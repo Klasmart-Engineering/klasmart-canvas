@@ -28,7 +28,7 @@ pipeline {
         stage('Run unit tests') {
             steps {
                 notifyBitbucket('INPROGRESS')
-                sh 'npm run test'
+                sh 'npm run test:ci'
             }
         }
         stage('Build') {
@@ -40,6 +40,8 @@ pipeline {
     }
     post {
         always {
+            junit 'junit.xml'
+            cobertura(coberturaReportFile: 'coverage/cobertura-coverage.xml')
             notifyBitbucket(BITBUCKET_STATUS_MAP[currentBuild.currentResult])
 	        slackSend channel: '#kidsloop-live-ci',
 	        color: COLOR_MAP[currentBuild.currentResult],

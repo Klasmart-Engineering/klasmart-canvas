@@ -26,6 +26,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:ci": "react-scripts test --coverage --reporters=default --reporters=jest-junit",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -48,5 +49,27 @@
     "@types/uuid": "^8.0.0",
     "prettier": "2.0.5",
     "react-test-renderer": "^16.13.1"
+    "jest-junit": "^11.0.1",
+    "prettier": "2.0.5"
+  },
+  "jest": {
+    "coverageReporters": [
+      "text",
+      "html",
+      "cobertura"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!src/**/*.d.ts",
+      "!<rootDir>/node_modules"
+    ]
+  },
+  "jest-junit": {
+    "reporters": [
+      "jest-junit"
+    ],
+    "output": "./junit.xml",
+    "suiteNameTemplate": "{filepath}",
+    "usePathForSuiteName": "true"
   }
 }
