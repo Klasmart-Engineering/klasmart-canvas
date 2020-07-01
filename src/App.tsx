@@ -15,26 +15,27 @@ let canvas: {
 function App() {
   const [shape, updateShape] = useState('rectangle');
   const [text, updateText] = useState('');
+  const [focused, updateFocus] = useState(false);
   const ref = useRef('');
+
   useEffect(() => {
-    console.log('mmm');
     // @ts-ignore
     canvas = new fabric.Canvas('canvas', {
       backgroundColor: 'white',
       width: '600',
       height: '350',
     });
-  }, []);
 
-  useEffect(() => {}, [text]);
+    document.addEventListener('keydown', keyDownHandler, false);
+  }, []);
 
   const writeText = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       ref.current = text;
 
       const textF = new fabric.Text(ref.current, {
-        left: 100,
-        top: 100,
+        left: 0,
+        top: 0,
       });
 
       console.log({ text });
@@ -46,6 +47,19 @@ function App() {
         updateText('');
       }
     }
+  };
+
+  const keyDownHandler = (e: { key: any }) => {
+    console.log({ focused });
+    if (e.key === 'Backspace' && !focused) {
+      removeSelectedElement();
+      return;
+    }
+  };
+
+  const removeSelectedElement = () => {
+    canvas.remove(canvas.getActiveObject());
+    console.log(canvas.getObjects());
   };
 
   // useEffect(() => {
@@ -143,6 +157,8 @@ function App() {
         value={text}
         onChange={(e) => updateText(e.target.value)}
         onKeyDown={(e) => writeText(e)}
+        onFocus={() => updateFocus(true)}
+        onBlur={() => updateFocus(false)}
       />
     </div>
   );
