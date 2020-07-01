@@ -1,0 +1,17 @@
+.toolbar {
+  display: flex;
+  border: solid 1px #d0d0d0;
+  margin-top: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.toolbar-section {
+  display: flex;
+  padding: 4px;
+  border-right: solid 1px #d0d0d0;
+}
+
+.toolbar-section:last-child {
+  border: none;
+}

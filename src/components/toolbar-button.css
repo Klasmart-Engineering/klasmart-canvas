@@ -1,0 +1,34 @@
+.button-container {
+  padding: 4px;
+  background-color: #fff;
+}
+
+.toolbar-button {
+  border: none;
+  padding: 24px 16px;
+  margin-left: 2px;
+  background-color: #fff;
+  border-radius: 4px;
+  outline: 0;
+}
+
+.toolbar-button:first-child {
+  margin: 0;
+}
+
+.toolbar-button:hover {
+  cursor: pointer;
+}
+
+.selected-button {
+  background-color: #d9d9d9;
+}
+
+.unselected-button:hover {
+  background-color: #f2f2f2;
+}
+
+.toolbar-button > img {
+  width: 24px;
+  height: 24px;
+}

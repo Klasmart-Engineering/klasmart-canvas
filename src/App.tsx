@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import './canvas.css';
+import Toolbar from './components/Toolbar';
 
 function App() {
   const ref: any = useRef(null);
@@ -13,6 +14,7 @@ function App() {
   return (
     <div className="container">
       <canvas ref={ref} width="600px" height="350px" />
+      <Toolbar />
     </div>
   );
 }
