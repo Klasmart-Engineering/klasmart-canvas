@@ -49,7 +49,7 @@ function App() {
     }
   }, [text]);
 
-  const writeText = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const writeText = (e: any) => {
     if (e.key === 'Enter') {
       ref.current = text;
 
@@ -158,22 +158,38 @@ function App() {
     console.log(canvas.getObjects());
   };
 
-  const redColor = (): void => {
+  const fillColor = (color: string) => {
+    console.log(color)
     if (canvas.getActiveObject()) {
-      canvas.getActiveObject().set('fill', 'red');
+      canvas.getActiveObject().set('fill', color);
 
       // @ts-ignore
       canvas.renderAll();
     }
   };
 
-  const greenColor = (): void => {
-    if (canvas.getActiveObject()) {
-      canvas.getActiveObject().set('fill', 'green');
+  const colorsList = [
+    'black',
+    'red',
+    'yellow',
+    'green',
+    'blue',
+    'purple',
+    'brown',
+  ];
 
-      // @ts-ignore
-      canvas.renderAll();
-    }
+  const MyButton = (props: any) => {
+    const buttonText = `${props.color[0].toUpperCase()}${props.color.slice(1)}`;
+    return (
+      <button onClick={() => props.fillColor(props.color)}>{buttonText}</button>
+    );
+  };
+
+  const ColorButtonsList = (props: { colors: any; fillColor: any }) => {
+    const colors = props.colors;
+    return colors.map((color: React.ReactNode) => (
+      <MyButton color={color} fillColor={props.fillColor} />
+    ));
   };
 
   /**
@@ -201,6 +217,22 @@ function App() {
       <button onClick={removeShape}>Remove selected shape</button>
       <div className="container">
         <canvas id="canvas" style={{ border: '1px solid' }} />
+        <div className="toolbar-container">
+          <Toolbar onTextClick={changeShowInput} />
+        </div>
+        <div className="input-container">
+          {showInput ? (
+            <TextField
+              id="outlined-basic"
+              className="input-text"
+              label="Insert Text"
+              variant="outlined"
+              value={text}
+              onChange={(e) => updateText(e.target.value)}
+              onKeyDown={(e) => writeText(e)}
+            />
+          ) : null}
+        </div>
       </div>
       <div>{text}</div>
       <input
@@ -208,21 +240,7 @@ function App() {
         onChange={(e) => updateText(e.target.value)}
         onKeyDown={(e) => writeText(e)}
       />
-      <button onClick={redColor}>Red</button>
-      <button onClick={greenColor}>Green</button>
-      <div className="toolbar-container">
-        <Toolbar onTextClick={changeShowInput} />
-      </div>
-      <div className="input-container">
-        {showInput ? (
-          <TextField
-            id="outlined-basic"
-            className="input-text"
-            label="Insert Text"
-            variant="outlined"
-          />
-        ) : null}
-      </div>
+      <ColorButtonsList colors={colorsList} fillColor={fillColor} />
     </div>
   );
 }

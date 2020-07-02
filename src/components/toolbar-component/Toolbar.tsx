@@ -73,7 +73,7 @@ function Toolbar({ onTextClick }: ToolbarProps) {
     ],
   });
 
-  /**
+  /**7
    * Is executed when a ToolbarButton is clicked in Tools section
    * and set the new selected button for that section
    * @param {number} index - index that the clicked button has in the array
