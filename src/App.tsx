@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
 import './canvas.css';
 
@@ -11,11 +11,12 @@ let canvas: {
   requestRenderAll(): void;
   discardActiveObject(): void;
 };
+const canvasWidth = 600;
+const canvasHeight = 350;
 
 function App() {
   const [shape, updateShape] = useState('rectangle');
   const [text, updateText] = useState('');
-  const [focused, updateFocus] = useState(false);
   const ref = useRef('');
 
   useEffect(() => {
@@ -25,9 +26,25 @@ function App() {
       width: '600',
       height: '350',
     });
-
-    document.addEventListener('keydown', keyDownHandler, false);
   }, []);
+
+  const keyDownHandler = useCallback((e: { key: any }) => {
+    if (e.key === 'Backspace') {
+      removeSelectedElement();
+      return;
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', keyDownHandler, false);
+  }, [keyDownHandler]);
+
+  useEffect(() => {
+    if (text.length) {
+      // @ts-ignore
+      canvas.discardActiveObject().renderAll();
+    }
+  }, [text]);
 
   const writeText = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -43,24 +60,18 @@ function App() {
       if (ref.current.length) {
         // @ts-ignore
         canvas.setActiveObject(textF);
+        // @ts-ignore
+        canvas.centerObject(textF);
         canvas.add(textF);
         updateText('');
       }
     }
   };
 
-  const keyDownHandler = (e: { key: any }) => {
-    console.log({ focused });
-    if (e.key === 'Backspace' && !focused) {
-      removeSelectedElement();
-      return;
-    }
-  };
-
-  const removeSelectedElement = () => {
+  function removeSelectedElement() {
     canvas.remove(canvas.getActiveObject());
     console.log(canvas.getObjects());
-  };
+  }
 
   // useEffect(() => {
   //   // @ts-ignore
@@ -89,49 +100,77 @@ function App() {
   //   });
   // }, [text]);
 
-  const addShape = () => {
-    const rect = new fabric.Rect({
+  const rectangle = () => {
+    const rectangleWidth = 150;
+    const rectangleHeight = 150;
+
+    return new fabric.Rect({
       originX: 'left',
-      left: 200,
       fill: 'blue',
-      width: 200,
-      height: 200,
-      angle: 45,
+      width: rectangleWidth,
+      height: rectangleHeight,
+      //angle: 45,
+      left: canvasWidth / 2 - rectangleWidth / 2,
+      top: canvasHeight / 2 - rectangleHeight / 2,
     });
+  };
 
-    const triangle = new fabric.Triangle({
-      width: 100,
-      height: 160,
+  const triangle = () => {
+    const triangleWidth = 100;
+    const triangleHeight = 160;
+    return new fabric.Triangle({
+      width: triangleWidth,
+      height: triangleHeight,
       fill: 'black',
-      left: 50,
-      top: 50,
+      left: canvasWidth / 2 - triangleWidth / 2,
+      top: canvasHeight / 2 - triangleHeight / 2,
     });
+  };
 
-    const circle = new fabric.Circle({
-      radius: 20,
+  const circle = () => {
+    const circleRadius = 50;
+    return new fabric.Circle({
+      radius: circleRadius,
       fill: 'green',
-      left: 100,
-      top: 100,
+      left: canvasWidth / 2 - circleRadius,
+      top: canvasHeight / 2 - circleRadius,
     });
+  };
 
+  const addShape = () => {
     console.log('shape selected', shape, canvas);
 
     switch (shape) {
       case 'rectangle':
-        canvas.add(rect);
-        return;
+        return canvas.add(rectangle());
       case 'triangle':
-        canvas.add(triangle);
-        return;
+        return canvas.add(triangle());
       case 'circle':
-        canvas.add(circle);
-        return;
+        return canvas.add(circle());
     }
   };
 
-  const removeShape = () => {
+  const removeShape = (): void => {
     canvas.remove(canvas.getActiveObject());
     console.log(canvas.getObjects());
+  };
+
+  const redColor = (): void => {
+    if (canvas.getActiveObject()) {
+      canvas.getActiveObject().set('fill', 'red');
+
+      // @ts-ignore
+      canvas.renderAll();
+    }
+  };
+
+  const greenColor = (): void => {
+    if (canvas.getActiveObject()) {
+      canvas.getActiveObject().set('fill', 'green');
+
+      // @ts-ignore
+      canvas.renderAll();
+    }
   };
 
   return (
@@ -157,9 +196,9 @@ function App() {
         value={text}
         onChange={(e) => updateText(e.target.value)}
         onKeyDown={(e) => writeText(e)}
-        onFocus={() => updateFocus(true)}
-        onBlur={() => updateFocus(false)}
       />
+      <button onClick={redColor}>Red</button>
+      <button onClick={greenColor}>Green</button>
     </div>
   );
 }
