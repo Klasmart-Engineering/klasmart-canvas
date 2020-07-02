@@ -7,6 +7,20 @@ function App() {
   const ref: any = useRef(null);
   const [showInput, setShowInput] = useState(true);
 
+  const fillColor = (color: string) => {
+    console.log({ color });
+  };
+
+  const colorsList = [
+    'black',
+    'red',
+    'yellow',
+    'green',
+    'blue',
+    'purple',
+    'brown',
+  ];
+
   useEffect(() => {
     const canvas = ref.current;
     const ctx = canvas.getContext('2d');
@@ -26,7 +40,11 @@ function App() {
     <div className="container">
       <canvas ref={ref} width="600px" height="350px" />
       <div className="toolbar-container">
-        <Toolbar onTextClick={changeShowInput} />
+        <Toolbar
+          onTextClick={changeShowInput}
+          colorList={colorsList}
+          fillColor={fillColor}
+        />
       </div>
       <div className="input-container">
         {showInput ? (
