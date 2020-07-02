@@ -17,6 +17,8 @@ import ToolbarElement from './ToolbarElement';
 
 interface ToolbarProps {
   onTextClick: (value: boolean) => void;
+  colorList: string[];
+  fillColor: (color: string) => void;
 }
 
 /**
@@ -25,7 +27,7 @@ interface ToolbarProps {
  * - onTextClick - event that is sended to its parent
  *   when text button is clicked
  */
-function Toolbar({ onTextClick }: ToolbarProps) {
+function Toolbar({ onTextClick, colorList, fillColor }: ToolbarProps) {
   const [showActions, setShowActions] = useState(false);
 
   const [colorPalette, setColorPalette] = useState({
@@ -98,6 +100,8 @@ function Toolbar({ onTextClick }: ToolbarProps) {
       selected: index,
       elements: [...colorPalette.elements],
     });
+
+    fillColor(colorList[index]);
   }
 
   /**
@@ -132,16 +136,16 @@ function Toolbar({ onTextClick }: ToolbarProps) {
       </ToolbarSection>
 
       <ToolbarSection>
-        {colorPalette.elements.map((tool, index) => {
+        {colorPalette.elements.map((color, index) => {
           return (
             <ToolbarElement
               key={index}
-              type={tool.type}
-              iconSrc={tool.iconSrc}
-              iconName={tool.iconName}
+              type={color.type}
+              iconSrc={color.iconSrc}
+              iconName={color.iconName}
               index={index}
               selected={colorPalette.selected === index}
-              options={tool.options}
+              options={color.options}
               onChildClick={handleColorPaletteElementClick}
             />
           );

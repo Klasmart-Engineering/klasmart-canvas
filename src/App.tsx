@@ -217,9 +217,9 @@ function App() {
       <button onClick={removeShape}>Remove selected shape</button>
       <div className="container">
         <canvas id="canvas" style={{ border: '1px solid' }} />
-        <div className="toolbar-container">
-          <Toolbar onTextClick={changeShowInput} />
-        </div>
+        {/*<div className="toolbar-container">*/}
+        {/*  <Toolbar onTextClick={changeShowInput} />*/}
+        {/*</div>*/}
         <div className="input-container">
           {showInput ? (
             <TextField
