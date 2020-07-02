@@ -15,14 +15,20 @@ function ToolbarSelector({
   options,
   selected,
   onChildClick,
+  onChildChange,
 }: IToolbarSelector) {
-  const [selectedOption, setSelectedOption] = useState(0);
+  const [selectedOption, setSelectedOption] = useState(options[0].iconName);
 
   /**
    * Is executed when the button is clicked and sends an events to its parent
    */
   function handleClick() {
     onChildClick(index);
+  }
+
+  function handleChange(value: string) {
+    setSelectedOption(value);
+    onChildChange(value);
   }
 
   return (
@@ -34,12 +40,16 @@ function ToolbarSelector({
       ].join(' ')}
       value={selectedOption}
       onClick={handleClick}
-      onChange={(e) => setSelectedOption(+e.target.value)}
-      onBlur={(e) => setSelectedOption(+e.target.value)}
+      onChange={(e) => handleChange(e.target.value)}
+      onBlur={(e) => handleChange(e.target.value)}
     >
       {options.map((option) => {
         return (
-          <option className="option" key={option.index} value={option.index}>
+          <option
+            className="option"
+            key={option.iconName}
+            value={option.iconName}
+          >
             {option.iconName}
           </option>
         );

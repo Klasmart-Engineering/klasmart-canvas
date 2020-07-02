@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
 import TextField from '@material-ui/core/TextField';
 import './canvas.css';
-import Toolbar from './components/toolbar-component/Toolbar';
+import Toolbar from './components/toolbar/Toolbar';
 
 let canvas: {
   add: (arg0: any) => void;
@@ -159,7 +159,7 @@ function App() {
   };
 
   const fillColor = (color: string) => {
-    console.log(color)
+    console.log(color);
     if (canvas.getActiveObject()) {
       canvas.getActiveObject().set('fill', color);
 
@@ -222,6 +222,7 @@ function App() {
             onTextClick={changeShowInput}
             colorList={colorsList}
             fillColor={fillColor}
+            updateShape={updateShape}
           />
         </div>
         <div className="input-container">

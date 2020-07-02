@@ -21,6 +21,7 @@ function ToolbarElement({
   iconName,
   selected,
   onChildClick,
+  onChildChange,
   type,
   options,
 }: IToolbarElement) {
@@ -44,6 +45,7 @@ function ToolbarElement({
           options={options}
           selected={selected}
           onChildClick={onChildClick}
+          onChildChange={onChildChange}
         />
       );
     }
