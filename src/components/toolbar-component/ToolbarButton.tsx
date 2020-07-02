@@ -1,5 +1,5 @@
 import React from 'react';
-import ToolbarButtonModel from '../models/toolbar-button.model';
+import IToolbarButton from '../../interfaces/toolbar/toolbar-button';
 import './toolbar-button.css';
 
 /**
@@ -18,7 +18,7 @@ function ToolbarButton({
   iconName,
   selected,
   onChildClick,
-}: ToolbarButtonModel) {
+}: IToolbarButton) {
   /**
    * Is executed when the button is clicked and sends an events to its parent
    */
