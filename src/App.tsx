@@ -1,11 +1,12 @@
 import React, { useRef, useEffect, useState } from 'react';
 import TextField from '@material-ui/core/TextField';
 import './canvas.css';
-import Toolbar from './components/toolbar-component/Toolbar';
+import Toolbar from './components/toolbar/Toolbar';
 
 function App() {
   const ref: any = useRef(null);
   const [showInput, setShowInput] = useState(true);
+  const [shape, updateShape] = useState('rectangle');
 
   const fillColor = (color: string) => {
     console.log({ color });
@@ -44,6 +45,7 @@ function App() {
           onTextClick={changeShowInput}
           colorList={colorsList}
           fillColor={fillColor}
+          updateShape={updateShape}
         />
       </div>
       <div className="input-container">

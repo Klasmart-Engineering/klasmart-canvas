@@ -5,4 +5,5 @@ export default interface ToolbarSelector {
   options: IToolbarSelectorOption[];
   selected: boolean;
   onChildClick: (index: number) => void;
+  onChildChange: (value: string) => void;
 }

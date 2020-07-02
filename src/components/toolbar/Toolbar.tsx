@@ -19,6 +19,7 @@ interface ToolbarProps {
   onTextClick: (value: boolean) => void;
   colorList: string[];
   fillColor: (color: string) => void;
+  updateShape: (shape: string) => void;
 }
 
 /**
@@ -26,8 +27,16 @@ interface ToolbarProps {
  * @param {ToolbarProps} props: Properties needed to render the component:
  * - onTextClick - event that is sended to its parent
  *   when text button is clicked
+ * - colorList - list of colors availables
+ * - fillColor - function to set the color to use
+ * - updateShape - function to set the shape to use
  */
-function Toolbar({ onTextClick, colorList, fillColor }: ToolbarProps) {
+function Toolbar({
+  onTextClick,
+  colorList,
+  fillColor,
+  updateShape,
+}: ToolbarProps) {
   const [showActions, setShowActions] = useState(false);
 
   const [colorPalette, setColorPalette] = useState({
@@ -50,13 +59,13 @@ function Toolbar({ onTextClick, colorList, fillColor }: ToolbarProps) {
       createElementProps(textIcon, 'Selector', 'selector', [
         {
           index: 0,
-          iconSrc: yellowCircle,
-          iconName: 'Triangle',
+          iconSrc: redCircle,
+          iconName: 'Rectangle',
         },
         {
           index: 1,
-          iconSrc: redCircle,
-          iconName: 'Square',
+          iconSrc: yellowCircle,
+          iconName: 'Triangle',
         },
         {
           index: 2,
@@ -116,6 +125,10 @@ function Toolbar({ onTextClick, colorList, fillColor }: ToolbarProps) {
     });
   }
 
+  function handleChange(shape: string) {
+    updateShape(shape.toLowerCase());
+  }
+
   return (
     <div className="toolbar">
       <ToolbarSection>
@@ -130,6 +143,7 @@ function Toolbar({ onTextClick, colorList, fillColor }: ToolbarProps) {
               selected={tools.selected === index}
               options={tool.options}
               onChildClick={handleToolsElementClick}
+              onChildChange={handleChange}
             />
           );
         })}
@@ -147,6 +161,7 @@ function Toolbar({ onTextClick, colorList, fillColor }: ToolbarProps) {
               selected={colorPalette.selected === index}
               options={color.options}
               onChildClick={handleColorPaletteElementClick}
+              onChildChange={handleChange}
             />
           );
         })}
@@ -165,6 +180,7 @@ function Toolbar({ onTextClick, colorList, fillColor }: ToolbarProps) {
                 selected={actions.selected === index}
                 options={action.options}
                 onChildClick={handleActionsElementClick}
+                onChildChange={updateShape}
               />
             );
           })}
