@@ -1,0 +1,23 @@
+.toolbar-selector {
+  border: none;
+  margin-left: 2px;
+  background-color: #fff;
+  border-radius: 4px;
+  outline: 0;
+}
+
+.toolbar-selector:first-child {
+  margin: 0;
+}
+
+.toolbar-selector:hover {
+  cursor: pointer;
+}
+
+.selected {
+  background-color: #d9d9d9;
+}
+
+.unselected:hover {
+  background-color: #f2f2f2;
+}

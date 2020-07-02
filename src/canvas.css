@@ -1,8 +1,9 @@
 .container {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 500px;
+  height: 600px;
   background-color: #79beff;
 }
 
@@ -11,4 +12,21 @@
   color: white;
   width: 600px;
   height: 350px;
+}
+
+.input-text {
+  background-color: #fff;
+  border-radius: 6px;
+}
+
+.input-container {
+  margin-top: 16px;
+  height: 56px;
+  width: 246px;
+}
+
+.toolbar-container {
+  display: flex;
+  align-items: flex-start;
+  width: 670px;
 }

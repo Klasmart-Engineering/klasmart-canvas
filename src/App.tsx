@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { fabric } from 'fabric';
+import TextField from '@material-ui/core/TextField';
 import './canvas.css';
+import Toolbar from './components/toolbar-component/Toolbar';
 
 let canvas: {
   add: (arg0: any) => void;
@@ -18,6 +20,7 @@ function App() {
   const [shape, updateShape] = useState('rectangle');
   const [text, updateText] = useState('');
   const ref = useRef('');
+  const [showInput, setShowInput] = useState(true);
 
   useEffect(() => {
     // @ts-ignore
@@ -173,6 +176,14 @@ function App() {
     }
   };
 
+  /**
+   * Set the value of the flag that show/hide the input
+   * @param {boolean} value - Value to set in the flag
+   */
+  function changeShowInput(value: boolean) {
+    setShowInput(value);
+  }
+
   return (
     <div className="App">
       <select onChange={(e) => updateShape(e.target.value)}>
@@ -199,6 +210,19 @@ function App() {
       />
       <button onClick={redColor}>Red</button>
       <button onClick={greenColor}>Green</button>
+      <div className="toolbar-container">
+        <Toolbar onTextClick={changeShowInput} />
+      </div>
+      <div className="input-container">
+        {showInput ? (
+          <TextField
+            id="outlined-basic"
+            className="input-text"
+            label="Insert Text"
+            variant="outlined"
+          />
+        ) : null}
+      </div>
     </div>
   );
 }
