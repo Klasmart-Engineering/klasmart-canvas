@@ -217,9 +217,13 @@ function App() {
       <button onClick={removeShape}>Remove selected shape</button>
       <div className="container">
         <canvas id="canvas" style={{ border: '1px solid' }} />
-        {/*<div className="toolbar-container">*/}
-        {/*  <Toolbar onTextClick={changeShowInput} />*/}
-        {/*</div>*/}
+        <div className="toolbar-container">
+          <Toolbar
+            onTextClick={changeShowInput}
+            colorList={colorsList}
+            fillColor={fillColor}
+          />
+        </div>
         <div className="input-container">
           {showInput ? (
             <TextField
@@ -234,13 +238,13 @@ function App() {
           ) : null}
         </div>
       </div>
-      <div>{text}</div>
-      <input
-        value={text}
-        onChange={(e) => updateText(e.target.value)}
-        onKeyDown={(e) => writeText(e)}
-      />
-      <ColorButtonsList colors={colorsList} fillColor={fillColor} />
+      {/*<div>{text}</div>*/}
+      {/*<input*/}
+      {/*  value={text}*/}
+      {/*  onChange={(e) => updateText(e.target.value)}*/}
+      {/*  onKeyDown={(e) => writeText(e)}*/}
+      {/*/>*/}
+      {/*<ColorButtonsList colors={colorsList} fillColor={fillColor} />*/}
     </div>
   );
 }
