@@ -22,6 +22,14 @@ function App() {
     'brown',
   ];
 
+  const addShape = () => {
+    console.log('add shape');
+  };
+
+  const removeShape = () => {
+    console.log('remove shape');
+  };
+
   useEffect(() => {
     const canvas = ref.current;
     const ctx = canvas.getContext('2d');
@@ -46,6 +54,8 @@ function App() {
           colorList={colorsList}
           fillColor={fillColor}
           updateShape={updateShape}
+          addAShape={addShape}
+          removeAShape={removeShape}
         />
       </div>
       <div className="input-container">

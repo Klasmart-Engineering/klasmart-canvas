@@ -9,6 +9,8 @@ import IToolbarSelector from '../../interfaces/toolbar/toolbar-selector';
  * - option - options to be displayed in the selector
  * - selected - flag that indicates if this selector is selected
  * - onChildClick - event that is emitted to parent when selector is clicked
+ * - onChildChange - event that is emitted to parent when selector's value
+ *   is changed
  */
 function ToolbarSelector({
   index,
