@@ -20,6 +20,8 @@ interface ToolbarProps {
   colorList: string[];
   fillColor: (color: string) => void;
   updateShape: (shape: string) => void;
+  addAShape: () => void;
+  removeAShape: () => void;
 }
 
 /**
@@ -30,12 +32,16 @@ interface ToolbarProps {
  * - colorList - list of colors availables
  * - fillColor - function to set the color to use
  * - updateShape - function to set the shape to use
+ * - addAShape - function to add a shape in the whiteboard
+ * - removeAShape - function to remove a shape in the whiteboard
  */
 function Toolbar({
   onTextClick,
   colorList,
   fillColor,
   updateShape,
+  addAShape,
+  removeAShape,
 }: ToolbarProps) {
   const [showActions, setShowActions] = useState(false);
 
@@ -123,6 +129,8 @@ function Toolbar({
       selected: index,
       elements: [...actions.elements],
     });
+
+    index ? removeAShape() : addAShape();
   }
 
   function handleChange(shape: string) {

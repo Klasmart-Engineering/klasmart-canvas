@@ -12,6 +12,7 @@ import ToolbarSelector from './ToolbarSelector';
  * - iconName - alt that the icon element will have
  * - selected - flag to indicate that this is the selected element
  * - onChildClick - event that recives the parent when an element is clicked
+ * - onChildChange - event that recives the parent when select changes its value
  * - type - element type (button or select)
  * - options - selector options (just for selector, in button is an empty array)
  */

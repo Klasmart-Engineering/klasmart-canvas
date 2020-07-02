@@ -18,6 +18,7 @@ const canvasHeight = 350;
 
 function App() {
   const [shape, updateShape] = useState('rectangle');
+  const [shapeColor, updateShapeColor] = useState('black');
   const [text, updateText] = useState('');
   const ref = useRef('');
   const [showInput, setShowInput] = useState(true);
@@ -103,13 +104,15 @@ function App() {
   //   });
   // }, [text]);
 
+  useEffect(() => {}, []);
+
   const rectangle = () => {
     const rectangleWidth = 150;
     const rectangleHeight = 150;
 
     return new fabric.Rect({
       originX: 'left',
-      fill: 'blue',
+      fill: shapeColor,
       width: rectangleWidth,
       height: rectangleHeight,
       //angle: 45,
@@ -124,7 +127,7 @@ function App() {
     return new fabric.Triangle({
       width: triangleWidth,
       height: triangleHeight,
-      fill: 'black',
+      fill: shapeColor,
       left: canvasWidth / 2 - triangleWidth / 2,
       top: canvasHeight / 2 - triangleHeight / 2,
     });
@@ -134,7 +137,7 @@ function App() {
     const circleRadius = 50;
     return new fabric.Circle({
       radius: circleRadius,
-      fill: 'green',
+      fill: shapeColor,
       left: canvasWidth / 2 - circleRadius,
       top: canvasHeight / 2 - circleRadius,
     });
@@ -160,6 +163,9 @@ function App() {
 
   const fillColor = (color: string) => {
     console.log(color);
+    updateShapeColor(color);
+
+    console.log({ shapeColor });
     if (canvas.getActiveObject()) {
       canvas.getActiveObject().set('fill', color);
 
@@ -223,6 +229,8 @@ function App() {
             colorList={colorsList}
             fillColor={fillColor}
             updateShape={updateShape}
+            addAShape={addShape}
+            removeAShape={removeShape}
           />
         </div>
         <div className="input-container">
@@ -239,7 +247,7 @@ function App() {
           ) : null}
         </div>
       </div>
-      {/*<div>{text}</div>*/}
+      {/*<div>{shapeColor}</div>*/}
       {/*<input*/}
       {/*  value={text}*/}
       {/*  onChange={(e) => updateText(e.target.value)}*/}
