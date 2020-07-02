@@ -27,22 +27,6 @@ function ToolbarButton({
     onChildClick(index);
   }
 
-  const MyButton = (props: any) => {
-    const buttonText = `${props.color[0].toUpperCase()}${props.color.slice(1)}`;
-    return (
-      <button
-        className={[
-          'toolbar-button',
-          selected ? 'selected-button' : '',
-          !selected ? 'unselected-button' : '',
-        ].join(' ')}
-        onClick={() => props.fillColor(props.color)}
-      >
-        <img src={iconSrc} alt={iconName} width="24px" height="24px" />
-      </button>
-    );
-  };
-
   return (
     <button
       className={[

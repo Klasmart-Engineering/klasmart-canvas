@@ -77,35 +77,6 @@ function App() {
     console.log(canvas.getObjects());
   }
 
-  // useEffect(() => {
-  //   // @ts-ignore
-  //   canvas.on('mouse:down', function (options) {
-  //     console.log(options.e.clientX, options.e.clientY);
-  //     console.log(options.e.x, options.e.y);
-  //     console.log(options);
-  //     if (ref.current.length === 0) {
-  //       console.log('text', text, text.length);
-  //
-  //       ref.current = text;
-  //
-  //       const textF = new fabric.Text(ref.current, {
-  //         left: options.absolutePointer.x,
-  //         top: options.absolutePointer.y,
-  //       });
-  //
-  //       // @ts-ignore
-  //       canvas.setActiveObject(textF);
-  //       canvas.add(textF);
-  //
-  //       return;
-  //     }
-  //
-  //     // Listen to keyboard strokes
-  //   });
-  // }, [text]);
-
-  useEffect(() => {}, []);
-
   const rectangle = () => {
     const rectangleWidth = 150;
     const rectangleHeight = 150;
@@ -184,20 +155,6 @@ function App() {
     'brown',
   ];
 
-  const MyButton = (props: any) => {
-    const buttonText = `${props.color[0].toUpperCase()}${props.color.slice(1)}`;
-    return (
-      <button onClick={() => props.fillColor(props.color)}>{buttonText}</button>
-    );
-  };
-
-  const ColorButtonsList = (props: { colors: any; fillColor: any }) => {
-    const colors = props.colors;
-    return colors.map((color: React.ReactNode) => (
-      <MyButton color={color} fillColor={props.fillColor} />
-    ));
-  };
-
   /**
    * Set the value of the flag that show/hide the input
    * @param {boolean} value - Value to set in the flag
@@ -208,19 +165,6 @@ function App() {
 
   return (
     <div className="App">
-      <select onChange={(e) => updateShape(e.target.value)}>
-        <option key="rectangle" value="rectangle">
-          Rectangle
-        </option>
-        <option key="triangle" value="triangle">
-          Triangle
-        </option>
-        <option key="circle" value="circle">
-          Circle
-        </option>
-      </select>
-      <button onClick={addShape}>Add shape</button>
-      <button onClick={removeShape}>Remove selected shape</button>
       <div className="container">
         <canvas id="canvas" style={{ border: '1px solid' }} />
         <div className="toolbar-container">
@@ -247,13 +191,6 @@ function App() {
           ) : null}
         </div>
       </div>
-      {/*<div>{shapeColor}</div>*/}
-      {/*<input*/}
-      {/*  value={text}*/}
-      {/*  onChange={(e) => updateText(e.target.value)}*/}
-      {/*  onKeyDown={(e) => writeText(e)}*/}
-      {/*/>*/}
-      {/*<ColorButtonsList colors={colorsList} fillColor={fillColor} />*/}
     </div>
   );
 }
