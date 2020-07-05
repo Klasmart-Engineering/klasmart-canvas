@@ -1,27 +1,25 @@
 import React, { useState } from 'react';
-import ToolbarSection from './ToolbarSection';
+import ToolbarSection from './toolbar-section/ToolbarSection';
 import './toolbar.css';
-import textIcon from '../../assets/icons/letter-a.svg';
-import blackCircle from '../../assets/icons/black-circle.svg';
-import redCircle from '../../assets/icons/red-circle.svg';
-import yellowCircle from '../../assets/icons/yellow-circle.svg';
-import greenCircle from '../../assets/icons/green-circle.svg';
-import blueCircle from '../../assets/icons/blue-circle.svg';
-import pinkCircle from '../../assets/icons/pink-circle.svg';
-import brownCircle from '../../assets/icons/brown-circle.svg';
-import addShape from '../../assets/icons/add-shape.svg';
-import removeShape from '../../assets/icons/remove-shape.svg';
-import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector-option';
-import IBasicToolbarElement from '../../interfaces/toolbar/basic-toolbar-element';
-import ToolbarElement from './ToolbarElement';
+import ToolbarText from './toolbar-text/ToolbarText';
+import ToolbarButton from './toolbar-button/ToolbarButton';
+import ToolbarSelector from './toolbar-selector/ToolbarSelector';
+import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
+import {
+  colorPaletteSection,
+  toolsSection,
+  actionsSection,
+} from './toolbar-section/toolbar-sections';
 
 interface ToolbarProps {
-  onTextClick: (value: boolean) => void;
   colorList: string[];
   fillColor: (color: string) => void;
   updateShape: (shape: string) => void;
   addAShape: () => void;
-  removeAShape: () => void;
+  removeSelectedElement: () => void;
+  text: string;
+  updateText: (value: string) => void; // onChange
+  writeText: (e: KeyboardEvent) => void; // onKeyDown
 }
 
 /**
@@ -33,62 +31,26 @@ interface ToolbarProps {
  * - fillColor - function to set the color to use
  * - updateShape - function to set the shape to use
  * - addAShape - function to add a shape in the whiteboard
- * - removeAShape - function to remove a shape in the whiteboard
+ * - removeSelectedElement - function to remove a shape in the whiteboard
+ * - text - value to set in TextField
+ * - updateText - function to execute when TextField is onChange
+ * - writeText - function to execute when TextField is onKeyDown
  */
 function Toolbar({
-  onTextClick,
   colorList,
   fillColor,
   updateShape,
   addAShape,
-  removeAShape,
+  removeSelectedElement,
+  text,
+  updateText,
+  writeText,
 }: ToolbarProps) {
-  const [showActions, setShowActions] = useState(false);
-
-  const [colorPalette, setColorPalette] = useState({
-    selected: 0,
-    elements: [
-      createElementProps(blackCircle, 'Black Color Icon', 'button', []),
-      createElementProps(redCircle, 'Red Color Icon', 'button', []),
-      createElementProps(yellowCircle, 'Yellow Color Icon', 'button', []),
-      createElementProps(greenCircle, 'Green Color Icon', 'button', []),
-      createElementProps(blueCircle, 'Blue Color Icon', 'button', []),
-      createElementProps(pinkCircle, 'Pink Color Icon', 'button', []),
-      createElementProps(brownCircle, 'Brown Color Icon', 'button', []),
-    ],
-  });
-
-  const [tools, setTools] = useState({
-    selected: 0,
-    elements: [
-      createElementProps(textIcon, 'Text Icon', 'button', []),
-      createElementProps(textIcon, 'Selector', 'selector', [
-        {
-          index: 0,
-          iconSrc: redCircle,
-          iconName: 'Rectangle',
-        },
-        {
-          index: 1,
-          iconSrc: yellowCircle,
-          iconName: 'Triangle',
-        },
-        {
-          index: 2,
-          iconSrc: redCircle,
-          iconName: 'Circle',
-        },
-      ]),
-    ],
-  });
-
-  const [actions, setActions] = useState({
-    selected: 0,
-    elements: [
-      createElementProps(addShape, 'Add Shape Button', 'button', []),
-      createElementProps(removeShape, 'Remove Shape Button', 'button', []),
-    ],
-  });
+  const [showActions, updateShowActions] = useState(false);
+  const [showInput, updateShowInput] = useState(true);
+  const [colorPalette, setColorPalette] = useState(colorPaletteSection);
+  const [tools, setTools] = useState(toolsSection);
+  const [actions, setActions] = useState(actionsSection);
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -96,8 +58,8 @@ function Toolbar({
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(index: number) {
-    setShowActions(!!index);
-    onTextClick(!index ? true : false);
+    updateShowActions(!!index);
+    updateShowInput(!index ? true : false);
 
     setTools({
       selected: index,
@@ -130,91 +92,135 @@ function Toolbar({
       elements: [...actions.elements],
     });
 
-    index ? removeAShape() : addAShape();
+    index ? removeSelectedElement() : addAShape();
   }
 
-  function handleChange(shape: string) {
+  /**
+   * Is executed when a change value happens in a Shape ToolbarSelector
+   * @param {string} shape - new selected shape
+   */
+  function handleShapeChange(shape: string) {
     updateShape(shape.toLowerCase());
   }
 
   return (
-    <div className="toolbar">
-      <ToolbarSection>
-        {tools.elements.map((tool, index) => {
-          return (
-            <ToolbarElement
-              key={index}
-              type={tool.type}
-              iconSrc={tool.iconSrc}
-              iconName={tool.iconName}
-              index={index}
-              selected={tools.selected === index}
-              options={tool.options}
-              onChildClick={handleToolsElementClick}
-              onChildChange={handleChange}
-            />
-          );
-        })}
-      </ToolbarSection>
-
-      <ToolbarSection>
-        {colorPalette.elements.map((color, index) => {
-          return (
-            <ToolbarElement
-              key={index}
-              type={color.type}
-              iconSrc={color.iconSrc}
-              iconName={color.iconName}
-              index={index}
-              selected={colorPalette.selected === index}
-              options={color.options}
-              onChildClick={handleColorPaletteElementClick}
-              onChildChange={handleChange}
-            />
-          );
-        })}
-      </ToolbarSection>
-
-      {showActions ? (
+    <div className="toolbar-container">
+      <div className="toolbar">
         <ToolbarSection>
-          {actions.elements.map((action, index) => {
-            return (
-              <ToolbarElement
-                key={index}
-                type={action.type}
-                iconSrc={action.iconSrc}
-                iconName={action.iconName}
-                index={index}
-                selected={actions.selected === index}
-                options={action.options}
-                onChildClick={handleActionsElementClick}
-                onChildChange={updateShape}
-              />
-            );
-          })}
+          {tools.elements.map((tool, index) =>
+            tool.iconName && tool.iconSrc
+              ? createToolbarButton(
+                  index,
+                  tool.iconSrc,
+                  tool.iconName,
+                  tools.selected === index,
+                  handleToolsElementClick
+                )
+              : tool.options
+              ? createToolbarSelector(
+                  index,
+                  tool.options,
+                  tools.selected === index,
+                  handleToolsElementClick,
+                  handleShapeChange
+                )
+              : null
+          )}
         </ToolbarSection>
-      ) : null}
+
+        <ToolbarSection>
+          {colorPalette.elements.map((color, index) =>
+            color.iconSrc && color.iconName
+              ? createToolbarButton(
+                  index,
+                  color.iconSrc,
+                  color.iconName,
+                  colorPalette.selected === index,
+                  handleColorPaletteElementClick
+                )
+              : null
+          )}
+        </ToolbarSection>
+
+        {showActions ? (
+          <ToolbarSection>
+            {actions.elements.map((action, index) =>
+              action.iconSrc && action.iconName
+                ? createToolbarButton(
+                    index,
+                    action.iconSrc,
+                    action.iconName,
+                    actions.selected === index,
+                    handleActionsElementClick
+                  )
+                : null
+            )}
+          </ToolbarSection>
+        ) : null}
+      </div>
+
+      <ToolbarText
+        showInput={showInput}
+        text={text}
+        updateText={updateText}
+        writeText={writeText}
+      />
     </div>
   );
 }
 
 /**
- * Create an object with the required properties for a new ToolbarButton
- * @param {string} iconSrc - src value that the icon button will have
- * @param {string} iconName - alt value that the icon button will have
+ * Creates a ToolbarButton
+ * @param index - index of the button in the section array
+ * @param iconSrc - src for the icon of the button
+ * @param iconName - alt for the icon of the button
+ * @param selected - flag to set this button like selected
+ * @param onChildClick - function to execute when button is clicked
  */
-function createElementProps(
+function createToolbarButton(
+  index: number,
   iconSrc: string,
   iconName: string,
-  type: 'button' | 'selector',
-  options: IToolbarSelectorOption[]
-): IBasicToolbarElement {
-  return {
-    iconSrc: iconSrc,
-    iconName: iconName,
-    type: type,
-    options: options,
-  };
+  selected: boolean,
+  onChildClick: (index: number) => void
+): JSX.Element {
+  return (
+    <ToolbarButton
+      key={index}
+      index={index}
+      iconSrc={iconSrc}
+      iconName={iconName}
+      selected={selected}
+      onChildClick={onChildClick}
+    />
+  );
+}
+
+/**
+ * Creates a ToolbarSelector
+ * @param index - index of the selector in the section array
+ * @param options - options that the selector will have
+ * @param selected - flag to set this selector like selected
+ * @param onChildClick - function to execute when selector is clicked
+ * @param onChildChange - function to execute when selector value changes
+ */
+function createToolbarSelector(
+  index: number,
+  options: IToolbarSelectorOption[],
+  selected: boolean,
+  onChildClick: (index: number) => void,
+  onChildChange: (value: string) => void
+): JSX.Element {
+  return (
+    <ToolbarSelector
+      key={index}
+      index={index}
+      options={options}
+      selected={selected}
+      onChildClick={onChildClick}
+      onChildChange={onChildChange}
+    />
+  );
 }
 
 export default Toolbar;

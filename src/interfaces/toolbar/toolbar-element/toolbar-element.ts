@@ -1,4 +1,4 @@
-import IToolbarSelectorOption from './toolbar-selector-option';
+import IToolbarSelectorOption from '../toolbar-selector/toolbar-selector-option';
 
 export default interface IToolbarElement {
   iconSrc: string;

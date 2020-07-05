@@ -1,3 +1,10 @@
+.toolbar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 686px;
+}
+
 .toolbar {
   display: flex;
   border: solid 1px #d0d0d0;
@@ -14,4 +21,16 @@
 
 .toolbar-section:last-child {
   border: none;
+}
+
+.input-container {
+  align-self: center;
+  margin-top: 16px;
+  height: 56px;
+  width: 246px;
+}
+
+.input-text {
+  background-color: #fff;
+  border-radius: 6px;
 }

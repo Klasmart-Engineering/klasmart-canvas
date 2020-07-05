@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './toolbar-selector.css';
-import IToolbarSelector from '../../interfaces/toolbar/toolbar-selector';
+import IToolbarSelector from '../../../interfaces/toolbar/toolbar-selector/toolbar-selector';
 
 /**
  * Render a ToolbarSelector
@@ -22,12 +22,16 @@ function ToolbarSelector({
   const [selectedOption, setSelectedOption] = useState(options[0].iconName);
 
   /**
-   * Is executed when the button is clicked and sends an events to its parent
+   * Is executed when the selector is clicked and sends an event to its parent
    */
   function handleClick() {
     onChildClick(index);
   }
 
+  /**
+   * Is executed when the selector changes its value
+   * @param {string} value - new value to set in selector
+   */
   function handleChange(value: string) {
     setSelectedOption(value);
     onChildChange(value);
