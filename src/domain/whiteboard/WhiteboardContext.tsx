@@ -7,6 +7,7 @@ import { useFontFamily } from './hooks/useFontFamily';
 import { textHandler } from './text/text';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
+import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -33,6 +34,7 @@ export const WhiteboardProvider = ({
   const { fontFamily, updateFontFamily } = useFontFamily();
   const { shapeColor, updateShapeColor } = useShapeColor();
   const { shape, updateShape } = useShape();
+  const { closeModal } = useWhiteboardClearModal();
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -168,6 +170,17 @@ export const WhiteboardProvider = ({
   };
 
   /**
+   * Clears all whiteboard elements
+   * */
+  const clearWhiteboard = (): void => {
+    canvas.clear();
+    // @ts-ignore
+    canvas.backgroundColor = 'white';
+    canvas.renderAll();
+    closeModal();
+  };
+
+  /**
    * List of available colors in toolbar
    * */
   const colorsList = [
@@ -192,6 +205,7 @@ export const WhiteboardProvider = ({
     updateText,
     writeText,
     discardActiveObject,
+    clearWhiteboard,
   };
 
   return (
