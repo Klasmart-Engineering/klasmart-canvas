@@ -167,6 +167,19 @@ export const WhiteboardProvider = ({
     }
   };
 
+  /**
+   * List of available colors in toolbar
+   * */
+  const colorsList = [
+    'black',
+    'red',
+    'yellow',
+    'green',
+    'blue',
+    'purple',
+    'brown',
+  ];
+
   const value = {
     text,
     updateText,
