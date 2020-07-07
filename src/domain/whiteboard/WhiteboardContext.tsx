@@ -154,6 +154,19 @@ export const WhiteboardProvider = ({
     }
   };
 
+  /**
+   * Add specific color to selected shape
+   * */
+  const fillColor = (color: string) => {
+    updateShapeColor(color);
+    if (canvas.getActiveObject()) {
+      canvas.getActiveObject().set('fill', color);
+
+      // @ts-ignore
+      canvas.renderAll();
+    }
+  };
+
   const value = {
     text,
     updateText,
