@@ -42,7 +42,6 @@ function App() {
 
   return (
     <div className="container">
-      <canvas ref={ref} width="600px" height="350px" />
       <Toolbar
         colorList={colorsList}
         fillColor={fillColor}
@@ -53,6 +52,7 @@ function App() {
         updateText={updateText}
         writeText={writeText}
       />
+      <canvas ref={ref} width="600px" height="350px" />
     </div>
   );
 }

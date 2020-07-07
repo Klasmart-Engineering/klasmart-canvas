@@ -6,10 +6,13 @@ import ToolbarButton from './toolbar-button/ToolbarButton';
 import ToolbarSelector from './toolbar-selector/ToolbarSelector';
 import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
 import {
-  colorPaletteSection,
   toolsSection,
   actionsSection,
 } from './toolbar-section/toolbar-sections';
+import SpecialSelector from './special-selector/SpecialSelector';
+import { OverridableComponent } from '@material-ui/core/OverridableComponent';
+import { SvgIconTypeMap } from '@material-ui/core';
+import IStyleOptions from '../../interfaces/toolbar/toolbar-element/style-options';
 
 interface ToolbarProps {
   colorList: string[];
@@ -18,8 +21,8 @@ interface ToolbarProps {
   addAShape: () => void;
   removeSelectedElement: () => void;
   text: string;
-  updateText: (value: string) => void; // onChange
-  writeText: (e: KeyboardEvent) => void; // onKeyDown
+  updateText: (value: string) => void;
+  writeText: (e: KeyboardEvent) => void;
 }
 
 /**
@@ -46,9 +49,7 @@ function Toolbar({
   updateText,
   writeText,
 }: ToolbarProps) {
-  const [showActions, updateShowActions] = useState(false);
-  const [showInput, updateShowInput] = useState(true);
-  const [colorPalette, setColorPalette] = useState(colorPaletteSection);
+  const [showInput, updateShowInput] = useState(false);
   const [tools, setTools] = useState(toolsSection);
   const [actions, setActions] = useState(actionsSection);
 
@@ -58,8 +59,7 @@ function Toolbar({
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(index: number) {
-    updateShowActions(!!index);
-    updateShowInput(!index ? true : false);
+    updateShowInput(index === 6);
 
     setTools({
       selected: index,
@@ -68,30 +68,11 @@ function Toolbar({
   }
 
   /**
-   * Is executed when a ToolbarButton is clicked in Color Palette section
-   * and set the new selected button for that section
-   * @param {number} index - index that the clicked button has in the array
-   */
-  function handleColorPaletteElementClick(index: number) {
-    setColorPalette({
-      selected: index,
-      elements: [...colorPalette.elements],
-    });
-
-    fillColor(colorList[index]);
-  }
-
-  /**
    * Is executed when a ToolbarButton is clicked in Actions section
    * and set the new selected button for that section
    * @param {number} index - index that the clicked button has in the array
    */
   function handleActionsElementClick(index: number) {
-    setActions({
-      selected: index,
-      elements: [...actions.elements],
-    });
-
     index ? removeSelectedElement() : addAShape();
   }
 
@@ -122,6 +103,16 @@ function Toolbar({
                   tool.options,
                   tools.selected === index,
                   handleToolsElementClick,
+                  handleShapeChange,
+                  tool.iconColorPalette
+                )
+              : tool.icon && tool.styleOptions
+              ? createSpecialSelector(
+                  index,
+                  tool.icon,
+                  tools.selected === index,
+                  tool.styleOptions,
+                  handleToolsElementClick,
                   handleShapeChange
                 )
               : null
@@ -129,34 +120,18 @@ function Toolbar({
         </ToolbarSection>
 
         <ToolbarSection>
-          {colorPalette.elements.map((color, index) =>
-            color.iconSrc && color.iconName
+          {actions.elements.map((action, index) =>
+            action.iconSrc && action.iconName
               ? createToolbarButton(
                   index,
-                  color.iconSrc,
-                  color.iconName,
-                  colorPalette.selected === index,
-                  handleColorPaletteElementClick
+                  action.iconSrc,
+                  action.iconName,
+                  actions.selected === index,
+                  action.onClick || handleActionsElementClick
                 )
               : null
           )}
         </ToolbarSection>
-
-        {showActions ? (
-          <ToolbarSection>
-            {actions.elements.map((action, index) =>
-              action.iconSrc && action.iconName
-                ? createToolbarButton(
-                    index,
-                    action.iconSrc,
-                    action.iconName,
-                    actions.selected === index,
-                    handleActionsElementClick
-                  )
-                : null
-            )}
-          </ToolbarSection>
-        ) : null}
       </div>
 
       <ToolbarText
@@ -171,11 +146,11 @@ function Toolbar({
 
 /**
  * Creates a ToolbarButton
- * @param index - index of the button in the section array
- * @param iconSrc - src for the icon of the button
- * @param iconName - alt for the icon of the button
- * @param selected - flag to set this button like selected
- * @param onChildClick - function to execute when button is clicked
+ * @param {number} index - index of the button in the section array
+ * @param {string} iconSrc - src for the icon of the button
+ * @param {string} iconName - alt for the icon of the button
+ * @param {boolean} selected - flag to set this button like selected
+ * @param {(index: number) => void} onChildClick - function to execute when button is clicked
  */
 function createToolbarButton(
   index: number,
@@ -198,18 +173,24 @@ function createToolbarButton(
 
 /**
  * Creates a ToolbarSelector
- * @param index - index of the selector in the section array
- * @param options - options that the selector will have
- * @param selected - flag to set this selector like selected
- * @param onChildClick - function to execute when selector is clicked
- * @param onChildChange - function to execute when selector value changes
+ * @param {number} index - index of the selector in the section array
+ * @param {IToolbarSelectorOption[]} options - options that the selector
+ * will have
+ * @param {boolean} selected - flag to set this selector like selected
+ * @param {(index: number) => void} onChildClick - function to execute
+ * when selector is clicked
+ * @param {(value: string) => void} onChildChange - function to execute
+ * when selector value changes
+ * @param {OverridableComponent<SvgIconTypeMap<{}, 'svg'>>}
+ * iconColorPalette - Icon to use in the color palette
  */
 function createToolbarSelector(
   index: number,
   options: IToolbarSelectorOption[],
   selected: boolean,
   onChildClick: (index: number) => void,
-  onChildChange: (value: string) => void
+  onChildChange: (value: string) => void,
+  iconColorPalette?: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>
 ): JSX.Element {
   return (
     <ToolbarSelector
@@ -217,6 +198,40 @@ function createToolbarSelector(
       index={index}
       options={options}
       selected={selected}
+      iconColorPalette={iconColorPalette}
+      onChildClick={onChildClick}
+      onChildChange={onChildChange}
+    />
+  );
+}
+
+/**
+ * Create an SpecialToolbarSelector
+ * @param {number} index - index of the selector in the section array
+ * @param {OverridableComponent<SvgIconTypeMap<{}, 'svg'>>} Icon - Icon
+ * that the selector will have
+ * @param {boolean} selected - flag to set this selector like selected
+ * @param {IStyleOptions[]} styleOptions - Options for the special selector
+ * @param {(index: number) => void} onChildClick - Function to execute when
+ * selector is clicked
+ * @param {(value: string) => void} onChildChange - Function to execute when
+ * selector's value is changed
+ */
+function createSpecialSelector(
+  index: number,
+  Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>,
+  selected: boolean,
+  styleOptions: IStyleOptions[],
+  onChildClick: (index: number) => void,
+  onChildChange: (value: string) => void
+): JSX.Element {
+  return (
+    <SpecialSelector
+      key={index}
+      index={index}
+      Icon={Icon}
+      selected={selected}
+      styleOptions={styleOptions}
       onChildClick={onChildClick}
       onChildChange={onChildChange}
     />

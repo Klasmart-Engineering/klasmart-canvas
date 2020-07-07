@@ -1,12 +1,12 @@
 .toolbar-container {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  width: 686px;
+  align-items: center;
 }
 
 .toolbar {
   display: flex;
+  flex-direction: column;
   border: solid 1px #d0d0d0;
   margin-top: 16px;
   background-color: #fff;
@@ -15,8 +15,9 @@
 
 .toolbar-section {
   display: flex;
+  flex-direction: column;
   padding: 4px;
-  border-right: solid 1px #d0d0d0;
+  border-bottom: solid 1px #d0d0d0;
 }
 
 .toolbar-section:last-child {
