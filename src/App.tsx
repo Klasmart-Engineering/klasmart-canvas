@@ -4,8 +4,9 @@ import Toolbar from './components/toolbar/Toolbar';
 
 function App() {
   const ref: any = useRef(null);
-  const [shape, updateShape] = useState('rectangle');
+  const [shape, updateShape] = useState('circle');
   const [text, updateText] = useState('');
+  const [font, updateFont] = useState('Arial');
 
   const fillColor = (color: string) => {
     console.log({ color });
@@ -50,6 +51,7 @@ function App() {
         removeSelectedElement={removeShape}
         text={text}
         updateText={updateText}
+        updateFont={updateFont}
         writeText={writeText}
       />
       <canvas ref={ref} width="600px" height="350px" />

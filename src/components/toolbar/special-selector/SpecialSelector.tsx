@@ -11,7 +11,7 @@ interface ISpecialSelector {
   styleOptions: any[];
   selected: boolean;
   onChildClick: (index: number) => void;
-  onChildChange: (value: string) => void;
+  onChildChange: (index: number, value: string) => void;
 }
 
 /**
@@ -53,7 +53,7 @@ function SpecialSelector({
    */
   function handleSelect(value: any) {
     setSelectedOption(value);
-    onChildChange(value.iconName);
+    onChildChange(index, value.iconName);
     setShowOptions(false);
   }
 

@@ -1,6 +1,6 @@
 import IToolbarSelectorOption from './toolbar-selector-option';
 import { OverridableComponent } from '@material-ui/core/OverridableComponent';
-import { SvgIconTypeMap } from '@material-ui/core';
+import { SvgIconTypeMap, Color } from '@material-ui/core';
 
 export default interface ToolbarSelector {
   index: number;
@@ -8,5 +8,6 @@ export default interface ToolbarSelector {
   selected: boolean;
   iconColorPalette?: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
   onChildClick: (index: number) => void;
-  onChildChange: (value: string) => void;
+  onChildChange: (index: number, value: string) => void;
+  onColorChange?: (color: string) => void;
 }

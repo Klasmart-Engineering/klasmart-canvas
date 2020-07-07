@@ -22,6 +22,7 @@ interface ToolbarProps {
   removeSelectedElement: () => void;
   text: string;
   updateText: (value: string) => void;
+  updateFont: (value: string) => void;
   writeText: (e: KeyboardEvent) => void;
 }
 
@@ -47,11 +48,12 @@ function Toolbar({
   removeSelectedElement,
   text,
   updateText,
+  updateFont,
   writeText,
 }: ToolbarProps) {
   const [showInput, updateShowInput] = useState(false);
   const [tools, setTools] = useState(toolsSection);
-  const [actions, setActions] = useState(actionsSection);
+  const [actions] = useState(actionsSection);
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -78,10 +80,25 @@ function Toolbar({
 
   /**
    * Is executed when a change value happens in a Shape ToolbarSelector
-   * @param {string} shape - new selected shape
+   * @param {number} index - index of the selector in ToolbarSection
+   * @param {string} value - new selected value
    */
-  function handleShapeChange(shape: string) {
-    updateShape(shape.toLowerCase());
+  function handleSelectorChange(index: number, value: string) {
+    switch (index) {
+      case 6: {
+        updateFont(value);
+        break;
+      }
+
+      case 7: {
+        updateShape(value.toLowerCase());
+        break;
+      }
+    }
+  }
+
+  function changeColor(color: string) {
+    fillColor(color);
   }
 
   return (
@@ -103,8 +120,9 @@ function Toolbar({
                   tool.options,
                   tools.selected === index,
                   handleToolsElementClick,
-                  handleShapeChange,
-                  tool.iconColorPalette
+                  handleSelectorChange,
+                  tool.iconColorPalette,
+                  changeColor
                 )
               : tool.icon && tool.styleOptions
               ? createSpecialSelector(
@@ -113,7 +131,7 @@ function Toolbar({
                   tools.selected === index,
                   tool.styleOptions,
                   handleToolsElementClick,
-                  handleShapeChange
+                  handleSelectorChange
                 )
               : null
           )}
@@ -189,8 +207,9 @@ function createToolbarSelector(
   options: IToolbarSelectorOption[],
   selected: boolean,
   onChildClick: (index: number) => void,
-  onChildChange: (value: string) => void,
-  iconColorPalette?: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>
+  onChildChange: (index: number, value: string) => void,
+  iconColorPalette?: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>,
+  onColorChange?: (color: string) => void
 ): JSX.Element {
   return (
     <ToolbarSelector
@@ -201,6 +220,7 @@ function createToolbarSelector(
       iconColorPalette={iconColorPalette}
       onChildClick={onChildClick}
       onChildChange={onChildChange}
+      onColorChange={onColorChange}
     />
   );
 }
@@ -223,7 +243,7 @@ function createSpecialSelector(
   selected: boolean,
   styleOptions: IStyleOptions[],
   onChildClick: (index: number) => void,
-  onChildChange: (value: string) => void
+  onChildChange: (index: number, value: string) => void
 ): JSX.Element {
   return (
     <SpecialSelector

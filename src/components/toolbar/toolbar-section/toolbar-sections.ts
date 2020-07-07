@@ -1,11 +1,4 @@
 import textIcon from '../../../assets/icons/letter-a.svg';
-import blackCircle from '../../../assets/icons/black-circle.svg';
-import redCircle from '../../../assets/icons/red-circle.svg';
-import yellowCircle from '../../../assets/icons/yellow-circle.svg';
-import greenCircle from '../../../assets/icons/green-circle.svg';
-import blueCircle from '../../../assets/icons/blue-circle.svg';
-import pinkCircle from '../../../assets/icons/pink-circle.svg';
-import brownCircle from '../../../assets/icons/brown-circle.svg';
 import pointer from '../../../assets/icons/pointer.svg';
 import hand from '../../../assets/icons/hand.svg';
 import crosshair from '../../../assets/icons/crosshair.svg';
@@ -149,19 +142,6 @@ const colorPaletteOptions = [
     },
   },
 ];
-
-const colorPaletteSection: IBasicToolbarSection = {
-  selected: 0,
-  elements: [
-    { iconSrc: blackCircle, iconName: 'Black Color Icon' },
-    { iconSrc: redCircle, iconName: 'Red Color Icon' },
-    { iconSrc: yellowCircle, iconName: 'Yellow Color Icon' },
-    { iconSrc: greenCircle, iconName: 'Green Color Icon' },
-    { iconSrc: blueCircle, iconName: 'Blue Color Icon' },
-    { iconSrc: pinkCircle, iconName: 'Pink Color Icon' },
-    { iconSrc: brownCircle, iconName: 'Brown Color Icon' },
-  ],
-};
 
 const toolsSection: IBasicToolbarSection = {
   selected: 0,
@@ -426,19 +406,10 @@ const actionsSection: IBasicToolbarSection = {
     { iconSrc: photo, iconName: 'Add Image' },
     { iconSrc: undo, iconName: 'Undo Icon' },
     { iconSrc: redo, iconName: 'Redo Icon' },
-    { iconSrc: clear, iconName: 'Clear Icon', onClick: clearAll },
+    { iconSrc: clear, iconName: 'Clear Icon' },
     { iconSrc: screenshot, iconName: 'Screenshot Icon' },
     { iconSrc: share, iconName: 'Share Icon' },
   ],
 };
 
-function clearAll() {
-  console.log('clear');
-}
-
-export {
-  colorPaletteSection,
-  toolsSection,
-  actionsSection,
-  colorPaletteOptions,
-};
+export { toolsSection, actionsSection, colorPaletteOptions };

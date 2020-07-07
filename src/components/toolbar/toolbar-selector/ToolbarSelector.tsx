@@ -23,6 +23,7 @@ function ToolbarSelector({
   iconColorPalette,
   onChildClick,
   onChildChange,
+  onColorChange,
 }: IToolbarSelector) {
   const [selectedOption, setSelectedOption] = useState(options[0]);
   const [showOptions, setShowOptions] = useState(false);
@@ -61,7 +62,7 @@ function ToolbarSelector({
    */
   function handleSelect(value: any) {
     setSelectedOption(value);
-    onChildChange(value.iconName);
+    onChildChange(index, value.iconName);
     setShowOptions(false);
   }
 
@@ -85,6 +86,10 @@ function ToolbarSelector({
    * @param {string} color - new color to set
    */
   function handleChangeColor(color: string) {
+    if (onColorChange) {
+      onColorChange(color);
+    }
+
     setColor(color);
     setShowOptions(false);
   }
