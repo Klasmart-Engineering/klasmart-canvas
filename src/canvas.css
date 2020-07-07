@@ -3,7 +3,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 600px;
+  height: 500px;
   background-color: #79beff;
 }
 
@@ -11,7 +11,7 @@
   background-color: #f1f1f1;
   color: white;
   width: 600px;
-  height: 350px;
+  height: 300px;
 }
 
 .input-text {
@@ -29,4 +29,9 @@
   display: flex;
   align-items: flex-start;
   width: 670px;
+}
+
+.canvas-container {
+  position: absolute !important;
+  pointer-events: none;
 }
