@@ -1,9 +1,12 @@
 import React, { createContext, useCallback, useEffect, useRef } from 'react';
 // @ts-ignore
 import FontFaceObserver from 'fontfaceobserver';
+import * as shapes from './Shapes/Shapes';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { textHandler } from './text/text';
+import { useShapeColor } from './hooks/useShapeColor';
+import { useShape } from './hooks/useShape';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -28,6 +31,8 @@ export const WhiteboardProvider = ({
   const { text, updateText } = useText();
   const textRef = useRef('');
   const { fontFamily, updateFontFamily } = useFontFamily();
+  const { shapeColor, updateShapeColor } = useShapeColor();
+  const { shape, updateShape } = useShape();
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -123,6 +128,29 @@ export const WhiteboardProvider = ({
         canvas.add(textFabric);
         updateText('');
       }
+    }
+  };
+
+  /**
+   * Add specific shape to whiteboard
+   * */
+  const addShape = () => {
+    switch (shape) {
+      case 'rectangle':
+        const rectangle = shapes.rectangle(150, 150, shapeColor);
+        // @ts-ignore
+        canvas.centerObject(rectangle);
+        return canvas.add(rectangle);
+      case 'triangle':
+        const triangle = shapes.triangle(100, 160, shapeColor);
+        // @ts-ignore
+        canvas.centerObject(triangle);
+        return canvas.add(triangle);
+      case 'circle':
+        const circle = shapes.circle(50, shapeColor);
+        // @ts-ignore
+        canvas.centerObject(circle);
+        return canvas.add(circle);
     }
   };
 
