@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useEffect, useRef } from 'react';
 // @ts-ignore
 import FontFaceObserver from 'fontfaceobserver';
-import * as shapes from './Shapes/Shapes';
+import * as shapes from './shapes/shapes';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { textHandler } from './text/text';
@@ -181,9 +181,17 @@ export const WhiteboardProvider = ({
   ];
 
   const value = {
+    fontFamily,
+    updateFontFamily,
+    colorsList,
+    fillColor,
+    updateShape,
+    addShape,
+    removeSelectedElement,
     text,
     updateText,
-    removeSelectedElement,
+    writeText,
+    discardActiveObject,
   };
 
   return (
