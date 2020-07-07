@@ -37,6 +37,18 @@ export const WhiteboardProvider = ({
   }, []);
 
   /**
+   * General handler for keyboard events
+   * Currently handle 'Backspace' event for removing selected element from
+   * whiteboard
+   * */
+  const keyDownHandler = useCallback((e: { key: any }) => {
+    if (e.key === 'Backspace') {
+      removeSelectedElement();
+      return;
+    }
+  }, []);
+
+  /**
    * Removes selected element from whiteboard
    * */
   function removeSelectedElement() {
@@ -46,6 +58,7 @@ export const WhiteboardProvider = ({
   const value = {
     text,
     updateText,
+    removeSelectedElement,
   };
 
   return (
