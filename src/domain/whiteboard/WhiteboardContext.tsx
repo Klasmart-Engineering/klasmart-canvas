@@ -36,6 +36,13 @@ export const WhiteboardProvider = ({
     });
   }, []);
 
+  /**
+   * Removes selected element from whiteboard
+   * */
+  function removeSelectedElement() {
+    canvas.remove(canvas.getActiveObject());
+  }
+
   const value = {
     text,
     updateText,
