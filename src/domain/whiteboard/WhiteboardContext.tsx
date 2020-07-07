@@ -3,6 +3,7 @@ import React, { createContext, useCallback, useEffect, useRef } from 'react';
 import FontFaceObserver from 'fontfaceobserver';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
+import { textHandler } from './text/text';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -89,6 +90,40 @@ export const WhiteboardProvider = ({
   const discardActiveObject = () => {
     // @ts-ignore
     canvas.discardActiveObject().renderAll();
+  };
+
+  /**
+   * If the input field (text) has length will unselect whiteboard active objects
+   * */
+  useEffect(() => {
+    if (text.length) {
+      // @ts-ignore
+      canvas.discardActiveObject().renderAll();
+    }
+  }, [text]);
+
+  /**
+   * Handles the logic to write text on the whiteboard
+   * */
+  const writeText = (e: any) => {
+    if (e.key === 'Enter') {
+      textRef.current = text;
+
+      if (textRef.current.length) {
+        const textFabric = textHandler(
+          textRef.current,
+          fontFamily,
+          updateFontFamily
+        );
+
+        // @ts-ignore
+        canvas.setActiveObject(textFabric);
+        // @ts-ignore
+        canvas.centerObject(textFabric);
+        canvas.add(textFabric);
+        updateText('');
+      }
+    }
   };
 
   const value = {
