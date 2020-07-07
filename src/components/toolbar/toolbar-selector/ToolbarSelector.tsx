@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import './toolbar-selector.css';
 import IToolbarSelector from '../../../interfaces/toolbar/toolbar-selector/toolbar-selector';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
@@ -27,12 +27,17 @@ function ToolbarSelector({
   const [selectedOption, setSelectedOption] = useState(options[0]);
   const [showOptions, setShowOptions] = useState(false);
   const [color, setColor] = useState('');
+  const buttonRef = useRef(null);
 
   /**
    * Is executed when the selector is clicked and sends an event to its parent
    */
   function handleClick() {
     onChildClick(index);
+
+    if (showOptions) {
+      setShowOptions(false);
+    }
   }
 
   /**
@@ -40,6 +45,13 @@ function ToolbarSelector({
    */
   function handleArrowClick() {
     onChildClick(index);
+
+    if (!showOptions) {
+      document.addEventListener('click', handleOutsideClick, false);
+    } else {
+      document.removeEventListener('click', handleOutsideClick, false);
+    }
+
     setShowOptions(!showOptions);
   }
 
@@ -54,6 +66,21 @@ function ToolbarSelector({
   }
 
   /**
+   * Is executed when you click on the window to check if you are clicking on toolbar elements or not
+   * @param {MouseEvent} e - Mouse click event
+   */
+  function handleOutsideClick(e: Event) {
+    if (
+      !((buttonRef.current as unknown) as HTMLElement).contains(
+        e.target as Node
+      ) &&
+      !showOptions
+    ) {
+      setShowOptions(false);
+    }
+  }
+
+  /**
    * Is executed when the color is changed
    * @param {string} color - new color to set
    */
@@ -65,6 +92,7 @@ function ToolbarSelector({
   return (
     <div className="selector-container">
       <div
+        ref={buttonRef}
         className={[
           'toolbar-selector',
           selected ? 'selected' : '',
@@ -79,7 +107,7 @@ function ToolbarSelector({
         />
         <ArrowRightIcon onClick={handleArrowClick} />
       </div>
-      {showOptions ? (
+      {showOptions && selected ? (
         <div className="options">
           {options
             .filter((option) => {
@@ -97,7 +125,7 @@ function ToolbarSelector({
                 />
               );
             })}
-          {iconColorPalette && showOptions ? (
+          {iconColorPalette ? (
             <ColorPalette
               Icon={iconColorPalette}
               handleColorChange={handleChangeColor}

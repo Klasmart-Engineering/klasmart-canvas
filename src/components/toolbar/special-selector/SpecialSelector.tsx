@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { OverridableComponent } from '@material-ui/core/OverridableComponent';
 import { SvgIconTypeMap } from '@material-ui/core';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
@@ -34,6 +34,18 @@ function SpecialSelector({
 }: ISpecialSelector) {
   const [selectedOption, setSelectedOption] = useState(styleOptions[0]);
   const [showOptions, setShowOptions] = useState(false);
+  const buttonRef = useRef(null);
+
+  /**
+   * Is executed when the selector is clicked and sends an event to its parent
+   */
+  function handleClick() {
+    onChildClick(index);
+
+    if (showOptions) {
+      setShowOptions(false);
+    }
+  }
 
   /**
    * Is executed when the selector changes its value
@@ -50,22 +62,48 @@ function SpecialSelector({
    */
   function handleArrowClick() {
     onChildClick(index);
+
+    if (!showOptions) {
+      document.addEventListener('click', handleOutsideClick, false);
+    } else {
+      document.removeEventListener('click', handleOutsideClick, false);
+    }
+
     setShowOptions(!showOptions);
+  }
+
+  /**
+   * Is executed when you click on the window to check if you are clicking on toolbar elements or not
+   * @param {MouseEvent} e - Mouse click event
+   */
+  function handleOutsideClick(e: MouseEvent) {
+    if (
+      !((buttonRef.current as unknown) as HTMLElement).contains(
+        e.target as Node
+      )
+    ) {
+      if (!showOptions) {
+        setShowOptions(false);
+      }
+    }
   }
 
   return (
     <div className="selector-container">
       <div
+        ref={buttonRef}
         className={[
           'toolbar-selector',
           selected ? 'selected' : '',
           !selected ? 'unselected' : '',
         ].join(' ')}
       >
-        <Icon style={selectedOption.style} />
+        <div className="icon-container" onClick={handleClick}>
+          <Icon style={selectedOption.style} />
+        </div>
         <ArrowRightIcon onClick={handleArrowClick} />
       </div>
-      {showOptions ? (
+      {showOptions && selected ? (
         <div className="options">
           {styleOptions
             .filter((option) => {
@@ -74,6 +112,7 @@ function SpecialSelector({
             .map((option) => {
               return (
                 <SpecialButton
+                  key={option.index}
                   index={option.index}
                   Icon={Icon}
                   iconName={option.iconName}
