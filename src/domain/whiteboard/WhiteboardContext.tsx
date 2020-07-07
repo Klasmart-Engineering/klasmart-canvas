@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useEffect, useRef } from 'react';
+import { useText } from './hooks/useText';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -20,7 +21,25 @@ export const WhiteboardProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const value = {};
+  const { text, updateText } = useText();
+  const textRef = useRef('');
+
+  /**
+   * Creates Canvas/Whiteboard instance
+   */
+  useEffect(() => {
+    // @ts-ignore
+    canvas = new fabric.Canvas('canvas', {
+      backgroundColor: 'white',
+      width: '600',
+      height: '350',
+    });
+  }, []);
+
+  const value = {
+    text,
+    updateText,
+  };
 
   return (
     <WhiteboardContext.Provider value={value}>
