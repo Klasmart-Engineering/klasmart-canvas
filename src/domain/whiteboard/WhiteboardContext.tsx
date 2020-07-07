@@ -1,5 +1,8 @@
 import React, { createContext, useCallback, useEffect, useRef } from 'react';
+// @ts-ignore
+import FontFaceObserver from 'fontfaceobserver';
 import { useText } from './hooks/useText';
+import { useFontFamily } from './hooks/useFontFamily';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -23,6 +26,7 @@ export const WhiteboardProvider = ({
 }) => {
   const { text, updateText } = useText();
   const textRef = useRef('');
+  const { fontFamily, updateFontFamily } = useFontFamily();
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -54,6 +58,38 @@ export const WhiteboardProvider = ({
   function removeSelectedElement() {
     canvas.remove(canvas.getActiveObject());
   }
+
+  /**
+   * Loads selected font. Default is Arial
+   * */
+  const fontFamilyLoader = useCallback((font: string) => {
+    const myFont = new FontFaceObserver(font);
+    myFont
+      .load()
+      .then(() => {
+        if (canvas.getActiveObject()) {
+          canvas.getActiveObject().set('fontFamily', font);
+          canvas.requestRenderAll();
+        }
+      })
+      .catch((e: any) => {
+        console.log(e);
+      });
+  }, []);
+
+  /**
+   * Add keyaboard keydown event listener. It listen keyDownHandler function
+   * Invokes fontFamilyLoader to set default and selected font family
+   * */
+  useEffect(() => {
+    document.addEventListener('keydown', keyDownHandler, false);
+    fontFamilyLoader(fontFamily);
+  }, [fontFamily, keyDownHandler, fontFamilyLoader]);
+
+  const discardActiveObject = () => {
+    // @ts-ignore
+    canvas.discardActiveObject().renderAll();
+  };
 
   const value = {
     text,
