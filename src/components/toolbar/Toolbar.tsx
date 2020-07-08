@@ -15,17 +15,6 @@ import { SvgIconTypeMap } from '@material-ui/core';
 import IStyleOptions from '../../interfaces/toolbar/toolbar-element/style-options';
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 
-interface ToolbarProps {
-  fillColor: (color: string) => void;
-  updateShape: (shape: string) => void;
-  addAShape: () => void;
-  removeSelectedElement: () => void;
-  text: string;
-  updateText: (value: string) => void;
-  updateFont: (value: string) => void;
-  writeText: (e: KeyboardEvent) => void;
-}
-
 /**
  * Render the toolbar that will be used in the whiteboard
  */
@@ -44,6 +33,7 @@ function Toolbar() {
     updateText,
     updateFontFamily,
     writeText,
+    openClearWhiteboardModal,
   } = useContext(WhiteboardContext);
 
   /**
@@ -63,18 +53,16 @@ function Toolbar() {
   /**
    * Is executed when the action of the element is triggered
    * @param {number} index - index that the element has in the ToolbarSection
-   * @param {string} especific (optional) - especific value/option to use
+   * @param {string} specific (optional) - specific value/option to use
    */
-  function handleToolsElementAction(index: number, especific?: string) {
-    switch (index) {
-      case 2:
-        if (especific === 'erase object') {
-          removeSelectedElement(especific);
-        }
-
+  function handleToolsElementAction(index: number, specific?: string) {
+    switch (true) {
+      case index === 2 && specific === 'erase object':
+        removeSelectedElement();
         break;
-      case 7:
-        addShape(especific);
+
+      case index === 7:
+        addShape(specific);
         break;
     }
   }
@@ -84,7 +72,13 @@ function Toolbar() {
    * and set the new selected button for that section
    * @param {number} index - index that the clicked button has in the array
    */
-  function handleActionsElementClick(index: number) {}
+  function handleActionsElementClick(index: number) {
+    switch (index) {
+      case 3: {
+        openClearWhiteboardModal();
+      }
+    }
+  }
 
   /**
    * Is executed when a change value happens in a Tools ToolbarSelector

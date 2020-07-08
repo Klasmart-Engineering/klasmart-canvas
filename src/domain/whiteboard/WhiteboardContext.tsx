@@ -36,7 +36,11 @@ export const WhiteboardProvider = ({
   const { fontFamily, updateFontFamily } = useFontFamily('Arial');
   const { shapeColor, updateShapeColor } = useShapeColor('#000');
   const { shape, updateShape } = useShape('circle');
-  const { closeModal } = useWhiteboardClearModal();
+  const {
+    ClearWhiteboardModal,
+    openModal,
+    closeModal,
+  } = useWhiteboardClearModal();
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -191,6 +195,10 @@ export const WhiteboardProvider = ({
     closeModal();
   };
 
+  const openClearWhiteboardModal = () => {
+    openModal();
+  };
+
   /**
    * List of available colors in toolbar
    * */
@@ -223,11 +231,12 @@ export const WhiteboardProvider = ({
     updateText,
     writeText,
     discardActiveObject,
-    clearWhiteboard,
+    openClearWhiteboardModal,
   };
 
   return (
     <WhiteboardContext.Provider value={value}>
+      <ClearWhiteboardModal clearWhiteboard={clearWhiteboard} />
       {children}
     </WhiteboardContext.Provider>
   );
