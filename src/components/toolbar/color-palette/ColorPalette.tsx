@@ -7,6 +7,7 @@ import { SvgIconTypeMap } from '@material-ui/core';
 interface IColorPalette {
   Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
   handleColorChange: (color: string) => void;
+  selectedColor: string;
 }
 
 /**
@@ -14,8 +15,13 @@ interface IColorPalette {
  * @param {IColorPalette} props - Props needed to render the component:
  * - Icon - Icon to use in the color palette
  * - handleColorChange - Function to execute when the color changes
+ * - selectedColor - Color to have selected in color palette
  */
-function ColorPalette({ Icon, handleColorChange }: IColorPalette) {
+function ColorPalette({
+  Icon,
+  handleColorChange,
+  selectedColor,
+}: IColorPalette) {
   /**
    * Executes the given funtion when the color changes
    * @param {string} color - new color to set
@@ -26,19 +32,20 @@ function ColorPalette({ Icon, handleColorChange }: IColorPalette) {
 
   return (
     <div>
-      {colorPaletteOptions.map((color, index) => {
-        return color.iconName ? (
-          <SpecialButton
-            key={index}
-            index={index}
-            Icon={Icon}
-            style={color.style}
-            iconName={color.iconName}
-            selected={false}
-            onChildClick={(e) => changeColor(color.iconName || '')}
-          />
-        ) : null;
-      })}
+      {colorPaletteOptions
+        .filter((color, index) => index)
+        .map((color, index) => {
+          return color.iconName ? (
+            <SpecialButton
+              key={index}
+              index={index}
+              Icon={Icon}
+              style={color.style}
+              selected={selectedColor === color.style.color}
+              onChildClick={(e) => changeColor(color.style.color || '')}
+            />
+          ) : null;
+        })}
     </div>
   );
 }

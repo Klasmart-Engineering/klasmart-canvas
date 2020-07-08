@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import ToolbarSection from './toolbar-section/ToolbarSection';
 import './toolbar.css';
 import ToolbarText from './toolbar-text/ToolbarText';
@@ -13,9 +13,9 @@ import SpecialSelector from './special-selector/SpecialSelector';
 import { OverridableComponent } from '@material-ui/core/OverridableComponent';
 import { SvgIconTypeMap } from '@material-ui/core';
 import IStyleOptions from '../../interfaces/toolbar/toolbar-element/style-options';
+import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 
 interface ToolbarProps {
-  colorList: string[];
   fillColor: (color: string) => void;
   updateShape: (shape: string) => void;
   addAShape: () => void;
@@ -28,32 +28,23 @@ interface ToolbarProps {
 
 /**
  * Render the toolbar that will be used in the whiteboard
- * @param {ToolbarProps} props: Properties needed to render the component:
- * - onTextClick - event that is sended to its parent
- *   when text button is clicked
- * - colorList - list of colors availables
- * - fillColor - function to set the color to use
- * - updateShape - function to set the shape to use
- * - addAShape - function to add a shape in the whiteboard
- * - removeSelectedElement - function to remove a shape in the whiteboard
- * - text - value to set in TextField
- * - updateText - function to execute when TextField is onChange
- * - writeText - function to execute when TextField is onKeyDown
  */
-function Toolbar({
-  colorList,
-  fillColor,
-  updateShape,
-  addAShape,
-  removeSelectedElement,
-  text,
-  updateText,
-  updateFont,
-  writeText,
-}: ToolbarProps) {
+function Toolbar() {
   const [showInput, updateShowInput] = useState(false);
   const [tools, setTools] = useState(toolsSection);
   const [actions] = useState(actionsSection);
+
+  const {
+    fillColor,
+    textColor,
+    updateShape,
+    addShape,
+    removeSelectedElement,
+    text,
+    updateText,
+    updateFontFamily,
+    writeText,
+  } = useContext(WhiteboardContext);
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -70,26 +61,42 @@ function Toolbar({
   }
 
   /**
+   * Is executed when the action of the element is triggered
+   * @param {number} index - index that the element has in the ToolbarSection
+   * @param {string} especific (optional) - especific value/option to use
+   */
+  function handleToolsElementAction(index: number, especific?: string) {
+    switch (index) {
+      case 2:
+        if (especific === 'erase object') {
+          removeSelectedElement(especific);
+        }
+
+        break;
+      case 7:
+        addShape(especific);
+        break;
+    }
+  }
+
+  /**
    * Is executed when a ToolbarButton is clicked in Actions section
    * and set the new selected button for that section
    * @param {number} index - index that the clicked button has in the array
    */
-  function handleActionsElementClick(index: number) {
-    index ? removeSelectedElement() : addAShape();
-  }
+  function handleActionsElementClick(index: number) {}
 
   /**
-   * Is executed when a change value happens in a Shape ToolbarSelector
+   * Is executed when a change value happens in a Tools ToolbarSelector
    * @param {number} index - index of the selector in ToolbarSection
    * @param {string} value - new selected value
    */
   function handleSelectorChange(index: number, value: string) {
     switch (index) {
       case 6: {
-        updateFont(value);
+        updateFontFamily(value);
         break;
       }
-
       case 7: {
         updateShape(value.toLowerCase());
         break;
@@ -97,8 +104,20 @@ function Toolbar({
     }
   }
 
-  function changeColor(color: string) {
-    fillColor(color);
+  /**
+   * Is executed when a color was picked in elements with color palette
+   * @param {number} index - index that the element has in ToolbarSection
+   * @param {string} color - new color to set in the element
+   */
+  function changeColor(index: number, color: string) {
+    switch (index) {
+      case 6:
+        textColor(color);
+        break;
+      case 7:
+        fillColor(color);
+        break;
+    }
   }
 
   return (
@@ -121,6 +140,7 @@ function Toolbar({
                   tools.selected === index,
                   handleToolsElementClick,
                   handleSelectorChange,
+                  handleToolsElementAction,
                   tool.iconColorPalette,
                   changeColor
                 )
@@ -199,8 +219,12 @@ function createToolbarButton(
  * when selector is clicked
  * @param {(value: string) => void} onChildChange - function to execute
  * when selector value changes
+ * @param {(index: number) => void} onAction - function to execute when
+ * the action of this element is trigered
  * @param {OverridableComponent<SvgIconTypeMap<{}, 'svg'>>}
  * iconColorPalette - Icon to use in the color palette
+ * @param {(index: number, color: string) => void} onColorChange - function
+ * to execute when a new color is picked in elements with color palette
  */
 function createToolbarSelector(
   index: number,
@@ -208,8 +232,9 @@ function createToolbarSelector(
   selected: boolean,
   onChildClick: (index: number) => void,
   onChildChange: (index: number, value: string) => void,
+  onAction: (index: number) => void,
   iconColorPalette?: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>,
-  onColorChange?: (color: string) => void
+  onColorChange?: (index: number, color: string) => void
 ): JSX.Element {
   return (
     <ToolbarSelector
@@ -218,6 +243,7 @@ function createToolbarSelector(
       options={options}
       selected={selected}
       iconColorPalette={iconColorPalette}
+      onAction={onAction}
       onChildClick={onChildClick}
       onChildChange={onChildChange}
       onColorChange={onColorChange}

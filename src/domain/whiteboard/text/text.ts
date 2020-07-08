@@ -26,7 +26,7 @@ export const textHandler = (
   });
 
   textFabric.on('deselected', () => {
-    updateFont(updateFontFamily, 'Arial');
+    updateFont(updateFontFamily, fontFamily);
   });
 
   return textFabric;

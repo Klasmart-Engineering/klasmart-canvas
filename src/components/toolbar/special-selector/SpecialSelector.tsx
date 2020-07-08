@@ -115,7 +115,6 @@ function SpecialSelector({
                   key={option.index}
                   index={option.index}
                   Icon={Icon}
-                  iconName={option.iconName}
                   style={option.style}
                   selected={false}
                   onChildClick={(e) => handleSelect(option)}

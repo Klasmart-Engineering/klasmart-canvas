@@ -12,22 +12,25 @@ import ToolbarButton from '../toolbar-button/ToolbarButton';
  * - options - options to be displayed in the selector
  * - selected - flag that indicates if this selector is selected
  * - iconColorPalette (optional) - Icon to set in the color palette
+ * - onAction - event that is emitted to parent when action is trigered
  * - onChildClick - event that is emitted to parent when selector is clicked
  * - onChildChange - event that is emitted to parent when selector's value
  *   is changed
+ * - onColorChange (optional) - event that is emitted to parent when a nnew color is picked
  */
 function ToolbarSelector({
   index,
   options,
   selected,
   iconColorPalette,
+  onAction,
   onChildClick,
   onChildChange,
   onColorChange,
 }: IToolbarSelector) {
   const [selectedOption, setSelectedOption] = useState(options[0]);
   const [showOptions, setShowOptions] = useState(false);
-  const [color, setColor] = useState('');
+  const [color, setColor] = useState('#000');
   const buttonRef = useRef(null);
 
   /**
@@ -35,6 +38,7 @@ function ToolbarSelector({
    */
   function handleClick() {
     onChildClick(index);
+    onAction(index, selectedOption.iconName.toLowerCase());
 
     if (showOptions) {
       setShowOptions(false);
@@ -64,6 +68,7 @@ function ToolbarSelector({
     setSelectedOption(value);
     onChildChange(index, value.iconName);
     setShowOptions(false);
+    onAction(index, value.iconName.toLowerCase());
   }
 
   /**
@@ -87,7 +92,7 @@ function ToolbarSelector({
    */
   function handleChangeColor(color: string) {
     if (onColorChange) {
-      onColorChange(color);
+      onColorChange(index, color);
     }
 
     setColor(color);
@@ -134,6 +139,7 @@ function ToolbarSelector({
             <ColorPalette
               Icon={iconColorPalette}
               handleColorChange={handleChangeColor}
+              selectedColor={color}
             />
           ) : null}
         </div>

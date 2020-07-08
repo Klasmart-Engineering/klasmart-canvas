@@ -1,6 +1,5 @@
 .container {
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 600px;
@@ -28,7 +27,7 @@
 .toolbar-container {
   display: flex;
   align-items: flex-start;
-  width: 670px;
+  width: 80px;
 }
 
 @font-face {

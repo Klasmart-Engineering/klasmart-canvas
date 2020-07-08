@@ -4,6 +4,7 @@ import FontFaceObserver from 'fontfaceobserver';
 import * as shapes from './shapes/shapes';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
+import { useFontColor } from './hooks/useFontColor';
 import { textHandler } from './text/text';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
@@ -31,9 +32,10 @@ export const WhiteboardProvider = ({
 }) => {
   const { text, updateText } = useText();
   const textRef = useRef('');
-  const { fontFamily, updateFontFamily } = useFontFamily();
-  const { shapeColor, updateShapeColor } = useShapeColor();
-  const { shape, updateShape } = useShape();
+  const { fontColor, updateFontColor } = useFontColor('#000');
+  const { fontFamily, updateFontFamily } = useFontFamily('Arial');
+  const { shapeColor, updateShapeColor } = useShapeColor('#000');
+  const { shape, updateShape } = useShape('circle');
   const { closeModal } = useWhiteboardClearModal();
 
   /**
@@ -125,6 +127,7 @@ export const WhiteboardProvider = ({
 
         // @ts-ignore
         canvas.setActiveObject(textFabric);
+        canvas.getActiveObject().set('fill', fontColor);
         // @ts-ignore
         canvas.centerObject(textFabric);
         canvas.add(textFabric);
@@ -136,8 +139,8 @@ export const WhiteboardProvider = ({
   /**
    * Add specific shape to whiteboard
    * */
-  const addShape = () => {
-    switch (shape) {
+  const addShape = (specific?: string) => {
+    switch (specific || shape) {
       case 'rectangle':
         const rectangle = shapes.rectangle(150, 150, shapeColor);
         // @ts-ignore
@@ -161,9 +164,17 @@ export const WhiteboardProvider = ({
    * */
   const fillColor = (color: string) => {
     updateShapeColor(color);
-    if (canvas.getActiveObject()) {
+    if (canvas.getActiveObject() && !canvas.getActiveObject().text) {
       canvas.getActiveObject().set('fill', color);
+      // @ts-ignore
+      canvas.renderAll();
+    }
+  };
 
+  const textColor = (color: string) => {
+    updateFontColor(color);
+    if (canvas.getActiveObject() && canvas.getActiveObject().text) {
+      canvas.getActiveObject().set('fill', color);
       // @ts-ignore
       canvas.renderAll();
     }
@@ -184,13 +195,19 @@ export const WhiteboardProvider = ({
    * List of available colors in toolbar
    * */
   const colorsList = [
-    'black',
-    'red',
-    'yellow',
-    'green',
-    'blue',
-    'purple',
-    'brown',
+    '#fff',
+    '#e6e6e6',
+    '#808080',
+    '#000',
+    '#f8433f',
+    '#5fe119',
+    '#347dfa',
+    '#44f9f9',
+    '#f289fe',
+    '#fbe739',
+    '#fb823f',
+    '#8880fc',
+    '#0C7Cfa',
   ];
 
   const value = {
@@ -198,6 +215,7 @@ export const WhiteboardProvider = ({
     updateFontFamily,
     colorsList,
     fillColor,
+    textColor,
     updateShape,
     addShape,
     removeSelectedElement,

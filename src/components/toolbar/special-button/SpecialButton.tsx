@@ -14,7 +14,6 @@ import ISpecialButton from '../../../interfaces/toolbar/special-button';
 function SpecialButton({
   index,
   Icon,
-  iconName,
   style,
   selected,
   onChildClick,

@@ -1,14 +1,17 @@
 import React from 'react';
 import './whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
+import Toolbar from '../../components/toolbar/Toolbar';
 
 function Whiteboard() {
   return (
     <div className="container">
-      <canvas id="canvas" style={{ border: '1px solid' }} />
       <div className="toolbar-container">
-        <WhiteboardProvider>{/*<Toolbar />*/}</WhiteboardProvider>
+        <WhiteboardProvider>
+          <Toolbar />
+        </WhiteboardProvider>
       </div>
+      <canvas id="canvas" style={{ border: '1px solid' }} />
     </div>
   );
 }
