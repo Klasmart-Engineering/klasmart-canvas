@@ -21,9 +21,10 @@ import dashedPen from '../../../assets/icons/toolbar/dashed-pen.svg';
 import rectangleShape from '../../../assets/icons/toolbar/rectangle-shape.svg';
 import triangleShape from '../../../assets/icons/toolbar/triangle-shape.svg';
 import circleShape from '../../../assets/icons/toolbar/circle-shape.svg';
-import pentagonShape from '../../../assets/icons/toolbar/pentagon-shape.svg';
-import starShape from '../../../assets/icons/toolbar/star-shape.svg';
-import chatBubbleShape from '../../../assets/icons/toolbar/chat-bubble-shape.svg';
+// Not ready yet
+// import pentagonShape from '../../../assets/icons/toolbar/pentagon-shape.svg';
+// import starShape from '../../../assets/icons/toolbar/star-shape.svg';
+// import chatBubbleShape from '../../../assets/icons/toolbar/chat-bubble-shape.svg';
 import move from '../../../assets/icons/toolbar/move.svg';
 import star from '../../../assets/icons/toolbar/star.svg';
 import emojiSmile from '../../../assets/icons/toolbar/emoji-smile.svg';
@@ -339,21 +340,22 @@ const toolsSection: IBasicToolbarSection = {
           iconSrc: triangleShape,
           iconName: 'Triangle',
         },
-        {
-          index: 3,
-          iconSrc: pentagonShape,
-          iconName: 'Pentagon',
-        },
-        {
-          index: 4,
-          iconSrc: starShape,
-          iconName: 'Star',
-        },
-        {
-          index: 5,
-          iconSrc: chatBubbleShape,
-          iconName: 'Chat Bubble',
-        },
+        // Not ready yet
+        // {
+        //   index: 3,
+        //   iconSrc: pentagonShape,
+        //   iconName: 'Pentagon',
+        // },
+        // {
+        //   index: 4,
+        //   iconSrc: starShape,
+        //   iconName: 'Star',
+        // },
+        // {
+        //   index: 5,
+        //   iconSrc: chatBubbleShape,
+        //   iconName: 'Chat Bubble',
+        // },
       ],
     },
     // stamp
