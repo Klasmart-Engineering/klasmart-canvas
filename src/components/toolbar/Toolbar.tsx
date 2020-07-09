@@ -30,6 +30,7 @@ function Toolbar() {
     addShape,
     removeSelectedElement,
     text,
+    fontFamily,
     updateText,
     updateFontFamily,
     writeText,
@@ -136,7 +137,8 @@ function Toolbar() {
                   handleSelectorChange,
                   handleToolsElementAction,
                   tool.iconColorPalette,
-                  changeColor
+                  changeColor,
+                  index === 6 ? fontFamily : null
                 )
               : tool.icon && tool.styleOptions
               ? createSpecialSelector(
@@ -228,7 +230,8 @@ function createToolbarSelector(
   onChildChange: (index: number, value: string) => void,
   onAction: (index: number) => void,
   iconColorPalette?: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>,
-  onColorChange?: (index: number, color: string) => void
+  onColorChange?: (index: number, color: string) => void,
+  defaultOption?: string
 ): JSX.Element {
   return (
     <ToolbarSelector
@@ -236,6 +239,7 @@ function createToolbarSelector(
       index={index}
       options={options}
       selected={selected}
+      defaultOption={defaultOption}
       iconColorPalette={iconColorPalette}
       onAction={onAction}
       onChildClick={onChildClick}

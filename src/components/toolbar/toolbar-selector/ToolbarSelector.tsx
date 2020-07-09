@@ -12,6 +12,7 @@ import ToolbarButton from '../toolbar-button/ToolbarButton';
  * - options - options to be displayed in the selector
  * - selected - flag that indicates if this selector is selected
  * - iconColorPalette (optional) - Icon to set in the color palette
+ * - defaultOption - value to set in the selector from parent
  * - onAction - event that is emitted to parent when action is trigered
  * - onChildClick - event that is emitted to parent when selector is clicked
  * - onChildChange - event that is emitted to parent when selector's value
@@ -23,6 +24,7 @@ function ToolbarSelector({
   options,
   selected,
   iconColorPalette,
+  defaultOption,
   onAction,
   onChildClick,
   onChildChange,
@@ -32,6 +34,16 @@ function ToolbarSelector({
   const [showOptions, setShowOptions] = useState(false);
   const [color, setColor] = useState('#000');
   const buttonRef = useRef(null);
+
+  React.useEffect(() => {
+    const newValue = defaultOption
+      ? options.find((option) => option.iconName === defaultOption)
+      : options[0];
+
+    if (newValue) {
+      setSelectedOption(newValue);
+    }
+  }, [defaultOption, options]);
 
   /**
    * Is executed when the selector is clicked and sends an event to its parent

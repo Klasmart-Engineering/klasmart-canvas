@@ -6,6 +6,7 @@ export default interface ToolbarSelector {
   index: number;
   options: IToolbarSelectorOption[];
   selected: boolean;
+  defaultOption?: string;
   iconColorPalette?: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
   selectedColor?: string;
   onAction: (index: number, value?: string) => void;
