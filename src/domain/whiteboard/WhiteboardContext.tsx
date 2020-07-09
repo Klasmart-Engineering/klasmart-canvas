@@ -42,9 +42,9 @@ export const WhiteboardProvider = ({
   useEffect(() => {
     // @ts-ignore
     canvas = new fabric.Canvas('canvas', {
-      backgroundColor: 'white',
-      width: '600',
-      height: '350',
+      backgroundColor: null,//'white',
+      width: '640',//'600',
+      height: '360'//'350',
     });
   }, []);
 
@@ -175,7 +175,7 @@ export const WhiteboardProvider = ({
   const clearWhiteboard = (): void => {
     canvas.clear();
     // @ts-ignore
-    canvas.backgroundColor = 'white';
+    canvas.backgroundColor = null//'white';
     canvas.renderAll();
     closeModal();
   };
