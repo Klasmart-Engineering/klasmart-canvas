@@ -22,7 +22,9 @@ export const textHandler = (
   const textFabric = createText(text, fontFamily);
 
   textFabric.on('selected', () => {
-    updateFont(updateFontFamily, fontFamily);
+    if (textFabric.fontFamily) {
+      updateFont(updateFontFamily, textFabric.fontFamily);
+    }
   });
 
   textFabric.on('deselected', () => {
