@@ -21,99 +21,81 @@ const Actions = () => {
 function Whiteboard() {
   const [auto, setAuto] = useState(true);
   const bx = () => {
-    return auto ? 'Control Video' : 'Control Whiteboard'
-  }
+    return auto ? 'Control Video' : 'Control Whiteboard';
+  };
 
   return (
     <div>
-      {/*<button>Hello button</button>*/}
-      {/*<canvas id="canvas" style={{ border: '1px solid' }} />*/}
-
-      <div
-        style={{
-          border: '1px solid red',
-          width: '640px',
-          height: '360px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          backgroundColor: 'green',
-        }}
-      >
-        {/*<button*/}
-        {/*  onClick={() => {*/}
-        {/*    alert('Fabric Button click 3 worked');*/}
-        {/*  }}*/}
-        {/*>*/}
-        {/*  test 3*/}
-        {/*</button>*/}
-
-        <ReactPlayer
-          url="https://www.youtube.com/watch?v=XhpGp9d9jSA"
-          controls
-        />
-
-        {/*<canvas*/}
-        {/*  id="canvas"*/}
-        {/*  style={{*/}
-        {/*    // border: '1px solid',*/}
-        {/*    // position: 'absolute',*/}
-        {/*    // width: '600px',*/}
-        {/*    // height: '350px',*/}
-        {/*    border: '1px solid blue',*/}
-        {/*    // width: '400px',*/}
-        {/*    // height: '250px',*/}
-        {/*    // display: 'flex',*/}
-        {/*    // alignItems: 'center',*/}
-        {/*    // justifyContent: 'center',*/}
-        {/*    position: 'absolute',*/}
-        {/*    backgroundColor: 'blue',*/}
-        {/*    // pointerEvents: 'none',*/}
-        {/*  }}*/}
-        {/*/>*/}
-
-        <div
-          style={{
-            border: '1px solid blue',
-            width: '640px',
-            height: '360px',
-            // display: 'flex',
-            // alignItems: 'center',
-            // justifyContent: 'center',
-            position: 'absolute',
-            // backgroundColor: 'blue',
-            pointerEvents: auto ? 'auto' : 'none',
-          }}
-        >
-          <canvas
-            id="canvas"
-            style={{
-              // border: '1px solid',
-              // position: 'absolute',
-              // width: '600px',
-              // height: '350px',
-              border: '1px solid blue',
-              // width: '400px',
-              // height: '250px',
-              // display: 'flex',
-              // alignItems: 'center',
-              // justifyContent: 'center',
-              // position: 'absolute',
-              // backgroundColor: 'blue',
-              //pointerEvents: 'auto',
-            }}
-          />
-        </div>
-      </div>
+      {/*<div*/}
+      {/*  style={{*/}
+      {/*    border: '1px solid red',*/}
+      {/*    width: '640px',*/}
+      {/*    height: '360px',*/}
+      {/*    display: 'flex',*/}
+      {/*    alignItems: 'center',*/}
+      {/*    justifyContent: 'center',*/}
+      {/*    position: 'relative',*/}
+      {/*    backgroundColor: 'green',*/}
+      {/*  }}*/}
+      {/*>*/}
+      {/*  <ReactPlayer*/}
+      {/*    url="https://www.youtube.com/watch?v=XhpGp9d9jSA"*/}
+      {/*    controls*/}
+      {/*  />*/}
+      {/*  <div*/}
+      {/*    style={{*/}
+      {/*      border: '1px solid blue',*/}
+      {/*      width: '640px',*/}
+      {/*      height: '360px',*/}
+      {/*      // display: 'flex',*/}
+      {/*      // alignItems: 'center',*/}
+      {/*      // justifyContent: 'center',*/}
+      {/*      position: 'absolute',*/}
+      {/*      // backgroundColor: 'blue',*/}
+      {/*      pointerEvents: auto ? 'auto' : 'none',*/}
+      {/*    }}*/}
+      {/*  >*/}
+      {/*    <canvas*/}
+      {/*      id="canvas"*/}
+      {/*      style={{*/}
+      {/*        // border: '1px solid',*/}
+      {/*        // position: 'absolute',*/}
+      {/*        // width: '600px',*/}
+      {/*        // height: '350px',*/}
+      {/*        border: '1px solid blue',*/}
+      {/*        // width: '400px',*/}
+      {/*        // height: '250px',*/}
+      {/*        // display: 'flex',*/}
+      {/*        // alignItems: 'center',*/}
+      {/*        // justifyContent: 'center',*/}
+      {/*        // position: 'absolute',*/}
+      {/*        // backgroundColor: 'blue',*/}
+      {/*        //pointerEvents: 'auto',*/}
+      {/*      }}*/}
+      {/*    />*/}
+      {/*  </div>*/}
+      {/*</div>*/}
       <div className="toolbar-container">
-        <WhiteboardProvider>
-          <Actions />
+        <WhiteboardProvider canvasId={'canvas'}>
+          <ReactPlayer
+            url="https://www.youtube.com/watch?v=XhpGp9d9jSA"
+            controls
+          />
+          {/*<Actions />*/}
+        </WhiteboardProvider>
+        <Button variant="outlined" color="primary" onClick={() => setAuto(!auto)}>
+          {bx()}
+        </Button>
+
+        <WhiteboardProvider canvasId={'canvas2'}>
+          <iframe
+            src="https://h5p.org/h5p/embed/1396"
+            width="640"
+            height="275"
+          ></iframe>
+          {/*<Actions />*/}
         </WhiteboardProvider>
       </div>
-      <Button variant="outlined" color="primary" onClick={() => setAuto(!auto)}>
-        {bx()}
-      </Button>
     </div>
   );
 }

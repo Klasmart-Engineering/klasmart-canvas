@@ -1,6 +1,13 @@
-import React, { createContext, useCallback, useEffect, useRef } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 // @ts-ignore
 import FontFaceObserver from 'fontfaceobserver';
+import { fabric } from 'fabric';
 import * as shapes from './shapes/shapes';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
@@ -8,26 +15,29 @@ import { textHandler } from './text/text';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
+import ReactPlayer from 'react-player';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
 
-let canvas: {
-  add: (arg0: any) => void;
-  remove: (arg0: any) => void;
-  getActiveObject: () => any;
-  getObjects: () => any;
-  backgroundColor: 'red';
-  requestRenderAll(): void;
-  discardActiveObject(): void;
-  clear(): void;
-  renderAll(): void;
-};
+// let canvas: {
+//   add: (arg0: any) => void;
+//   remove: (arg0: any) => void;
+//   getActiveObject: () => any;
+//   getObjects: () => any;
+//   backgroundColor: 'red';
+//   requestRenderAll(): void;
+//   discardActiveObject(): void;
+//   clear(): void;
+//   renderAll(): void;
+// };
 
 export const WhiteboardProvider = ({
   children,
+  canvasId,
 }: {
   children: React.ReactNode;
+  canvasId: string;
 }) => {
   const { text, updateText } = useText();
   const textRef = useRef('');
@@ -35,17 +45,24 @@ export const WhiteboardProvider = ({
   const { shapeColor, updateShapeColor } = useShapeColor();
   const { shape, updateShape } = useShape();
   const { closeModal } = useWhiteboardClearModal();
+  const [auto, setAuto] = useState(false);
+
+  const [canvas, setCanvas] = useState();
 
   /**
    * Creates Canvas/Whiteboard instance
    */
   useEffect(() => {
+    console.log('canvas Id', canvasId);
+
     // @ts-ignore
-    canvas = new fabric.Canvas('canvas', {
-      backgroundColor: null,//'white',
-      width: '640',//'600',
-      height: '360'//'350',
+    const canvasInstance = new fabric.Canvas(canvasId, {
+      backgroundColor: null, //'white',
+      width: '640', //'600',
+      height: '360', //'350',
     });
+
+    setCanvas(canvasInstance);
   }, []);
 
   /**
@@ -95,7 +112,6 @@ export const WhiteboardProvider = ({
   }, [fontFamily, keyDownHandler, fontFamilyLoader]);
 
   const discardActiveObject = () => {
-    // @ts-ignore
     canvas.discardActiveObject().renderAll();
   };
 
@@ -104,7 +120,6 @@ export const WhiteboardProvider = ({
    * */
   useEffect(() => {
     if (text.length) {
-      // @ts-ignore
       canvas.discardActiveObject().renderAll();
     }
   }, [text]);
@@ -123,9 +138,7 @@ export const WhiteboardProvider = ({
           updateFontFamily
         );
 
-        // @ts-ignore
         canvas.setActiveObject(textFabric);
-        // @ts-ignore
         canvas.centerObject(textFabric);
         canvas.add(textFabric);
         updateText('');
@@ -140,17 +153,14 @@ export const WhiteboardProvider = ({
     switch (shape) {
       case 'rectangle':
         const rectangle = shapes.rectangle(150, 150, shapeColor);
-        // @ts-ignore
         canvas.centerObject(rectangle);
         return canvas.add(rectangle);
       case 'triangle':
         const triangle = shapes.triangle(100, 160, shapeColor);
-        // @ts-ignore
         canvas.centerObject(triangle);
         return canvas.add(triangle);
       case 'circle':
         const circle = shapes.circle(50, shapeColor);
-        // @ts-ignore
         canvas.centerObject(circle);
         return canvas.add(circle);
     }
@@ -163,8 +173,6 @@ export const WhiteboardProvider = ({
     updateShapeColor(color);
     if (canvas.getActiveObject()) {
       canvas.getActiveObject().set('fill', color);
-
-      // @ts-ignore
       canvas.renderAll();
     }
   };
@@ -174,8 +182,7 @@ export const WhiteboardProvider = ({
    * */
   const clearWhiteboard = (): void => {
     canvas.clear();
-    // @ts-ignore
-    canvas.backgroundColor = null//'white';
+    canvas.backgroundColor = null; //'white';
     canvas.renderAll();
     closeModal();
   };
@@ -210,7 +217,57 @@ export const WhiteboardProvider = ({
 
   return (
     <WhiteboardContext.Provider value={value}>
-      {children}
+      <div
+        style={{
+          border: '1px solid red',
+          width: '640px',
+          height: '360px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          backgroundColor: 'green',
+        }}
+      >
+        {/*<ReactPlayer*/}
+        {/*  url="https://www.youtube.com/watch?v=XhpGp9d9jSA"*/}
+        {/*  controls*/}
+        {/*/>*/}
+
+        {children}
+        <div
+          style={{
+            border: '1px solid blue',
+            width: '640px',
+            height: '360px',
+            // display: 'flex',
+            // alignItems: 'center',
+            // justifyContent: 'center',
+            position: 'absolute',
+            // backgroundColor: 'blue',
+            pointerEvents: auto ? 'auto' : 'none',
+          }}
+        >
+          <canvas
+            id={canvasId}
+            style={{
+              // border: '1px solid',
+              // position: 'absolute',
+              // width: '600px',
+              // height: '350px',
+              border: '1px solid blue',
+              // width: '400px',
+              // height: '250px',
+              // display: 'flex',
+              // alignItems: 'center',
+              // justifyContent: 'center',
+              // position: 'absolute',
+              // backgroundColor: 'blue',
+              //pointerEvents: 'auto',
+            }}
+          />
+        </div>
+      </div>
     </WhiteboardContext.Provider>
   );
 };
