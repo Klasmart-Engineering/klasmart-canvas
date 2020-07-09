@@ -21,13 +21,15 @@ export const textHandler = (
 ) => {
   const textFabric = createText(text, fontFamily);
 
-  // textFabric.on('selected', () => {
-  //   updateFont(updateFontFamily, fontFamily);
-  // });
+  textFabric.on('selected', () => {
+    if (textFabric.fontFamily) {
+      updateFont(updateFontFamily, textFabric.fontFamily);
+    }
+  });
 
-  // textFabric.on('deselected', () => {
-  //   updateFont(updateFontFamily, 'Arial');
-  // });
+  textFabric.on('deselected', () => {
+    updateFont(updateFontFamily, 'Arial');
+  });
 
   return textFabric;
 };
