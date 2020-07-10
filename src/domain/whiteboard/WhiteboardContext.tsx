@@ -16,6 +16,7 @@ import { textHandler } from './text/text';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
+import { usePointerEvents } from './hooks/usePointerEvents';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -39,7 +40,7 @@ export const WhiteboardProvider = ({
   const { shapeColor, updateShapeColor } = useShapeColor();
   const { shape, updateShape } = useShape();
   const { closeModal } = useWhiteboardClearModal();
-  const [pointerEvents, setPointerEvents] = useState(false);
+  const { pointerEvents, setPointerEvents } = usePointerEvents();
   const [canvas, setCanvas] = useState();
 
   /**
@@ -94,7 +95,7 @@ export const WhiteboardProvider = ({
   }, []);
 
   /**
-   * Add keyaboard keydown event listener. It listen keyDownHandler function
+   * Add keyboard keydown event listener. It listen keyDownHandler function
    * Invokes fontFamilyLoader to set default and selected font family
    * */
   useEffect(() => {
@@ -204,7 +205,6 @@ export const WhiteboardProvider = ({
     writeText,
     discardActiveObject,
     clearWhiteboard,
-    pointerEvents,
     setPointerEvents,
   };
 
