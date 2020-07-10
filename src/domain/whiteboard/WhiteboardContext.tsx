@@ -16,31 +16,22 @@ import { textHandler } from './text/text';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
-import ReactPlayer from 'react-player';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
 
-// let canvas: {
-//   add: (arg0: any) => void;
-//   remove: (arg0: any) => void;
-//   getActiveObject: () => any;
-//   getObjects: () => any;
-//   backgroundColor: 'red';
-//   requestRenderAll(): void;
-//   discardActiveObject(): void;
-//   clear(): void;
-//   renderAll(): void;
-// };
-
 export const WhiteboardProvider = ({
   children,
   canvasId,
+  canvasWidth,
+  canvasHeight,
   toolbar,
 }: {
   children: React.ReactNode;
   canvasId: string;
   toolbar: ReactComponentElement<any>;
+  canvasWidth: string;
+  canvasHeight: string;
 }) => {
   const { text, updateText } = useText();
   const textRef = useRef('');
@@ -60,9 +51,9 @@ export const WhiteboardProvider = ({
 
     // @ts-ignore
     const canvasInstance = new fabric.Canvas(canvasId, {
-      backgroundColor: null, //'white',
-      width: '640', //'600',
-      height: '360', //'350',
+      backgroundColor: null,
+      width: canvasWidth,
+      height: canvasHeight,
     });
 
     setCanvas(canvasInstance);
@@ -225,8 +216,8 @@ export const WhiteboardProvider = ({
       <div
         style={{
           border: '1px solid red',
-          width: '640px',
-          height: '360px',
+          width: canvasWidth + 'px',
+          height: canvasHeight + 'px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -234,41 +225,20 @@ export const WhiteboardProvider = ({
           backgroundColor: 'green',
         }}
       >
-        {/*<ReactPlayer*/}
-        {/*  url="https://www.youtube.com/watch?v=XhpGp9d9jSA"*/}
-        {/*  controls*/}
-        {/*/>*/}
-
         {children}
         <div
           style={{
             border: '1px solid blue',
-            width: '640px',
-            height: '360px',
-            // display: 'flex',
-            // alignItems: 'center',
-            // justifyContent: 'center',
+            width: canvasWidth + 'px',
+            height: canvasHeight + 'px',
             position: 'absolute',
-            // backgroundColor: 'blue',
             pointerEvents: auto ? 'auto' : 'none',
           }}
         >
           <canvas
             id={canvasId}
             style={{
-              // border: '1px solid',
-              // position: 'absolute',
-              // width: '600px',
-              // height: '350px',
               border: '1px solid blue',
-              // width: '400px',
-              // height: '250px',
-              // display: 'flex',
-              // alignItems: 'center',
-              // justifyContent: 'center',
-              // position: 'absolute',
-              // backgroundColor: 'blue',
-              //pointerEvents: 'auto',
             }}
           />
         </div>
