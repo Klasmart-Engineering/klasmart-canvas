@@ -1,5 +1,6 @@
 import React, {
   createContext,
+  ReactComponentElement,
   useCallback,
   useEffect,
   useRef,
@@ -35,9 +36,11 @@ export const WhiteboardContext = createContext();
 export const WhiteboardProvider = ({
   children,
   canvasId,
+  toolbar,
 }: {
   children: React.ReactNode;
   canvasId: string;
+  toolbar: ReactComponentElement<any>;
 }) => {
   const { text, updateText } = useText();
   const textRef = useRef('');
@@ -213,6 +216,8 @@ export const WhiteboardProvider = ({
     writeText,
     discardActiveObject,
     clearWhiteboard,
+    auto,
+    setAuto,
   };
 
   return (
@@ -268,6 +273,7 @@ export const WhiteboardProvider = ({
           />
         </div>
       </div>
+      {toolbar}
     </WhiteboardContext.Provider>
   );
 };

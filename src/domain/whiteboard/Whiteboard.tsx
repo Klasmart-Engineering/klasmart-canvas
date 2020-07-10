@@ -4,8 +4,13 @@ import { WhiteboardProvider, WhiteboardContext } from './WhiteboardContext';
 import Button from '@material-ui/core/Button';
 import ReactPlayer from 'react-player';
 
-const Actions = () => {
-  const { addShape, clearWhiteboard } = useContext(WhiteboardContext);
+const Toolbar = () => {
+  const { addShape, clearWhiteboard, auto, setAuto } = useContext(
+    WhiteboardContext
+  );
+  const bx = () => {
+    return auto ? 'Control Video' : 'Control Whiteboard';
+  };
   return (
     <div>
       <Button variant="outlined" color="primary" onClick={addShape}>
@@ -14,16 +19,14 @@ const Actions = () => {
       <Button variant="outlined" color="primary" onClick={clearWhiteboard}>
         Clear Whiteboard
       </Button>
+      <Button variant="outlined" color="primary" onClick={() => setAuto(!auto)}>
+        {bx()}
+      </Button>
     </div>
   );
 };
 
 function Whiteboard() {
-  const [auto, setAuto] = useState(true);
-  const bx = () => {
-    return auto ? 'Control Video' : 'Control Whiteboard';
-  };
-
   return (
     <div>
       {/*<div*/}
@@ -76,18 +79,22 @@ function Whiteboard() {
       {/*  </div>*/}
       {/*</div>*/}
       <div className="toolbar-container">
-        <WhiteboardProvider canvasId={'canvas'}>
+        <WhiteboardProvider canvasId={'canvas'} toolbar={<Toolbar />}>
           <ReactPlayer
             url="https://www.youtube.com/watch?v=XhpGp9d9jSA"
             controls
           />
           {/*<Actions />*/}
         </WhiteboardProvider>
-        <Button variant="outlined" color="primary" onClick={() => setAuto(!auto)}>
-          {bx()}
-        </Button>
+        {/*<Button*/}
+        {/*  variant="outlined"*/}
+        {/*  color="primary"*/}
+        {/*  onClick={() => setAuto(!auto)}*/}
+        {/*>*/}
+        {/*  {bx()}*/}
+        {/*</Button>*/}
 
-        <WhiteboardProvider canvasId={'canvas2'}>
+        <WhiteboardProvider canvasId={'canvas2'} toolbar={<Toolbar />}>
           <iframe
             src="https://h5p.org/h5p/embed/1396"
             width="640"
