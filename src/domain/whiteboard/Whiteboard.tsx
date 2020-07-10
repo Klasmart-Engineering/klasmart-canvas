@@ -2,7 +2,7 @@ import React from 'react';
 import './whiteboard.css';
 
 function Whiteboard() {
-  return <div className="toolbar-container"></div>;
+  return <div></div>;
 }
 
 export default Whiteboard;

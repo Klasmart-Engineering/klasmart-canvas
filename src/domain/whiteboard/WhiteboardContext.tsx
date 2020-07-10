@@ -206,13 +206,13 @@ export const WhiteboardProvider = ({
     discardActiveObject,
     clearWhiteboard,
     setPointerEvents,
+    pointerEvents,
   };
 
   return (
     <WhiteboardContext.Provider value={value}>
       <div
         style={{
-          border: '1px solid red',
           width: canvasWidth + 'px',
           height: canvasHeight + 'px',
           display: 'flex',
@@ -225,19 +225,13 @@ export const WhiteboardProvider = ({
         {children}
         <div
           style={{
-            border: '1px solid blue',
             width: canvasWidth + 'px',
             height: canvasHeight + 'px',
             position: 'absolute',
             pointerEvents: pointerEvents ? 'auto' : 'none',
           }}
         >
-          <canvas
-            id={canvasId}
-            style={{
-              border: '1px solid blue',
-            }}
-          />
+          <canvas id={canvasId} />
         </div>
       </div>
       {toolbar}
