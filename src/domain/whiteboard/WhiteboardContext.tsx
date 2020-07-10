@@ -103,7 +103,6 @@ export const WhiteboardProvider = ({
   }, [fontFamily, keyDownHandler, fontFamilyLoader]);
 
   const discardActiveObject = () => {
-    // @ts-ignore
     canvas.discardActiveObject().renderAll();
   };
 
@@ -112,7 +111,6 @@ export const WhiteboardProvider = ({
    * */
   useEffect(() => {
     if (text.length) {
-      // @ts-ignore
       canvas.discardActiveObject().renderAll();
     }
   }, [text]);
@@ -131,9 +129,7 @@ export const WhiteboardProvider = ({
           updateFontFamily
         );
 
-        // @ts-ignore
         canvas.setActiveObject(textFabric);
-        // @ts-ignore
         canvas.centerObject(textFabric);
         canvas.add(textFabric);
         updateText('');
@@ -148,17 +144,14 @@ export const WhiteboardProvider = ({
     switch (shape) {
       case 'rectangle':
         const rectangle = shapes.rectangle(150, 150, shapeColor);
-        // @ts-ignore
         canvas.centerObject(rectangle);
         return canvas.add(rectangle);
       case 'triangle':
         const triangle = shapes.triangle(100, 160, shapeColor);
-        // @ts-ignore
         canvas.centerObject(triangle);
         return canvas.add(triangle);
       case 'circle':
         const circle = shapes.circle(50, shapeColor);
-        // @ts-ignore
         canvas.centerObject(circle);
         return canvas.add(circle);
     }
@@ -171,8 +164,6 @@ export const WhiteboardProvider = ({
     updateShapeColor(color);
     if (canvas.getActiveObject()) {
       canvas.getActiveObject().set('fill', color);
-
-      // @ts-ignore
       canvas.renderAll();
     }
   };
@@ -182,7 +173,6 @@ export const WhiteboardProvider = ({
    * */
   const clearWhiteboard = (): void => {
     canvas.clear();
-    // @ts-ignore
     canvas.backgroundColor = 'white';
     canvas.renderAll();
     closeModal();
