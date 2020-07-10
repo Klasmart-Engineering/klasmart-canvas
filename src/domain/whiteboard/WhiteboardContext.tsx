@@ -222,7 +222,7 @@ export const WhiteboardProvider = ({
           alignItems: 'center',
           justifyContent: 'center',
           position: 'relative',
-          backgroundColor: 'green',
+          backgroundColor: 'white',
         }}
       >
         {children}

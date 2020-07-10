@@ -52,7 +52,6 @@ function Whiteboard() {
             width="640"
             height="275"
           ></iframe>
-          {/*<Actions />*/}
         </WhiteboardProvider>
       </div>
     </div>
