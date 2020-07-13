@@ -70,7 +70,7 @@ export const WhiteboardProvider = ({
    * whiteboard
    * */
   const keyDownHandler = useCallback((e: { key: any }) => {
-    if (e.key === 'Backspace') {
+    if (e.key === 'Backspace' && canvas) {
       removeSelectedElement();
       return;
     }
