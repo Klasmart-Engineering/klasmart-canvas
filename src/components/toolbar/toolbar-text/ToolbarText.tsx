@@ -6,7 +6,7 @@ interface IToolbarText {
   showInput: boolean;
   text: string;
   updateText: (value: string) => void;
-  writeText: (e: any) => void;
+  writeText?: (e: any) => void;
 }
 
 /**
@@ -15,7 +15,8 @@ interface IToolbarText {
  * - showInput - flag tho show/hide the input
  * - text - value that the input field will have
  * - updateText - function to execute when the field value changes
- * - writeText - function to execute when the user keydown a key
+ * - writeText (provisionaly optional) -
+ *   function to execute when the user keydown a key
  */
 function ToolbarText({ showInput, text, updateText, writeText }: IToolbarText) {
   return (
@@ -28,7 +29,8 @@ function ToolbarText({ showInput, text, updateText, writeText }: IToolbarText) {
           variant="outlined"
           value={text}
           onChange={(e) => updateText(e.target.value)}
-          onKeyDown={(e) => writeText(e)}
+          // is necesary the function managed by Whiteboard
+          // onKeyDown={(e) => writeText(e)}
         />
       ) : null}
     </div>

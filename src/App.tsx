@@ -1,11 +1,13 @@
 import React from 'react';
-import Whiteboard from './domain/whiteboard/Whiteboard';
+import Toolbar from './components/toolbar/Toolbar';
 
 function App() {
   return (
     <div className="App">
       <div>
-        <Whiteboard />
+        {/* <Whiteboard /> */}
+        {/* Just for show it, originally Toolbar comes from Whiteboard */}
+        <Toolbar />
       </div>
     </div>
   );

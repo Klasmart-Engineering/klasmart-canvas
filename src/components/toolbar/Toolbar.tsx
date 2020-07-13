@@ -10,7 +10,6 @@ import SpecialSelector from './special-selector/SpecialSelector';
 import { OverridableComponent } from '@material-ui/core/OverridableComponent';
 import { SvgIconTypeMap } from '@material-ui/core';
 import IStyleOptions from '../../interfaces/toolbar/toolbar-special-elements/style-option';
-import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import IBasicToolbarSelector from '../../interfaces/toolbar/toolbar-selector/basic-toolbar-selector';
 import IBasicToolbarButton from '../../interfaces/toolbar/toolbar-button/basic-toolbar-button';
 import IColorPalette from '../../interfaces/toolbar/toolbar-selector/color-palette';
@@ -30,20 +29,24 @@ function Toolbar() {
   const [tools, setTools] = useState(toolsSection);
   const [actions] = useState(actionsSection);
 
-  const {
-    fillColor,
-    textColor,
-    updateShape,
-    addShape,
-    removeSelectedElement,
-    text,
-    fontFamily,
-    updateText,
-    updateFontFamily,
-    writeText,
-    openClearWhiteboardModal,
-    setAuto,
-  } = useContext(WhiteboardContext);
+  // provisional, this will be managed by WhiteboardContext
+  const [text, updateText] = useState('');
+
+  // This comes from WhiteboardContext
+  // const {
+  //   fillColor,
+  //   textColor,
+  //   updateShape,
+  //   addShape,
+  //   removeSelectedElement,
+  //   text,
+  //   fontFamily,
+  //   updateText,
+  //   updateFontFamily,
+  //   writeText,
+  //   openClearWhiteboardModal,
+  //   setAuto,
+  // } = useContext(WhiteboardContext);
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -67,7 +70,8 @@ function Toolbar() {
   function handleActionsElementClick(index: number) {
     switch (index) {
       case 3: {
-        openClearWhiteboardModal();
+        // Comes from WhiteboardContext
+        // openClearWhiteboardModal();
       }
     }
   }
@@ -80,16 +84,19 @@ function Toolbar() {
   function handleToolSelectorChange(index: number, value: string) {
     switch (index) {
       case 2: {
-        setAuto(value === 'Whiteboard' ? true : false);
+        // Comes from WhiteboardContext
+        // setAuto(value === 'Whiteboard' ? true : false);
         break;
       }
 
       case 7: {
-        updateFontFamily(value);
+        // Comes from WhiteboardContext
+        // updateFontFamily(value);
         break;
       }
       case 8: {
-        updateShape(value.toLowerCase());
+        // Comes from WhiteboardContext
+        // updateShape(value.toLowerCase());
         break;
       }
     }
@@ -103,11 +110,13 @@ function Toolbar() {
   function handleToolsElementAction(index: number, specific?: string) {
     switch (true) {
       case index === 3 && specific === 'erase object':
-        removeSelectedElement();
+        // Comes from WhiteboardContext
+        // removeSelectedElement();
         break;
 
       case index === 8:
-        addShape(specific);
+        // Comes from WhiteboardContext
+        // addShape(specific);
         break;
     }
   }
@@ -120,10 +129,12 @@ function Toolbar() {
   function changeColor(index: number, color: string) {
     switch (index) {
       case 7:
-        textColor(color);
+        // Comes from WhiteboardContext
+        // textColor(color);
         break;
       case 8:
-        fillColor(color);
+        // Comes from WhiteboardContext
+        // fillColor(color);
         break;
     }
   }
@@ -169,7 +180,9 @@ function Toolbar() {
                   handleToolsElementClick,
                   handleToolSelectorChange,
                   handleToolsElementAction,
-                  index === 7 ? fontFamily : null,
+                  '',
+                  // Is necesary have WhiteboardContext
+                  // index === 7 ? fontFamily : null,
                   setColorPalette(tool.colorPaletteIcon)
                 )
               : determineIfIsSpecialSelector(tool)
@@ -205,7 +218,8 @@ function Toolbar() {
         showInput={showInput}
         text={text}
         updateText={updateText}
-        writeText={writeText}
+        // This is a function managed by WhiteboardContext
+        // writeText={writeText}
       />
     </div>
   );
