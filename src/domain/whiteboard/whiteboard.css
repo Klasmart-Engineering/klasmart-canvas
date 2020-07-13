@@ -1,0 +1,50 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 600px;
+  background-color: #79beff;
+}
+
+.container > canvas {
+  background-color: #f1f1f1;
+  color: white;
+  width: 600px;
+  height: 350px;
+}
+
+.input-text {
+  background-color: #fff;
+  border-radius: 6px;
+}
+
+.input-container {
+  margin-top: 16px;
+  height: 56px;
+  width: 246px;
+}
+
+.whiteboard {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  margin-bottom: 8px;
+  background-color: #79beff;
+}
+
+@font-face {
+  font-family: 'Crayon';
+  src: local('Crayon'),
+    url(../../assets/fonts/DkCrayonCrumble.ttf) format('truetype');
+}
+
+@font-face {
+  font-family: 'Arial';
+  src: local('Arial'), url(../../assets/fonts/ARIAL.TTF) format('truetype');
+}
+
+@font-face {
+  font-family: 'Chalkboard';
+  src: local('Chalkboard'),
+    url(../../assets/fonts/SheilaChalk.ttf) format('truetype');
+}

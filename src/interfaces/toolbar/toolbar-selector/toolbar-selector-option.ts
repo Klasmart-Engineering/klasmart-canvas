@@ -1,5 +1,5 @@
 export default interface IToolbarSelectorOption {
-  index: number;
+  title: string;
   iconSrc: string;
   iconName: string;
 }

@@ -4,6 +4,7 @@ import IToolbarSelector from '../../../interfaces/toolbar/toolbar-selector/toolb
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import ColorPalette from '../color-palette/ColorPalette';
 import ToolbarButton from '../toolbar-button/ToolbarButton';
+import IToolbarSelectorOption from '../../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
 
 /**
  * Render a ToolbarSelector
@@ -11,30 +12,35 @@ import ToolbarButton from '../toolbar-button/ToolbarButton';
  * - index - index that the selector has in the Toolbar Section
  * - options - options to be displayed in the selector
  * - selected - flag that indicates if this selector is selected
- * - iconColorPalette (optional) - Icon to set in the color palette
- * - onChildClick - event that is emitted to parent when selector is clicked
- * - onChildChange - event that is emitted to parent when selector's value
- *   is changed
+ * - definedOptionName (optional) - selected option defined by parent
+ * - colorPalette (optional) - Contains the icon and onChangeColor method
+ *   for the color palette (if required)
+ * - onAction - event that is emitted to parent when action is triggered
+ * - onClick - event that is emitted to parent when selector is clicked
+ * - onChange - event that is emitted to parent when selector's value is changed
  */
-function ToolbarSelector({
-  index,
-  options,
-  selected,
-  iconColorPalette,
-  onChildClick,
-  onChildChange,
-  onColorChange,
-}: IToolbarSelector) {
-  const [selectedOption, setSelectedOption] = useState(options[0]);
+function ToolbarSelector(props: IToolbarSelector) {
+  const [selectedOption, setSelectedOption] = useState(props.options[0]);
   const [showOptions, setShowOptions] = useState(false);
-  const [color, setColor] = useState('');
+  const [color, setColor] = useState(props.colorPalette?.selectedColor || '');
   const buttonRef = useRef(null);
+
+  React.useEffect(() => {
+    const newValue = props.options.find(
+      (option) => option.iconName === props.definedOptionName
+    );
+
+    if (newValue) {
+      setSelectedOption(newValue);
+    }
+  }, [props.definedOptionName, props.options]);
 
   /**
    * Is executed when the selector is clicked and sends an event to its parent
    */
   function handleClick() {
-    onChildClick(index);
+    props.onClick(props.index);
+    props.onAction(props.index, selectedOption.iconName.toLowerCase());
 
     if (showOptions) {
       setShowOptions(false);
@@ -45,7 +51,7 @@ function ToolbarSelector({
    * Is executed when the arrow is clicked
    */
   function handleArrowClick() {
-    onChildClick(index);
+    props.onClick(props.index);
 
     if (!showOptions) {
       document.addEventListener('click', handleOutsideClick, false);
@@ -58,12 +64,13 @@ function ToolbarSelector({
 
   /**
    * Is executed when the selector changes its value
-   * @param {string} value - new value to set in selector
+   * @param {IToolbarSelectorOption} value - new value to set in selector
    */
-  function handleSelect(value: any) {
+  function handleSelect(value: IToolbarSelectorOption) {
     setSelectedOption(value);
-    onChildChange(index, value.iconName);
     setShowOptions(false);
+    props.onChange(props.index, value.iconName);
+    props.onAction(props.index, value.iconName.toLowerCase());
   }
 
   /**
@@ -82,12 +89,12 @@ function ToolbarSelector({
   }
 
   /**
-   * Is executed when the color is changed
+   * Is executed when the color is changed (if color palette exists)
    * @param {string} color - new color to set
    */
   function handleChangeColor(color: string) {
-    if (onColorChange) {
-      onColorChange(color);
+    if (props.colorPalette) {
+      props.colorPalette.onChangeColor(props.index, color);
     }
 
     setColor(color);
@@ -96,12 +103,13 @@ function ToolbarSelector({
 
   return (
     <div className="selector-container">
-      <div
+      <button
+        title={selectedOption.title}
         ref={buttonRef}
         className={[
           'toolbar-selector',
-          selected ? 'selected' : '',
-          !selected ? 'unselected' : '',
+          props.selected ? 'selected' : '',
+          !props.selected ? 'unselected' : '',
         ].join(' ')}
       >
         <img
@@ -110,30 +118,32 @@ function ToolbarSelector({
           alt={selectedOption.iconName}
           onClick={handleClick}
         />
-        <ArrowRightIcon onClick={handleArrowClick} />
-      </div>
-      {showOptions && selected ? (
+        <ArrowRightIcon className="arrow" onClick={handleArrowClick} />
+      </button>
+      {showOptions && props.selected ? (
         <div className="options">
-          {options
+          {props.options
             .filter((option) => {
-              return option.index !== selectedOption.index;
+              return option.iconName !== selectedOption.iconName;
             })
-            .map((option) => {
+            .map((option, index) => {
               return (
                 <ToolbarButton
-                  key={option.index}
-                  index={option.index}
+                  key={option.iconName}
+                  index={index}
+                  title={option.title}
                   iconSrc={option.iconSrc}
                   iconName={option.iconName}
                   selected={false}
-                  onChildClick={(e) => handleSelect(option)}
+                  onClick={(e) => handleSelect(option)}
                 />
               );
             })}
-          {iconColorPalette ? (
+          {props.colorPalette ? (
             <ColorPalette
-              Icon={iconColorPalette}
+              Icon={props.colorPalette.icon}
               handleColorChange={handleChangeColor}
+              selectedColor={color}
             />
           ) : null}
         </div>
