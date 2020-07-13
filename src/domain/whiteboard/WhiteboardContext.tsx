@@ -55,7 +55,14 @@ export const WhiteboardProvider = ({
     });
 
     setCanvas(canvasInstance);
-  }, []);
+  }, [canvasHeight, canvasWidth, canvasId]);
+
+  /**
+   * Removes selected element from whiteboard
+   * */
+  const removeSelectedElement = useCallback(() => {
+    canvas.remove(canvas.getActiveObject());
+  }, [canvas])
 
   /**
    * General handler for keyboard events
@@ -67,14 +74,7 @@ export const WhiteboardProvider = ({
       removeSelectedElement();
       return;
     }
-  }, []);
-
-  /**
-   * Removes selected element from whiteboard
-   * */
-  function removeSelectedElement() {
-    canvas.remove(canvas.getActiveObject());
-  }
+  }, [canvas, removeSelectedElement]);
 
   /**
    * Loads selected font. Default is Arial
@@ -92,7 +92,7 @@ export const WhiteboardProvider = ({
       .catch((e: any) => {
         console.log(e);
       });
-  }, []);
+  }, [canvas]);
 
   /**
    * Add keyboard keydown event listener. It listen keyDownHandler function
@@ -114,7 +114,7 @@ export const WhiteboardProvider = ({
     if (text.length) {
       canvas.discardActiveObject().renderAll();
     }
-  }, [text]);
+  }, [text, canvas]);
 
   /**
    * Handles the logic to write text on the whiteboard
