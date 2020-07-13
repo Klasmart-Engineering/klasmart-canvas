@@ -72,12 +72,12 @@ export const WhiteboardProvider = ({
    * */
   const keyDownHandler = useCallback(
     (e: { key: any }) => {
-      if (e.key === 'Backspace') {
+      if (canvas && e.key === 'Backspace') {
         removeSelectedElement();
         return;
       }
     },
-    [removeSelectedElement]
+    [canvas, removeSelectedElement]
   );
 
   /**
@@ -97,7 +97,7 @@ export const WhiteboardProvider = ({
       myFont
         .load()
         .then(() => {
-          if (canvas.getActiveObject()) {
+          if (canvas && canvas.getActiveObject()) {
             canvas.getActiveObject().set('fontFamily', font);
             canvas.requestRenderAll();
           }
