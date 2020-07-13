@@ -1,6 +1,14 @@
-import React, { createContext, useCallback, useEffect, useRef } from 'react';
+import React, {
+  createContext,
+  ReactComponentElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 // @ts-ignore
 import FontFaceObserver from 'fontfaceobserver';
+import { fabric } from 'fabric';
 import * as shapes from './shapes/shapes';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
@@ -13,22 +21,18 @@ import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
 // @ts-ignore
 export const WhiteboardContext = createContext();
 
-let canvas: {
-  add: (arg0: any) => void;
-  remove: (arg0: any) => void;
-  getActiveObject: () => any;
-  getObjects: () => any;
-  backgroundColor: 'red';
-  requestRenderAll(): void;
-  discardActiveObject(): void;
-  clear(): void;
-  renderAll(): void;
-};
-
 export const WhiteboardProvider = ({
   children,
+  canvasId,
+  canvasWidth,
+  canvasHeight,
+  toolbar,
 }: {
   children: React.ReactNode;
+  canvasId: string;
+  toolbar: ReactComponentElement<any>;
+  canvasWidth: string;
+  canvasHeight: string;
 }) => {
   const { text, updateText } = useText();
   const textRef = useRef('');
@@ -36,6 +40,8 @@ export const WhiteboardProvider = ({
   const { fontFamily, updateFontFamily } = useFontFamily('Arial');
   const { shapeColor, updateShapeColor } = useShapeColor('#000');
   const { shape, updateShape } = useShape('circle');
+  const [auto, setAuto] = useState(false);
+  const [canvas, setCanvas] = useState();
   const {
     ClearWhiteboardModal,
     openModal,
@@ -46,12 +52,16 @@ export const WhiteboardProvider = ({
    * Creates Canvas/Whiteboard instance
    */
   useEffect(() => {
+    console.log('canvas Id', canvasId);
+
     // @ts-ignore
-    canvas = new fabric.Canvas('canvas', {
-      backgroundColor: 'white',
-      width: '600',
-      height: '350',
+    const canvasInstance = new fabric.Canvas(canvasId, {
+      backgroundColor: null,
+      width: canvasWidth,
+      height: canvasHeight,
     });
+
+    setCanvas(canvasInstance);
   }, []);
 
   /**
@@ -101,7 +111,6 @@ export const WhiteboardProvider = ({
   }, [fontFamily, keyDownHandler, fontFamilyLoader]);
 
   const discardActiveObject = () => {
-    // @ts-ignore
     canvas.discardActiveObject().renderAll();
   };
 
@@ -110,7 +119,6 @@ export const WhiteboardProvider = ({
    * */
   useEffect(() => {
     if (text.length) {
-      // @ts-ignore
       canvas.discardActiveObject().renderAll();
     }
   }, [text]);
@@ -129,7 +137,6 @@ export const WhiteboardProvider = ({
           updateFontFamily
         );
 
-        // @ts-ignore
         canvas.setActiveObject(textFabric);
         canvas.getActiveObject().set('fill', fontColor);
         // @ts-ignore
@@ -147,17 +154,14 @@ export const WhiteboardProvider = ({
     switch (specific || shape) {
       case 'rectangle':
         const rectangle = shapes.rectangle(150, 150, shapeColor);
-        // @ts-ignore
         canvas.centerObject(rectangle);
         return canvas.add(rectangle);
       case 'triangle':
         const triangle = shapes.triangle(100, 160, shapeColor);
-        // @ts-ignore
         canvas.centerObject(triangle);
         return canvas.add(triangle);
       case 'circle':
         const circle = shapes.circle(50, shapeColor);
-        // @ts-ignore
         canvas.centerObject(circle);
         return canvas.add(circle);
     }
@@ -189,8 +193,7 @@ export const WhiteboardProvider = ({
    * */
   const clearWhiteboard = (): void => {
     canvas.clear();
-    // @ts-ignore
-    canvas.backgroundColor = 'white';
+    canvas.backgroundColor = null; //'white';
     canvas.renderAll();
     closeModal();
   };
@@ -232,12 +235,46 @@ export const WhiteboardProvider = ({
     writeText,
     discardActiveObject,
     openClearWhiteboardModal,
+    clearWhiteboard,
+    auto,
+    setAuto,
   };
 
   return (
     <WhiteboardContext.Provider value={value}>
       <ClearWhiteboardModal clearWhiteboard={clearWhiteboard} />
       {children}
+      <div
+        style={{
+          border: '1px solid red',
+          width: canvasWidth + 'px',
+          height: canvasHeight + 'px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          backgroundColor: 'white',
+        }}
+      >
+        {children}
+        <div
+          style={{
+            border: '1px solid blue',
+            width: canvasWidth + 'px',
+            height: canvasHeight + 'px',
+            position: 'absolute',
+            pointerEvents: auto ? 'auto' : 'none',
+          }}
+        >
+          <canvas
+            id={canvasId}
+            style={{
+              border: '1px solid blue',
+            }}
+          />
+        </div>
+      </div>
+      {toolbar}
     </WhiteboardContext.Provider>
   );
 };
