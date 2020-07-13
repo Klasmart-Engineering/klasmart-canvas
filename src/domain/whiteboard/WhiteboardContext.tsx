@@ -17,6 +17,7 @@ import { textHandler } from './text/text';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
+import './whiteboard.css';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -62,23 +63,27 @@ export const WhiteboardProvider = ({
     });
 
     setCanvas(canvasInstance);
-  }, []);
+  }, [canvasHeight, canvasId, canvasWidth]);
 
   /**
    * General handler for keyboard events
    * Currently handle 'Backspace' event for removing selected element from
    * whiteboard
    * */
-  const keyDownHandler = useCallback((e: { key: any }) => {
-    if (e.key === 'Backspace') {
-      removeSelectedElement();
-      return;
-    }
-  }, []);
+  const keyDownHandler = useCallback(
+    (e: { key: any }) => {
+      if (e.key === 'Backspace') {
+        removeSelectedElement();
+        return;
+      }
+    },
+    [removeSelectedElement]
+  );
 
   /**
    * Removes selected element from whiteboard
    * */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   function removeSelectedElement() {
     canvas.remove(canvas.getActiveObject());
   }
@@ -86,20 +91,23 @@ export const WhiteboardProvider = ({
   /**
    * Loads selected font. Default is Arial
    * */
-  const fontFamilyLoader = useCallback((font: string) => {
-    const myFont = new FontFaceObserver(font);
-    myFont
-      .load()
-      .then(() => {
-        if (canvas.getActiveObject()) {
-          canvas.getActiveObject().set('fontFamily', font);
-          canvas.requestRenderAll();
-        }
-      })
-      .catch((e: any) => {
-        console.log(e);
-      });
-  }, []);
+  const fontFamilyLoader = useCallback(
+    (font: string) => {
+      const myFont = new FontFaceObserver(font);
+      myFont
+        .load()
+        .then(() => {
+          if (canvas.getActiveObject()) {
+            canvas.getActiveObject().set('fontFamily', font);
+            canvas.requestRenderAll();
+          }
+        })
+        .catch((e: any) => {
+          console.log(e);
+        });
+    },
+    [canvas]
+  );
 
   /**
    * Add keyaboard keydown event listener. It listen keyDownHandler function
@@ -121,7 +129,7 @@ export const WhiteboardProvider = ({
     if (text.length) {
       canvas.discardActiveObject().renderAll();
     }
-  }, [text]);
+  }, [canvas, text]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -243,38 +251,39 @@ export const WhiteboardProvider = ({
   return (
     <WhiteboardContext.Provider value={value}>
       <ClearWhiteboardModal clearWhiteboard={clearWhiteboard} />
-      {children}
-      <div
-        style={{
-          border: '1px solid red',
-          width: canvasWidth + 'px',
-          height: canvasHeight + 'px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          backgroundColor: 'white',
-        }}
-      >
-        {children}
+      <div className="whiteboard">
+        {toolbar}
         <div
           style={{
-            border: '1px solid blue',
+            border: '1px solid red',
             width: canvasWidth + 'px',
             height: canvasHeight + 'px',
-            position: 'absolute',
-            pointerEvents: auto ? 'auto' : 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            backgroundColor: 'white',
           }}
         >
-          <canvas
-            id={canvasId}
+          {children}
+          <div
             style={{
               border: '1px solid blue',
+              width: canvasWidth + 'px',
+              height: canvasHeight + 'px',
+              position: 'absolute',
+              pointerEvents: auto ? 'auto' : 'none',
             }}
-          />
+          >
+            <canvas
+              id={canvasId}
+              style={{
+                border: '1px solid blue',
+              }}
+            />
+          </div>
         </div>
       </div>
-      {toolbar}
     </WhiteboardContext.Provider>
   );
 };

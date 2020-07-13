@@ -42,6 +42,7 @@ function Toolbar() {
     updateFontFamily,
     writeText,
     openClearWhiteboardModal,
+    setAuto,
   } = useContext(WhiteboardContext);
 
   /**
@@ -50,7 +51,7 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(index: number) {
-    updateShowInput(index === 6);
+    updateShowInput(index === 7);
 
     setTools({
       selected: index,
@@ -78,11 +79,16 @@ function Toolbar() {
    */
   function handleToolSelectorChange(index: number, value: string) {
     switch (index) {
-      case 6: {
+      case 2: {
+        setAuto(value === 'Whiteboard' ? true : false);
+        break;
+      }
+
+      case 7: {
         updateFontFamily(value);
         break;
       }
-      case 7: {
+      case 8: {
         updateShape(value.toLowerCase());
         break;
       }
@@ -96,11 +102,11 @@ function Toolbar() {
    */
   function handleToolsElementAction(index: number, specific?: string) {
     switch (true) {
-      case index === 2 && specific === 'erase object':
+      case index === 3 && specific === 'erase object':
         removeSelectedElement();
         break;
 
-      case index === 7:
+      case index === 8:
         addShape(specific);
         break;
     }
@@ -113,10 +119,10 @@ function Toolbar() {
    */
   function changeColor(index: number, color: string) {
     switch (index) {
-      case 6:
+      case 7:
         textColor(color);
         break;
-      case 7:
+      case 8:
         fillColor(color);
         break;
     }
@@ -163,7 +169,7 @@ function Toolbar() {
                   handleToolsElementClick,
                   handleToolSelectorChange,
                   handleToolsElementAction,
-                  index === 6 ? fontFamily : null,
+                  index === 7 ? fontFamily : null,
                   setColorPalette(tool.colorPaletteIcon)
                 )
               : determineIfIsSpecialSelector(tool)
