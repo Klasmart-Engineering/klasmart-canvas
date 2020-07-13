@@ -78,7 +78,7 @@ export default function WhiteboardProvider({ children }: any) {
         const sourcePainter = new CanvasPainterService(canvas);
         state.service.addTarget(sourcePainter);
       } catch (err) {
-        console.error(`Couldn't add source canvas: ${err}.`)
+        console.error(`Couldn't add source canvas: ${err}.`);
       }
     },
     [state]
@@ -90,7 +90,7 @@ export default function WhiteboardProvider({ children }: any) {
         const targetPainter = new CanvasPainterService(canvas);
         state.eventController.setPainter(targetPainter);
       } catch (err) {
-        console.error(`Couldn't add target canvas: ${err}.`)
+        console.error(`Couldn't add target canvas: ${err}.`);
       }
     },
     [state]
