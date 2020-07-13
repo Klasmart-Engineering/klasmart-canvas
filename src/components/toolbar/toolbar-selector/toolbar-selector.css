@@ -11,8 +11,10 @@
   height: 32px;
   border: none;
   margin-left: 4px;
+  padding-right: 0;
   background-color: #fff;
   border-radius: 4px;
+  outline: 0;
 }
 
 .toolbar-selector:first-child {
@@ -43,12 +45,17 @@
 
 .options {
   position: absolute;
-  margin: 0 0 8px 50px;
+  margin: 0 0 8px 56px;
   padding: 2px;
   border: none;
   background-color: #fff;
   border-radius: 4px;
   z-index: 2;
+}
+
+.special-options {
+  display: flex;
+  align-content: center;
 }
 
 .icon-container {

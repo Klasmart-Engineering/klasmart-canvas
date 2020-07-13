@@ -1,18 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { OverridableComponent } from '@material-ui/core/OverridableComponent';
-import { SvgIconTypeMap } from '@material-ui/core';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import SpecialButton from '../special-button/SpecialButton';
 import '../toolbar-selector/toolbar-selector.css';
-
-interface ISpecialSelector {
-  index: number;
-  Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
-  styleOptions: any[];
-  selected: boolean;
-  onChildClick: (index: number) => void;
-  onChildChange: (index: number, value: string) => void;
-}
+import ISpecialSelector from '../../../interfaces/toolbar/toolbar-special-elements/toolbar-special-selector';
 
 /**
  * Render an SpecialSelector that uses a stylizable Icon (Font like)
@@ -21,18 +11,11 @@ interface ISpecialSelector {
  * - Icon - Icon to set in the options
  * - selected - flag to set if the element is selected or not
  * - styleOptions - Icon styles in the different options
- * - onChildClick - Function to execute when the element is clicked
- * - onChildChange - Function to execute when the value changes
+ * - onClick - Function to execute when the element is clicked
+ * - onChange - Function to execute when the value changes
  */
-function SpecialSelector({
-  index,
-  Icon,
-  selected,
-  styleOptions,
-  onChildClick,
-  onChildChange,
-}: ISpecialSelector) {
-  const [selectedOption, setSelectedOption] = useState(styleOptions[0]);
+function SpecialSelector(props: ISpecialSelector) {
+  const [selectedOption, setSelectedOption] = useState(props.styleOptions[0]);
   const [showOptions, setShowOptions] = useState(false);
   const buttonRef = useRef(null);
 
@@ -40,7 +23,7 @@ function SpecialSelector({
    * Is executed when the selector is clicked and sends an event to its parent
    */
   function handleClick() {
-    onChildClick(index);
+    props.onClick(props.index);
 
     if (showOptions) {
       setShowOptions(false);
@@ -53,7 +36,7 @@ function SpecialSelector({
    */
   function handleSelect(value: any) {
     setSelectedOption(value);
-    onChildChange(index, value.iconName);
+    props.onChange(props.index, value.iconName);
     setShowOptions(false);
   }
 
@@ -61,7 +44,7 @@ function SpecialSelector({
    * Is executed when you click the arrow
    */
   function handleArrowClick() {
-    onChildClick(index);
+    props.onClick(props.index);
 
     if (!showOptions) {
       document.addEventListener('click', handleOutsideClick, false);
@@ -90,34 +73,34 @@ function SpecialSelector({
 
   return (
     <div className="selector-container">
-      <div
+      <button
+        title={selectedOption.title}
         ref={buttonRef}
         className={[
           'toolbar-selector',
-          selected ? 'selected' : '',
-          !selected ? 'unselected' : '',
+          props.selected ? 'selected' : '',
+          !props.selected ? 'unselected' : '',
         ].join(' ')}
       >
-        <div className="icon-container" onClick={handleClick}>
-          <Icon style={selectedOption.style} />
-        </div>
+        <props.Icon style={selectedOption.style} onClick={handleClick} />
         <ArrowRightIcon onClick={handleArrowClick} />
-      </div>
-      {showOptions && selected ? (
-        <div className="options">
-          {styleOptions
+      </button>
+      {showOptions && props.selected ? (
+        <div className="options special-options">
+          {props.styleOptions
             .filter((option) => {
-              return option.index !== selectedOption.index;
+              return option.iconName !== selectedOption.iconName;
             })
-            .map((option) => {
+            .map((option, index) => {
               return (
                 <SpecialButton
-                  key={option.index}
-                  index={option.index}
-                  Icon={Icon}
+                  key={index}
+                  index={index}
+                  title={option.title}
+                  Icon={props.Icon}
                   style={option.style}
                   selected={false}
-                  onChildClick={(e) => handleSelect(option)}
+                  onClick={(e) => handleSelect(option)}
                 />
               );
             })}
