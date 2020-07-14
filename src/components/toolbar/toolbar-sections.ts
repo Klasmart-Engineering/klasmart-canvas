@@ -49,97 +49,97 @@ import IStyleOption from '../../interfaces/toolbar/toolbar-special-elements/styl
 
 const colorPaletteOptions: IStyleOption[] = [
   {
+    id: 'transparent',
     title: 'Transparent',
-    iconName: 'Transparent',
     style: {},
   },
   {
+    id: 'white_color',
     title: 'White',
-    iconName: 'White',
     style: {
       color: '#fff',
     },
   },
   {
-    title: 'Gray Light',
-    iconName: 'Gray Light',
+    id: 'light_gray_color',
+    title: 'Light Gray',
     style: {
       color: '#e6e6e6',
     },
   },
   {
-    title: 'Gray Dark',
-    iconName: 'Gray Dark',
+    id: 'dark_gray_color',
+    title: 'Dark Gray',
     style: {
       color: '#808080',
     },
   },
   {
+    id: 'black_color',
     title: 'Black',
-    iconName: 'Black',
     style: {
       color: '#000',
     },
   },
   {
+    id: 'red_color',
     title: 'Red',
-    iconName: 'Red',
     style: {
       color: '#f8433f',
     },
   },
   {
+    id: 'green_color',
     title: 'Green',
-    iconName: 'Green',
     style: {
       color: '#5fe119',
     },
   },
   {
+    id: 'blue_color',
     title: 'Blue',
-    iconName: 'Blue',
     style: {
       color: '#347dfa',
     },
   },
   {
+    id: 'cyan_color',
     title: 'Cyan',
-    iconName: 'Cyan',
     style: {
       color: '#44f9f9',
     },
   },
   {
+    id: 'magenta_color',
     title: 'Magenta',
-    iconName: 'Magenta',
     style: {
       color: '#f289fe',
     },
   },
   {
+    id: 'yellow_color',
     title: 'Yellow',
-    iconName: 'Yellow',
     style: {
       color: '#fbe739',
     },
   },
   {
+    id: 'orange_color',
     title: 'Orange',
-    iconName: 'Orange',
     style: {
       color: '#fb823f',
     },
   },
   {
+    id: 'purple_color',
     title: 'Purple',
-    iconName: 'Purple',
     style: {
       color: '#8880fc',
     },
   },
   {
+    id: 'violet_color',
     title: 'Violet',
-    iconName: 'Violet',
     style: {
       color: '#0C7Cfa',
     },
@@ -148,40 +148,46 @@ const colorPaletteOptions: IStyleOption[] = [
 
 const actionsSection: IBasicToolbarSection = {
   // No one will be selected
-  selected: -1,
+  selected: '',
   elements: [
     // ToolbarButton
     {
+      id: 'add_image',
       title: 'Add Image',
       iconSrc: photo,
       iconName: 'Add Image',
     },
     // ToolbarButton
     {
+      id: 'undo',
       title: 'Undo',
       iconSrc: undo,
       iconName: 'Undo Icon',
     },
     // ToolbarButton
     {
+      id: 'redo',
       title: 'Redo',
       iconSrc: redo,
       iconName: 'Redo Icon',
     },
     // ToolbarButton
     {
+      id: 'clear_whiteboard',
       title: 'Clear Whiteboard',
       iconSrc: clear,
       iconName: 'Clear Icon',
     },
     // ToolbarButton
     {
+      id: 'whiteboard_screenshot',
       title: 'Whiteboard Screenshot',
       iconSrc: screenshot,
       iconName: 'Screenshot Icon',
     },
     // ToolbarButton
     {
+      id: 'share_whiteboard',
       title: 'Share Whiteboard',
       iconSrc: share,
       iconName: 'Share Icon',
@@ -190,47 +196,56 @@ const actionsSection: IBasicToolbarSection = {
 };
 
 const toolsSection: IBasicToolbarSection = {
-  selected: 0,
+  selected: 'pointers',
   elements: [
     // Pointers - ToolbarSelector
     {
+      id: 'pointers',
       options: [
         {
+          id: 'arrow_pointer',
           title: 'Arrow Pointer',
           iconSrc: pointer,
           iconName: 'Arrow',
         },
         {
+          id: 'hand_pointer',
           title: 'Hand Pointer',
           iconSrc: hand,
           iconName: 'Hand',
         },
         {
+          id: 'hand_pointer',
           title: 'Crosshair Pointer',
           iconSrc: crosshair,
           iconName: 'Crosshair',
         },
         {
+          id: 'laser_pointer',
           title: 'Laser Pointer',
           iconSrc: laser,
           iconName: 'Laser',
         },
         {
+          id: 'left_pointer',
           title: 'Left Pointer',
           iconSrc: left,
           iconName: 'Left',
         },
         {
+          id: 'up_pointer',
           title: 'Up Pointer',
           iconSrc: up,
           iconName: 'Up',
         },
         {
+          id: 'right_pointer',
           title: 'Right Pointer',
           iconSrc: right,
           iconName: 'Right',
         },
         {
+          id: 'down_pointer',
           title: 'Down Pointer',
           iconSrc: down,
           iconName: 'Down',
@@ -238,16 +253,24 @@ const toolsSection: IBasicToolbarSection = {
       ],
     },
     // Move - ToolbarButton
-    { title: 'Move Objects', iconSrc: move, iconName: 'Move Icon' },
+    {
+      id: 'move_objects',
+      title: 'Move Objects',
+      iconSrc: move,
+      iconName: 'Move Icon',
+    },
     // Activity/Whiteboard Toogle - ToolbarSelector
     {
+      id: 'activity_whiteboard_toogle',
       options: [
         {
+          id: 'play_activity',
           title: 'Play Activity',
           iconSrc: play,
           iconName: 'Activity',
         },
         {
+          id: 'use_whiteboard',
           title: 'Use Whiteboard',
           iconSrc: whiteboard,
           iconName: 'Whiteboard',
@@ -256,13 +279,16 @@ const toolsSection: IBasicToolbarSection = {
     },
     // Erase - ToolbarSelector
     {
+      id: 'erase_type',
       options: [
         {
+          id: 'object_erase',
           title: 'Erase Object',
           iconSrc: trash,
           iconName: 'Erase Object',
         },
         {
+          id: 'partial_erase',
           title: 'Partial Erase',
           iconSrc: eraser,
           iconName: 'Spot Erase',
@@ -271,43 +297,52 @@ const toolsSection: IBasicToolbarSection = {
     },
     // Line Type - ToolbarSelector - Color Palette
     {
+      id: 'line_type',
       options: [
         {
+          id: 'pen_line',
           title: 'Pen Line',
           iconSrc: pen,
           iconName: 'Pen',
         },
         {
+          id: 'pencil_line',
           title: 'Pencil Line',
           iconSrc: pencil,
           iconName: 'Pencil',
         },
         {
+          id: 'felt_line',
           title: 'Felt Line',
           iconSrc: felt,
           iconName: 'Felt',
         },
         {
+          id: 'crayon_line',
           title: 'Crayon Line',
           iconSrc: crayon,
           iconName: 'Crayon',
         },
         {
+          id: 'chalk_line',
           title: 'Chalk Line',
           iconSrc: chalk,
           iconName: 'Chalk',
         },
         {
+          id: 'paintbrush_line',
           title: 'Paintbrush Line',
           iconSrc: paintBrush,
           iconName: 'Paintbrush',
         },
         {
+          id: 'marker_line',
           title: 'Marker Line',
           iconSrc: marker,
           iconName: 'Marker',
         },
         {
+          id: 'dashed_line',
           title: 'Dashed Line',
           iconSrc: dashedPen,
           iconName: 'Dashed Pen',
@@ -317,39 +352,40 @@ const toolsSection: IBasicToolbarSection = {
     },
     // Thickness - SpecialToolbarSelector
     {
+      id: 'thickness_size',
       icon: FiberManualRecordRoundedIcon,
       styleOptions: [
         {
+          id: 'thick_8px',
           title: '8px',
-          iconName: 'Thick 8',
           style: {
             fontSize: 8,
           },
         },
         {
+          id: 'thick_12px',
           title: '12px',
-          iconName: 'Thick 12',
           style: {
             fontSize: 12,
           },
         },
         {
+          id: 'thick_16px',
           title: '16px',
-          iconName: 'Thick 16',
           style: {
             fontSize: 16,
           },
         },
         {
+          id: 'thick_20px',
           title: '20px',
-          iconName: 'Thick 20',
           style: {
             fontSize: 20,
           },
         },
         {
+          id: 'thick_24px',
           title: '24px',
-          iconName: 'Thick 24',
           style: {
             fontSize: 24,
           },
@@ -358,23 +394,28 @@ const toolsSection: IBasicToolbarSection = {
     },
     // Flood Fill - SpecialToolbarSelector
     {
+      id: 'flood_fill',
       icon: FormatColorFillRoundedIcon,
       styleOptions: colorPaletteOptions,
     },
     // Text - ToolbarSelector - Color Palette
     {
+      id: 'add_text',
       options: [
         {
+          id: 'arial_font',
           title: 'Arial Font',
           iconSrc: textIcon,
           iconName: 'Arial',
         },
         {
+          id: 'crayon_font',
           title: 'Crayon Font',
           iconSrc: crayon,
           iconName: 'Crayon',
         },
         {
+          id: 'crayon_font',
           title: 'Chalk Font',
           iconSrc: chalk,
           iconName: 'Chalkboard',
@@ -384,78 +425,90 @@ const toolsSection: IBasicToolbarSection = {
     },
     // Shapes - ToolbarSelector - Color Palette
     {
+      id: 'add_shape',
       options: [
         {
+          id: 'circle_shape',
           title: 'Circle Shape',
           iconSrc: circleShape,
           iconName: 'Circle',
         },
         {
+          id: 'rectangle_shape',
           title: 'Rectangle Shape',
           iconSrc: rectangleShape,
           iconName: 'Rectangle',
         },
         {
+          id: 'triangle_shape',
           title: 'Triangle Shape',
           iconSrc: triangleShape,
           iconName: 'Triangle',
         },
         // Not ready yet
         // {
-        //   index: 3,
+        //   id: 'pentagon_shape',
+        //   title: 'Pentagon Shape',
         //   iconSrc: pentagonShape,
         //   iconName: 'Pentagon',
         // },
         // {
-        //   index: 4,
+        //   id: 'star_shape',
+        //   title: 'Star Shape',
         //   iconSrc: starShape,
         //   iconName: 'Star',
         // },
         // {
-        //   index: 5,
+        //   id: 'chat_bubble_shape',
+        //   title: 'Chat Bubble Shape',
         //   iconSrc: chatBubbleShape,
         //   iconName: 'Chat Bubble',
         // },
-        //   ],
-        // },
-        // stamp
       ],
       colorPaletteIcon: FiberManualRecordRoundedIcon,
     },
     // Stamps - ToolbarSelector
     {
+      id: 'add_stamp',
       options: [
         {
+          id: 'yellow_star_stamp',
           title: 'Yellow Star',
           iconSrc: star,
           iconName: 'Yellow Star',
         },
         {
+          id: 'emoji_1_stamp',
           title: 'Emoji 1',
           iconSrc: emojiSmile,
           iconName: 'Emoji 1',
         },
         {
+          id: 'emoji_2_stamp',
           title: 'Emoji 2',
           iconSrc: emojiLike,
           iconName: 'Emoji 2',
         },
         {
+          id: 'emoji_3_stamp',
           title: 'Emoji 3',
           iconSrc: emojiHello,
           iconName: 'Emoji 3',
         },
         {
+          id: 'emoji_4_stamp',
           title: 'Emoji 4',
           iconSrc: emojiSleep,
           iconName: 'Emoji 4',
         },
         {
+          id: 'emoji_5_stamp',
           title: 'Emoji 5',
           iconSrc: emojiNervious,
           iconName: 'Emoji 5',
         },
         {
+          id: 'emoji_6_stamp',
           title: 'Emoji 6',
           iconSrc: emojiLaugh,
           iconName: 'Emoji 6',

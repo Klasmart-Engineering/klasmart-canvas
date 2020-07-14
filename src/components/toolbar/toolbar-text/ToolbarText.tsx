@@ -18,7 +18,8 @@ interface IToolbarText {
  * - writeText (provisionaly optional) -
  *   function to execute when the user keydown a key
  */
-function ToolbarText({ showInput, text, updateText, writeText }: IToolbarText) {
+function ToolbarText(props: IToolbarText) {
+  const { showInput, text, updateText, writeText } = props;
   return (
     <div className="input-container">
       {showInput ? (

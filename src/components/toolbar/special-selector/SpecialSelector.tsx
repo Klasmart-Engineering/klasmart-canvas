@@ -7,7 +7,7 @@ import ISpecialSelector from '../../../interfaces/toolbar/toolbar-special-elemen
 /**
  * Render an SpecialSelector that uses a stylizable Icon (Font like)
  * @param {ISpecialSelector} props - Props needed to render the component:
- * - index - index that the element has in the section
+ * - id - id that the element has
  * - Icon - Icon to set in the options
  * - selected - flag to set if the element is selected or not
  * - styleOptions - Icon styles in the different options
@@ -15,7 +15,9 @@ import ISpecialSelector from '../../../interfaces/toolbar/toolbar-special-elemen
  * - onChange - Function to execute when the value changes
  */
 function SpecialSelector(props: ISpecialSelector) {
-  const [selectedOption, setSelectedOption] = useState(props.styleOptions[0]);
+  const { id, Icon, selected, styleOptions, onClick, onChange } = props;
+
+  const [selectedOption, setSelectedOption] = useState(styleOptions[0]);
   const [showOptions, setShowOptions] = useState(false);
   const buttonRef = useRef(null);
 
@@ -23,7 +25,7 @@ function SpecialSelector(props: ISpecialSelector) {
    * Is executed when the selector is clicked and sends an event to its parent
    */
   function handleClick() {
-    props.onClick(props.index);
+    onClick(id);
 
     if (showOptions) {
       setShowOptions(false);
@@ -36,7 +38,7 @@ function SpecialSelector(props: ISpecialSelector) {
    */
   function handleSelect(value: any) {
     setSelectedOption(value);
-    props.onChange(props.index, value.iconName);
+    onChange(id, value.id);
     setShowOptions(false);
   }
 
@@ -44,7 +46,7 @@ function SpecialSelector(props: ISpecialSelector) {
    * Is executed when you click the arrow
    */
   function handleArrowClick() {
-    props.onClick(props.index);
+    onClick(id);
 
     if (!showOptions) {
       document.addEventListener('click', handleOutsideClick, false);
@@ -78,29 +80,29 @@ function SpecialSelector(props: ISpecialSelector) {
         ref={buttonRef}
         className={[
           'toolbar-selector',
-          props.selected ? 'selected' : '',
-          !props.selected ? 'unselected' : '',
+          selected ? 'selected' : '',
+          !selected ? 'unselected' : '',
         ].join(' ')}
       >
-        <props.Icon style={selectedOption.style} onClick={handleClick} />
+        <Icon style={selectedOption.style} onClick={handleClick} />
         <ArrowRightIcon onClick={handleArrowClick} />
       </button>
-      {showOptions && props.selected ? (
+      {showOptions && selected ? (
         <div className="options special-options">
-          {props.styleOptions
+          {styleOptions
             .filter((option) => {
-              return option.iconName !== selectedOption.iconName;
+              return option.id !== selectedOption.id;
             })
-            .map((option, index) => {
+            .map((option) => {
               return (
                 <SpecialButton
-                  key={index}
-                  index={index}
+                  key={option.id}
+                  id={option.id}
                   title={option.title}
-                  Icon={props.Icon}
+                  Icon={Icon}
                   style={option.style}
                   selected={false}
-                  onClick={(e) => handleSelect(option)}
+                  onClick={() => handleSelect(option)}
                 />
               );
             })}
