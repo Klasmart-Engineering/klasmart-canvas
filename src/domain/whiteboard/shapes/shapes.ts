@@ -33,9 +33,10 @@ export const triangle = (width: number, height: number, color: string) => {
  * @param radius Radius of circle
  * @param color Color of shape
  */
-export const circle = (radius: number, color: string) => {
-  return new fabric.Circle({
-    radius: radius,
+export const circle = (width: number, height: number, color: string) => {
+  return new fabric.Ellipse({
+    rx: width,
+    ry: height,
     fill: color,
   });
 };

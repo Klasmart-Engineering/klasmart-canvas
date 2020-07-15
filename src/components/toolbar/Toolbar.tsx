@@ -43,7 +43,7 @@ function Toolbar() {
     text,
     updateText,
     updateFontFamily,
-    writeText,
+    writeText
   } = useContext(WhiteboardContext);
 
   /**
@@ -75,6 +75,8 @@ function Toolbar() {
         break;
       case 7:
         addShape(especific);
+        // mouseDown(especific);
+        // mouseUp();
         break;
     }
   }

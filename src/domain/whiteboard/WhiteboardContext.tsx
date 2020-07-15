@@ -14,7 +14,7 @@ import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
 export const WhiteboardContext = createContext();
 
 let canvas: {
-  add: (arg0: any) => void;
+  add: (arg0: any, arg1?: any) => void;
   remove: (arg0: any) => void;
   getActiveObject: () => any;
   getObjects: () => any;
@@ -23,6 +23,8 @@ let canvas: {
   discardActiveObject(): void;
   clear(): void;
   renderAll(): void;
+  on: (arg0: string, arg1: (arg0: any) => void) => void;
+  off: (arg0: string) => void;
 };
 
 export const WhiteboardProvider = ({
@@ -137,25 +139,94 @@ export const WhiteboardProvider = ({
   };
 
   /**
+   * Mouse down event listener for canvas.
+   * @param shape Shape being added on canvas.
+   * @param isCircle Indicates if shape is a circle.
+   */
+  const mouseDown = (shape: any, isCircle?: boolean) => {
+    canvas.on('mouse:down', (e: any) => {
+      shape.set({ top: e.pointer.y, left: e.pointer.x });
+      mouseMove(shape, e.pointer, isCircle);
+      mouseUp(shape);
+      return canvas.add(shape);
+    });
+  };
+
+  /**
+   * 
+   * @param shape Shape that was added to canvas.
+   * @param coordsStart Coordinates of initial click on canvas.
+   * @param isCircle Indicates if shape added is a circle.
+   */
+  const mouseMove = (shape: any, coordsStart: any, isCircle?: boolean): void => {
+    canvas.on('mouse:move', (e: any) => {
+      const getLength = (x1: number, x2: number) => Math.abs(x1 - x2);
+      const setSize = (start: any, end: any): void => {
+        let width = getLength(end.x, start.x);
+        let height = getLength(end.y, start.y);
+        shape.set({ width, height });
+      };
+
+      const setCircleSize = (start: any, end: any): void => {
+        let rx = getLength(end.x, start.x) / 2;
+        let ry = getLength(end.y, start.y) / 2;
+        shape.set({ rx, ry });
+      };
+
+      if (!isCircle) {
+        setSize(coordsStart, e.pointer);
+      } else {
+        setCircleSize(coordsStart, e.pointer);
+      }
+
+      canvas.renderAll();
+    });
+  }
+
+  /**
+   * Mouse up event listener for canvas.
+   */
+  const mouseUp = (shape: any): void => {
+    canvas.on('mouse:up', (e: any) => {
+      clearAllMouseEvents();
+      shape.setCoords();
+      canvas.renderAll();
+    });
+  };
+
+  /**
+   * Clears all mouse event listeners from canvas.
+   */
+  const clearAllMouseEvents = (): void => {
+    canvas.off('mouse:move');
+    canvas.off('mouse:down');
+    canvas.off('mouse:up');
+  }
+
+  /**
    * Add specific shape to whiteboard
    * */
-  const addShape = (specific?: string) => {
+  const addShape = (specific?: string): void => {
+    // Required to prevent multiple shapes add at once
+    // if user clicked more than one shape during selection.
+    clearAllMouseEvents();
+    
     switch (specific || shape) {
       case 'rectangle':
-        const rectangle = shapes.rectangle(150, 150, shapeColor);
-        // @ts-ignore
-        canvas.centerObject(rectangle);
-        return canvas.add(rectangle);
+        const rectangle = shapes.rectangle(15, 15, shapeColor);
+        mouseDown(rectangle);
+        mouseUp(rectangle);
+        return;
       case 'triangle':
-        const triangle = shapes.triangle(100, 160, shapeColor);
-        // @ts-ignore
-        canvas.centerObject(triangle);
-        return canvas.add(triangle);
+        const triangle = shapes.triangle(10, 16, shapeColor);
+        mouseDown(triangle);
+        mouseUp(triangle);
+        return;
       case 'circle':
-        const circle = shapes.circle(50, shapeColor);
-        // @ts-ignore
-        canvas.centerObject(circle);
-        return canvas.add(circle);
+        const circle = shapes.circle(10, 10, shapeColor);
+        mouseDown(circle, true);
+        mouseUp(circle);
+        return;
     }
   };
 
