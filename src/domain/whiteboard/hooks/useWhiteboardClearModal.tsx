@@ -19,9 +19,6 @@ export const useWhiteboardClearModal = () => {
   const ClearWhiteboardModal = (props: IClearWhiteboardModal) => {
     return (
       <div>
-        <Button variant="outlined" color="primary" onClick={openModal}>
-          Open alert dialog
-        </Button>
         <Dialog
           open={clearWhiteboardModal}
           onClose={closeModal}

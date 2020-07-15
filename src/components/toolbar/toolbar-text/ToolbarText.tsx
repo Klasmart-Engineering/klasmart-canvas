@@ -6,7 +6,7 @@ interface IToolbarText {
   showInput: boolean;
   text: string;
   updateText: (value: string) => void;
-  writeText?: (e: any) => void;
+  writeText: (e: any) => void;
 }
 
 /**
@@ -20,6 +20,7 @@ interface IToolbarText {
  */
 function ToolbarText(props: IToolbarText) {
   const { showInput, text, updateText, writeText } = props;
+
   return (
     <div className="input-container">
       {showInput ? (
@@ -30,8 +31,7 @@ function ToolbarText(props: IToolbarText) {
           variant="outlined"
           value={text}
           onChange={(e) => updateText(e.target.value)}
-          // is necesary the function managed by Whiteboard
-          // onKeyDown={(e) => writeText(e)}
+          onKeyDown={(e) => writeText(e)}
         />
       ) : null}
     </div>

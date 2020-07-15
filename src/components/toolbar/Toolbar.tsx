@@ -14,6 +14,7 @@ import IBasicToolbarSelector from '../../interfaces/toolbar/toolbar-selector/bas
 import IBasicToolbarButton from '../../interfaces/toolbar/toolbar-button/basic-toolbar-button';
 import IColorPalette from '../../interfaces/toolbar/toolbar-selector/color-palette';
 import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elements/basic-special-selector';
+import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 
 export const ELEMENTS = {
   ADD_IMAGE_ACTION: 'add_image',
@@ -48,24 +49,20 @@ function Toolbar() {
   const [tools, setTools] = useState(toolsSection);
   const [actions] = useState(actionsSection);
 
-  // provisional, this will be managed by WhiteboardContext
-  const [text, updateText] = useState('');
-
-  // This comes from WhiteboardContext
-  // const {
-  //   fillColor,
-  //   textColor,
-  //   updateShape,
-  //   addShape,
-  //   removeSelectedElement,
-  //   text,
-  //   fontFamily,
-  //   updateText,
-  //   updateFontFamily,
-  //   writeText,
-  //   openClearWhiteboardModal,
-  //   setAuto,
-  // } = useContext(WhiteboardContext);
+  const {
+    fillColor,
+    textColor,
+    updateShape,
+    addShape,
+    removeSelectedElement,
+    text,
+    fontFamily,
+    updateText,
+    updateFontFamily,
+    writeText,
+    openClearWhiteboardModal,
+    setPointerEvents,
+  } = useContext(WhiteboardContext);
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -89,8 +86,7 @@ function Toolbar() {
   function handleActionsElementClick(tool: string) {
     switch (tool) {
       case ELEMENTS.CLEAR_WHITEBOARD_ACTION: {
-        // Comes from WhiteboardContext
-        // openClearWhiteboardModal();
+        openClearWhiteboardModal();
       }
     }
   }
@@ -102,22 +98,18 @@ function Toolbar() {
    */
   function handleToolSelectorChange(tool: string, value: string) {
     switch (tool) {
-      case ELEMENTS.ACTIVITY_WHITEBOARD_TOOGLE_TOOL: {
+      case ELEMENTS.ACTIVITY_WHITEBOARD_TOOGLE_TOOL:
         // Comes from WhiteboardContext
-        // setAuto(value === 'Whiteboard' ? true : false);
+        setPointerEvents(value === 'Whiteboard' ? true : false);
         break;
-      }
 
-      case ELEMENTS.ADD_TEXT_TOOL: {
-        // Comes from WhiteboardContext
-        // updateFontFamily(value);
+      case ELEMENTS.ADD_TEXT_TOOL:
+        updateFontFamily(value);
         break;
-      }
-      case ELEMENTS.ADD_SHAPE_TOOL: {
-        // Comes from WhiteboardContext
-        // updateShape(value.toLowerCase());
+
+      case ELEMENTS.ADD_SHAPE_TOOL:
+        updateShape(value.toLowerCase());
         break;
-      }
     }
   }
 
@@ -128,14 +120,12 @@ function Toolbar() {
    */
   function handleToolsElementAction(tool: string, specific?: string) {
     switch (true) {
-      case tool === ELEMENTS.ERASE_TYPE_TOOL && specific === 'object_erase':
-        // Comes from WhiteboardContext
-        // removeSelectedElement();
+      case tool === ELEMENTS.ERASE_TYPE_TOOL && specific === 'erase object':
+        removeSelectedElement();
         break;
 
       case tool === ELEMENTS.ADD_SHAPE_TOOL:
-        // Comes from WhiteboardContext
-        // addShape(specific);
+        addShape(specific);
         break;
     }
   }
@@ -148,12 +138,10 @@ function Toolbar() {
   function changeColor(tool: string, color: string) {
     switch (tool) {
       case ELEMENTS.ADD_TEXT_TOOL:
-        // Comes from WhiteboardContext
-        // textColor(color);
+        textColor(color);
         break;
       case ELEMENTS.ADD_SHAPE_TOOL:
-        // Comes from WhiteboardContext
-        // fillColor(color);
+        fillColor(color);
         break;
     }
   }
@@ -199,9 +187,7 @@ function Toolbar() {
                   handleToolsElementClick,
                   handleToolSelectorChange,
                   handleToolsElementAction,
-                  '',
-                  // Is necesary have WhiteboardContext
-                  // index === 7 ? fontFamily : null,
+                  tool.id === ELEMENTS.ADD_TEXT_TOOL ? fontFamily : null,
                   setColorPalette(tool.colorPaletteIcon)
                 )
               : determineIfIsSpecialSelector(tool)
@@ -237,8 +223,7 @@ function Toolbar() {
         showInput={showInput}
         text={text}
         updateText={updateText}
-        // This is a function managed by WhiteboardContext
-        // writeText={writeText}
+        writeText={writeText}
       />
     </div>
   );

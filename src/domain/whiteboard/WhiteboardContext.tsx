@@ -17,6 +17,8 @@ import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
 import { usePointerEvents } from './hooks/usePointerEvents';
+import { useFontColor } from './hooks/useFontColor';
+import './whiteboard.css';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -36,12 +38,17 @@ export const WhiteboardProvider = ({
 }) => {
   const { text, updateText } = useText();
   const textRef = useRef('');
-  const { fontFamily, updateFontFamily } = useFontFamily();
-  const { shapeColor, updateShapeColor } = useShapeColor();
-  const { shape, updateShape } = useShape();
-  const { closeModal } = useWhiteboardClearModal();
+  const { fontColor, updateFontColor } = useFontColor('#000');
+  const { fontFamily, updateFontFamily } = useFontFamily('Arial');
+  const { shapeColor, updateShapeColor } = useShapeColor('#000');
+  const { shape, updateShape } = useShape('circle');
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const [canvas, setCanvas] = useState();
+  const {
+    ClearWhiteboardModal,
+    openModal,
+    closeModal,
+  } = useWhiteboardClearModal();
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -62,37 +69,43 @@ export const WhiteboardProvider = ({
    * */
   const removeSelectedElement = useCallback(() => {
     canvas.remove(canvas.getActiveObject());
-  }, [canvas])
+  }, [canvas]);
 
   /**
    * General handler for keyboard events
    * Currently handle 'Backspace' event for removing selected element from
    * whiteboard
    * */
-  const keyDownHandler = useCallback((e: { key: any }) => {
-    if (e.key === 'Backspace' && canvas) {
-      removeSelectedElement();
-      return;
-    }
-  }, [canvas, removeSelectedElement]);
+  const keyDownHandler = useCallback(
+    (e: { key: any }) => {
+      if (e.key === 'Backspace' && canvas) {
+        removeSelectedElement();
+        return;
+      }
+    },
+    [canvas, removeSelectedElement]
+  );
 
   /**
    * Loads selected font. Default is Arial
    * */
-  const fontFamilyLoader = useCallback((font: string) => {
-    const myFont = new FontFaceObserver(font);
-    myFont
-      .load()
-      .then(() => {
-        if (canvas.getActiveObject()) {
-          canvas.getActiveObject().set('fontFamily', font);
-          canvas.requestRenderAll();
-        }
-      })
-      .catch((e: any) => {
-        console.log(e);
-      });
-  }, [canvas]);
+  const fontFamilyLoader = useCallback(
+    (font: string) => {
+      const myFont = new FontFaceObserver(font);
+      myFont
+        .load()
+        .then(() => {
+          if (canvas.getActiveObject()) {
+            canvas.getActiveObject().set('fontFamily', font);
+            canvas.requestRenderAll();
+          }
+        })
+        .catch((e: any) => {
+          console.log(e);
+        });
+    },
+    [canvas]
+  );
 
   /**
    * Add keyboard keydown event listener. It listen keyDownHandler function
@@ -131,6 +144,7 @@ export const WhiteboardProvider = ({
         );
 
         canvas.setActiveObject(textFabric);
+        canvas.getActiveObject().set('fill', fontColor);
         canvas.centerObject(textFabric);
         canvas.add(textFabric);
         updateText('');
@@ -141,8 +155,8 @@ export const WhiteboardProvider = ({
   /**
    * Add specific shape to whiteboard
    * */
-  const addShape = () => {
-    switch (shape) {
+  const addShape = (specific?: string) => {
+    switch (specific || shape) {
       case 'rectangle':
         const rectangle = shapes.rectangle(150, 150, shapeColor);
         canvas.centerObject(rectangle);
@@ -170,6 +184,19 @@ export const WhiteboardProvider = ({
   };
 
   /**
+   * Add specific color to selected text
+   * @param {string} color - color to set
+   */
+  const textColor = (color: string) => {
+    updateFontColor(color);
+    if (canvas.getActiveObject() && canvas.getActiveObject().text) {
+      canvas.getActiveObject().set('fill', color);
+      // @ts-ignore
+      canvas.renderAll();
+    }
+  };
+
+  /**
    * Clears all whiteboard elements
    * */
   const clearWhiteboard = (): void => {
@@ -177,6 +204,13 @@ export const WhiteboardProvider = ({
     canvas.backgroundColor = 'white';
     canvas.renderAll();
     closeModal();
+  };
+
+  /**
+   * Opens ClearWhiteboardModal
+   */
+  const openClearWhiteboardModal = () => {
+    openModal();
   };
 
   /**
@@ -197,6 +231,7 @@ export const WhiteboardProvider = ({
     updateFontFamily,
     colorsList,
     fillColor,
+    textColor,
     updateShape,
     addShape,
     removeSelectedElement,
@@ -204,37 +239,41 @@ export const WhiteboardProvider = ({
     updateText,
     writeText,
     discardActiveObject,
-    clearWhiteboard,
+    openClearWhiteboardModal,
     setPointerEvents,
     pointerEvents,
   };
 
   return (
     <WhiteboardContext.Provider value={value}>
-      <div
-        style={{
-          width: canvasWidth + 'px',
-          height: canvasHeight + 'px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          backgroundColor: 'white',
-        }}
-      >
-        {children}
+      <ClearWhiteboardModal clearWhiteboard={clearWhiteboard} />
+      <div className="whiteboard">
+        {toolbar}
         <div
           style={{
+            border: '1px solid black',
             width: canvasWidth + 'px',
             height: canvasHeight + 'px',
-            position: 'absolute',
-            pointerEvents: pointerEvents ? 'auto' : 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            backgroundColor: 'white',
           }}
         >
-          <canvas id={canvasId} />
+          {children}
+          <div
+            style={{
+              width: canvasWidth + 'px',
+              height: canvasHeight + 'px',
+              position: 'absolute',
+              pointerEvents: pointerEvents ? 'auto' : 'none',
+            }}
+          >
+            <canvas id={canvasId} />
+          </div>
         </div>
       </div>
-      {toolbar}
     </WhiteboardContext.Provider>
   );
 };
