@@ -1,5 +1,5 @@
 import React from 'react';
-import { colorPaletteOptions } from '../toolbar-section/toolbar-sections';
+import { colorPaletteOptions } from '../toolbar-sections';
 import SpecialButton from '../special-button/SpecialButton';
 import { OverridableComponent } from '@material-ui/core/OverridableComponent';
 import { SvgIconTypeMap } from '@material-ui/core';
@@ -33,16 +33,17 @@ function ColorPalette({
   return (
     <div>
       {colorPaletteOptions
-        .filter((color, index) => index)
+        .filter((_, index) => index)
         .map((color, index) => {
           return color.iconName ? (
             <SpecialButton
               key={index}
               index={index}
+              title={color.title}
               Icon={Icon}
               style={color.style}
               selected={selectedColor === color.style.color}
-              onChildClick={(e) => changeColor(color.style.color || '')}
+              onClick={(e) => changeColor(color.style.color || '')}
             />
           ) : null;
         })}

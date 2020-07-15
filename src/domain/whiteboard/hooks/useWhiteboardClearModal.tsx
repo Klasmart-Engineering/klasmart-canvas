@@ -3,6 +3,7 @@ import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogActions from '@material-ui/core/DialogActions';
+
 export const useWhiteboardClearModal = () => {
   const [clearWhiteboardModal, setOpen] = useState(false);
   const openModal = () => {
@@ -19,9 +20,6 @@ export const useWhiteboardClearModal = () => {
   const ClearWhiteboardModal = (props: IClearWhiteboardModal) => {
     return (
       <div>
-        <Button variant="outlined" color="primary" onClick={openModal}>
-          Open alert dialog
-        </Button>
         <Dialog
           open={clearWhiteboardModal}
           onClose={closeModal}

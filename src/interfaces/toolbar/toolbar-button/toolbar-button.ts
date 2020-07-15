@@ -1,7 +1,8 @@
 export default interface IToolbarButton {
+  index: number;
+  title: string;
   iconSrc: string;
   iconName: string;
-  index: number;
   selected: boolean;
-  onChildClick: (index: number) => void;
+  onClick: (index: number) => void;
 }

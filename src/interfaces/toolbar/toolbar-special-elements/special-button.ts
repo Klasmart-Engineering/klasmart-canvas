@@ -1,10 +1,12 @@
 import { OverridableComponent } from '@material-ui/core/OverridableComponent';
 import { SvgIconTypeMap } from '@material-ui/core';
+import IStyleForIcon from './style-for-icon';
 
 export default interface ISpecialButton {
-  Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
-  style: any;
   index: number;
+  title: string;
+  Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
+  style: IStyleForIcon;
   selected: boolean;
-  onChildClick: (index: number) => void;
+  onClick: (index: number) => void;
 }
