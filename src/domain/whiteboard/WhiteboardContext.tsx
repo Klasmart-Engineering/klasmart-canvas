@@ -130,6 +130,17 @@ export const WhiteboardProvider = ({
   }, [text, canvas]);
 
   /**
+   * If pointersEvents changes to false, al the selected objects
+   * will be unselected
+   */
+  useEffect(() => {
+    if (!pointerEvents && canvas) {
+      canvas.discardActiveObject();
+      canvas.requestRenderAll();
+    }
+  }, [pointerEvents, canvas]);
+
+  /**
    * Handles the logic to write text on the whiteboard
    * */
   const writeText = (e: any) => {
@@ -213,6 +224,37 @@ export const WhiteboardProvider = ({
     openModal();
   };
 
+  const eraseObject = (): void => {
+    canvas.selection = false;
+    canvas.forEachObject(function (o: any) {
+      o.selectable = false;
+    });
+    canvas.renderAll();
+
+    let eraser: boolean = false;
+
+    canvas.on('mouse:down', (e: any) => {
+      if (eraser) {
+        return false;
+      }
+
+      if (e.target) {
+        canvas.remove(e.target);
+        canvas.renderAll();
+      }
+
+      eraser = true;
+    });
+
+    canvas.on('mouse:up', () => {
+      if (!eraser) {
+        return false;
+      }
+
+      eraser = false;
+    });
+  };
+
   /**
    * List of available colors in toolbar
    * */
@@ -242,6 +284,7 @@ export const WhiteboardProvider = ({
     openClearWhiteboardModal,
     setPointerEvents,
     pointerEvents,
+    eraseObject,
   };
 
   return (
