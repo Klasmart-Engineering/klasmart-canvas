@@ -249,7 +249,6 @@ export const WhiteboardProvider = ({
    */
   const eraseObject = (): void => {
     let eraser: boolean = false;
-    let activeObjects: any = null;
 
     // Deactivate selection
     setCanvasSelection(false);
@@ -262,7 +261,6 @@ export const WhiteboardProvider = ({
 
       // if the click is made over an object
       if (e.target) {
-        activeObjects = canvas.getActiveObjects();
         canvas.remove(e.target);
         canvas.renderAll();
       }
