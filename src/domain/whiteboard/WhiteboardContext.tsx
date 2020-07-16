@@ -19,6 +19,7 @@ import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
 import { usePointerEvents } from './hooks/usePointerEvents';
 import { useFontColor } from './hooks/useFontColor';
 import './whiteboard.css';
+import { useEraseType } from './hooks/useEraseType';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -42,8 +43,10 @@ export const WhiteboardProvider = ({
   const { fontFamily, updateFontFamily } = useFontFamily('Arial');
   const { shapeColor, updateShapeColor } = useShapeColor('#000');
   const { shape, updateShape } = useShape('circle');
+  const { eraseType, updateEraseType } = useEraseType('');
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const [canvas, setCanvas] = useState();
+
   const {
     ClearWhiteboardModal,
     openModal,
@@ -116,6 +119,9 @@ export const WhiteboardProvider = ({
     fontFamilyLoader(fontFamily);
   }, [fontFamily, keyDownHandler, fontFamilyLoader]);
 
+  /**
+   * Deselect the actual selected object
+   */
   const discardActiveObject = () => {
     canvas.discardActiveObject().renderAll();
   };
@@ -130,15 +136,29 @@ export const WhiteboardProvider = ({
   }, [text, canvas]);
 
   /**
-   * If pointersEvents changes to false, al the selected objects
+   * If pointersEvents changes to false, all the selected objects
    * will be unselected
    */
   useEffect(() => {
     if (!pointerEvents && canvas) {
-      canvas.discardActiveObject();
-      canvas.requestRenderAll();
+      canvas.discardActiveObject().renderAll();
     }
   }, [pointerEvents, canvas]);
+
+  /**
+   * When eraseType value changes, listeners and states
+   * necessaries to erase objects are setted or removed
+   */
+  useEffect(() => {
+    if (eraseType !== 'Erase Object' && canvas) {
+      setCanvasSelection(true);
+      canvas.__eventListeners = {};
+    } else if (canvas) {
+      canvas.discardActiveObject().renderAll();
+      eraseObject();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eraseType, canvas]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -224,28 +244,52 @@ export const WhiteboardProvider = ({
     openModal();
   };
 
+  /**
+   * Creates the listeners to erase objects from the whiteboard
+   */
   const eraseObject = (): void => {
-    canvas.selection = false;
-    canvas.forEachObject(function (o: any) {
-      o.selectable = false;
-    });
-    canvas.renderAll();
-
     let eraser: boolean = false;
+    let activeObjects: any = null;
 
+    // Deactivate selection
+    setCanvasSelection(false);
+
+    // When mouse down eraser is able to remove objects
     canvas.on('mouse:down', (e: any) => {
       if (eraser) {
         return false;
       }
 
+      // if the click is made over an object
       if (e.target) {
+        activeObjects = canvas.getActiveObjects();
         canvas.remove(e.target);
         canvas.renderAll();
+      }
+
+      // if the click is made over an object group
+      if (e.target && activeObjects.length) {
+        activeObjects.forEach(function (object: any) {
+          canvas.remove(object);
+        });
+
+        canvas.discardActiveObject().renderAll();
       }
 
       eraser = true;
     });
 
+    // When mouse is over an object
+    canvas.on('mouse:over', (e: any) => {
+      if (!eraser) {
+        return false;
+      }
+
+      canvas.remove(e.target);
+      canvas.renderAll();
+    });
+
+    // When mouse up eraser is unable to remove objects
     canvas.on('mouse:up', () => {
       if (!eraser) {
         return false;
@@ -253,6 +297,19 @@ export const WhiteboardProvider = ({
 
       eraser = false;
     });
+  };
+
+  /**
+   * Set Canvas Whiteboard selection hability
+   * @param {boolean} selection - value to set in canvas and objects selection
+   */
+  const setCanvasSelection = (selection: boolean): void => {
+    canvas.selection = selection;
+    canvas.forEachObject((object: fabric.Object) => {
+      object.selectable = selection;
+    });
+
+    canvas.renderAll();
   };
 
   /**
@@ -276,7 +333,6 @@ export const WhiteboardProvider = ({
     textColor,
     updateShape,
     addShape,
-    removeSelectedElement,
     text,
     updateText,
     writeText,
@@ -285,6 +341,8 @@ export const WhiteboardProvider = ({
     setPointerEvents,
     pointerEvents,
     eraseObject,
+    eraseType,
+    updateEraseType,
   };
 
   return (

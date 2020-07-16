@@ -25,7 +25,6 @@ export const ELEMENTS = {
   SHARE_WHITEBOARD_ACTION: 'share_whiteboard',
   POINTERS_TOOL: 'pointers',
   MOVE_OBJECTS_TOOL: 'move_objects',
-  ACTIVITY_WHITEBOARD_TOOGLE_TOOL: 'activity_whiteboard_toogle',
   ERASE_TYPE_TOOL: 'erase_type',
   LINE_TYPE_TOOL: 'line_type',
   THICKNESS_SIZE_TOOL: 'thickness_size',
@@ -54,7 +53,6 @@ function Toolbar() {
     textColor,
     updateShape,
     addShape,
-    removeSelectedElement,
     text,
     fontFamily,
     updateText,
@@ -62,6 +60,8 @@ function Toolbar() {
     writeText,
     openClearWhiteboardModal,
     setPointerEvents,
+    eraseType,
+    updateEraseType,
   } = useContext(WhiteboardContext);
 
   /**
@@ -70,7 +70,9 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
+    updateEraseType('');
     updateShowInput(tool === ELEMENTS.ADD_TEXT_TOOL);
+    setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
     setTools({
       selected: tool,
@@ -98,17 +100,16 @@ function Toolbar() {
    */
   function handleToolSelectorChange(tool: string, value: string) {
     switch (tool) {
-      case ELEMENTS.ACTIVITY_WHITEBOARD_TOOGLE_TOOL:
-        // Comes from WhiteboardContext
-        setPointerEvents(value === 'Whiteboard' ? true : false);
-        break;
-
       case ELEMENTS.ADD_TEXT_TOOL:
         updateFontFamily(value);
         break;
 
       case ELEMENTS.ADD_SHAPE_TOOL:
         updateShape(value.toLowerCase());
+        break;
+
+      case ELEMENTS.ERASE_TYPE_TOOL:
+        updateEraseType(value);
         break;
     }
   }
@@ -119,9 +120,11 @@ function Toolbar() {
    * @param {string} specific (optional) - specific value/option to use
    */
   function handleToolsElementAction(tool: string, specific?: string) {
+    updateEraseType('');
+
     switch (true) {
       case tool === ELEMENTS.ERASE_TYPE_TOOL && specific === 'erase object':
-        removeSelectedElement();
+        updateEraseType('Erase Object');
         break;
 
       case tool === ELEMENTS.ADD_SHAPE_TOOL:
@@ -140,6 +143,7 @@ function Toolbar() {
       case ELEMENTS.ADD_TEXT_TOOL:
         textColor(color);
         break;
+
       case ELEMENTS.ADD_SHAPE_TOOL:
         fillColor(color);
         break;
@@ -165,6 +169,23 @@ function Toolbar() {
     };
   }
 
+  /**
+   * Set the option defined by parent component to the elements that need it
+   * @param {string} tool - Tool to set the parent defined option
+   */
+  function setDefaultOption(tool: string): string {
+    switch (tool) {
+      case ELEMENTS.ADD_TEXT_TOOL:
+        return fontFamily;
+
+      case ELEMENTS.ERASE_TYPE_TOOL:
+        return eraseType;
+
+      default:
+        return '';
+    }
+  }
+
   return (
     <div className="toolbar-container">
       <div className="toolbar">
@@ -187,7 +208,7 @@ function Toolbar() {
                   handleToolsElementClick,
                   handleToolSelectorChange,
                   handleToolsElementAction,
-                  tool.id === ELEMENTS.ADD_TEXT_TOOL ? fontFamily : null,
+                  setDefaultOption(tool.id),
                   setColorPalette(tool.colorPaletteIcon)
                 )
               : determineIfIsSpecialSelector(tool)
@@ -235,7 +256,8 @@ function Toolbar() {
  * @param {string} iconSrc - src for the icon of the button
  * @param {string} iconName - alt for the icon of the button
  * @param {boolean} selected - flag to set this button like selected
- * @param {(index: number) => void} onClick - function to execute when button is clicked
+ * @param {(index: number) => void} onClick - function to execute
+ * when button is clicked
  */
 function createToolbarButton(
   id: string,
