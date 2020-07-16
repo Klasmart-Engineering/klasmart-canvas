@@ -267,15 +267,6 @@ export const WhiteboardProvider = ({
         canvas.renderAll();
       }
 
-      // if the click is made over an object group
-      if (e.target && activeObjects.length) {
-        activeObjects.forEach(function (object: any) {
-          canvas.remove(object);
-        });
-
-        canvas.discardActiveObject().renderAll();
-      }
-
       eraser = true;
     });
 
