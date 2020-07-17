@@ -8,7 +8,7 @@ export default interface ToolbarSelector {
   definedOptionName?: string;
   colorPalette?: IColorPalette;
   selectedColor?: string;
-  onAction: (tool: string, value?: string) => void;
+  onAction: (tool: string, option?: string | boolean | number) => void;
   onClick: (tool: string) => void;
-  onChange: (tool: string, value: string) => void;
+  onChange: (tool: string, option: string | boolean | number) => void;
 }

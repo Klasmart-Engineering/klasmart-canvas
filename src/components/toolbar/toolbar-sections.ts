@@ -50,11 +50,13 @@ import IStyleOption from '../../interfaces/toolbar/toolbar-special-elements/styl
 const colorPaletteOptions: IStyleOption[] = [
   {
     id: 'transparent',
+    value: '',
     title: 'Transparent',
     style: {},
   },
   {
     id: 'white_color',
+    value: '#fff',
     title: 'White',
     style: {
       color: '#fff',
@@ -62,6 +64,7 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'light_gray_color',
+    value: '#e6e6e6',
     title: 'Light Gray',
     style: {
       color: '#e6e6e6',
@@ -69,6 +72,7 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'dark_gray_color',
+    value: '#808080',
     title: 'Dark Gray',
     style: {
       color: '#808080',
@@ -76,6 +80,7 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'black_color',
+    value: '#000',
     title: 'Black',
     style: {
       color: '#000',
@@ -83,6 +88,7 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'red_color',
+    value: '#f8433f',
     title: 'Red',
     style: {
       color: '#f8433f',
@@ -90,6 +96,7 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'green_color',
+    value: '#5fe119',
     title: 'Green',
     style: {
       color: '#5fe119',
@@ -97,6 +104,7 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'blue_color',
+    value: '#347dfa',
     title: 'Blue',
     style: {
       color: '#347dfa',
@@ -104,6 +112,7 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'cyan_color',
+    value: '#44f9f9',
     title: 'Cyan',
     style: {
       color: '#44f9f9',
@@ -111,6 +120,7 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'magenta_color',
+    value: '#f289fe',
     title: 'Magenta',
     style: {
       color: '#f289fe',
@@ -118,6 +128,7 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'yellow_color',
+    value: '#fbe739',
     title: 'Yellow',
     style: {
       color: '#fbe739',
@@ -125,6 +136,7 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'orange_color',
+    value: '#fb823f',
     title: 'Orange',
     style: {
       color: '#fb823f',
@@ -132,6 +144,7 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'purple_color',
+    value: '#8880fc',
     title: 'Purple',
     style: {
       color: '#8880fc',
@@ -139,9 +152,10 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'violet_color',
+    value: '#0c7cfa',
     title: 'Violet',
     style: {
-      color: '#0C7Cfa',
+      color: '#0c7cfa',
     },
   },
 ];
@@ -204,48 +218,56 @@ const toolsSection: IBasicToolbarSection = {
       options: [
         {
           id: 'arrow_pointer',
+          value: 'arrow',
           title: 'Arrow Pointer',
           iconSrc: pointer,
           iconName: 'Arrow',
         },
         {
           id: 'hand_pointer',
+          value: 'hand',
           title: 'Hand Pointer',
           iconSrc: hand,
           iconName: 'Hand',
         },
         {
-          id: 'hand_pointer',
+          id: 'crosshair_pointer',
+          value: 'crosshair',
           title: 'Crosshair Pointer',
           iconSrc: crosshair,
           iconName: 'Crosshair',
         },
         {
           id: 'laser_pointer',
+          value: 'laser',
           title: 'Laser Pointer',
           iconSrc: laser,
           iconName: 'Laser',
         },
         {
           id: 'left_pointer',
+          value: 'left',
           title: 'Left Pointer',
           iconSrc: left,
           iconName: 'Left',
         },
         {
           id: 'up_pointer',
+          value: 'up',
           title: 'Up Pointer',
           iconSrc: up,
           iconName: 'Up',
         },
         {
           id: 'right_pointer',
+          value: 'right',
           title: 'Right Pointer',
           iconSrc: right,
           iconName: 'Right',
         },
         {
           id: 'down_pointer',
+          value: 'down',
           title: 'Down Pointer',
           iconSrc: down,
           iconName: 'Down',
@@ -265,12 +287,14 @@ const toolsSection: IBasicToolbarSection = {
       options: [
         {
           id: 'play_activity',
+          value: true,
           title: 'Play Activity',
           iconSrc: play,
           iconName: 'Activity',
         },
         {
           id: 'use_whiteboard',
+          value: false,
           title: 'Use Whiteboard',
           iconSrc: whiteboard,
           iconName: 'Whiteboard',
@@ -283,12 +307,14 @@ const toolsSection: IBasicToolbarSection = {
       options: [
         {
           id: 'object_erase',
+          value: 'object',
           title: 'Erase Object',
           iconSrc: trash,
           iconName: 'Erase Object',
         },
         {
           id: 'partial_erase',
+          value: 'partial',
           title: 'Partial Erase',
           iconSrc: eraser,
           iconName: 'Spot Erase',
@@ -301,48 +327,56 @@ const toolsSection: IBasicToolbarSection = {
       options: [
         {
           id: 'pen_line',
+          value: 'pen',
           title: 'Pen Line',
           iconSrc: pen,
           iconName: 'Pen',
         },
         {
           id: 'pencil_line',
+          value: 'pencil',
           title: 'Pencil Line',
           iconSrc: pencil,
           iconName: 'Pencil',
         },
         {
           id: 'felt_line',
+          value: 'felt',
           title: 'Felt Line',
           iconSrc: felt,
           iconName: 'Felt',
         },
         {
           id: 'crayon_line',
+          value: 'crayon',
           title: 'Crayon Line',
           iconSrc: crayon,
           iconName: 'Crayon',
         },
         {
           id: 'chalk_line',
+          value: 'chalk',
           title: 'Chalk Line',
           iconSrc: chalk,
           iconName: 'Chalk',
         },
         {
           id: 'paintbrush_line',
+          value: 'paintbrush',
           title: 'Paintbrush Line',
           iconSrc: paintBrush,
           iconName: 'Paintbrush',
         },
         {
           id: 'marker_line',
+          value: 'marker',
           title: 'Marker Line',
           iconSrc: marker,
           iconName: 'Marker',
         },
         {
           id: 'dashed_line',
+          value: 'dashed',
           title: 'Dashed Line',
           iconSrc: dashedPen,
           iconName: 'Dashed Pen',
@@ -357,6 +391,7 @@ const toolsSection: IBasicToolbarSection = {
       styleOptions: [
         {
           id: 'thick_8px',
+          value: 8,
           title: '8px',
           style: {
             fontSize: 8,
@@ -364,6 +399,7 @@ const toolsSection: IBasicToolbarSection = {
         },
         {
           id: 'thick_12px',
+          value: 12,
           title: '12px',
           style: {
             fontSize: 12,
@@ -371,6 +407,7 @@ const toolsSection: IBasicToolbarSection = {
         },
         {
           id: 'thick_16px',
+          value: 16,
           title: '16px',
           style: {
             fontSize: 16,
@@ -378,6 +415,7 @@ const toolsSection: IBasicToolbarSection = {
         },
         {
           id: 'thick_20px',
+          value: 20,
           title: '20px',
           style: {
             fontSize: 20,
@@ -385,6 +423,7 @@ const toolsSection: IBasicToolbarSection = {
         },
         {
           id: 'thick_24px',
+          value: 24,
           title: '24px',
           style: {
             fontSize: 24,
@@ -404,18 +443,21 @@ const toolsSection: IBasicToolbarSection = {
       options: [
         {
           id: 'arial_font',
+          value: 'Arial',
           title: 'Arial Font',
           iconSrc: textIcon,
           iconName: 'Arial',
         },
         {
           id: 'crayon_font',
+          value: 'Crayon',
           title: 'Crayon Font',
           iconSrc: crayon,
           iconName: 'Crayon',
         },
         {
-          id: 'crayon_font',
+          id: 'chalkboard_font',
+          value: 'Chalkboard',
           title: 'Chalk Font',
           iconSrc: chalk,
           iconName: 'Chalkboard',
@@ -429,18 +471,21 @@ const toolsSection: IBasicToolbarSection = {
       options: [
         {
           id: 'circle_shape',
+          value: 'circle',
           title: 'Circle Shape',
           iconSrc: circleShape,
           iconName: 'Circle',
         },
         {
           id: 'rectangle_shape',
+          value: 'rectangle',
           title: 'Rectangle Shape',
           iconSrc: rectangleShape,
           iconName: 'Rectangle',
         },
         {
           id: 'triangle_shape',
+          value: 'triangle',
           title: 'Triangle Shape',
           iconSrc: triangleShape,
           iconName: 'Triangle',
@@ -448,18 +493,21 @@ const toolsSection: IBasicToolbarSection = {
         // Not ready yet
         // {
         //   id: 'pentagon_shape',
+        //   value: 'pentagon',
         //   title: 'Pentagon Shape',
         //   iconSrc: pentagonShape,
         //   iconName: 'Pentagon',
         // },
         // {
         //   id: 'star_shape',
+        //   value: 'star',
         //   title: 'Star Shape',
         //   iconSrc: starShape,
         //   iconName: 'Star',
         // },
         // {
         //   id: 'chat_bubble_shape',
+        //   value: 'chatBubble',
         //   title: 'Chat Bubble Shape',
         //   iconSrc: chatBubbleShape,
         //   iconName: 'Chat Bubble',
@@ -473,42 +521,49 @@ const toolsSection: IBasicToolbarSection = {
       options: [
         {
           id: 'yellow_star_stamp',
+          value: 'yellowStar',
           title: 'Yellow Star',
           iconSrc: star,
           iconName: 'Yellow Star',
         },
         {
           id: 'emoji_1_stamp',
+          value: 'emoji1',
           title: 'Emoji 1',
           iconSrc: emojiSmile,
           iconName: 'Emoji 1',
         },
         {
           id: 'emoji_2_stamp',
+          value: 'emoji2',
           title: 'Emoji 2',
           iconSrc: emojiLike,
           iconName: 'Emoji 2',
         },
         {
           id: 'emoji_3_stamp',
+          value: 'emoji3',
           title: 'Emoji 3',
           iconSrc: emojiHello,
           iconName: 'Emoji 3',
         },
         {
           id: 'emoji_4_stamp',
+          value: 'emoji4',
           title: 'Emoji 4',
           iconSrc: emojiSleep,
           iconName: 'Emoji 4',
         },
         {
           id: 'emoji_5_stamp',
+          value: 'emoji5',
           title: 'Emoji 5',
           iconSrc: emojiNervious,
           iconName: 'Emoji 5',
         },
         {
           id: 'emoji_6_stamp',
+          value: 'emoji6',
           title: 'Emoji 6',
           iconSrc: emojiLaugh,
           iconName: 'Emoji 6',

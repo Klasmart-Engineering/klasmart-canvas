@@ -38,10 +38,10 @@ export const WhiteboardProvider = ({
 }) => {
   const { text, updateText } = useText();
   const textRef = useRef('');
-  const { fontColor, updateFontColor } = useFontColor('#000');
-  const { fontFamily, updateFontFamily } = useFontFamily('Arial');
+  const { fontColor, updateFontColor } = useFontColor('#fb823f');
+  const { fontFamily, updateFontFamily } = useFontFamily('Crayon');
   const { shapeColor, updateShapeColor } = useShapeColor('#000');
-  const { shape, updateShape } = useShape('circle');
+  const { shape, updateShape } = useShape('rectangle');
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const [canvas, setCanvas] = useState();
   const {
@@ -228,10 +228,13 @@ export const WhiteboardProvider = ({
 
   const value = {
     fontFamily,
+    fontColor,
     updateFontFamily,
     colorsList,
     fillColor,
     textColor,
+    shape,
+    shapeColor,
     updateShape,
     addShape,
     removeSelectedElement,

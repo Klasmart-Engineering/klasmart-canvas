@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './toolbar-selector.css';
 import IToolbarSelector from '../../../interfaces/toolbar/toolbar-selector/toolbar-selector';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
@@ -31,14 +31,16 @@ function ToolbarSelector(props: IToolbarSelector) {
     onChange,
   } = props;
 
-  const [selectedOption, setSelectedOption] = useState(options[0]);
+  const [selectedOption, setSelectedOption] = useState(
+    findOptionDefinedbyParent()
+  );
   const [showOptions, setShowOptions] = useState(false);
   const [color, setColor] = useState(colorPalette?.selectedColor || '');
   const buttonRef = useRef(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const newValue = options.find(
-      (option) => option.iconName === definedOptionName
+      (option) => option.value === definedOptionName
     );
 
     if (newValue) {
@@ -46,12 +48,20 @@ function ToolbarSelector(props: IToolbarSelector) {
     }
   }, [definedOptionName, options]);
 
+  function findOptionDefinedbyParent() {
+    if (definedOptionName) {
+      return options.find((option) => option.value === definedOptionName);
+    }
+
+    return options[0];
+  }
+
   /**
    * Is executed when the selector is clicked and sends an event to its parent
    */
   function handleClick() {
     onClick(id);
-    onAction(id, selectedOption.iconName.toLowerCase());
+    onAction(id, selectedOption?.value);
 
     if (showOptions) {
       setShowOptions(false);
@@ -74,14 +84,14 @@ function ToolbarSelector(props: IToolbarSelector) {
   }
 
   /**
-   * Is executed when the selector changes its value
+   * Is executed when the selector changes its option
    * @param {IToolbarSelectorOption} value - new value to set in selector
    */
-  function handleSelect(value: IToolbarSelectorOption) {
-    setSelectedOption(value);
+  function handleSelect(option: IToolbarSelectorOption) {
+    setSelectedOption(option);
     setShowOptions(false);
-    onChange(id, value.iconName);
-    onAction(id, value.iconName.toLowerCase());
+    onChange(id, option.value);
+    onAction(id, option.value);
   }
 
   /**
@@ -115,7 +125,7 @@ function ToolbarSelector(props: IToolbarSelector) {
   return (
     <div className="selector-container">
       <button
-        title={selectedOption.title}
+        title={selectedOption?.title}
         ref={buttonRef}
         className={[
           'toolbar-selector',
@@ -125,8 +135,8 @@ function ToolbarSelector(props: IToolbarSelector) {
       >
         <img
           className="icon"
-          src={selectedOption.iconSrc}
-          alt={selectedOption.iconName}
+          src={selectedOption?.iconSrc}
+          alt={selectedOption?.iconName}
           onClick={handleClick}
         />
         <ArrowRightIcon className="arrow" onClick={handleArrowClick} />
@@ -135,7 +145,7 @@ function ToolbarSelector(props: IToolbarSelector) {
         <div className="options">
           {options
             .filter((option) => {
-              return option.iconName !== selectedOption.iconName;
+              return option.value !== selectedOption?.value;
             })
             .map((option) => {
               return (

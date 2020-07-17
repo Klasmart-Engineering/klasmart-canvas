@@ -15,6 +15,7 @@ import IBasicToolbarButton from '../../interfaces/toolbar/toolbar-button/basic-t
 import IColorPalette from '../../interfaces/toolbar/toolbar-selector/color-palette';
 import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elements/basic-special-selector';
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
+import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 
 export const ELEMENTS = {
   ADD_IMAGE_ACTION: 'add_image',
@@ -57,11 +58,14 @@ function Toolbar() {
     removeSelectedElement,
     text,
     fontFamily,
+    fontColor,
     updateText,
     updateFontFamily,
     writeText,
     openClearWhiteboardModal,
     setPointerEvents,
+    shape,
+    shapeColor,
   } = useContext(WhiteboardContext);
 
   /**
@@ -96,19 +100,22 @@ function Toolbar() {
    * @param {string} tool - index of the selector in ToolbarSection
    * @param {string} value - new selected value
    */
-  function handleToolSelectorChange(tool: string, value: string) {
+  function handleToolSelectorChange(
+    tool: string,
+    option: string | boolean | number
+  ) {
     switch (tool) {
       case ELEMENTS.ACTIVITY_WHITEBOARD_TOOGLE_TOOL:
         // Comes from WhiteboardContext
-        setPointerEvents(value === 'Whiteboard' ? true : false);
+        setPointerEvents(!option);
         break;
 
       case ELEMENTS.ADD_TEXT_TOOL:
-        updateFontFamily(value);
+        updateFontFamily(option);
         break;
 
       case ELEMENTS.ADD_SHAPE_TOOL:
-        updateShape(value.toLowerCase());
+        updateShape(option);
         break;
     }
   }
@@ -152,17 +159,46 @@ function Toolbar() {
    * colorPaletteIcon - Icon to set in the color palette
    */
   function setColorPalette(
-    colorPaletteIcon?: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>
+    tool: IBasicToolbarSelector
   ): IColorPalette | undefined {
-    if (!colorPaletteIcon) {
+    let selected = '';
+
+    if (!tool.colorPaletteIcon) {
       return undefined;
     }
 
+    switch (tool.id) {
+      case ELEMENTS.ADD_TEXT_TOOL:
+        selected = fontColor;
+        break;
+      case ELEMENTS.ADD_SHAPE_TOOL:
+        selected = shapeColor;
+        break;
+      default:
+        selected = '#000';
+        break;
+    }
+
     return {
-      icon: colorPaletteIcon,
-      selectedColor: '#000',
+      icon: tool.colorPaletteIcon,
+      selectedColor: selected,
       onChangeColor: changeColor,
     };
+  }
+
+  /**
+   * Set the parent's definedOptionName in the given tool
+   * @param {string} tool - Tool to set the definedOption
+   */
+  function setDefinedOptionSelector(tool: string): string {
+    switch (tool) {
+      case ELEMENTS.ADD_TEXT_TOOL:
+        return fontFamily;
+      case ELEMENTS.ADD_SHAPE_TOOL:
+        return shape;
+      default:
+        return '';
+    }
   }
 
   return (
@@ -187,8 +223,8 @@ function Toolbar() {
                   handleToolsElementClick,
                   handleToolSelectorChange,
                   handleToolsElementAction,
-                  tool.id === ELEMENTS.ADD_TEXT_TOOL ? fontFamily : null,
-                  setColorPalette(tool.colorPaletteIcon)
+                  setDefinedOptionSelector(tool.id),
+                  setColorPalette(tool)
                 )
               : determineIfIsSpecialSelector(tool)
               ? createSpecialSelector(
@@ -279,7 +315,7 @@ function createToolbarSelector(
   options: IToolbarSelectorOption[],
   selected: boolean,
   onClick: (tool: string) => void,
-  onChange: (tool: string, value: string) => void,
+  onChange: (tool: string, value: string | boolean | number) => void,
   onAction: (tool: string) => void,
   definedOptionName?: string,
   colorPalette?: IColorPalette

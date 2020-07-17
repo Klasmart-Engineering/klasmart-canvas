@@ -41,7 +41,7 @@ function ColorPalette(props: IColorPalette) {
               Icon={Icon}
               style={color.style}
               selected={selectedColor === color.style.color}
-              onClick={(e) => changeColor(color.style.color || '')}
+              onClick={() => changeColor(color.style.color || '')}
             />
           ) : null;
         })}
