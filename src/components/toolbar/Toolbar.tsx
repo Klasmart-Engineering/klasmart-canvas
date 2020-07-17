@@ -1,7 +1,6 @@
 import React, { useState, useContext } from 'react';
 import ToolbarSection from './toolbar-section/ToolbarSection';
 import './toolbar.css';
-import ToolbarText from './toolbar-text/ToolbarText';
 import ToolbarButton from './toolbar-button/ToolbarButton';
 import ToolbarSelector from './toolbar-selector/ToolbarSelector';
 import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
@@ -45,7 +44,6 @@ type ToolbarElementTypes =
  * Render the toolbar that will be used in the whiteboard
  */
 function Toolbar() {
-  const [showInput, updateShowInput] = useState(false);
   const [tools, setTools] = useState(toolsSection);
   const [actions] = useState(actionsSection);
 
@@ -55,13 +53,11 @@ function Toolbar() {
     updateShape,
     addShape,
     removeSelectedElement,
-    text,
     fontFamily,
-    updateText,
     updateFontFamily,
-    writeText,
     openClearWhiteboardModal,
     setPointerEvents,
+    updateTextIsActive,
   } = useContext(WhiteboardContext);
 
   /**
@@ -70,7 +66,7 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
-    updateShowInput(tool === ELEMENTS.ADD_TEXT_TOOL);
+    updateTextIsActive(tool === ELEMENTS.ADD_TEXT_TOOL);
 
     setTools({
       selected: tool,
@@ -100,7 +96,7 @@ function Toolbar() {
     switch (tool) {
       case ELEMENTS.ACTIVITY_WHITEBOARD_TOOGLE_TOOL:
         // Comes from WhiteboardContext
-        setPointerEvents(value === 'Whiteboard' ? true : false);
+        setPointerEvents(value === 'Whiteboard');
         break;
 
       case ELEMENTS.ADD_TEXT_TOOL:
@@ -218,13 +214,6 @@ function Toolbar() {
           )}
         </ToolbarSection>
       </div>
-
-      <ToolbarText
-        showInput={showInput}
-        text={text}
-        updateText={updateText}
-        writeText={writeText}
-      />
     </div>
   );
 }
