@@ -23,8 +23,8 @@ function ToolbarSelector(props: IToolbarSelector) {
   const {
     id,
     options,
-    selected,
-    definedOptionName,
+    active,
+    selectedValue,
     colorPalette,
     onAction,
     onClick,
@@ -35,25 +35,20 @@ function ToolbarSelector(props: IToolbarSelector) {
     findOptionDefinedbyParent()
   );
   const [showOptions, setShowOptions] = useState(false);
-  const [color, setColor] = useState(colorPalette?.selectedColor || '');
   const buttonRef = useRef(null);
 
   useEffect(() => {
-    const newValue = options.find(
-      (option) => option.value === definedOptionName
-    );
+    const newValue = options.find((option) => option.value === selectedValue);
 
     if (newValue) {
       setSelectedOption(newValue);
     }
-  }, [definedOptionName, options]);
+  }, [selectedValue, options]);
 
-  function findOptionDefinedbyParent() {
-    if (definedOptionName) {
-      return options.find((option) => option.value === definedOptionName);
-    }
-
-    return options[0];
+  function findOptionDefinedbyParent(): IToolbarSelectorOption {
+    return (
+      options.find((option) => option.value === selectedValue) || options[0]
+    );
   }
 
   /**
@@ -61,7 +56,7 @@ function ToolbarSelector(props: IToolbarSelector) {
    */
   function handleClick() {
     onClick(id);
-    onAction(id, selectedOption?.value);
+    onAction(id, selectedOption.value);
 
     if (showOptions) {
       setShowOptions(false);
@@ -88,7 +83,6 @@ function ToolbarSelector(props: IToolbarSelector) {
    * @param {IToolbarSelectorOption} value - new value to set in selector
    */
   function handleSelect(option: IToolbarSelectorOption) {
-    setSelectedOption(option);
     setShowOptions(false);
     onChange(id, option.value);
     onAction(id, option.value);
@@ -118,53 +112,59 @@ function ToolbarSelector(props: IToolbarSelector) {
       colorPalette.onChangeColor(id, color);
     }
 
-    setColor(color);
     setShowOptions(false);
   }
 
   return (
     <div className="selector-container">
       <button
-        title={selectedOption?.title}
+        title={selectedOption.title}
         ref={buttonRef}
         className={[
           'toolbar-selector',
-          selected ? 'selected' : '',
-          !selected ? 'unselected' : '',
+          active ? 'selected' : '',
+          !active ? 'unselected' : '',
         ].join(' ')}
       >
         <img
           className="icon"
-          src={selectedOption?.iconSrc}
-          alt={selectedOption?.iconName}
+          src={selectedOption.iconSrc}
+          alt={selectedOption.iconName}
           onClick={handleClick}
         />
         <ArrowRightIcon className="arrow" onClick={handleArrowClick} />
       </button>
-      {showOptions && selected ? (
-        <div className="options">
-          {options
-            .filter((option) => {
-              return option.value !== selectedOption?.value;
-            })
-            .map((option) => {
-              return (
-                <ToolbarButton
-                  key={option.iconName}
-                  id={option.id}
-                  title={option.title}
-                  iconSrc={option.iconSrc}
-                  iconName={option.iconName}
-                  selected={false}
-                  onClick={(e) => handleSelect(option)}
-                />
-              );
-            })}
+      {showOptions && active ? (
+        <div className="options-container">
+          <div
+            className={[
+              'options',
+              colorPalette ? 'with-palette' : 'no-palette',
+            ].join(' ')}
+          >
+            {options
+              .filter((option) => {
+                return option.value !== selectedOption.value;
+              })
+              .map((option) => {
+                return (
+                  <ToolbarButton
+                    key={option.iconName}
+                    id={option.id}
+                    title={option.title}
+                    iconSrc={option.iconSrc}
+                    iconName={option.iconName}
+                    active={false}
+                    onClick={() => handleSelect(option)}
+                  />
+                );
+              })}
+          </div>
           {colorPalette ? (
             <ColorPalette
               Icon={colorPalette.icon}
               handleColorChange={handleChangeColor}
-              selectedColor={color}
+              selectedColor={colorPalette.selectedColor}
             />
           ) : null}
         </div>

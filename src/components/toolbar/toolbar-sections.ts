@@ -39,8 +39,6 @@ import redo from '../../assets/icons/toolbar/redo.svg';
 import clear from '../../assets/icons/toolbar/clear.svg';
 import screenshot from '../../assets/icons/toolbar/screenshot.svg';
 import share from '../../assets/icons/toolbar/share.svg';
-import play from '../../assets/icons/toolbar/play.svg';
-import whiteboard from '../../assets/icons/toolbar/whiteboard.svg';
 import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRounded';
 import FormatColorFillRoundedIcon from '@material-ui/icons/FormatColorFillRounded';
 import BorderColorRoundedIcon from '@material-ui/icons/BorderColorRounded';
@@ -161,8 +159,8 @@ const colorPaletteOptions: IStyleOption[] = [
 ];
 
 const actionsSection: IBasicToolbarSection = {
-  // No one will be selected
-  selected: '',
+  // No one will be active
+  active: '',
   elements: [
     // ToolbarButton
     {
@@ -210,7 +208,7 @@ const actionsSection: IBasicToolbarSection = {
 };
 
 const toolsSection: IBasicToolbarSection = {
-  selected: 'pointers',
+  active: 'pointers',
   elements: [
     // Pointers - ToolbarSelector
     {
@@ -280,26 +278,6 @@ const toolsSection: IBasicToolbarSection = {
       title: 'Move Objects',
       iconSrc: move,
       iconName: 'Move Icon',
-    },
-    // Activity/Whiteboard Toogle - ToolbarSelector
-    {
-      id: 'activity_whiteboard_toogle',
-      options: [
-        {
-          id: 'play_activity',
-          value: true,
-          title: 'Play Activity',
-          iconSrc: play,
-          iconName: 'Activity',
-        },
-        {
-          id: 'use_whiteboard',
-          value: false,
-          title: 'Use Whiteboard',
-          iconSrc: whiteboard,
-          iconName: 'Whiteboard',
-        },
-      ],
     },
     // Erase - ToolbarSelector
     {

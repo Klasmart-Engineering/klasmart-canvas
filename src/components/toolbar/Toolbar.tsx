@@ -15,7 +15,6 @@ import IBasicToolbarButton from '../../interfaces/toolbar/toolbar-button/basic-t
 import IColorPalette from '../../interfaces/toolbar/toolbar-selector/color-palette';
 import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elements/basic-special-selector';
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
-import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 
 export const ELEMENTS = {
   ADD_IMAGE_ACTION: 'add_image',
@@ -26,7 +25,6 @@ export const ELEMENTS = {
   SHARE_WHITEBOARD_ACTION: 'share_whiteboard',
   POINTERS_TOOL: 'pointers',
   MOVE_OBJECTS_TOOL: 'move_objects',
-  ACTIVITY_WHITEBOARD_TOOGLE_TOOL: 'activity_whiteboard_toogle',
   ERASE_TYPE_TOOL: 'erase_type',
   LINE_TYPE_TOOL: 'line_type',
   THICKNESS_SIZE_TOOL: 'thickness_size',
@@ -75,9 +73,10 @@ function Toolbar() {
    */
   function handleToolsElementClick(tool: string) {
     updateShowInput(tool === ELEMENTS.ADD_TEXT_TOOL);
+    setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
     setTools({
-      selected: tool,
+      active: tool,
       elements: [...tools.elements],
     });
   }
@@ -105,11 +104,6 @@ function Toolbar() {
     option: string | boolean | number
   ) {
     switch (tool) {
-      case ELEMENTS.ACTIVITY_WHITEBOARD_TOOGLE_TOOL:
-        // Comes from WhiteboardContext
-        setPointerEvents(!option);
-        break;
-
       case ELEMENTS.ADD_TEXT_TOOL:
         updateFontFamily(option);
         break;
@@ -175,7 +169,7 @@ function Toolbar() {
         selected = shapeColor;
         break;
       default:
-        selected = '#000';
+        selected = '';
         break;
     }
 
@@ -190,7 +184,7 @@ function Toolbar() {
    * Set the parent's definedOptionName in the given tool
    * @param {string} tool - Tool to set the definedOption
    */
-  function setDefinedOptionSelector(tool: string): string {
+  function setSelectedOptionSelector(tool: string): string {
     switch (tool) {
       case ELEMENTS.ADD_TEXT_TOOL:
         return fontFamily;
@@ -212,25 +206,25 @@ function Toolbar() {
                   tool.title,
                   tool.iconSrc,
                   tool.iconName,
-                  tools.selected === tool.id,
+                  tools.active === tool.id,
                   handleToolsElementClick
                 )
               : determineIfIsToolbarSelector(tool)
               ? createToolbarSelector(
                   tool.id,
                   tool.options,
-                  tools.selected === tool.id,
+                  tools.active === tool.id,
                   handleToolsElementClick,
                   handleToolSelectorChange,
                   handleToolsElementAction,
-                  setDefinedOptionSelector(tool.id),
+                  setSelectedOptionSelector(tool.id),
                   setColorPalette(tool)
                 )
               : determineIfIsSpecialSelector(tool)
               ? createSpecialSelector(
                   tool.id,
                   tool.icon,
-                  tools.selected === tool.id,
+                  tools.active === tool.id,
                   tool.styleOptions,
                   handleToolsElementClick,
                   handleToolSelectorChange
@@ -247,7 +241,7 @@ function Toolbar() {
                   action.title,
                   action.iconSrc,
                   action.iconName,
-                  actions.selected === action.id,
+                  actions.active === action.id,
                   handleActionsElementClick
                 )
               : null
@@ -270,7 +264,7 @@ function Toolbar() {
  * @param {string} id - id of the button
  * @param {string} iconSrc - src for the icon of the button
  * @param {string} iconName - alt for the icon of the button
- * @param {boolean} selected - flag to set this button like selected
+ * @param {boolean} active - flag to set this button like active
  * @param {(index: number) => void} onClick - function to execute when button is clicked
  */
 function createToolbarButton(
@@ -278,7 +272,7 @@ function createToolbarButton(
   title: string,
   iconSrc: string,
   iconName: string,
-  selected: boolean,
+  active: boolean,
   onClick: (tool: string) => void
 ): JSX.Element {
   return (
@@ -288,7 +282,7 @@ function createToolbarButton(
       title={title}
       iconSrc={iconSrc}
       iconName={iconName}
-      selected={selected}
+      active={active}
       onClick={onClick}
     />
   );
@@ -299,7 +293,7 @@ function createToolbarButton(
  * @param {string} id - id of the selector
  * @param {IToolbarSelectorOption[]} options - options that the selector
  * will have
- * @param {boolean} selected - flag to set this selector like selected
+ * @param {boolean} active - flag to set this selector like active
  * @param {(index: number) => void} onClick - function to execute
  * when selector is clicked
  * @param {(value: string) => void} onChange - function to execute
@@ -313,11 +307,11 @@ function createToolbarButton(
 function createToolbarSelector(
   id: string,
   options: IToolbarSelectorOption[],
-  selected: boolean,
+  active: boolean,
   onClick: (tool: string) => void,
   onChange: (tool: string, value: string | boolean | number) => void,
   onAction: (tool: string) => void,
-  definedOptionName?: string,
+  selectedValue: string,
   colorPalette?: IColorPalette
 ): JSX.Element {
   return (
@@ -325,8 +319,8 @@ function createToolbarSelector(
       key={id}
       id={id}
       options={options}
-      selected={selected}
-      definedOptionName={definedOptionName}
+      active={active}
+      selectedValue={selectedValue}
       colorPalette={colorPalette}
       onAction={onAction}
       onClick={onClick}

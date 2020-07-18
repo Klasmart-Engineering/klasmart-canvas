@@ -88,24 +88,26 @@ function SpecialSelector(props: ISpecialSelector) {
         <ArrowRightIcon onClick={handleArrowClick} />
       </button>
       {showOptions && selected ? (
-        <div className="options special-options">
-          {styleOptions
-            .filter((option) => {
-              return option.id !== selectedOption.id;
-            })
-            .map((option) => {
-              return (
-                <SpecialButton
-                  key={option.id}
-                  id={option.id}
-                  title={option.title}
-                  Icon={Icon}
-                  style={option.style}
-                  selected={false}
-                  onClick={() => handleSelect(option)}
-                />
-              );
-            })}
+        <div className="options-container">
+          <div className="options special-options no-palette">
+            {styleOptions
+              .filter((option) => {
+                return option.id !== selectedOption.id;
+              })
+              .map((option) => {
+                return (
+                  <SpecialButton
+                    key={option.id}
+                    id={option.id}
+                    title={option.title}
+                    Icon={Icon}
+                    style={option.style}
+                    selected={false}
+                    onClick={() => handleSelect(option)}
+                  />
+                );
+              })}
+          </div>
         </div>
       ) : null}
     </div>

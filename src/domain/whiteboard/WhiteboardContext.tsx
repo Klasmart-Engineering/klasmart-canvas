@@ -38,10 +38,10 @@ export const WhiteboardProvider = ({
 }) => {
   const { text, updateText } = useText();
   const textRef = useRef('');
-  const { fontColor, updateFontColor } = useFontColor('#fb823f');
-  const { fontFamily, updateFontFamily } = useFontFamily('Crayon');
-  const { shapeColor, updateShapeColor } = useShapeColor('#000');
-  const { shape, updateShape } = useShape('rectangle');
+  const { fontColor, updateFontColor } = useFontColor();
+  const { fontFamily, updateFontFamily } = useFontFamily();
+  const { shapeColor, updateShapeColor } = useShapeColor();
+  const { shape, updateShape } = useShape();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const [canvas, setCanvas] = useState();
   const {
@@ -63,6 +63,15 @@ export const WhiteboardProvider = ({
 
     setCanvas(canvasInstance);
   }, [canvasHeight, canvasWidth, canvasId]);
+
+  /**
+   * When pointerEvents is false deselects any selected object
+   */
+  useEffect(() => {
+    if (!pointerEvents && canvas) {
+      canvas.discardActiveObject().renderAll();
+    }
+  }, [canvas, pointerEvents]);
 
   /**
    * Removes selected element from whiteboard
