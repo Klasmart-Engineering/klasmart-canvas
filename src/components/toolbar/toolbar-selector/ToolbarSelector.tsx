@@ -12,7 +12,7 @@ import IToolbarSelectorOption from '../../../interfaces/toolbar/toolbar-selector
  * - id - id that the selector has in the Toolbar Section
  * - options - options to be displayed in the selector
  * - selected - flag that indicates if this selector is selected
- * - definedOptionName (optional) - selected option defined by parent
+ * - selectedValue - selected value setted by parent
  * - colorPalette (optional) - Contains the icon and onChangeColor method
  *   for the color palette (if required)
  * - onAction - event that is emitted to parent when action is triggered
@@ -37,6 +37,10 @@ function ToolbarSelector(props: IToolbarSelector) {
   const [showOptions, setShowOptions] = useState(false);
   const buttonRef = useRef(null);
 
+  /**
+   * When selectedValue changes the value is found in all the available options
+   * to be setted like selected option
+   */
   useEffect(() => {
     const newValue = options.find((option) => option.value === selectedValue);
 
@@ -45,6 +49,9 @@ function ToolbarSelector(props: IToolbarSelector) {
     }
   }, [selectedValue, options]);
 
+  /**
+   * Finds the option that has the selectedValue defined by parent
+   */
   function findOptionDefinedbyParent(): IToolbarSelectorOption {
     return (
       options.find((option) => option.value === selectedValue) || options[0]

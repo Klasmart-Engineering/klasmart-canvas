@@ -369,7 +369,7 @@ const toolsSection: IBasicToolbarSection = {
       styleOptions: [
         {
           id: 'thick_8px',
-          value: 8,
+          value: '8px',
           title: '8px',
           style: {
             fontSize: 8,
@@ -377,7 +377,7 @@ const toolsSection: IBasicToolbarSection = {
         },
         {
           id: 'thick_12px',
-          value: 12,
+          value: '12px',
           title: '12px',
           style: {
             fontSize: 12,
@@ -385,7 +385,7 @@ const toolsSection: IBasicToolbarSection = {
         },
         {
           id: 'thick_16px',
-          value: 16,
+          value: '16px',
           title: '16px',
           style: {
             fontSize: 16,
@@ -393,7 +393,7 @@ const toolsSection: IBasicToolbarSection = {
         },
         {
           id: 'thick_20px',
-          value: 20,
+          value: '20px',
           title: '20px',
           style: {
             fontSize: 20,
@@ -401,7 +401,7 @@ const toolsSection: IBasicToolbarSection = {
         },
         {
           id: 'thick_24px',
-          value: 24,
+          value: '24px',
           title: '24px',
           style: {
             fontSize: 24,

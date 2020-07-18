@@ -1,6 +1,6 @@
 export default interface IToolbarSelectorOption {
   id: string;
-  value: string | boolean | number;
+  value: string;
   title: string;
   iconSrc: string;
   iconName: string;

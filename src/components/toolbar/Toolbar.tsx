@@ -225,6 +225,7 @@ function Toolbar() {
                   tool.id,
                   tool.icon,
                   tools.active === tool.id,
+                  setSelectedOptionSelector(tool.id),
                   tool.styleOptions,
                   handleToolsElementClick,
                   handleToolSelectorChange
@@ -344,7 +345,8 @@ function createToolbarSelector(
 function createSpecialSelector(
   id: string,
   Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>,
-  selected: boolean,
+  active: boolean,
+  selectedValue: string,
   styleOptions: IStyleOptions[],
   onClick: (tool: string) => void,
   onChange: (tool: string, value: string) => void
@@ -354,7 +356,8 @@ function createSpecialSelector(
       key={id}
       id={id}
       Icon={Icon}
-      selected={selected}
+      active={active}
+      selectedValue={selectedValue}
       styleOptions={styleOptions}
       onClick={onClick}
       onChange={onChange}

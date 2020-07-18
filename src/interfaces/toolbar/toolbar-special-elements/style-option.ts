@@ -2,7 +2,7 @@ import IStyleForIcon from './style-for-icon';
 
 export default interface IStyleOption {
   id: string;
-  value: string | boolean | number;
+  value: string;
   title: string;
   style: IStyleForIcon;
 }
