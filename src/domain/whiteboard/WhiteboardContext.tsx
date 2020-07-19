@@ -50,6 +50,15 @@ export const WhiteboardProvider = ({
     closeModal,
   } = useWhiteboardClearModal();
 
+  // Provisional (just for change value in Toolbar selectors) they can be modified in the future
+  const [pointer, updatePointer] = useState('arrow');
+  const [eraseType, updateEraseType] = useState('object');
+  const [penLine, updatePenLine] = useState('pen');
+  const [penColor, updatePenColor] = useState('#000');
+  const [thickness, updateThickness] = useState('8px');
+  const [floodFill, updateFloodFill] = useState('#000');
+  const [stamp, updateStamp] = useState('yellowStar');
+
   /**
    * Creates Canvas/Whiteboard instance
    */
@@ -254,6 +263,21 @@ export const WhiteboardProvider = ({
     openClearWhiteboardModal,
     setPointerEvents,
     pointerEvents,
+    // Just for control selectors' value they can be modified in the future
+    pointer,
+    updatePointer,
+    eraseType,
+    updateEraseType,
+    penLine,
+    updatePenLine,
+    penColor,
+    updatePenColor,
+    thickness,
+    updateThickness,
+    floodFill,
+    updateFloodFill,
+    stamp,
+    updateStamp,
   };
 
   return (

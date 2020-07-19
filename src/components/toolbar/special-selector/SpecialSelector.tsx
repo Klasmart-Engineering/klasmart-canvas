@@ -72,8 +72,8 @@ function SpecialSelector(props: ISpecialSelector) {
    * Is executed when the selector changes its value
    * @param {string} value - new value to set in selector
    */
-  function handleSelect(value: any) {
-    onChange(id, value.id);
+  function handleSelect(option: any) {
+    onChange(id, option.value);
     setShowOptions(false);
   }
 
@@ -127,7 +127,7 @@ function SpecialSelector(props: ISpecialSelector) {
           <div className="options special-options no-palette">
             {styleOptions
               .filter((option) => {
-                return option.id !== selectedOption.id;
+                return option.value !== selectedOption.value;
               })
               .map((option) => {
                 return (

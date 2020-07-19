@@ -64,6 +64,21 @@ function Toolbar() {
     setPointerEvents,
     shape,
     shapeColor,
+    // Just for control selectors' value may be changed in the future
+    pointer,
+    updatePointer,
+    eraseType,
+    updateEraseType,
+    penLine,
+    updatePenLine,
+    penColor,
+    updatePenColor,
+    thickness,
+    updateThickness,
+    floodFill,
+    updateFloodFill,
+    stamp,
+    updateStamp,
   } = useContext(WhiteboardContext);
 
   /**
@@ -75,6 +90,7 @@ function Toolbar() {
     updateShowInput(tool === ELEMENTS.ADD_TEXT_TOOL);
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
+    // set the clicked tool like active style in Toolbar
     setTools({
       active: tool,
       elements: [...tools.elements],
@@ -99,17 +115,38 @@ function Toolbar() {
    * @param {string} tool - index of the selector in ToolbarSection
    * @param {string} value - new selected value
    */
-  function handleToolSelectorChange(
-    tool: string,
-    option: string | boolean | number
-  ) {
+  function handleToolSelectorChange(tool: string, option: string) {
     switch (tool) {
+      case ELEMENTS.POINTERS_TOOL:
+        updatePointer(option);
+        break;
+
+      case ELEMENTS.ERASE_TYPE_TOOL:
+        updateEraseType(option);
+        break;
+
+      case ELEMENTS.LINE_TYPE_TOOL:
+        updatePenLine(option);
+        break;
+
+      case ELEMENTS.THICKNESS_SIZE_TOOL:
+        updateThickness(option);
+        break;
+
+      case ELEMENTS.FLOOD_FILL_TOOL:
+        updateFloodFill(option);
+        break;
+
       case ELEMENTS.ADD_TEXT_TOOL:
         updateFontFamily(option);
         break;
 
       case ELEMENTS.ADD_SHAPE_TOOL:
         updateShape(option);
+        break;
+
+      case ELEMENTS.ADD_STAMP_TOOL:
+        updateStamp(option);
         break;
     }
   }
@@ -138,9 +175,14 @@ function Toolbar() {
    */
   function changeColor(tool: string, color: string) {
     switch (tool) {
+      case ELEMENTS.LINE_TYPE_TOOL:
+        updatePenColor(color);
+        break;
+
       case ELEMENTS.ADD_TEXT_TOOL:
         textColor(color);
         break;
+
       case ELEMENTS.ADD_SHAPE_TOOL:
         fillColor(color);
         break;
@@ -162,12 +204,18 @@ function Toolbar() {
     }
 
     switch (tool.id) {
+      case ELEMENTS.LINE_TYPE_TOOL:
+        selected = penColor;
+        break;
+
       case ELEMENTS.ADD_TEXT_TOOL:
         selected = fontColor;
         break;
+
       case ELEMENTS.ADD_SHAPE_TOOL:
         selected = shapeColor;
         break;
+
       default:
         selected = '';
         break;
@@ -186,10 +234,30 @@ function Toolbar() {
    */
   function setSelectedOptionSelector(tool: string): string {
     switch (tool) {
+      case ELEMENTS.POINTERS_TOOL:
+        return pointer;
+
+      case ELEMENTS.ERASE_TYPE_TOOL:
+        return eraseType;
+
+      case ELEMENTS.LINE_TYPE_TOOL:
+        return penLine;
+
+      case ELEMENTS.THICKNESS_SIZE_TOOL:
+        return thickness;
+
+      case ELEMENTS.FLOOD_FILL_TOOL:
+        return floodFill;
+
       case ELEMENTS.ADD_TEXT_TOOL:
         return fontFamily;
+
       case ELEMENTS.ADD_SHAPE_TOOL:
         return shape;
+
+      case ELEMENTS.ADD_STAMP_TOOL:
+        return stamp;
+
       default:
         return '';
     }
@@ -310,7 +378,7 @@ function createToolbarSelector(
   options: IToolbarSelectorOption[],
   active: boolean,
   onClick: (tool: string) => void,
-  onChange: (tool: string, value: string | boolean | number) => void,
+  onChange: (tool: string, value: string) => void,
   onAction: (tool: string) => void,
   selectedValue: string,
   colorPalette?: IColorPalette
