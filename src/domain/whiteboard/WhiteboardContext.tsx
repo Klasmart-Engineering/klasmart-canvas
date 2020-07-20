@@ -103,25 +103,29 @@ export const WhiteboardProvider = ({
 
           text.on('selected', () => {
             if (text.fontFamily) {
-              updateFontFamily(text.fontFamily);
-              // @ts-ignore
+              //@ts-ignore
               updateFontColor(text.fill);
+              updateFontFamily(text.fontFamily);
             }
           });
         }
       });
     } else {
+      if (canvas?.getActiveObject()) {
+        canvas?.discardActiveObject();
+        canvas?.renderAll();
+      }
+
       canvas?.on({
         'selection:updated': (object: any) => {
           canvas?.setActiveObject(object.selected[0]);
+          canvas?.renderAll();
         },
         'selection:created': (object: any) => {
           canvas?.setActiveObject(object.selected[0]);
+          canvas?.renderAll();
         },
       });
-
-      canvas?.discardActiveObject();
-      canvas?.renderAll();
     }
 
     return () => {
