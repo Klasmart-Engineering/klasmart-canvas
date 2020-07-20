@@ -54,7 +54,6 @@ function Toolbar() {
     removeSelectedElement,
     fontFamily,
     fontColor,
-    updateText,
     updateFontFamily,
     openClearWhiteboardModal,
     setPointerEvents,
