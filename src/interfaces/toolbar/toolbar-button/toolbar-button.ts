@@ -3,6 +3,6 @@ export default interface IToolbarButton {
   title: string;
   iconSrc: string;
   iconName: string;
-  selected: boolean;
+  active: boolean;
   onClick: (tool: string) => void;
 }

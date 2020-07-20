@@ -14,16 +14,16 @@ import './toolbar-button.css';
  * - onClick - event to send to parent when the button is clicked
  */
 function ToolbarButton(props: IToolbarButton) {
-  const { id, title, iconSrc, iconName, selected, onClick } = props;
+  const { id, title, iconSrc, iconName, active, onClick } = props;
 
   return (
     <button
       key={id}
       title={title}
       className={[
-        'toolbar-button',
-        selected ? 'selected-button' : '',
-        !selected ? 'unselected-button' : '',
+        'toolbar-button original',
+        active ? 'selected-button' : '',
+        !active ? 'unselected-button' : '',
       ].join(' ')}
       onClick={() => onClick(id)}
     >

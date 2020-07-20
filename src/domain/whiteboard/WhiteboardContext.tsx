@@ -49,6 +49,15 @@ export const WhiteboardProvider = ({
   } = useWhiteboardClearModal();
   const { textIsActive, updateTextIsActive } = useTextIsActive();
 
+  // Provisional (just for change value in Toolbar selectors) they can be modified in the future
+  const [pointer, updatePointer] = useState('arrow');
+  const [eraseType, updateEraseType] = useState('object');
+  const [penLine, updatePenLine] = useState('pen');
+  const [penColor, updatePenColor] = useState('#000');
+  const [thickness, updateThickness] = useState('8px');
+  const [floodFill, updateFloodFill] = useState('#000');
+  const [stamp, updateStamp] = useState('yellowStar');
+
   /**
    * Creates Canvas/Whiteboard instance
    */
@@ -102,6 +111,15 @@ export const WhiteboardProvider = ({
         }
       });
     } else {
+      canvas?.on({
+        'selection:updated': (object: any) => {
+          canvas?.setActiveObject(object.selected[0]);
+        },
+        'selection:created': (object: any) => {
+          canvas?.setActiveObject(object.selected[0]);
+        },
+      });
+
       canvas?.discardActiveObject();
       canvas?.renderAll();
     }
@@ -119,6 +137,15 @@ export const WhiteboardProvider = ({
   ]);
 
   /**
+   * When pointerEvents is false deselects any selected object
+   */
+  useEffect(() => {
+    if (!pointerEvents && canvas) {
+      canvas.discardActiveObject().renderAll();
+    }
+  }, [canvas, pointerEvents]);
+
+  /**
    * Removes selected element from whiteboard
    * */
   const removeSelectedElement = useCallback(() => {
@@ -134,7 +161,7 @@ export const WhiteboardProvider = ({
     (e: { key: any }) => {
       if (e.key === 'Backspace' && canvas) {
         const obj = canvas.getActiveObject();
-        if (obj?.isEditing === false) {
+        if (!obj?.isEditing) {
           removeSelectedElement();
         }
         return;
@@ -267,10 +294,13 @@ export const WhiteboardProvider = ({
 
   const value = {
     fontFamily,
+    fontColor,
     updateFontFamily,
     colorsList,
     fillColor,
     textColor,
+    shape,
+    shapeColor,
     updateShape,
     addShape,
     removeSelectedElement,
@@ -283,6 +313,21 @@ export const WhiteboardProvider = ({
     textIsActive,
     updateTextIsActive,
     updateFontColor,
+    // Just for control selectors' value they can be modified in the future
+    pointer,
+    updatePointer,
+    eraseType,
+    updateEraseType,
+    penLine,
+    updatePenLine,
+    penColor,
+    updatePenColor,
+    thickness,
+    updateThickness,
+    floodFill,
+    updateFloodFill,
+    stamp,
+    updateStamp,
   };
 
   return (

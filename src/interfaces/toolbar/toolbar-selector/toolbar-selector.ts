@@ -4,11 +4,10 @@ import IColorPalette from './color-palette';
 export default interface ToolbarSelector {
   id: string;
   options: IToolbarSelectorOption[];
-  selected: boolean;
-  definedOptionName?: string;
+  active: boolean;
+  selectedValue: string;
   colorPalette?: IColorPalette;
-  selectedColor?: string;
-  onAction: (tool: string, value?: string) => void;
+  onAction: (tool: string, option?: string) => void;
   onClick: (tool: string) => void;
-  onChange: (tool: string, value: string) => void;
+  onChange: (tool: string, option: string) => void;
 }
