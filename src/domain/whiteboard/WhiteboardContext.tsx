@@ -36,10 +36,10 @@ export const WhiteboardProvider = ({
   canvasHeight: string;
 }) => {
   const { text, updateText } = useText();
-  const { fontColor, updateFontColor } = useFontColor('#000');
-  const { fontFamily, updateFontFamily } = useFontFamily('Arial');
-  const { shapeColor, updateShapeColor } = useShapeColor('#000');
-  const { shape, updateShape } = useShape('circle');
+  const { fontColor, updateFontColor } = useFontColor();
+  const { fontFamily, updateFontFamily } = useFontFamily();
+  const { shapeColor, updateShapeColor } = useShapeColor();
+  const { shape, updateShape } = useShape();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const [canvas, setCanvas] = useState();
   const {

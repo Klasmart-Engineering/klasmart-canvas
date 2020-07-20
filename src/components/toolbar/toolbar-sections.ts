@@ -493,13 +493,6 @@ const toolsSection: IBasicToolbarSection = {
           iconName: 'Rounded Rectangle',
         },
         {
-          id: 'rectangle_shape',
-          value: 'rectangle',
-          title: 'Rectangle Shape',
-          iconSrc: rectangleShape,
-          iconName: 'Rectangle',
-        },
-        {
           id: 'free_shape',
           value: 'freeShape',
           title: 'Free Shape',
