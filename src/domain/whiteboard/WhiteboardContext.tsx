@@ -19,6 +19,8 @@ import { setSize, setCircleSize, setPathSize } from './utils/scaling';
 import { usePointerEvents } from './hooks/usePointerEvents';
 import { useFontColor } from './hooks/useFontColor';
 import { useTextIsActive } from './hooks/useTextIsActive';
+import { useShapeIsActive } from './hooks/useShapeIsActive';
+import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
 
 // @ts-ignore
@@ -58,6 +60,7 @@ export const WhiteboardProvider = ({
   });
 
   const { textIsActive, updateTextIsActive } = useTextIsActive();
+  const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState('arrow');
@@ -268,7 +271,7 @@ export const WhiteboardProvider = ({
    */
   const mouseDown = (specific: string, color?: string): void => {
 
-    canvas.on('mouse:down', (e: any): void => {
+    canvas.on('mouse:down', (e: CanvasEvent): void => {
       if (e.target) {
         return;
       }
@@ -277,7 +280,7 @@ export const WhiteboardProvider = ({
       shape.set({ top: e.pointer.y, left: e.pointer.x, fill: color || shapeColor });
       clearOnMouseEvent();
       mouseMove(shape, e.pointer, specific);
-      mouseUp(shape, specific);
+      mouseUp(shape);
       canvas.add(shape);
     });
   };
@@ -293,7 +296,8 @@ export const WhiteboardProvider = ({
     coordsStart: any,
     specific?: string
   ): void => {
-    canvas.on('mouse:move', (e: any): void => {
+    canvas.on('mouse:move', (e: CanvasEvent): void => {
+      console.log(e);
       let size;
 
       if (specific === 'circle') {
@@ -322,8 +326,8 @@ export const WhiteboardProvider = ({
   /**
    * Mouse up event listener for canvas.
    */
-  const mouseUp = (shape: any, specific: string): void => {
-    canvas.on('mouse:up', (e: any): void => {
+  const mouseUp = (shape: fabric.Object | fabric.Rect | fabric.Ellipse): void => {
+    canvas.on('mouse:up', (e: CanvasEvent): void => {
       shape.setCoords();
       canvas.renderAll();
       clearOnMouseEvent();
@@ -349,6 +353,10 @@ export const WhiteboardProvider = ({
   const addShape = (specific?: string): void => {
     // Required to prevent multiple shapes add at once
     // if user clicked more than one shape during selection.
+    if (!shapeIsActive) {
+      return;
+    }
+
     clearOnMouseEvent();
     clearMouseEvents();
     mouseDown(specific || shape, shapeColor);
@@ -434,6 +442,8 @@ export const WhiteboardProvider = ({
     pointerEvents,
     textIsActive,
     updateTextIsActive,
+    shapeIsActive,
+    updateShapeIsActive,
     updateFontColor,
     // Just for control selectors' value they can be modified in the future
     pointer,
