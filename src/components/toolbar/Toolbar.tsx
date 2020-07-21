@@ -42,7 +42,10 @@ function Toolbar() {
     updateFontFamily,
     writeText,
     openClearWhiteboardModal,
+    auto,
     setAuto,
+    styles,
+    updateStyles
   } = useContext(WhiteboardContext);
 
   /**
@@ -52,11 +55,17 @@ function Toolbar() {
    */
   function handleToolsElementClick(index: number) {
     updateShowInput(index === 7);
+    updatePointerEvents(index === 0);
 
     setTools({
       selected: index,
       elements: [...tools.elements],
     });
+  }
+
+  function updatePointerEvents(defaultPointer: boolean) {
+    let autoNone = auto ? 'auto' : 'none';
+    updateStyles({ ...styles, pointerEvents: defaultPointer ? autoNone : 'unset' });
   }
 
   /**

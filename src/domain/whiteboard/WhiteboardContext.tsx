@@ -16,7 +16,9 @@ import { useFontColor } from './hooks/useFontColor';
 import { textHandler } from './text/text';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
+import { useStyles } from './hooks/useStyles';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
+import { setSize, setCircleSize, setPathSize } from './utils/scaling';
 import './whiteboard.css';
 
 // @ts-ignore
@@ -48,6 +50,13 @@ export const WhiteboardProvider = ({
     openModal,
     closeModal,
   } = useWhiteboardClearModal();
+  const { styles, updateStyles } = useStyles({
+    border: '1px solid blue',
+    width: canvasWidth + 'px',
+    height: canvasHeight + 'px',
+    position: 'absolute',
+    pointerEvents: auto ? 'auto' : 'none',
+  });
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -156,16 +165,43 @@ export const WhiteboardProvider = ({
   };
 
   /**
+   * Adds shape to whiteboard.
+   * @param specific Indicates shape type that should be added in whiteboard.
+   */
+  const shapeSelector = (specific: string): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
+    switch (specific || shape) {
+      case 'rectangle':
+        return shapes.chat(10, 10, shapeColor);
+      case 'triangle':
+        return shapes.triangle(10, 16, shapeColor);
+      case 'star':
+        return shapes.star(10, 10, shapeColor);
+      case 'arrow':
+        return shapes.arrow(10, 10, shapeColor);
+      case 'chat':
+        return shapes.chat(10, 10, shapeColor);
+      default:
+        return shapes.circle(10, 10, shapeColor);
+    }
+  }
+
+  /**
    * Mouse down event listener for canvas.
    * @param shape Shape being added on canvas.
    * @param isCircle Indicates if shape is a circle.
    */
-  const mouseDown = (shape: any, isCircle?: boolean) => {
-    canvas.on('mouse:down', (e: any) => {
+  const mouseDown = (specific: string): void => {
+    canvas.on('mouse:down', (e: any): void => {
+      if (e.target) {
+        return;
+      }
+
+      const shape = shapeSelector(specific)
       shape.set({ top: e.pointer.y, left: e.pointer.x });
-      mouseMove(shape, e.pointer, isCircle);
-      mouseUp(shape);
-      return canvas.add(shape);
+      clearOnMouseEvent();
+      mouseMove(shape, e.pointer, specific);
+      mouseUp(shape, specific);
+      canvas.add(shape);
     });
   };
 
@@ -175,27 +211,33 @@ export const WhiteboardProvider = ({
    * @param coordsStart Coordinates of initial click on canvas.
    * @param isCircle Indicates if shape added is a circle.
    */
-  const mouseMove = (shape: any, coordsStart: any, isCircle?: boolean): void => {
-    canvas.on('mouse:move', (e: any) => {
-      const getLength = (x1: number, x2: number) => Math.abs(x1 - x2);
-      const setSize = (start: any, end: any): void => {
-        let width = getLength(end.x, start.x);
-        let height = getLength(end.y, start.y);
-        shape.set({ width, height });
-      };
+  const mouseMove = (
+    shape: fabric.Object | fabric.Rect | fabric.Ellipse,
+    coordsStart: any,
+    specific?: string
+  ): void => {
+    canvas.on('mouse:move', (e: any): void => {
+      let size;
 
-      const setCircleSize = (start: any, end: any): void => {
-        let rx = getLength(end.x, start.x) / 2;
-        let ry = getLength(end.y, start.y) / 2;
-        shape.set({ rx, ry });
-      };
-
-      if (!isCircle) {
-        setSize(coordsStart, e.pointer);
+      if (specific === 'circle') {
+        size = setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
+      } else if (specific === 'star' || specific === 'arrow' || specific === 'chat') {
+        size = setPathSize(shape, coordsStart, e.pointer);
       } else {
-        setCircleSize(coordsStart, e.pointer);
+        size = setSize(shape, coordsStart, e.pointer);
       }
 
+      let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
+
+      if (coordsStart.x > e.pointer.x) {
+        anchor = { ...anchor, originX: 'right' };
+      }
+
+      if (coordsStart.y > e.pointer.y) {
+        anchor = { ...anchor, originY: 'bottom' };
+      }
+
+      shape.set(anchor)
       canvas.renderAll();
     });
   }
@@ -203,21 +245,25 @@ export const WhiteboardProvider = ({
   /**
    * Mouse up event listener for canvas.
    */
-  const mouseUp = (shape: any): void => {
-    canvas.on('mouse:up', (e: any) => {
-      clearAllMouseEvents();
+  const mouseUp = (shape: any, specific: string): void => {
+    canvas.on('mouse:up', (e: any): void => {
+      clearOnMouseEvent();
       shape.setCoords();
       canvas.renderAll();
+      addShape(specific);
     });
   };
 
   /**
    * Clears all mouse event listeners from canvas.
    */
-  const clearAllMouseEvents = (): void => {
+  const clearMouseEvents = (): void => {
     canvas.off('mouse:move');
-    canvas.off('mouse:down');
     canvas.off('mouse:up');
+  }
+
+  const clearOnMouseEvent = (): void => {
+    canvas.off('mouse:down');
   }
 
   /**
@@ -226,25 +272,9 @@ export const WhiteboardProvider = ({
   const addShape = (specific?: string): void => {
     // Required to prevent multiple shapes add at once
     // if user clicked more than one shape during selection.
-    clearAllMouseEvents();
-    
-    switch (specific || shape) {
-      case 'rectangle':
-        const rectangle = shapes.rectangle(15, 15, shapeColor);
-        mouseDown(rectangle);
-        mouseUp(rectangle);
-        return;
-      case 'triangle':
-        const triangle = shapes.triangle(10, 16, shapeColor);
-        mouseDown(triangle);
-        mouseUp(triangle);
-        return;
-      case 'circle':
-        const circle = shapes.circle(10, 10, shapeColor);
-        mouseDown(circle, true);
-        mouseUp(circle);
-        return;
-    }
+    clearOnMouseEvent();
+    clearMouseEvents();
+    mouseDown(specific || shape);
   };
 
   /**
@@ -318,6 +348,8 @@ export const WhiteboardProvider = ({
     clearWhiteboard,
     auto,
     setAuto,
+    styles,
+    updateStyles
   };
 
   return (
@@ -339,13 +371,8 @@ export const WhiteboardProvider = ({
         >
           {children}
           <div
-            style={{
-              border: '1px solid blue',
-              width: canvasWidth + 'px',
-              height: canvasHeight + 'px',
-              position: 'absolute',
-              pointerEvents: auto ? 'auto' : 'none',
-            }}
+            className="canvas-wrapper"
+            style={styles}
           >
             <canvas
               id={canvasId}
