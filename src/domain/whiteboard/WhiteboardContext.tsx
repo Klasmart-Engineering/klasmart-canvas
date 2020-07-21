@@ -3,7 +3,6 @@ import React, {
   ReactComponentElement,
   useCallback,
   useEffect,
-  useRef,
   useState,
 } from 'react';
 // @ts-ignore
@@ -12,12 +11,12 @@ import { fabric } from 'fabric';
 import * as shapes from './shapes/shapes';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
-import { textHandler } from './text/text';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
 import { usePointerEvents } from './hooks/usePointerEvents';
 import { useFontColor } from './hooks/useFontColor';
+import { useTextIsActive } from './hooks/useTextIsActive';
 import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 
@@ -38,12 +37,11 @@ export const WhiteboardProvider = ({
   canvasHeight: string;
 }) => {
   const { text, updateText } = useText();
-  const textRef = useRef('');
-  const { fontColor, updateFontColor } = useFontColor('#000');
-  const { fontFamily, updateFontFamily } = useFontFamily('Arial');
-  const { shapeColor, updateShapeColor } = useShapeColor('#000');
-  const { shape, updateShape } = useShape('circle');
-  const { eraseType, updateEraseType } = useEraseType('');
+  const { fontColor, updateFontColor } = useFontColor();
+  const { fontFamily, updateFontFamily } = useFontFamily();
+  const { shapeColor, updateShapeColor } = useShapeColor();
+  const { shape, updateShape } = useShape();
+  const { eraseType, updateEraseType } = useEraseType();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const [canvas, setCanvas] = useState();
 
@@ -52,6 +50,15 @@ export const WhiteboardProvider = ({
     openModal,
     closeModal,
   } = useWhiteboardClearModal();
+  const { textIsActive, updateTextIsActive } = useTextIsActive();
+
+  // Provisional (just for change value in Toolbar selectors) they can be modified in the future
+  const [pointer, updatePointer] = useState('arrow');
+  const [penLine, updatePenLine] = useState('pen');
+  const [penColor, updatePenColor] = useState('#000');
+  const [thickness, updateThickness] = useState('8px');
+  const [floodFill, updateFloodFill] = useState('#000');
+  const [stamp, updateStamp] = useState('yellowStar');
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -68,6 +75,83 @@ export const WhiteboardProvider = ({
   }, [canvasHeight, canvasWidth, canvasId]);
 
   /**
+   * Handles the logic to write text on the whiteboard
+   * */
+  useEffect(() => {
+    if (textIsActive) {
+      canvas?.on('mouse:down', (options: { target: null; e: any }) => {
+        if (options.target === null) {
+          const text = new fabric.IText(' ', {
+            fontFamily: fontFamily,
+            fontSize: 30,
+            fontWeight: 400,
+            fill: fontColor,
+            fontStyle: 'normal',
+            top: options.e.offsetY,
+            left: options.e.offsetX,
+            cursorDuration: 500,
+          });
+
+          canvas.add(text);
+          canvas.setActiveObject(text);
+          text.enterEditing();
+          text?.hiddenTextarea?.focus();
+
+          text.on('editing:exited', () => {
+            if (text?.text?.replace(/\s/g, '').length === 0) {
+              canvas.remove(canvas.getActiveObject());
+            }
+          });
+
+          text.on('selected', () => {
+            if (text.fontFamily) {
+              //@ts-ignore
+              updateFontColor(text.fill);
+              updateFontFamily(text.fontFamily);
+            }
+          });
+        }
+      });
+    } else {
+      if (canvas?.getActiveObject()) {
+        canvas?.discardActiveObject();
+        canvas?.renderAll();
+      }
+
+      canvas?.on({
+        'selection:updated': (object: any) => {
+          canvas?.setActiveObject(object.selected[0]);
+          canvas?.renderAll();
+        },
+        'selection:created': (object: any) => {
+          canvas?.setActiveObject(object.selected[0]);
+          canvas?.renderAll();
+        },
+      });
+    }
+
+    return () => {
+      canvas?.off('mouse:down');
+    };
+  }, [
+    canvas,
+    textIsActive,
+    fontColor,
+    fontFamily,
+    updateFontFamily,
+    updateFontColor,
+  ]);
+
+  /**
+   * When pointerEvents is false deselects any selected object
+   */
+  useEffect(() => {
+    if (!pointerEvents && canvas) {
+      canvas.discardActiveObject().renderAll();
+    }
+  }, [canvas, pointerEvents]);
+
+  /**
    * Removes selected element from whiteboard
    * */
   const removeSelectedElement = useCallback(() => {
@@ -76,14 +160,22 @@ export const WhiteboardProvider = ({
 
   /**
    * General handler for keyboard events
-   * Currently handle 'Backspace' event for removing selected element from
-   * whiteboard
+   * 'Backspace' event for removing selected element from whiteboard
+   * 'Escape' event for deselect active objects
    * */
   const keyDownHandler = useCallback(
     (e: { key: any }) => {
       if (e.key === 'Backspace' && canvas) {
-        removeSelectedElement();
+        const obj = canvas.getActiveObject();
+        if (!obj?.isEditing) {
+          removeSelectedElement();
+        }
         return;
+      }
+
+      if (e.key === 'Escape' && canvas) {
+        canvas.discardActiveObject();
+        canvas.renderAll();
       }
     },
     [canvas, removeSelectedElement]
@@ -150,38 +242,14 @@ export const WhiteboardProvider = ({
    * necessaries to erase objects are setted or removed
    */
   useEffect(() => {
-    if (eraseType !== 'Erase Object' && canvas) {
+    if (eraseType !== 'object' && canvas) {
       setCanvasSelection(true);
       canvas.__eventListeners = {};
     } else if (canvas) {
-      canvas.discardActiveObject().renderAll();
       eraseObject();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eraseType, canvas]);
-
-  /**
-   * Handles the logic to write text on the whiteboard
-   * */
-  const writeText = (e: any) => {
-    if (e.key === 'Enter') {
-      textRef.current = text;
-
-      if (textRef.current.length) {
-        const textFabric = textHandler(
-          textRef.current,
-          fontFamily,
-          updateFontFamily
-        );
-
-        canvas.setActiveObject(textFabric);
-        canvas.getActiveObject().set('fill', fontColor);
-        canvas.centerObject(textFabric);
-        canvas.add(textFabric);
-        updateText('');
-      }
-    }
-  };
 
   /**
    * Add specific shape to whiteboard
@@ -249,6 +317,7 @@ export const WhiteboardProvider = ({
    */
   const eraseObject = (): void => {
     let eraser: boolean = false;
+    let activeObjects: any = null;
 
     // Deactivate selection
     setCanvasSelection(false);
@@ -261,8 +330,18 @@ export const WhiteboardProvider = ({
 
       // if the click is made over an object
       if (e.target) {
+        activeObjects = canvas.getActiveObjects();
         canvas.remove(e.target);
         canvas.renderAll();
+      }
+
+      // if the click is made over an object group
+      if (e.target && activeObjects.length) {
+        activeObjects.forEach(function (object: any) {
+          canvas.remove(object);
+        });
+
+        canvas.discardActiveObject().renderAll();
       }
 
       eraser = true;
@@ -316,15 +395,17 @@ export const WhiteboardProvider = ({
 
   const value = {
     fontFamily,
+    fontColor,
     updateFontFamily,
     colorsList,
     fillColor,
     textColor,
+    shape,
+    shapeColor,
     updateShape,
     addShape,
     text,
     updateText,
-    writeText,
     discardActiveObject,
     openClearWhiteboardModal,
     setPointerEvents,
@@ -332,6 +413,22 @@ export const WhiteboardProvider = ({
     eraseObject,
     eraseType,
     updateEraseType,
+    textIsActive,
+    updateTextIsActive,
+    updateFontColor,
+    // Just for control selectors' value they can be modified in the future
+    pointer,
+    updatePointer,
+    penLine,
+    updatePenLine,
+    penColor,
+    updatePenColor,
+    thickness,
+    updateThickness,
+    floodFill,
+    updateFloodFill,
+    stamp,
+    updateStamp,
   };
 
   return (

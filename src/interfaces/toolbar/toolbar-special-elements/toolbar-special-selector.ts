@@ -6,7 +6,8 @@ export default interface ISpecialSelector {
   id: string;
   Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
   styleOptions: IStyleOption[];
-  selected: boolean;
+  active: boolean;
+  selectedValue: string;
   onClick: (tool: string) => void;
   onChange: (tool: string, valueId: string) => void;
 }
