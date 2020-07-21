@@ -43,14 +43,41 @@ export const circle = (width: number, height: number, color: string) => {
 };
 
 /**
- * Creates polygon shape.
+ * Creates pentagon shape.
  * @param width With of shape
  * @param height Height of shape
  * @param color Color of shape
  */
-// export const polygon = (width: number, height: number, color: string): fabric.Polygon => {
-//   return new fabric.Polygon();
-// };
+export const pentagon = (color: string): fabric.Object => {
+  let shape = new fabric.Polygon([
+    {x: 200, y: 0},
+    {x: 250, y: 42},
+    {x: 230, y: 100},
+    {x: 170, y: 100},
+    {x: 150, y: 42}
+  ]);
+
+  return shape.set({ scaleX: 0.2, scaleY: 0.2, fill: color });
+};
+
+/**
+ * Creates pentagon shape.
+ * @param width With of shape
+ * @param height Height of shape
+ * @param color Color of shape
+ */
+export const hexagon = (color: string): fabric.Object => {
+  let shape = new fabric.Polygon([
+    {x: 125, y: 0},
+    {x: 275, y: 0},
+    {x: 350, y: 175},
+    {x: 275, y: 350},
+    {x: 125, y: 350},
+    {x: 50, y: 175 }
+  ]);
+
+  return shape.set({ scaleX: 0.2, scaleY: 0.2, fill: color });
+};
 
 /**
  * Method to create a shape.

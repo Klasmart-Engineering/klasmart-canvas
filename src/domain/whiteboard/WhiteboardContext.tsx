@@ -128,8 +128,10 @@ export const WhiteboardProvider = ({
 
       canvas?.on({
         'selection:updated': (object: any) => {
-          canvas?.setActiveObject(object.selected[0]);
-          canvas?.renderAll();
+          if (object.selected[0]) {
+            canvas?.setActiveObject(object.selected[0]);
+            canvas?.renderAll();
+          }
         },
         'selection:created': (object: any) => {
           if (object.selected[0]) {
@@ -241,15 +243,19 @@ export const WhiteboardProvider = ({
   const shapeSelector = (specific: string): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
     switch (specific || shape) {
       case 'rectangle':
-        return shapes.chat(10, 10, shapeColor);
+        return shapes.rectangle(10, 10, shapeColor);
       case 'triangle':
         return shapes.triangle(10, 16, shapeColor);
       case 'star':
         return shapes.star(10, 10, shapeColor);
-      case 'arrow':
+      case 'rightArrow':
         return shapes.arrow(10, 10, shapeColor);
-      case 'chat':
+      case 'chatBubble':
         return shapes.chat(10, 10, shapeColor);
+      case 'pentagon':
+        return shapes.pentagon(shapeColor);
+      case 'hexagon':
+          return shapes.hexagon(shapeColor);
       default:
         return shapes.circle(10, 10, shapeColor);
     }
@@ -260,14 +266,15 @@ export const WhiteboardProvider = ({
    * @param shape Shape being added on canvas.
    * @param isCircle Indicates if shape is a circle.
    */
-  const mouseDown = (specific: string): void => {
+  const mouseDown = (specific: string, color?: string): void => {
+
     canvas.on('mouse:down', (e: any): void => {
       if (e.target) {
         return;
       }
 
       const shape = shapeSelector(specific)
-      shape.set({ top: e.pointer.y, left: e.pointer.x });
+      shape.set({ top: e.pointer.y, left: e.pointer.x, fill: color || shapeColor });
       clearOnMouseEvent();
       mouseMove(shape, e.pointer, specific);
       mouseUp(shape, specific);
@@ -291,10 +298,10 @@ export const WhiteboardProvider = ({
 
       if (specific === 'circle') {
         size = setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
-      } else if (specific === 'star' || specific === 'arrow' || specific === 'chat') {
-        size = setPathSize(shape, coordsStart, e.pointer);
-      } else {
+      } else if (specific === 'rectangle' || specific === 'triangle') {
         size = setSize(shape, coordsStart, e.pointer);
+      } else {
+        size = setPathSize(shape, coordsStart, e.pointer);
       }
 
       let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
@@ -317,10 +324,10 @@ export const WhiteboardProvider = ({
    */
   const mouseUp = (shape: any, specific: string): void => {
     canvas.on('mouse:up', (e: any): void => {
-      clearOnMouseEvent();
       shape.setCoords();
       canvas.renderAll();
-      addShape(specific);
+      clearOnMouseEvent();
+      clearMouseEvents();
     });
   };
 
@@ -344,7 +351,7 @@ export const WhiteboardProvider = ({
     // if user clicked more than one shape during selection.
     clearOnMouseEvent();
     clearMouseEvents();
-    mouseDown(specific || shape);
+    mouseDown(specific || shape, shapeColor);
   };
 
   /**
@@ -352,6 +359,10 @@ export const WhiteboardProvider = ({
    * */
   const fillColor = (color: string) => {
     updateShapeColor(color);
+    clearOnMouseEvent();
+    clearMouseEvents();
+    mouseDown(shape, color);
+
     if (canvas.getActiveObject()) {
       canvas.getActiveObject().set('fill', color);
       canvas.renderAll();
@@ -463,6 +474,7 @@ export const WhiteboardProvider = ({
           <div
             className="canvas-wrapper"
             style={styles}
+            onClick={() => {addShape()}}
           >
             <canvas id={canvasId} />
           </div>

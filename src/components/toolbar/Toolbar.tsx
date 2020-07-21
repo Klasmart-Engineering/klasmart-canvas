@@ -57,7 +57,6 @@ function Toolbar() {
     updateFontFamily,
     openClearWhiteboardModal,
     auto,
-    setAuto,
     styles,
     updateStyles,
     setPointerEvents,
