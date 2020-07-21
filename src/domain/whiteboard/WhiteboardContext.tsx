@@ -297,7 +297,6 @@ export const WhiteboardProvider = ({
     specific?: string
   ): void => {
     canvas.on('mouse:move', (e: CanvasEvent): void => {
-      console.log(e);
       let size;
 
       if (specific === 'circle') {
