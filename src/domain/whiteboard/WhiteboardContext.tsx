@@ -36,10 +36,10 @@ export const WhiteboardProvider = ({
   canvasHeight: string;
 }) => {
   const { text, updateText } = useText();
-  const { fontColor, updateFontColor } = useFontColor('#000');
-  const { fontFamily, updateFontFamily } = useFontFamily('Arial');
-  const { shapeColor, updateShapeColor } = useShapeColor('#000');
-  const { shape, updateShape } = useShape('circle');
+  const { fontColor, updateFontColor } = useFontColor();
+  const { fontFamily, updateFontFamily } = useFontFamily();
+  const { shapeColor, updateShapeColor } = useShapeColor();
+  const { shape, updateShape } = useShape();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const [canvas, setCanvas] = useState();
   const {
@@ -48,6 +48,15 @@ export const WhiteboardProvider = ({
     closeModal,
   } = useWhiteboardClearModal();
   const { textIsActive, updateTextIsActive } = useTextIsActive();
+
+  // Provisional (just for change value in Toolbar selectors) they can be modified in the future
+  const [pointer, updatePointer] = useState('arrow');
+  const [eraseType, updateEraseType] = useState('object');
+  const [penLine, updatePenLine] = useState('pen');
+  const [penColor, updatePenColor] = useState('#000');
+  const [thickness, updateThickness] = useState('8px');
+  const [floodFill, updateFloodFill] = useState('#000');
+  const [stamp, updateStamp] = useState('yellowStar');
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -94,16 +103,29 @@ export const WhiteboardProvider = ({
 
           text.on('selected', () => {
             if (text.fontFamily) {
-              updateFontFamily(text.fontFamily);
-              // @ts-ignore
+              //@ts-ignore
               updateFontColor(text.fill);
+              updateFontFamily(text.fontFamily);
             }
           });
         }
       });
     } else {
-      canvas?.discardActiveObject();
-      canvas?.renderAll();
+      if (canvas?.getActiveObject()) {
+        canvas?.discardActiveObject();
+        canvas?.renderAll();
+      }
+
+      canvas?.on({
+        'selection:updated': (object: any) => {
+          canvas?.setActiveObject(object.selected[0]);
+          canvas?.renderAll();
+        },
+        'selection:created': (object: any) => {
+          canvas?.setActiveObject(object.selected[0]);
+          canvas?.renderAll();
+        },
+      });
     }
 
     return () => {
@@ -117,6 +139,15 @@ export const WhiteboardProvider = ({
     updateFontFamily,
     updateFontColor,
   ]);
+
+  /**
+   * When pointerEvents is false deselects any selected object
+   */
+  useEffect(() => {
+    if (!pointerEvents && canvas) {
+      canvas.discardActiveObject().renderAll();
+    }
+  }, [canvas, pointerEvents]);
 
   /**
    * Removes selected element from whiteboard
@@ -134,7 +165,7 @@ export const WhiteboardProvider = ({
     (e: { key: any }) => {
       if (e.key === 'Backspace' && canvas) {
         const obj = canvas.getActiveObject();
-        if (obj?.isEditing === false) {
+        if (!obj?.isEditing) {
           removeSelectedElement();
         }
         return;
@@ -267,10 +298,13 @@ export const WhiteboardProvider = ({
 
   const value = {
     fontFamily,
+    fontColor,
     updateFontFamily,
     colorsList,
     fillColor,
     textColor,
+    shape,
+    shapeColor,
     updateShape,
     addShape,
     removeSelectedElement,
@@ -283,6 +317,21 @@ export const WhiteboardProvider = ({
     textIsActive,
     updateTextIsActive,
     updateFontColor,
+    // Just for control selectors' value they can be modified in the future
+    pointer,
+    updatePointer,
+    eraseType,
+    updateEraseType,
+    penLine,
+    updatePenLine,
+    penColor,
+    updatePenColor,
+    thickness,
+    updateThickness,
+    floodFill,
+    updateFloodFill,
+    stamp,
+    updateStamp,
   };
 
   return (
