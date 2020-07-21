@@ -8,9 +8,9 @@ test('should set eraseType initial value', () => {
 });
 
 test('should update eraseType', () => {
-  const { result } = renderHook(() => useEraseType('Spot Erase'));
+  const { result } = renderHook(() => useEraseType('partial'));
   act(() => {
-    result.current.updateEraseType('Object Erase');
+    result.current.updateEraseType('object');
   });
-  expect(result.current.eraseType).toBe('Object Erase');
+  expect(result.current.eraseType).toBe('object');
 });

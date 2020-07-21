@@ -112,22 +112,6 @@ export const WhiteboardProvider = ({
           });
         }
       });
-    } else {
-      if (canvas?.getActiveObject()) {
-        canvas?.discardActiveObject();
-        canvas?.renderAll();
-      }
-
-      canvas?.on({
-        'selection:updated': (object: any) => {
-          canvas?.setActiveObject(object.selected[0]);
-          canvas?.renderAll();
-        },
-        'selection:created': (object: any) => {
-          canvas?.setActiveObject(object.selected[0]);
-          canvas?.renderAll();
-        },
-      });
     }
 
     return () => {
@@ -143,13 +127,15 @@ export const WhiteboardProvider = ({
   ]);
 
   /**
-   * When pointerEvents is false deselects any selected object
+   * Is executed when textIsActive changes its value,
+   * basically to deselect any selected object
    */
   useEffect(() => {
-    if (!pointerEvents && canvas) {
-      canvas.discardActiveObject().renderAll();
+    if (!textIsActive) {
+      canvas?.discardActiveObject();
+      canvas?.renderAll();
     }
-  }, [canvas, pointerEvents]);
+  }, [canvas, textIsActive]);
 
   /**
    * Removes selected element from whiteboard
@@ -190,7 +176,7 @@ export const WhiteboardProvider = ({
       myFont
         .load()
         .then(() => {
-          if (canvas.getActiveObject()) {
+          if (canvas.getActiveObject() && canvas) {
             canvas.getActiveObject().set('fontFamily', font);
             canvas.requestRenderAll();
           }
@@ -228,7 +214,7 @@ export const WhiteboardProvider = ({
   }, [text, canvas]);
 
   /**
-   * If pointersEvents changes to false, all the selected objects
+   * If pointerEvents changes to false, all the selected objects
    * will be unselected
    */
   useEffect(() => {
@@ -242,12 +228,17 @@ export const WhiteboardProvider = ({
    * necessaries to erase objects are setted or removed
    */
   useEffect(() => {
-    if (eraseType !== 'object' && canvas) {
-      setCanvasSelection(true);
-      canvas.__eventListeners = {};
-    } else if (canvas) {
+    if (eraseType === 'object' && canvas) {
       eraseObject();
+    } else if (canvas) {
+      setCanvasSelection(true);
     }
+
+    return () => {
+      canvas?.off('mouse:down');
+      canvas?.off('mouse:up');
+      canvas?.off('mouse:over');
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eraseType, canvas]);
 

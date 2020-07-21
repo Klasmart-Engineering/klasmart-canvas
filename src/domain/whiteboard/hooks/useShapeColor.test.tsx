@@ -3,7 +3,7 @@ import { useShapeColor } from './useShapeColor';
 
 test('should set shapeColor from initial value', () => {
   const { result } = renderHook(() => useShapeColor());
-  expect(result.current.shapeColor).toBe('black');
+  expect(result.current.shapeColor).toBe('#000');
   expect(typeof result.current.updateShapeColor).toBe('function');
   act(() => {
     result.current.updateShapeColor('green');
