@@ -5,7 +5,7 @@ import ISpecialButton from '../../../interfaces/toolbar/toolbar-special-elements
 /**
  * Render a button to use in the SpecialSelector
  * @param {ISpecialButton} props - Props needed to render the component:
- * - index - index that the button has in the array
+ * - id - id that the button has
  * - title - title for the button
  * - Icon - Icon to use in the button
  * - style - style to set in that Icon
@@ -13,24 +13,26 @@ import ISpecialButton from '../../../interfaces/toolbar/toolbar-special-elements
  * - onClick - Function to execute when the button is clicked
  */
 function SpecialButton(props: ISpecialButton) {
+  const { id, title, Icon, style, selected, onClick } = props;
+
   /**
    * Is executed when the button is clicked and sends an events to its parent
    */
   function handleClick() {
-    props.onClick(props.index);
+    onClick(id);
   }
 
   return (
     <button
-      title={props.title}
+      title={title}
       className={[
         'toolbar-button',
-        props.selected ? 'selected-button' : '',
-        !props.selected ? 'unselected-button' : '',
+        selected ? 'selected-button' : '',
+        !selected ? 'unselected-button' : '',
       ].join(' ')}
       onClick={handleClick}
     >
-      <props.Icon style={props.style} />
+      <Icon style={style} />
     </button>
   );
 }

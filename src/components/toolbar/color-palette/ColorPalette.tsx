@@ -3,6 +3,7 @@ import { colorPaletteOptions } from '../toolbar-sections';
 import SpecialButton from '../special-button/SpecialButton';
 import { OverridableComponent } from '@material-ui/core/OverridableComponent';
 import { SvgIconTypeMap } from '@material-ui/core';
+import './color-palette.css';
 
 interface IColorPalette {
   Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
@@ -17,11 +18,9 @@ interface IColorPalette {
  * - handleColorChange - Function to execute when the color changes
  * - selectedColor - Color to have selected in color palette
  */
-function ColorPalette({
-  Icon,
-  handleColorChange,
-  selectedColor,
-}: IColorPalette) {
+function ColorPalette(props: IColorPalette) {
+  const { Icon, handleColorChange, selectedColor } = props;
+
   /**
    * Executes the given funtion when the color changes
    * @param {string} color - new color to set
@@ -31,19 +30,19 @@ function ColorPalette({
   }
 
   return (
-    <div>
+    <div className="color-palette">
       {colorPaletteOptions
         .filter((_, index) => index)
-        .map((color, index) => {
-          return color.iconName ? (
+        .map((color) => {
+          return color.id ? (
             <SpecialButton
-              key={index}
-              index={index}
+              key={color.id}
+              id={color.id}
               title={color.title}
               Icon={Icon}
               style={color.style}
               selected={selectedColor === color.style.color}
-              onClick={(e) => changeColor(color.style.color || '')}
+              onClick={() => changeColor(color.style.color || '')}
             />
           ) : null;
         })}

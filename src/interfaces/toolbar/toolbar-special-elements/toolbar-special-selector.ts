@@ -3,10 +3,11 @@ import { SvgIconTypeMap } from '@material-ui/core/SvgIcon';
 import IStyleOption from './style-option';
 
 export default interface ISpecialSelector {
-  index: number;
+  id: string;
   Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
   styleOptions: IStyleOption[];
-  selected: boolean;
-  onClick: (index: number) => void;
-  onChange: (index: number, value: string) => void;
+  active: boolean;
+  selectedValue: string;
+  onClick: (tool: string) => void;
+  onChange: (tool: string, valueId: string) => void;
 }

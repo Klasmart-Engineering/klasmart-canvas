@@ -6,7 +6,7 @@ import './toolbar-button.css';
  * Render each button that will be included in the toolbar
  * @param {ToolbarButtonModel} props - Props that the button
  * need to be rendered:
- * - index - index to identify the button
+ * - id - id to identify the button
  * - title - title for the button to show in on hover
  * - iconSrc - src for the icon button
  * - iconName - alt for the icon button
@@ -14,23 +14,20 @@ import './toolbar-button.css';
  * - onClick - event to send to parent when the button is clicked
  */
 function ToolbarButton(props: IToolbarButton) {
+  const { id, title, iconSrc, iconName, active, onClick } = props;
+
   return (
     <button
-      key={props.index}
-      title={props.title}
+      key={id}
+      title={title}
       className={[
-        'toolbar-button',
-        props.selected ? 'selected-button' : '',
-        !props.selected ? 'unselected-button' : '',
+        'toolbar-button original',
+        active ? 'selected-button' : '',
+        !active ? 'unselected-button' : '',
       ].join(' ')}
-      onClick={(e) => props.onClick(props.index)}
+      onClick={() => onClick(id)}
     >
-      <img
-        src={props.iconSrc}
-        alt={props.iconName}
-        width="24px"
-        height="24px"
-      />
+      <img src={iconSrc} alt={iconName} width="24px" height="24px" />
     </button>
   );
 }

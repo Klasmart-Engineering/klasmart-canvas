@@ -1,7 +1,6 @@
 import React, { useState, useContext } from 'react';
 import ToolbarSection from './toolbar-section/ToolbarSection';
 import './toolbar.css';
-import ToolbarText from './toolbar-text/ToolbarText';
 import ToolbarButton from './toolbar-button/ToolbarButton';
 import ToolbarSelector from './toolbar-selector/ToolbarSelector';
 import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
@@ -10,11 +9,29 @@ import SpecialSelector from './special-selector/SpecialSelector';
 import { OverridableComponent } from '@material-ui/core/OverridableComponent';
 import { SvgIconTypeMap } from '@material-ui/core';
 import IStyleOptions from '../../interfaces/toolbar/toolbar-special-elements/style-option';
-import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import IBasicToolbarSelector from '../../interfaces/toolbar/toolbar-selector/basic-toolbar-selector';
 import IBasicToolbarButton from '../../interfaces/toolbar/toolbar-button/basic-toolbar-button';
 import IColorPalette from '../../interfaces/toolbar/toolbar-selector/color-palette';
 import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elements/basic-special-selector';
+import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
+
+export const ELEMENTS = {
+  ADD_IMAGE_ACTION: 'add_image',
+  UNDO_ACTION: 'undo',
+  REDO_ACTION: 'redo',
+  CLEAR_WHITEBOARD_ACTION: 'clear_whiteboard',
+  WHITEBOARD_SCREENSHOT_ACTION: 'whiteboard_screenshot',
+  SHARE_WHITEBOARD_ACTION: 'share_whiteboard',
+  POINTERS_TOOL: 'pointers',
+  MOVE_OBJECTS_TOOL: 'move_objects',
+  ERASE_TYPE_TOOL: 'erase_type',
+  LINE_TYPE_TOOL: 'line_type',
+  THICKNESS_SIZE_TOOL: 'thickness_size',
+  FLOOD_FILL_TOOL: 'flood_fill',
+  ADD_TEXT_TOOL: 'add_text',
+  ADD_SHAPE_TOOL: 'add_shape',
+  ADD_STAMP_TOOL: 'add_stamp',
+};
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -26,7 +43,6 @@ type ToolbarElementTypes =
  * Render the toolbar that will be used in the whiteboard
  */
 function Toolbar() {
-  const [showInput, updateShowInput] = useState(false);
   const [tools, setTools] = useState(toolsSection);
   const [actions] = useState(actionsSection);
 
@@ -36,16 +52,33 @@ function Toolbar() {
     updateShape,
     addShape,
     removeSelectedElement,
-    text,
     fontFamily,
-    updateText,
+    fontColor,
     updateFontFamily,
-    writeText,
     openClearWhiteboardModal,
     auto,
     setAuto,
     styles,
-    updateStyles
+    updateStyles,
+    setPointerEvents,
+    updateTextIsActive,
+    shape,
+    shapeColor,
+    // Just for control selectors' value may be changed in the future
+    pointer,
+    updatePointer,
+    eraseType,
+    updateEraseType,
+    penLine,
+    updatePenLine,
+    penColor,
+    updatePenColor,
+    thickness,
+    updateThickness,
+    floodFill,
+    updateFloodFill,
+    stamp,
+    updateStamp,
   } = useContext(WhiteboardContext);
 
   /**
@@ -53,12 +86,13 @@ function Toolbar() {
    * and set the new selected button for that section
    * @param {number} index - index that the clicked button has in the array
    */
-  function handleToolsElementClick(index: number) {
-    updateShowInput(index === 7);
-    updatePointerEvents(index === 0);
+  function handleToolsElementClick(tool: string) {
+    updateTextIsActive(tool === ELEMENTS.ADD_TEXT_TOOL);
+    setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
+    // set the clicked tool like active style in Toolbar
     setTools({
-      selected: index,
+      active: tool,
       elements: [...tools.elements],
     });
   }
@@ -73,9 +107,9 @@ function Toolbar() {
    * and set the new selected button for that section
    * @param {number} index - index that the clicked button has in the array
    */
-  function handleActionsElementClick(index: number) {
-    switch (index) {
-      case 3: {
+  function handleActionsElementClick(tool: string) {
+    switch (tool) {
+      case ELEMENTS.CLEAR_WHITEBOARD_ACTION: {
         openClearWhiteboardModal();
       }
     }
@@ -83,24 +117,42 @@ function Toolbar() {
 
   /**
    * Is executed when a change value happens in a Tools ToolbarSelector
-   * @param {number} index - index of the selector in ToolbarSection
+   * @param {string} tool - index of the selector in ToolbarSection
    * @param {string} value - new selected value
    */
-  function handleToolSelectorChange(index: number, value: string) {
-    switch (index) {
-      case 2: {
-        setAuto(value === 'Whiteboard' ? true : false);
+  function handleToolSelectorChange(tool: string, option: string) {
+    switch (tool) {
+      case ELEMENTS.POINTERS_TOOL:
+        updatePointer(option);
         break;
-      }
 
-      case 7: {
-        updateFontFamily(value);
+      case ELEMENTS.ERASE_TYPE_TOOL:
+        updateEraseType(option);
         break;
-      }
-      case 8: {
-        updateShape(value.toLowerCase());
+
+      case ELEMENTS.LINE_TYPE_TOOL:
+        updatePenLine(option);
         break;
-      }
+
+      case ELEMENTS.THICKNESS_SIZE_TOOL:
+        updateThickness(option);
+        break;
+
+      case ELEMENTS.FLOOD_FILL_TOOL:
+        updateFloodFill(option);
+        break;
+
+      case ELEMENTS.ADD_TEXT_TOOL:
+        updateFontFamily(option);
+        break;
+
+      case ELEMENTS.ADD_SHAPE_TOOL:
+        updateShape(option);
+        break;
+
+      case ELEMENTS.ADD_STAMP_TOOL:
+        updateStamp(option);
+        break;
     }
   }
 
@@ -109,13 +161,13 @@ function Toolbar() {
    * @param {number} index - index that the element has in the ToolbarSection
    * @param {string} specific (optional) - specific value/option to use
    */
-  function handleToolsElementAction(index: number, specific?: string) {
+  function handleToolsElementAction(tool: string, specific?: string) {
     switch (true) {
-      case index === 3 && specific === 'erase object':
+      case tool === ELEMENTS.ERASE_TYPE_TOOL && specific === 'erase object':
         removeSelectedElement();
         break;
 
-      case index === 8:
+      case tool === ELEMENTS.ADD_SHAPE_TOOL:
         addShape(specific);
         break;
     }
@@ -126,12 +178,17 @@ function Toolbar() {
    * @param {number} index - index that the element has in ToolbarSection
    * @param {string} color - new color to set in the element
    */
-  function changeColor(index: number, color: string) {
-    switch (index) {
-      case 7:
+  function changeColor(tool: string, color: string) {
+    switch (tool) {
+      case ELEMENTS.LINE_TYPE_TOOL:
+        updatePenColor(color);
+        break;
+
+      case ELEMENTS.ADD_TEXT_TOOL:
         textColor(color);
         break;
-      case 8:
+
+      case ELEMENTS.ADD_SHAPE_TOOL:
         fillColor(color);
         break;
     }
@@ -143,49 +200,105 @@ function Toolbar() {
    * colorPaletteIcon - Icon to set in the color palette
    */
   function setColorPalette(
-    colorPaletteIcon?: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>
+    tool: IBasicToolbarSelector
   ): IColorPalette | undefined {
-    if (!colorPaletteIcon) {
+    let selected = '';
+
+    if (!tool.colorPaletteIcon) {
       return undefined;
     }
 
+    switch (tool.id) {
+      case ELEMENTS.LINE_TYPE_TOOL:
+        selected = penColor;
+        break;
+
+      case ELEMENTS.ADD_TEXT_TOOL:
+        selected = fontColor;
+        break;
+
+      case ELEMENTS.ADD_SHAPE_TOOL:
+        selected = shapeColor;
+        break;
+
+      default:
+        selected = '';
+        break;
+    }
+
     return {
-      icon: colorPaletteIcon,
-      selectedColor: '#000',
+      icon: tool.colorPaletteIcon,
+      selectedColor: selected,
       onChangeColor: changeColor,
     };
+  }
+
+  /**
+   * Set the parent's definedOptionName in the given tool
+   * @param {string} tool - Tool to set the definedOption
+   */
+  function setSelectedOptionSelector(tool: string): string {
+    switch (tool) {
+      case ELEMENTS.POINTERS_TOOL:
+        return pointer;
+
+      case ELEMENTS.ERASE_TYPE_TOOL:
+        return eraseType;
+
+      case ELEMENTS.LINE_TYPE_TOOL:
+        return penLine;
+
+      case ELEMENTS.THICKNESS_SIZE_TOOL:
+        return thickness;
+
+      case ELEMENTS.FLOOD_FILL_TOOL:
+        return floodFill;
+
+      case ELEMENTS.ADD_TEXT_TOOL:
+        return fontFamily;
+
+      case ELEMENTS.ADD_SHAPE_TOOL:
+        return shape;
+
+      case ELEMENTS.ADD_STAMP_TOOL:
+        return stamp;
+
+      default:
+        return '';
+    }
   }
 
   return (
     <div className="toolbar-container">
       <div className="toolbar">
         <ToolbarSection>
-          {tools.elements.map((tool, index) =>
+          {tools.elements.map((tool) =>
             determineIfIsToolbarButton(tool)
               ? createToolbarButton(
-                  index,
+                  tool.id,
                   tool.title,
                   tool.iconSrc,
                   tool.iconName,
-                  tools.selected === index,
+                  tools.active === tool.id,
                   handleToolsElementClick
                 )
               : determineIfIsToolbarSelector(tool)
               ? createToolbarSelector(
-                  index,
+                  tool.id,
                   tool.options,
-                  tools.selected === index,
+                  tools.active === tool.id,
                   handleToolsElementClick,
                   handleToolSelectorChange,
                   handleToolsElementAction,
-                  index === 7 ? fontFamily : null,
-                  setColorPalette(tool.colorPaletteIcon)
+                  setSelectedOptionSelector(tool.id),
+                  setColorPalette(tool)
                 )
               : determineIfIsSpecialSelector(tool)
               ? createSpecialSelector(
-                  index,
+                  tool.id,
                   tool.icon,
-                  tools.selected === index,
+                  tools.active === tool.id,
+                  setSelectedOptionSelector(tool.id),
                   tool.styleOptions,
                   handleToolsElementClick,
                   handleToolSelectorChange
@@ -195,55 +308,48 @@ function Toolbar() {
         </ToolbarSection>
 
         <ToolbarSection>
-          {actions.elements.map((action, index) =>
+          {actions.elements.map((action) =>
             determineIfIsToolbarButton(action)
               ? createToolbarButton(
-                  index,
+                  action.id,
                   action.title,
                   action.iconSrc,
                   action.iconName,
-                  actions.selected === index,
+                  actions.active === action.id,
                   handleActionsElementClick
                 )
               : null
           )}
         </ToolbarSection>
       </div>
-
-      <ToolbarText
-        showInput={showInput}
-        text={text}
-        updateText={updateText}
-        writeText={writeText}
-      />
     </div>
   );
 }
 
 /**
  * Creates a ToolbarButton
- * @param {number} index - index of the button in the section array
+ * @param {string} id - id of the button
  * @param {string} iconSrc - src for the icon of the button
  * @param {string} iconName - alt for the icon of the button
- * @param {boolean} selected - flag to set this button like selected
+ * @param {boolean} active - flag to set this button like active
  * @param {(index: number) => void} onClick - function to execute when button is clicked
  */
 function createToolbarButton(
-  index: number,
+  id: string,
   title: string,
   iconSrc: string,
   iconName: string,
-  selected: boolean,
-  onClick: (index: number) => void
+  active: boolean,
+  onClick: (tool: string) => void
 ): JSX.Element {
   return (
     <ToolbarButton
+      key={id}
+      id={id}
       title={title}
-      key={index}
-      index={index}
       iconSrc={iconSrc}
       iconName={iconName}
-      selected={selected}
+      active={active}
       onClick={onClick}
     />
   );
@@ -251,10 +357,10 @@ function createToolbarButton(
 
 /**
  * Creates a ToolbarSelector
- * @param {number} index - index of the selector in the section array
+ * @param {string} id - id of the selector
  * @param {IToolbarSelectorOption[]} options - options that the selector
  * will have
- * @param {boolean} selected - flag to set this selector like selected
+ * @param {boolean} active - flag to set this selector like active
  * @param {(index: number) => void} onClick - function to execute
  * when selector is clicked
  * @param {(value: string) => void} onChange - function to execute
@@ -266,22 +372,22 @@ function createToolbarButton(
  * the color palette to use
  */
 function createToolbarSelector(
-  index: number,
+  id: string,
   options: IToolbarSelectorOption[],
-  selected: boolean,
-  onClick: (index: number) => void,
-  onChange: (index: number, value: string) => void,
-  onAction: (index: number) => void,
-  definedOptionName?: string,
+  active: boolean,
+  onClick: (tool: string) => void,
+  onChange: (tool: string, value: string) => void,
+  onAction: (tool: string) => void,
+  selectedValue: string,
   colorPalette?: IColorPalette
 ): JSX.Element {
   return (
     <ToolbarSelector
-      key={index}
-      index={index}
+      key={id}
+      id={id}
       options={options}
-      selected={selected}
-      definedOptionName={definedOptionName}
+      active={active}
+      selectedValue={selectedValue}
       colorPalette={colorPalette}
       onAction={onAction}
       onClick={onClick}
@@ -292,7 +398,7 @@ function createToolbarSelector(
 
 /**
  * Create an SpecialToolbarSelector
- * @param {number} index - index of the selector in the section array
+ * @param {string} id - id of the selector
  * @param {OverridableComponent<SvgIconTypeMap<{}, 'svg'>>} Icon - Icon
  * that the selector will have
  * @param {boolean} selected - flag to set this selector like selected
@@ -303,19 +409,21 @@ function createToolbarSelector(
  * selector's value is changed
  */
 function createSpecialSelector(
-  index: number,
+  id: string,
   Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>,
-  selected: boolean,
+  active: boolean,
+  selectedValue: string,
   styleOptions: IStyleOptions[],
-  onClick: (index: number) => void,
-  onChange: (index: number, value: string) => void
+  onClick: (tool: string) => void,
+  onChange: (tool: string, value: string) => void
 ): JSX.Element {
   return (
     <SpecialSelector
-      key={index}
-      index={index}
+      key={id}
+      id={id}
       Icon={Icon}
-      selected={selected}
+      active={active}
+      selectedValue={selectedValue}
       styleOptions={styleOptions}
       onClick={onClick}
       onChange={onChange}

@@ -4,5 +4,5 @@ import { SvgIconTypeMap } from '@material-ui/core/SvgIcon';
 export default interface IColorPalette {
   icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
   selectedColor: string;
-  onChangeColor: (index: number, color: string) => void;
+  onChangeColor: (id: string, color: string) => void;
 }

@@ -1,29 +1,67 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import SpecialButton from '../special-button/SpecialButton';
 import '../toolbar-selector/toolbar-selector.css';
 import ISpecialSelector from '../../../interfaces/toolbar/toolbar-special-elements/toolbar-special-selector';
+import IStyleOption from '../../../interfaces/toolbar/toolbar-special-elements/style-option';
 
 /**
  * Render an SpecialSelector that uses a stylizable Icon (Font like)
  * @param {ISpecialSelector} props - Props needed to render the component:
- * - index - index that the element has in the section
+ * - id - id that the element has
  * - Icon - Icon to set in the options
- * - selected - flag to set if the element is selected or not
+ * - active - flag to set if the element is selected or not
+ * - selectedValue - Selected value setted by parent
  * - styleOptions - Icon styles in the different options
  * - onClick - Function to execute when the element is clicked
  * - onChange - Function to execute when the value changes
  */
 function SpecialSelector(props: ISpecialSelector) {
-  const [selectedOption, setSelectedOption] = useState(props.styleOptions[0]);
+  const {
+    id,
+    Icon,
+    active,
+    selectedValue,
+    styleOptions,
+    onClick,
+    onChange,
+  } = props;
+
+  const [selectedOption, setSelectedOption] = useState(
+    findOptionDefinedByParent()
+  );
   const [showOptions, setShowOptions] = useState(false);
   const buttonRef = useRef(null);
+
+  /**
+   * When selectedValue changes the value is found in all the available options
+   * to be setted like selected option
+   */
+  useEffect(() => {
+    const newValue = styleOptions.find(
+      (option) => option.value === selectedValue
+    );
+
+    if (newValue) {
+      setSelectedOption(newValue);
+    }
+  }, [selectedValue, styleOptions]);
+
+  /**
+   * Finds the option that has the selectedValue defined by parent
+   */
+  function findOptionDefinedByParent(): IStyleOption {
+    return (
+      styleOptions.find((option) => option.value === selectedValue) ||
+      styleOptions[0]
+    );
+  }
 
   /**
    * Is executed when the selector is clicked and sends an event to its parent
    */
   function handleClick() {
-    props.onClick(props.index);
+    onClick(id);
 
     if (showOptions) {
       setShowOptions(false);
@@ -34,9 +72,8 @@ function SpecialSelector(props: ISpecialSelector) {
    * Is executed when the selector changes its value
    * @param {string} value - new value to set in selector
    */
-  function handleSelect(value: any) {
-    setSelectedOption(value);
-    props.onChange(props.index, value.iconName);
+  function handleSelect(option: any) {
+    onChange(id, option.value);
     setShowOptions(false);
   }
 
@@ -44,7 +81,7 @@ function SpecialSelector(props: ISpecialSelector) {
    * Is executed when you click the arrow
    */
   function handleArrowClick() {
-    props.onClick(props.index);
+    onClick(id);
 
     if (!showOptions) {
       document.addEventListener('click', handleOutsideClick, false);
@@ -78,32 +115,34 @@ function SpecialSelector(props: ISpecialSelector) {
         ref={buttonRef}
         className={[
           'toolbar-selector',
-          props.selected ? 'selected' : '',
-          !props.selected ? 'unselected' : '',
+          active ? 'selected' : '',
+          !active ? 'unselected' : '',
         ].join(' ')}
       >
-        <props.Icon style={selectedOption.style} onClick={handleClick} />
+        <Icon style={selectedOption.style} onClick={handleClick} />
         <ArrowRightIcon onClick={handleArrowClick} />
       </button>
-      {showOptions && props.selected ? (
-        <div className="options special-options">
-          {props.styleOptions
-            .filter((option) => {
-              return option.iconName !== selectedOption.iconName;
-            })
-            .map((option, index) => {
-              return (
-                <SpecialButton
-                  key={index}
-                  index={index}
-                  title={option.title}
-                  Icon={props.Icon}
-                  style={option.style}
-                  selected={false}
-                  onClick={(e) => handleSelect(option)}
-                />
-              );
-            })}
+      {showOptions && active ? (
+        <div className="options-container">
+          <div className="options special-options no-palette">
+            {styleOptions
+              .filter((option) => {
+                return option.value !== selectedOption.value;
+              })
+              .map((option) => {
+                return (
+                  <SpecialButton
+                    key={option.id}
+                    id={option.id}
+                    title={option.title}
+                    Icon={Icon}
+                    style={option.style}
+                    selected={false}
+                    onClick={() => handleSelect(option)}
+                  />
+                );
+              })}
+          </div>
         </div>
       ) : null}
     </div>
