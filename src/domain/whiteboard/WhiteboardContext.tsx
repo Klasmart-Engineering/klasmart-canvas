@@ -230,6 +230,10 @@ export const WhiteboardProvider = ({
   useEffect(() => {
     if (eraseType === 'object' && canvas) {
       eraseObject();
+
+      if (canvas.getActiveObjects().length === 1) {
+        canvas.discardActiveObject().renderAll();
+      }
     } else if (canvas) {
       setCanvasSelection(true);
     }
