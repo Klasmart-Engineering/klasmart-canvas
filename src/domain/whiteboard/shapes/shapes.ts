@@ -165,3 +165,8 @@ export const chat = (
 
   return generic(path, width, height, color);
 };
+
+export const brush = () => {
+  const shape = new fabric.PatternBrush();
+  return shape;
+}

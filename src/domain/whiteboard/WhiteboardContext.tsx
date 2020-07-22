@@ -20,6 +20,7 @@ import { usePointerEvents } from './hooks/usePointerEvents';
 import { useFontColor } from './hooks/useFontColor';
 import { useTextIsActive } from './hooks/useTextIsActive';
 import { useShapeIsActive } from './hooks/useShapeIsActive';
+import { useBrushIsActive } from './hooks/useBrushIsActive';
 import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
 
@@ -61,6 +62,7 @@ export const WhiteboardProvider = ({
 
   const { textIsActive, updateTextIsActive } = useTextIsActive();
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
+  const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState('arrow');
@@ -80,6 +82,7 @@ export const WhiteboardProvider = ({
       backgroundColor: null,
       width: canvasWidth,
       height: canvasHeight,
+      isDrawingMode: false,
     });
 
     setCanvas(canvasInstance);
@@ -165,6 +168,17 @@ export const WhiteboardProvider = ({
       canvas.discardActiveObject().renderAll();
     }
   }, [canvas, pointerEvents]);
+
+  useEffect(() => {
+    if (brushIsActive) {
+      canvas.isDrawingMode = { ...canvas, isDrawingMode: true };
+      // canvas.on('mouse:down', () => {
+      //   let brush = shapes.brush();
+      //   console.log(brush);
+      //   debugger;
+      // });
+    }
+  }, [brushIsActive, canvas]);
 
   /**
    * Removes selected element from whiteboard
@@ -448,6 +462,8 @@ export const WhiteboardProvider = ({
     updateTextIsActive,
     shapeIsActive,
     updateShapeIsActive,
+    brushIsActive,
+    updateBrushIsActive,
     updateFontColor,
     // Just for control selectors' value they can be modified in the future
     pointer,

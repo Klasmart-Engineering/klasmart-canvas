@@ -59,6 +59,7 @@ function Toolbar() {
     setPointerEvents,
     updateTextIsActive,
     updateShapeIsActive,
+    updateBrushIsActive,
     shape,
     shapeColor,
     // Just for control selectors' value may be changed in the future
@@ -86,6 +87,7 @@ function Toolbar() {
   function handleToolsElementClick(tool: string) {
     updateTextIsActive(tool === ELEMENTS.ADD_TEXT_TOOL);
     updateShapeIsActive(tool === ELEMENTS.ADD_SHAPE_TOOL);
+    updateBrushIsActive(tool === ELEMENTS.LINE_TYPE_TOOL);
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
     // set the clicked tool like active style in Toolbar
@@ -114,6 +116,7 @@ function Toolbar() {
    * @param {string} value - new selected value
    */
   function handleToolSelectorChange(tool: string, option: string) {
+
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
         updatePointer(option);
