@@ -95,7 +95,7 @@ export const WhiteboardProvider = ({
     if (textIsActive) {
       canvas?.on('mouse:down', (options: { target: null; e: any }) => {
         if (options.target === null) {
-          const text = new fabric.IText(' ', {
+          let text = new fabric.IText(' ', {
             fontFamily: fontFamily,
             fontSize: 30,
             fontWeight: 400,
@@ -112,17 +112,38 @@ export const WhiteboardProvider = ({
           text?.hiddenTextarea?.focus();
 
           text.on('editing:exited', () => {
+            const textCopy = text.text;
+            const toObject = text.toObject();
+            delete toObject.text;
+            delete toObject.type;
+            const clonedTextObj = JSON.parse(JSON.stringify(toObject));
+
+            if (typeof textCopy === 'string') {
+              text = new fabric.Textbox(textCopy, clonedTextObj);
+            }
+
+            canvas.remove(canvas.getActiveObject());
+            canvas.add(text);
+            canvas.setActiveObject(text);
+
             if (text?.text?.replace(/\s/g, '').length === 0) {
               canvas.remove(canvas.getActiveObject());
+              return;
             }
-          });
 
-          text.on('selected', () => {
-            if (text.fontFamily) {
-              //@ts-ignore
-              updateFontColor(text.fill);
-              updateFontFamily(text.fontFamily);
-            }
+            text.on('selected', () => {
+              if (text.fontFamily) {
+                //@ts-ignore
+                updateFontColor(text.fill);
+                updateFontFamily(text.fontFamily);
+              }
+            });
+
+            text.on('modified', () => {
+              if (text?.text?.replace(/\s/g, '').length === 0) {
+                canvas.remove(canvas.getActiveObject());
+              }
+            });
           });
         }
       });
