@@ -138,13 +138,6 @@ export const WhiteboardProvider = ({
   }, [canvas, textIsActive]);
 
   /**
-   * Removes selected element from whiteboard
-   * */
-  const removeSelectedElement = useCallback(() => {
-    canvas.remove(canvas.getActiveObject());
-  }, [canvas]);
-
-  /**
    * General handler for keyboard events
    * 'Backspace' event for removing selected element from whiteboard
    * 'Escape' event for deselect active objects
@@ -152,10 +145,14 @@ export const WhiteboardProvider = ({
   const keyDownHandler = useCallback(
     (e: { key: any }) => {
       if (e.key === 'Backspace' && canvas) {
-        const obj = canvas.getActiveObject();
-        if (!obj?.isEditing) {
-          removeSelectedElement();
-        }
+        const objects = canvas.getActiveObjects();
+
+        objects.forEach((object: any) => {
+          if (!object?.isEditing) {
+            canvas.remove(object);
+            canvas.discardActiveObject().renderAll();
+          }
+        });
         return;
       }
 
@@ -164,7 +161,7 @@ export const WhiteboardProvider = ({
         canvas.renderAll();
       }
     },
-    [canvas, removeSelectedElement]
+    [canvas]
   );
 
   /**
@@ -176,7 +173,7 @@ export const WhiteboardProvider = ({
       myFont
         .load()
         .then(() => {
-          if (canvas.getActiveObject() && canvas) {
+          if (canvas?.getActiveObject()) {
             canvas.getActiveObject().set('fontFamily', font);
             canvas.requestRenderAll();
           }

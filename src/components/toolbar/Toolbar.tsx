@@ -61,6 +61,7 @@ function Toolbar() {
     shapeColor,
     eraseType,
     updateEraseType,
+    discardActiveObject,
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
@@ -82,9 +83,29 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
+    // Set Erase Type in initial value
     updateEraseType('');
+
+    /*
+      It is setted to true when you select Add Text Tool,
+      otherwise will be setted in false
+    */
     updateTextIsActive(tool === ELEMENTS.ADD_TEXT_TOOL);
+
+    /*
+      It is setted to false when you select Pointer Tool,
+      otherwise will be setted in true
+    */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
+
+    /*
+      If you click on another button different that Erase Type Tool
+      and Add Text Tool the selected object will be deselected;
+      Erase Type and Add Text cases will be handled in WhiteboardContext
+    */
+    if (tool !== ELEMENTS.ERASE_TYPE_TOOL && tool !== ELEMENTS.ADD_TEXT_TOOL) {
+      discardActiveObject();
+    }
 
     // set the clicked tool like active style in Toolbar
     setTools({
@@ -99,6 +120,8 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleActionsElementClick(tool: string) {
+    discardActiveObject();
+
     switch (tool) {
       case ELEMENTS.CLEAR_WHITEBOARD_ACTION: {
         openClearWhiteboardModal();
