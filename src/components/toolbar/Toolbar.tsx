@@ -40,6 +40,7 @@ function Toolbar() {
     openClearWhiteboardModal,
     setPointerEvents,
     updateTextIsActive,
+    updateShapeIsActive,
     shape,
     shapeColor,
     eraseType,
@@ -74,6 +75,12 @@ function Toolbar() {
       otherwise will be setted in false
     */
     updateTextIsActive(tool === ELEMENTS.ADD_TEXT_TOOL);
+
+    /*
+      It is setted to true when you select Add Shape Tool,
+      otherwise will be setted in false
+    */
+    updateShapeIsActive(tool === ELEMENTS.ADD_SHAPE_TOOL);
 
     /*
       It is setted to false when you select Pointer Tool,

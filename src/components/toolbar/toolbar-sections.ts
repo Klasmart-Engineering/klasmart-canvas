@@ -18,23 +18,13 @@ import chalk from '../../assets/icons/toolbar/chalk.svg';
 import paintBrush from '../../assets/icons/toolbar/paint-brush.svg';
 import marker from '../../assets/icons/toolbar/marker.svg';
 import dashedPen from '../../assets/icons/toolbar/dashed-pen.svg';
-import lineShape from '../../assets/icons/toolbar/line-shape.svg';
-import freeLineShape from '../../assets/icons/toolbar/free-line-shape.svg';
 import circleShape from '../../assets/icons/toolbar/circle-shape.svg';
 import rectangleShape from '../../assets/icons/toolbar/rectangle-shape.svg';
-import roundedRectangleShape from '../../assets/icons/toolbar/rounded-rectangle-shape.svg';
-import freeShape from '../../assets/icons/toolbar/free-shape.svg';
 import triangleShape from '../../assets/icons/toolbar/triangle-shape.svg';
-import rightTriangleShape from '../../assets/icons/toolbar/right-triangle-shape.svg';
-import diamondShape from '../../assets/icons/toolbar/diamond-shape.svg';
 import pentagonShape from '../../assets/icons/toolbar/pentagon-shape.svg';
 import hexagonShape from '../../assets/icons/toolbar/hexagon-shape.svg';
-import fourPointedStarShape from '../../assets/icons/toolbar/four-pointed-star-shape.png';
 import starShape from '../../assets/icons/toolbar/star-shape.svg';
-import sixPointedStarShape from '../../assets/icons/toolbar/six-pointed-star-shape.svg';
 import chatBubbleShape from '../../assets/icons/toolbar/chat-bubble-shape.svg';
-import chatRectangleBubbleShape from '../../assets/icons/toolbar/chat-rectangle-bubble-shape.svg';
-import thinkingBubbleShape from '../../assets/icons/toolbar/thinking-bubble-shape.svg';
 import move from '../../assets/icons/toolbar/move.svg';
 import star from '../../assets/icons/toolbar/star.svg';
 import emojiSmile from '../../assets/icons/toolbar/emoji-smile.svg';
@@ -458,20 +448,6 @@ const toolsSection: IBasicToolbarSection = {
       id: 'add_shape',
       options: [
         {
-          id: 'line_shape',
-          value: 'line',
-          title: 'Line',
-          iconSrc: lineShape,
-          iconName: 'Line',
-        },
-        {
-          id: 'free_line_shape',
-          value: 'freeLine',
-          title: 'Free Line',
-          iconSrc: freeLineShape,
-          iconName: 'Free Line',
-        },
-        {
           id: 'circle_shape',
           value: 'circle',
           title: 'Circle Shape',
@@ -486,39 +462,11 @@ const toolsSection: IBasicToolbarSection = {
           iconName: 'Rectangle',
         },
         {
-          id: 'rounded_rectangle_shape',
-          value: 'roundedRectangle',
-          title: 'Rounded Rectangle Shape',
-          iconSrc: roundedRectangleShape,
-          iconName: 'Rounded Rectangle',
-        },
-        {
-          id: 'free_shape',
-          value: 'freeShape',
-          title: 'Free Shape',
-          iconSrc: freeShape,
-          iconName: 'Free Shape',
-        },
-        {
           id: 'triangle_shape',
           value: 'triangle',
           title: 'Triangle Shape',
           iconSrc: triangleShape,
           iconName: 'Triangle',
-        },
-        {
-          id: 'right_triangle_shape',
-          value: 'rightTriangle',
-          title: 'Right Triangle Shape',
-          iconSrc: rightTriangleShape,
-          iconName: 'Right Triangle',
-        },
-        {
-          id: 'diamond_shape',
-          value: 'diamond',
-          title: 'Diamond Shape',
-          iconSrc: diamondShape,
-          iconName: 'Diamond',
         },
         {
           id: 'pentagon_shape',
@@ -542,34 +490,6 @@ const toolsSection: IBasicToolbarSection = {
           iconName: 'Right Arrow',
         },
         {
-          id: 'left_arrow_shape',
-          value: 'leftArrow',
-          title: 'Left Arrow',
-          iconSrc: left,
-          iconName: 'Left Arrow',
-        },
-        {
-          id: 'up_arrow_shape',
-          value: 'upArrow',
-          title: 'Up Arrow',
-          iconSrc: up,
-          iconName: 'Up Arrow',
-        },
-        {
-          id: 'down_arrow_shape',
-          value: 'downArrow',
-          title: 'Down Arrow',
-          iconSrc: down,
-          iconName: 'Down Arrow',
-        },
-        {
-          id: 'four_pointed_star_shape',
-          value: 'fourPointedStar',
-          title: 'Four Pointed Star',
-          iconSrc: fourPointedStarShape,
-          iconName: 'Four Pointed Star',
-        },
-        {
           id: 'star_shape',
           value: 'star',
           title: 'Star Shape',
@@ -577,32 +497,11 @@ const toolsSection: IBasicToolbarSection = {
           iconName: 'Star',
         },
         {
-          id: 'six_pointed_star_shape',
-          value: 'sixPointedStar',
-          title: 'Six Pointed Star',
-          iconSrc: sixPointedStarShape,
-          iconName: 'Six Pointed Star',
-        },
-        {
-          id: 'chat_rectangle_bubble_shape',
-          value: 'chatRectangleBubble',
-          title: 'Chat Rectangle Bubble',
-          iconSrc: chatRectangleBubbleShape,
-          iconName: 'Chat Rectangle Bubble',
-        },
-        {
           id: 'chat_bubble_shape',
           value: 'chatBubble',
           title: 'Chat Bubble',
           iconSrc: chatBubbleShape,
           iconName: 'Chat Bubble',
-        },
-        {
-          id: 'thinking_bubble_shape',
-          value: 'thinkingBubble',
-          title: 'Thinking Bubble',
-          iconSrc: thinkingBubbleShape,
-          iconName: 'Thinking Bubble',
         },
       ],
       colorPaletteIcon: FiberManualRecordRoundedIcon,
