@@ -33,7 +33,6 @@ function Toolbar() {
     fillColor,
     textColor,
     updateShape,
-    addShape,
     fontFamily,
     fontColor,
     updateFontFamily,
@@ -167,10 +166,6 @@ function Toolbar() {
     switch (tool) {
       case ELEMENTS.ERASE_TYPE_TOOL:
         updateEraseType(specific);
-        break;
-
-      case ELEMENTS.ADD_SHAPE_TOOL:
-        addShape(specific);
         break;
 
       case ELEMENTS.ADD_TEXT_TOOL:
