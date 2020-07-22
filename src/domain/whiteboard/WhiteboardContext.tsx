@@ -13,10 +13,14 @@ import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
+import { useStyles } from './hooks/useStyles';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
+import { setSize, setCircleSize, setPathSize } from './utils/scaling';
 import { usePointerEvents } from './hooks/usePointerEvents';
 import { useFontColor } from './hooks/useFontColor';
 import { useTextIsActive } from './hooks/useTextIsActive';
+import { useShapeIsActive } from './hooks/useShapeIsActive';
+import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
@@ -51,7 +55,16 @@ export const WhiteboardProvider = ({
     openModal,
     closeModal,
   } = useWhiteboardClearModal();
+  const { styles, updateStyles } = useStyles({
+    border: '1px solid blue',
+    width: canvasWidth + 'px',
+    height: canvasHeight + 'px',
+    position: 'absolute',
+    pointerEvents: pointerEvents ? 'auto' : 'none',
+  });
+
   const { textIsActive, updateTextIsActive } = useTextIsActive();
+  const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -245,23 +258,130 @@ export const WhiteboardProvider = ({
   }, [eraseType, canvas]);
 
   /**
-   * Add specific shape to whiteboard
-   * */
-  const addShape = (specific?: string) => {
+   * Adds shape to whiteboard.
+   * @param specific Indicates shape type that should be added in whiteboard.
+   */
+  const shapeSelector = (
+    specific: string
+  ): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
     switch (specific || shape) {
       case 'rectangle':
-        const rectangle = shapes.rectangle(150, 150, shapeColor);
-        canvas.centerObject(rectangle);
-        return canvas.add(rectangle);
+        return shapes.rectangle(10, 10, shapeColor);
       case 'triangle':
-        const triangle = shapes.triangle(100, 160, shapeColor);
-        canvas.centerObject(triangle);
-        return canvas.add(triangle);
-      case 'circle':
-        const circle = shapes.circle(50, shapeColor);
-        canvas.centerObject(circle);
-        return canvas.add(circle);
+        return shapes.triangle(10, 16, shapeColor);
+      case 'star':
+        return shapes.star(10, 10, shapeColor);
+      case 'rightArrow':
+        return shapes.arrow(10, 10, shapeColor);
+      case 'chatBubble':
+        return shapes.chat(10, 10, shapeColor);
+      case 'pentagon':
+        return shapes.pentagon(shapeColor);
+      case 'hexagon':
+        return shapes.hexagon(shapeColor);
+      default:
+        return shapes.circle(10, 10, shapeColor);
     }
+  };
+
+  /**
+   * Mouse down event listener for canvas.
+   * @param shape Shape being added on canvas.
+   * @param isCircle Indicates if shape is a circle.
+   */
+  const mouseDown = (specific: string, color?: string): void => {
+    canvas.on('mouse:down', (e: CanvasEvent): void => {
+      if (e.target) {
+        return;
+      }
+
+      const shape = shapeSelector(specific);
+      shape.set({
+        top: e.pointer.y,
+        left: e.pointer.x,
+        fill: color || shapeColor,
+      });
+      clearOnMouseEvent();
+      mouseMove(shape, e.pointer, specific);
+      mouseUp(shape);
+      canvas.add(shape);
+    });
+  };
+
+  /**
+   *
+   * @param shape Shape that was added to canvas.
+   * @param coordsStart Coordinates of initial click on canvas.
+   * @param isCircle Indicates if shape added is a circle.
+   */
+  const mouseMove = (
+    shape: fabric.Object | fabric.Rect | fabric.Ellipse,
+    coordsStart: any,
+    specific?: string
+  ): void => {
+    canvas.on('mouse:move', (e: CanvasEvent): void => {
+      if (specific === 'circle') {
+        setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
+      } else if (specific === 'rectangle' || specific === 'triangle') {
+        setSize(shape, coordsStart, e.pointer);
+      } else {
+        setPathSize(shape, coordsStart, e.pointer);
+      }
+
+      let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
+
+      if (coordsStart.x > e.pointer.x) {
+        anchor = { ...anchor, originX: 'right' };
+      }
+
+      if (coordsStart.y > e.pointer.y) {
+        anchor = { ...anchor, originY: 'bottom' };
+      }
+
+      shape.set(anchor);
+      canvas.renderAll();
+    });
+  };
+
+  /**
+   * Mouse up event listener for canvas.
+   */
+  const mouseUp = (
+    shape: fabric.Object | fabric.Rect | fabric.Ellipse
+  ): void => {
+    canvas.on('mouse:up', (): void => {
+      shape.setCoords();
+      canvas.renderAll();
+      clearOnMouseEvent();
+      clearMouseEvents();
+    });
+  };
+
+  /**
+   * Clears all mouse event listeners from canvas.
+   */
+  const clearMouseEvents = (): void => {
+    canvas.off('mouse:move');
+    canvas.off('mouse:up');
+  };
+
+  const clearOnMouseEvent = (): void => {
+    canvas.off('mouse:down');
+  };
+
+  /**
+   * Add specific shape to whiteboard
+   * */
+  const addShape = (specific?: string): void => {
+    // Required to prevent multiple shapes add at once
+    // if user clicked more than one shape during selection.
+    if (!shapeIsActive) {
+      return;
+    }
+
+    clearOnMouseEvent();
+    clearMouseEvents();
+    mouseDown(specific || shape, shapeColor);
   };
 
   /**
@@ -269,6 +389,10 @@ export const WhiteboardProvider = ({
    * */
   const fillColor = (color: string) => {
     updateShapeColor(color);
+    clearOnMouseEvent();
+    clearMouseEvents();
+    mouseDown(shape, color);
+
     if (canvas.getActiveObject()) {
       canvas.getActiveObject().set('fill', color);
       canvas.renderAll();
@@ -401,13 +525,17 @@ export const WhiteboardProvider = ({
     updateText,
     discardActiveObject,
     openClearWhiteboardModal,
-    setPointerEvents,
+    clearWhiteboard,
+    styles,
+    updateStyles,
     pointerEvents,
     eraseObject,
     eraseType,
     updateEraseType,
     textIsActive,
     updateTextIsActive,
+    shapeIsActive,
+    updateShapeIsActive,
     updateFontColor,
     // Just for control selectors' value they can be modified in the future
     pointer,
@@ -422,6 +550,7 @@ export const WhiteboardProvider = ({
     updateFloodFill,
     stamp,
     updateStamp,
+    setPointerEvents,
   };
 
   return (
@@ -443,11 +572,10 @@ export const WhiteboardProvider = ({
         >
           {children}
           <div
-            style={{
-              width: canvasWidth + 'px',
-              height: canvasHeight + 'px',
-              position: 'absolute',
-              pointerEvents: pointerEvents ? 'auto' : 'none',
+            className="canvas-wrapper"
+            style={styles}
+            onClick={() => {
+              addShape();
             }}
           >
             <canvas id={canvasId} />
