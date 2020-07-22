@@ -23,8 +23,8 @@ export const getLength = (x1: number, x2: number): number => Math.abs(x1 - x2);
  * @param end End coordinates.
  */
 export const setSize = (shape: fabric.Rect | fabric.Triangle, start: any, end: any): Dimensions => {
-  let width = getLength(end.x, start.x);
-  let height = getLength(end.y, start.y);
+  const width = getLength(end.x, start.x);
+  const height = getLength(end.y, start.y);
   shape.set({ width, height });
 
   return { width, height };
@@ -37,8 +37,8 @@ export const setSize = (shape: fabric.Rect | fabric.Triangle, start: any, end: a
  * @param end End coordinates.
  */
 export const setCircleSize = (shape: fabric.Ellipse, start: any, end: any): Dimensions => {
-  let rx = getLength(end.x, start.x) / 2;
-  let ry = getLength(end.y, start.y) / 2;
+  const rx = getLength(end.x, start.x) / 2;
+  const ry = getLength(end.y, start.y) / 2;
   shape.set({ rx, ry });
 
   return { width: rx * 2, height: ry * 2 };
@@ -51,10 +51,10 @@ export const setCircleSize = (shape: fabric.Ellipse, start: any, end: any): Dime
  * @param end End coordinates.
  */
 export const setPathSize = (shape: fabric.Object, start: any, end: any): Dimensions => {
-  let width = getLength(end.x, start.x) / 2;
-  let height = getLength(end.y, start.y) / 2;
-  let scaleX = 2 / (shape.width as unknown as number / width);
-  let scaleY = 2 / (shape.height as unknown as number / height);
+  const width = getLength(end.x, start.x) / 2;
+  const height = getLength(end.y, start.y) / 2;
+  const scaleX = 2 / (shape.width as unknown as number / width);
+  const scaleY = 2 / (shape.height as unknown as number / height);
 
   shape.set({ scaleX, scaleY });
   return { width, height };

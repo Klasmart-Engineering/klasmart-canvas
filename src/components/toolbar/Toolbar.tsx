@@ -56,9 +56,6 @@ function Toolbar() {
     fontColor,
     updateFontFamily,
     openClearWhiteboardModal,
-    auto,
-    styles,
-    updateStyles,
     setPointerEvents,
     updateTextIsActive,
     updateShapeIsActive,
@@ -96,11 +93,6 @@ function Toolbar() {
       active: tool,
       elements: [...tools.elements],
     });
-  }
-
-  function updatePointerEvents(defaultPointer: boolean) {
-    let autoNone = auto ? 'auto' : 'none';
-    updateStyles({ ...styles, pointerEvents: defaultPointer ? autoNone : 'unset' });
   }
 
   /**
