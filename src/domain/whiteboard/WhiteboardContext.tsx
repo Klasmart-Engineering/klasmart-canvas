@@ -181,6 +181,17 @@ export const WhiteboardProvider = ({
   }, [brushIsActive, canvas]);
 
   /**
+   * Disables shape canvas mouse events.
+   */
+  useEffect(() => {
+    if (!shapeIsActive && canvas) {
+      canvas.off('mouse:move');
+      canvas.off('mouse:up');
+      canvas.off('mouse:down');
+    }
+  }, [shapeIsActive, canvas]);
+
+  /**
    * Removes selected element from whiteboard
    * */
   const removeSelectedElement = useCallback(() => {
