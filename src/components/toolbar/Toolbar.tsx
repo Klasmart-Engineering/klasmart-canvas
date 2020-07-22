@@ -14,24 +14,7 @@ import IBasicToolbarButton from '../../interfaces/toolbar/toolbar-button/basic-t
 import IColorPalette from '../../interfaces/toolbar/toolbar-selector/color-palette';
 import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elements/basic-special-selector';
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
-
-export const ELEMENTS = {
-  ADD_IMAGE_ACTION: 'add_image',
-  UNDO_ACTION: 'undo',
-  REDO_ACTION: 'redo',
-  CLEAR_WHITEBOARD_ACTION: 'clear_whiteboard',
-  WHITEBOARD_SCREENSHOT_ACTION: 'whiteboard_screenshot',
-  SHARE_WHITEBOARD_ACTION: 'share_whiteboard',
-  POINTERS_TOOL: 'pointers',
-  MOVE_OBJECTS_TOOL: 'move_objects',
-  ERASE_TYPE_TOOL: 'erase_type',
-  LINE_TYPE_TOOL: 'line_type',
-  THICKNESS_SIZE_TOOL: 'thickness_size',
-  FLOOD_FILL_TOOL: 'flood_fill',
-  ADD_TEXT_TOOL: 'add_text',
-  ADD_SHAPE_TOOL: 'add_shape',
-  ADD_STAMP_TOOL: 'add_stamp',
-};
+import { ELEMENTS } from '../../config/toolbar-element-names';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -84,7 +67,7 @@ function Toolbar() {
    */
   function handleToolsElementClick(tool: string) {
     // Set Erase Type in initial value
-    updateEraseType('');
+    updateEraseType(null);
 
     /*
       It is setted to true when you select Add Text Tool,
@@ -172,7 +155,7 @@ function Toolbar() {
    * @param {string} specific (optional) - specific value/option to use
    */
   function handleToolsElementAction(tool: string, specific?: string) {
-    updateEraseType('');
+    updateEraseType(null);
 
     switch (tool) {
       case ELEMENTS.ERASE_TYPE_TOOL:

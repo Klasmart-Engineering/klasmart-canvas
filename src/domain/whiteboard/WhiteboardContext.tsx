@@ -19,6 +19,7 @@ import { useFontColor } from './hooks/useFontColor';
 import { useTextIsActive } from './hooks/useTextIsActive';
 import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
+import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -53,12 +54,12 @@ export const WhiteboardProvider = ({
   const { textIsActive, updateTextIsActive } = useTextIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
-  const [pointer, updatePointer] = useState('arrow');
-  const [penLine, updatePenLine] = useState('pen');
-  const [penColor, updatePenColor] = useState('#000');
-  const [thickness, updateThickness] = useState('8px');
-  const [floodFill, updateFloodFill] = useState('#000');
-  const [stamp, updateStamp] = useState('yellowStar');
+  const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
+  const [penLine, updatePenLine] = useState(DEFAULT_VALUES.PEN_LINE);
+  const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
+  const [thickness, updateThickness] = useState(DEFAULT_VALUES.THICKNESS);
+  const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
+  const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
 
   /**
    * Creates Canvas/Whiteboard instance
