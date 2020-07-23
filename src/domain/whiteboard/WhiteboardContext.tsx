@@ -51,6 +51,7 @@ export const WhiteboardProvider = ({
     openModal,
     closeModal,
   } = useWhiteboardClearModal();
+
   const { styles, updateStyles } = useStyles({
     border: '1px solid blue',
     width: canvasWidth + 'px',
@@ -164,6 +165,8 @@ export const WhiteboardProvider = ({
     if (!pointerEvents && canvas) {
       canvas.discardActiveObject().renderAll();
     }
+
+    updateStyles({ ...styles, pointerEvents: pointerEvents ? 'auto' : 'none' });
   }, [canvas, pointerEvents]);
 
   /**
