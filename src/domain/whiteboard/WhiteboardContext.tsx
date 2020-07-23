@@ -173,17 +173,6 @@ export const WhiteboardProvider = ({
   }, [canvas, textIsActive]);
 
   /**
-   * Disables shape canvas mouse events.
-   */
-  useEffect(() => {
-    if (!shapeIsActive && canvas) {
-      canvas.off('mouse:move');
-      canvas.off('mouse:up');
-      canvas.off('mouse:down');
-    }
-  }, [shapeIsActive, canvas]);
-
-  /**
    * General handler for keyboard events
    * 'Backspace' event for removing selected element from whiteboard
    * 'Escape' event for deselect active objects
@@ -293,52 +282,29 @@ export const WhiteboardProvider = ({
    * Adds shape to whiteboard.
    * @param specific Indicates shape type that should be added in whiteboard.
    */
-  const shapeSelector = (
-    specific: string
-  ): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
-    switch (specific || shape) {
-      case 'rectangle':
-        return shapes.rectangle(10, 10, shapeColor);
-      case 'triangle':
-        return shapes.triangle(10, 16, shapeColor);
-      case 'star':
-        return shapes.star(10, 10, shapeColor);
-      case 'rightArrow':
-        return shapes.arrow(10, 10, shapeColor);
-      case 'chatBubble':
-        return shapes.chat(10, 10, shapeColor);
-      case 'pentagon':
-        return shapes.pentagon(shapeColor);
-      case 'hexagon':
-        return shapes.hexagon(shapeColor);
-      default:
-        return shapes.circle(10, 10, shapeColor);
-    }
-  };
-
-  /**
-   * Mouse down event listener for canvas.
-   * @param shape Shape being added on canvas.
-   * @param isCircle Indicates if shape is a circle.
-   */
-  const mouseDown = (specific: string, color?: string): void => {
-    canvas.on('mouse:down', (e: CanvasEvent): void => {
-      if (e.target) {
-        return;
+  const shapeSelector = useCallback(
+    (specific: string): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
+      switch (specific || shape) {
+        case 'rectangle':
+          return shapes.rectangle(2, 2, shapeColor);
+        case 'triangle':
+          return shapes.triangle(2, 4, shapeColor);
+        case 'star':
+          return shapes.star(2, 2, shapeColor);
+        case 'rightArrow':
+          return shapes.arrow(2, 2, shapeColor);
+        case 'chatBubble':
+          return shapes.chat(2, 2, shapeColor);
+        case 'pentagon':
+          return shapes.pentagon(shapeColor);
+        case 'hexagon':
+          return shapes.hexagon(shapeColor);
+        default:
+          return shapes.circle(2, 2, shapeColor);
       }
-
-      const shape = shapeSelector(specific);
-      shape.set({
-        top: e.pointer.y,
-        left: e.pointer.x,
-        fill: color || shapeColor,
-      });
-      clearOnMouseEvent();
-      mouseMove(shape, e.pointer, specific);
-      mouseUp(shape);
-      canvas.add(shape);
-    });
-  };
+    },
+    [shape, shapeColor]
+  );
 
   /**
    *
@@ -346,60 +312,108 @@ export const WhiteboardProvider = ({
    * @param coordsStart Coordinates of initial click on canvas.
    * @param isCircle Indicates if shape added is a circle.
    */
-  const mouseMove = (
-    shape: fabric.Object | fabric.Rect | fabric.Ellipse,
-    coordsStart: any,
-    specific?: string
-  ): void => {
-    canvas.on('mouse:move', (e: CanvasEvent): void => {
-      if (specific === 'circle') {
-        setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
-      } else if (specific === 'rectangle' || specific === 'triangle') {
-        setSize(shape, coordsStart, e.pointer);
-      } else {
-        setPathSize(shape, coordsStart, e.pointer);
-      }
+  const mouseMove = useCallback(
+    (
+      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
+      coordsStart: any,
+      specific?: string
+    ): void => {
+      canvas.on('mouse:move', (e: CanvasEvent): void => {
+        if (specific === 'circle') {
+          setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
+        } else if (specific === 'rectangle' || specific === 'triangle') {
+          setSize(shape, coordsStart, e.pointer);
+        } else {
+          setPathSize(shape, coordsStart, e.pointer);
+        }
 
-      let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
+        let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
 
-      if (coordsStart.x > e.pointer.x) {
-        anchor = { ...anchor, originX: 'right' };
-      }
+        if (coordsStart.x > e.pointer.x) {
+          anchor = { ...anchor, originX: 'right' };
+        }
 
-      if (coordsStart.y > e.pointer.y) {
-        anchor = { ...anchor, originY: 'bottom' };
-      }
+        if (coordsStart.y > e.pointer.y) {
+          anchor = { ...anchor, originY: 'bottom' };
+        }
 
-      shape.set(anchor);
-      canvas.renderAll();
-    });
-  };
-
-  /**
-   * Mouse up event listener for canvas.
-   */
-  const mouseUp = (
-    shape: fabric.Object | fabric.Rect | fabric.Ellipse
-  ): void => {
-    canvas.on('mouse:up', (): void => {
-      shape.setCoords();
-      canvas.renderAll();
-      clearOnMouseEvent();
-      clearMouseEvents();
-    });
-  };
+        shape.set(anchor);
+        canvas.renderAll();
+      });
+    },
+    [canvas]
+  );
 
   /**
    * Clears all mouse event listeners from canvas.
    */
-  const clearMouseEvents = (): void => {
+  const clearMouseEvents = useCallback((): void => {
     canvas.off('mouse:move');
     canvas.off('mouse:up');
-  };
+  }, [canvas]);
 
-  const clearOnMouseEvent = (): void => {
+  const clearOnMouseEvent = useCallback((): void => {
     canvas.off('mouse:down');
-  };
+  }, [canvas]);
+
+  /**
+   * Mouse up event listener for canvas.
+   */
+  const mouseUp = useCallback(
+    (
+      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
+      coordsStart: any,
+      specific: string
+    ): void => {
+      canvas.on('mouse:up', (e: CanvasEvent): void => {
+        let size;
+
+        if (specific === 'circle') {
+          size = setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
+        } else if (specific === 'rectangle' || specific === 'triangle') {
+          size = setSize(shape, coordsStart, e.pointer);
+        } else {
+          size = setPathSize(shape, coordsStart, e.pointer);
+        }
+
+        if (size.width <= 2 && size.height <= 2) {
+          canvas.remove(shape);
+        } else {
+          shape.setCoords();
+          canvas.renderAll();
+        }
+      });
+    },
+    [canvas, clearMouseEvents, clearOnMouseEvent]
+  );
+
+  /**
+   * Mouse down event listener for canvas.
+   * @param shape Shape being added on canvas.
+   * @param isCircle Indicates if shape is a circle.
+   */
+  const mouseDown = useCallback(
+    (specific: string, color?: string): void => {
+      canvas.on('mouse:down', (e: CanvasEvent): void => {
+        if (e.target) {
+          return;
+        }
+
+        const shape = shapeSelector(specific);
+        shape.set({
+          top: e.pointer.y,
+          left: e.pointer.x,
+          fill: color || shapeColor,
+        });
+
+        clearOnMouseEvent();
+        mouseMove(shape, e.pointer, specific);
+        mouseUp(shape, e.pointer, specific);
+        canvas.add(shape);
+      });
+    },
+    [canvas, clearOnMouseEvent, mouseMove, mouseUp, shapeColor, shapeSelector]
+  );
 
   /**
    * Add specific shape to whiteboard
@@ -430,6 +444,18 @@ export const WhiteboardProvider = ({
       canvas.renderAll();
     }
   };
+
+  useEffect(() => {
+    if (shape && shapeIsActive) {
+      mouseDown(shape, shapeColor);
+    }
+
+    return () => {
+      canvas?.off('mouse:down');
+      canvas?.off('mouse:move');
+      canvas?.off('mouse:up');
+    };
+  }, [canvas, shape, shapeIsActive, mouseDown]);
 
   /**
    * Add specific color to selected text
