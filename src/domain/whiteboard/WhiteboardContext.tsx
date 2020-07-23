@@ -167,16 +167,17 @@ export const WhiteboardProvider = ({
     }
   }, [canvas, pointerEvents]);
 
+  /**
+   * Activates or deactivates drawing mode.
+   */
   useEffect(() => {
-    if (brushIsActive) {
-      canvas.isDrawingMode = { ...canvas, isDrawingMode: true };
-      // canvas.on('mouse:down', () => {
-      //   let brush = shapes.brush();
-      //   console.log(brush);
-      //   debugger;
-      // });
+    if (brushIsActive && canvas) {
+      canvas.isDrawingMode = true;
+      canvas.freeDrawingBrush.color = penColor || '#000';
+    } else if (canvas && !brushIsActive) {
+      canvas.isDrawingMode = false;
     }
-  }, [brushIsActive, canvas]);
+  }, [brushIsActive, canvas, penColor]);
 
   /**
    * Disables shape canvas mouse events.
@@ -188,7 +189,6 @@ export const WhiteboardProvider = ({
       canvas.off('mouse:down');
     }
   }, [shapeIsActive, canvas]);
-
 
   /**
    * General handler for keyboard events
