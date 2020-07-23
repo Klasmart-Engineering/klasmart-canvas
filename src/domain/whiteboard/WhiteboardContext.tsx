@@ -13,7 +13,6 @@ import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
-import { useStyles } from './hooks/useStyles';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
 import { setSize, setCircleSize, setPathSize } from './utils/scaling';
 import { usePointerEvents } from './hooks/usePointerEvents';
@@ -48,7 +47,7 @@ export const WhiteboardProvider = ({
   const { shapeColor, updateShapeColor } = useShapeColor();
   const { shape, updateShape } = useShape();
   const { eraseType, updateEraseType } = useEraseType();
-  const { pointerEvents, setPointerEvents } = usePointerEvents();
+  const { pointerEvents, setPointerEvents } = usePointerEvents(false);
   const [canvas, setCanvas] = useState();
 
   const {
@@ -56,13 +55,6 @@ export const WhiteboardProvider = ({
     openModal,
     closeModal,
   } = useWhiteboardClearModal();
-  const { styles, updateStyles } = useStyles({
-    border: '1px solid blue',
-    width: canvasWidth + 'px',
-    height: canvasHeight + 'px',
-    position: 'absolute',
-    pointerEvents: pointerEvents ? 'auto' : 'none',
-  });
 
   const { textIsActive, updateTextIsActive } = useTextIsActive();
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
@@ -610,8 +602,6 @@ export const WhiteboardProvider = ({
     discardActiveObject,
     openClearWhiteboardModal,
     clearWhiteboard,
-    styles,
-    updateStyles,
     pointerEvents,
     eraseObject,
     eraseType,
@@ -659,7 +649,12 @@ export const WhiteboardProvider = ({
           {children}
           <div
             className="canvas-wrapper"
-            style={styles}
+            style={{
+              width: canvasWidth + 'px',
+              height: canvasHeight + 'px',
+              position: 'absolute',
+              pointerEvents: pointerEvents ? 'auto' : 'none',
+            }}
             onClick={() => {
               addShape();
             }}
