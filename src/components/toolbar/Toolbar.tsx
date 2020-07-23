@@ -88,13 +88,13 @@ function Toolbar() {
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
     /*
-      If you click on another button different that Erase Type Tool
-      and Add Text Tool the selected object will be deselected;
+      If you click on another button different than Erase Type Tool,
+      Add Shape Tool, and Add Text Tool the selected object will be deselected;
       Erase Type and Add Text cases will be handled in WhiteboardContext
     */
-    if (tool !== ELEMENTS.ERASE_TYPE_TOOL && tool !== ELEMENTS.ADD_TEXT_TOOL) {
-      discardActiveObject();
-    }
+   if (tool !== ELEMENTS.ERASE_TYPE_TOOL && tool !== ELEMENTS.ADD_TEXT_TOOL && tool !== ELEMENTS.ADD_SHAPE_TOOL) {
+    discardActiveObject();
+  }
 
     // set the clicked tool like active style in Toolbar
     setTools({
