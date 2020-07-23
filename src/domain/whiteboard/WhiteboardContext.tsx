@@ -24,6 +24,8 @@ import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
+import { useLineWidth } from './hooks/useLineWidth';
+import { Canvas } from 'fabric/fabric-impl';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -47,8 +49,9 @@ export const WhiteboardProvider = ({
   const { shapeColor, updateShapeColor } = useShapeColor();
   const { shape, updateShape } = useShape();
   const { eraseType, updateEraseType } = useEraseType();
+  const { lineWidth, updateLineWidth } = useLineWidth();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
-  const [canvas, setCanvas] = useState();
+  const [canvas, setCanvas] = useState<Canvas>();
 
   const {
     ClearWhiteboardModal,
@@ -70,7 +73,6 @@ export const WhiteboardProvider = ({
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
   const [penLine, updatePenLine] = useState(DEFAULT_VALUES.PEN_LINE);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
-  const [thickness, updateThickness] = useState(DEFAULT_VALUES.THICKNESS);
   const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
 
@@ -80,9 +82,9 @@ export const WhiteboardProvider = ({
   useEffect(() => {
     // @ts-ignore
     const canvasInstance = new fabric.Canvas(canvasId, {
-      backgroundColor: null,
-      width: canvasWidth,
-      height: canvasHeight,
+      backgroundColor: 'white',
+      width: parseInt(canvasWidth, 10),
+      height: parseInt(canvasHeight, 10),
     });
 
     setCanvas(canvasInstance);
@@ -93,16 +95,16 @@ export const WhiteboardProvider = ({
    * */
   useEffect(() => {
     if (textIsActive) {
-      canvas?.on('mouse:down', (options: { target: null; e: any }) => {
-        if (options.target === null) {
+      canvas?.on('mouse:down', (e: any) => {
+        if (e.target === null) {
           let text = new fabric.IText(' ', {
             fontFamily: fontFamily,
             fontSize: 30,
             fontWeight: 400,
             fill: fontColor,
             fontStyle: 'normal',
-            top: options.e.offsetY,
-            left: options.e.offsetX,
+            top: e.offsetY,
+            left: e.offsetX,
             cursorDuration: 500,
           });
 
@@ -220,6 +222,7 @@ export const WhiteboardProvider = ({
         .load()
         .then(() => {
           if (canvas?.getActiveObject()) {
+            //@ts-ignore
             canvas.getActiveObject().set('fontFamily', font);
             canvas.requestRenderAll();
           }
@@ -244,7 +247,7 @@ export const WhiteboardProvider = ({
    * Deselect the actual selected object
    */
   const discardActiveObject = () => {
-    canvas.discardActiveObject().renderAll();
+    canvas?.discardActiveObject().renderAll();
   };
 
   /**
@@ -252,7 +255,7 @@ export const WhiteboardProvider = ({
    * */
   useEffect(() => {
     if (text.length) {
-      canvas.discardActiveObject().renderAll();
+      canvas?.discardActiveObject().renderAll();
     }
   }, [text, canvas]);
 
@@ -322,7 +325,8 @@ export const WhiteboardProvider = ({
    * @param isCircle Indicates if shape is a circle.
    */
   const mouseDown = (specific: string, color?: string): void => {
-    canvas.on('mouse:down', (e: CanvasEvent): void => {
+    //@ts-ignore
+    canvas?.on('mouse:down', (e: CanvasEvent): void => {
       if (e.target) {
         return;
       }
@@ -351,7 +355,8 @@ export const WhiteboardProvider = ({
     coordsStart: any,
     specific?: string
   ): void => {
-    canvas.on('mouse:move', (e: CanvasEvent): void => {
+    //@ts-ignore
+    canvas?.on('mouse:move', (e: CanvasEvent): void => {
       if (specific === 'circle') {
         setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
       } else if (specific === 'rectangle' || specific === 'triangle') {
@@ -381,7 +386,7 @@ export const WhiteboardProvider = ({
   const mouseUp = (
     shape: fabric.Object | fabric.Rect | fabric.Ellipse
   ): void => {
-    canvas.on('mouse:up', (): void => {
+    canvas?.on('mouse:up', (): void => {
       shape.setCoords();
       canvas.renderAll();
       clearOnMouseEvent();
@@ -393,12 +398,12 @@ export const WhiteboardProvider = ({
    * Clears all mouse event listeners from canvas.
    */
   const clearMouseEvents = (): void => {
-    canvas.off('mouse:move');
-    canvas.off('mouse:up');
+    canvas?.off('mouse:move');
+    canvas?.off('mouse:up');
   };
 
   const clearOnMouseEvent = (): void => {
-    canvas.off('mouse:down');
+    canvas?.off('mouse:down');
   };
 
   /**
@@ -425,7 +430,7 @@ export const WhiteboardProvider = ({
     clearMouseEvents();
     mouseDown(shape, color);
 
-    if (canvas.getActiveObject()) {
+    if (canvas?.getActiveObject()) {
       canvas.getActiveObject().set('fill', color);
       canvas.renderAll();
     }
@@ -437,9 +442,9 @@ export const WhiteboardProvider = ({
    */
   const textColor = (color: string) => {
     updateFontColor(color);
-    if (canvas.getActiveObject() && canvas.getActiveObject().text) {
+    //@ts-ignore
+    if (canvas?.getActiveObject() && canvas.getActiveObject().text) {
       canvas.getActiveObject().set('fill', color);
-      // @ts-ignore
       canvas.renderAll();
     }
   };
@@ -448,9 +453,11 @@ export const WhiteboardProvider = ({
    * Clears all whiteboard elements
    * */
   const clearWhiteboard = (): void => {
-    canvas.clear();
-    canvas.backgroundColor = 'white';
-    canvas.renderAll();
+    if (canvas) {
+      canvas.clear();
+      canvas.backgroundColor = 'white';
+      canvas.renderAll();
+    }
     closeModal();
   };
 
@@ -472,7 +479,7 @@ export const WhiteboardProvider = ({
     setCanvasSelection(false);
 
     // When mouse down eraser is able to remove objects
-    canvas.on('mouse:down', (e: any) => {
+    canvas?.on('mouse:down', (e: any) => {
       if (eraser) {
         return false;
       }
@@ -497,7 +504,7 @@ export const WhiteboardProvider = ({
     });
 
     // When mouse is over an object
-    canvas.on('mouse:over', (e: any) => {
+    canvas?.on('mouse:over', (e: any) => {
       if (!eraser) {
         return false;
       }
@@ -507,7 +514,7 @@ export const WhiteboardProvider = ({
     });
 
     // When mouse up eraser is unable to remove objects
-    canvas.on('mouse:up', () => {
+    canvas?.on('mouse:up', () => {
       if (!eraser) {
         return false;
       }
@@ -521,12 +528,14 @@ export const WhiteboardProvider = ({
    * @param {boolean} selection - value to set in canvas and objects selection
    */
   const setCanvasSelection = (selection: boolean): void => {
-    canvas.selection = selection;
-    canvas.forEachObject((object: fabric.Object) => {
-      object.selectable = selection;
-    });
+    if (canvas) {
+      canvas.selection = selection;
+      canvas.forEachObject((object: fabric.Object) => {
+        object.selectable = selection;
+      });
 
-    canvas.renderAll();
+      canvas.renderAll();
+    }
   };
 
   /**
@@ -569,6 +578,8 @@ export const WhiteboardProvider = ({
     shapeIsActive,
     updateShapeIsActive,
     updateFontColor,
+    lineWidth,
+    updateLineWidth,
     // Just for control selectors' value they can be modified in the future
     pointer,
     updatePointer,
@@ -576,8 +587,6 @@ export const WhiteboardProvider = ({
     updatePenLine,
     penColor,
     updatePenColor,
-    thickness,
-    updateThickness,
     floodFill,
     updateFloodFill,
     stamp,

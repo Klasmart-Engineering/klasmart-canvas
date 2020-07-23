@@ -45,6 +45,8 @@ function Toolbar() {
     eraseType,
     updateEraseType,
     discardActiveObject,
+    lineWidth,
+    updateLineWidth,
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
@@ -52,13 +54,11 @@ function Toolbar() {
     updatePenLine,
     penColor,
     updatePenColor,
-    thickness,
-    updateThickness,
     floodFill,
     updateFloodFill,
     stamp,
     updateStamp,
-  } = useContext(WhiteboardContext);
+  }: any = useContext(WhiteboardContext);
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -134,7 +134,7 @@ function Toolbar() {
         break;
 
       case ELEMENTS.THICKNESS_SIZE_TOOL:
-        updateThickness(option);
+        updateLineWidth(option);
         break;
 
       case ELEMENTS.FLOOD_FILL_TOOL:
@@ -250,7 +250,7 @@ function Toolbar() {
         return penLine;
 
       case ELEMENTS.THICKNESS_SIZE_TOOL:
-        return thickness;
+        return lineWidth;
 
       case ELEMENTS.FLOOD_FILL_TOOL:
         return floodFill;
