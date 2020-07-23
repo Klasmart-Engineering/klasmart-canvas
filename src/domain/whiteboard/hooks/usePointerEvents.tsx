@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
-export const usePointerEvents = () => {
-  const [pointerEvents, setPointerEvents] = useState(false);
+export const usePointerEvents = (newState: boolean = true) => {
+  const [pointerEvents, setPointerEvents] = useState<boolean>(newState);
 
   return { pointerEvents, setPointerEvents };
 };

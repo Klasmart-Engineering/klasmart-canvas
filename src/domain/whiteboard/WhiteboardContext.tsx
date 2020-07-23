@@ -21,6 +21,8 @@ import { useTextIsActive } from './hooks/useTextIsActive';
 import { useShapeIsActive } from './hooks/useShapeIsActive';
 import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
+import { useEraseType } from './hooks/useEraseType';
+import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -43,8 +45,10 @@ export const WhiteboardProvider = ({
   const { fontFamily, updateFontFamily } = useFontFamily();
   const { shapeColor, updateShapeColor } = useShapeColor();
   const { shape, updateShape } = useShape();
-  const { pointerEvents, setPointerEvents } = usePointerEvents();
+  const { eraseType, updateEraseType } = useEraseType();
+  const { pointerEvents, setPointerEvents } = usePointerEvents(false);
   const [canvas, setCanvas] = useState();
+
   const {
     ClearWhiteboardModal,
     openModal,
@@ -55,13 +59,12 @@ export const WhiteboardProvider = ({
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
-  const [pointer, updatePointer] = useState('arrow');
-  const [eraseType, updateEraseType] = useState('object');
-  const [penLine, updatePenLine] = useState('pen');
-  const [penColor, updatePenColor] = useState('#000');
-  const [thickness, updateThickness] = useState('8px');
-  const [floodFill, updateFloodFill] = useState('#000');
-  const [stamp, updateStamp] = useState('yellowStar');
+  const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
+  const [penLine, updatePenLine] = useState(DEFAULT_VALUES.PEN_LINE);
+  const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
+  const [thickness, updateThickness] = useState(DEFAULT_VALUES.THICKNESS);
+  const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
+  const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -84,7 +87,7 @@ export const WhiteboardProvider = ({
     if (textIsActive) {
       canvas?.on('mouse:down', (options: { target: null; e: any }) => {
         if (options.target === null) {
-          const text = new fabric.IText(' ', {
+          let text = new fabric.IText(' ', {
             fontFamily: fontFamily,
             fontSize: 30,
             fontWeight: 400,
@@ -101,39 +104,40 @@ export const WhiteboardProvider = ({
           text?.hiddenTextarea?.focus();
 
           text.on('editing:exited', () => {
+            const textCopy = text.text;
+            const toObject = text.toObject();
+            delete toObject.text;
+            delete toObject.type;
+            const clonedTextObj = JSON.parse(JSON.stringify(toObject));
+
+            if (typeof textCopy === 'string') {
+              text = new fabric.Textbox(textCopy, clonedTextObj);
+            }
+
+            canvas.remove(canvas.getActiveObject());
+            canvas.add(text);
+            canvas.setActiveObject(text);
+
             if (text?.text?.replace(/\s/g, '').length === 0) {
               canvas.remove(canvas.getActiveObject());
+              return;
             }
-          });
 
-          text.on('selected', () => {
-            if (text.fontFamily) {
-              //@ts-ignore
-              updateFontColor(text.fill);
-              updateFontFamily(text.fontFamily);
-            }
+            text.on('selected', () => {
+              if (text.fontFamily) {
+                //@ts-ignore
+                updateFontColor(text.fill);
+                updateFontFamily(text.fontFamily);
+              }
+            });
+
+            text.on('modified', () => {
+              if (text?.text?.replace(/\s/g, '').length === 0) {
+                canvas.remove(canvas.getActiveObject());
+              }
+            });
           });
         }
-      });
-    } else {
-      if (canvas?.getActiveObject()) {
-        canvas?.discardActiveObject();
-        canvas?.renderAll();
-      }
-
-      canvas?.on({
-        'selection:updated': (object: any) => {
-          if (object.selected[0]) {
-            canvas?.setActiveObject(object.selected[0]);
-            canvas?.renderAll();
-          }
-        },
-        'selection:created': (object: any) => {
-          if (object.selected[0]) {
-            canvas?.setActiveObject(object.selected[0]);
-            canvas?.renderAll();
-          }
-        },
       });
     }
 
@@ -150,13 +154,15 @@ export const WhiteboardProvider = ({
   ]);
 
   /**
-   * When pointerEvents is false deselects any selected object
+   * Is executed when textIsActive changes its value,
+   * basically to deselect any selected object
    */
   useEffect(() => {
-    if (!pointerEvents && canvas) {
-      canvas.discardActiveObject().renderAll();
+    if (!textIsActive) {
+      canvas?.discardActiveObject();
+      canvas?.renderAll();
     }
-  }, [canvas, pointerEvents]);
+  }, [canvas, textIsActive]);
 
   /**
    * Disables shape canvas mouse events.
@@ -170,13 +176,6 @@ export const WhiteboardProvider = ({
   }, [shapeIsActive, canvas]);
 
   /**
-   * Removes selected element from whiteboard
-   * */
-  const removeSelectedElement = useCallback(() => {
-    canvas.remove(canvas.getActiveObject());
-  }, [canvas]);
-
-  /**
    * General handler for keyboard events
    * 'Backspace' event for removing selected element from whiteboard
    * 'Escape' event for deselect active objects
@@ -184,10 +183,14 @@ export const WhiteboardProvider = ({
   const keyDownHandler = useCallback(
     (e: { key: any }) => {
       if (e.key === 'Backspace' && canvas) {
-        const obj = canvas.getActiveObject();
-        if (!obj?.isEditing) {
-          removeSelectedElement();
-        }
+        const objects = canvas.getActiveObjects();
+
+        objects.forEach((object: any) => {
+          if (!object?.isEditing) {
+            canvas.remove(object);
+            canvas.discardActiveObject().renderAll();
+          }
+        });
         return;
       }
 
@@ -196,7 +199,7 @@ export const WhiteboardProvider = ({
         canvas.renderAll();
       }
     },
-    [canvas, removeSelectedElement]
+    [canvas]
   );
 
   /**
@@ -208,7 +211,7 @@ export const WhiteboardProvider = ({
       myFont
         .load()
         .then(() => {
-          if (canvas.getActiveObject()) {
+          if (canvas?.getActiveObject()) {
             canvas.getActiveObject().set('fontFamily', font);
             canvas.requestRenderAll();
           }
@@ -229,6 +232,9 @@ export const WhiteboardProvider = ({
     fontFamilyLoader(fontFamily);
   }, [fontFamily, keyDownHandler, fontFamilyLoader]);
 
+  /**
+   * Deselect the actual selected object
+   */
   const discardActiveObject = () => {
     canvas.discardActiveObject().renderAll();
   };
@@ -241,6 +247,39 @@ export const WhiteboardProvider = ({
       canvas.discardActiveObject().renderAll();
     }
   }, [text, canvas]);
+
+  /**
+   * If pointerEvents changes to false, all the selected objects
+   * will be unselected
+   */
+  useEffect(() => {
+    if (!pointerEvents && canvas) {
+      canvas.discardActiveObject().renderAll();
+    }
+  }, [pointerEvents, canvas]);
+
+  /**
+   * When eraseType value changes, listeners and states
+   * necessaries to erase objects are setted or removed
+   */
+  useEffect(() => {
+    if (eraseType === 'object' && canvas) {
+      eraseObject();
+
+      if (canvas.getActiveObjects().length === 1) {
+        canvas.discardActiveObject().renderAll();
+      }
+    } else if (canvas) {
+      setCanvasSelection(true);
+    }
+
+    return () => {
+      canvas?.off('mouse:down');
+      canvas?.off('mouse:up');
+      canvas?.off('mouse:over');
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eraseType, canvas]);
 
   /**
    * Adds shape to whiteboard.
@@ -415,6 +454,74 @@ export const WhiteboardProvider = ({
   };
 
   /**
+   * Creates the listeners to erase objects from the whiteboard
+   */
+  const eraseObject = (): void => {
+    let eraser: boolean = false;
+    let activeObjects: any = null;
+
+    // Deactivate selection
+    setCanvasSelection(false);
+
+    // When mouse down eraser is able to remove objects
+    canvas.on('mouse:down', (e: any) => {
+      if (eraser) {
+        return false;
+      }
+
+      // if the click is made over an object
+      if (e.target) {
+        activeObjects = canvas.getActiveObjects();
+        canvas.remove(e.target);
+        canvas.renderAll();
+      }
+
+      // if the click is made over an object group
+      if (e.target && activeObjects.length) {
+        activeObjects.forEach(function (object: any) {
+          canvas.remove(object);
+        });
+
+        canvas.discardActiveObject().renderAll();
+      }
+
+      eraser = true;
+    });
+
+    // When mouse is over an object
+    canvas.on('mouse:over', (e: any) => {
+      if (!eraser) {
+        return false;
+      }
+
+      canvas.remove(e.target);
+      canvas.renderAll();
+    });
+
+    // When mouse up eraser is unable to remove objects
+    canvas.on('mouse:up', () => {
+      if (!eraser) {
+        return false;
+      }
+
+      eraser = false;
+    });
+  };
+
+  /**
+   * Set Canvas Whiteboard selection hability
+   * @param {boolean} selection - value to set in canvas and objects selection
+   */
+  const setCanvasSelection = (selection: boolean): void => {
+    canvas.selection = selection;
+    canvas.forEachObject((object: fabric.Object) => {
+      object.selectable = selection;
+    });
+
+    canvas.renderAll();
+  };
+
+  /**
    * List of available colors in toolbar
    * */
   const colorsList = [
@@ -438,13 +545,15 @@ export const WhiteboardProvider = ({
     shapeColor,
     updateShape,
     addShape,
-    removeSelectedElement,
     text,
     updateText,
     discardActiveObject,
     openClearWhiteboardModal,
     clearWhiteboard,
     pointerEvents,
+    eraseObject,
+    eraseType,
+    updateEraseType,
     textIsActive,
     updateTextIsActive,
     shapeIsActive,
@@ -453,8 +562,6 @@ export const WhiteboardProvider = ({
     // Just for control selectors' value they can be modified in the future
     pointer,
     updatePointer,
-    eraseType,
-    updateEraseType,
     penLine,
     updatePenLine,
     penColor,

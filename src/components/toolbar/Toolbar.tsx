@@ -14,24 +14,7 @@ import IBasicToolbarButton from '../../interfaces/toolbar/toolbar-button/basic-t
 import IColorPalette from '../../interfaces/toolbar/toolbar-selector/color-palette';
 import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elements/basic-special-selector';
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
-
-export const ELEMENTS = {
-  ADD_IMAGE_ACTION: 'add_image',
-  UNDO_ACTION: 'undo',
-  REDO_ACTION: 'redo',
-  CLEAR_WHITEBOARD_ACTION: 'clear_whiteboard',
-  WHITEBOARD_SCREENSHOT_ACTION: 'whiteboard_screenshot',
-  SHARE_WHITEBOARD_ACTION: 'share_whiteboard',
-  POINTERS_TOOL: 'pointers',
-  MOVE_OBJECTS_TOOL: 'move_objects',
-  ERASE_TYPE_TOOL: 'erase_type',
-  LINE_TYPE_TOOL: 'line_type',
-  THICKNESS_SIZE_TOOL: 'thickness_size',
-  FLOOD_FILL_TOOL: 'flood_fill',
-  ADD_TEXT_TOOL: 'add_text',
-  ADD_SHAPE_TOOL: 'add_shape',
-  ADD_STAMP_TOOL: 'add_stamp',
-};
+import { ELEMENTS } from '../../config/toolbar-element-names';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -50,8 +33,6 @@ function Toolbar() {
     fillColor,
     textColor,
     updateShape,
-    addShape,
-    removeSelectedElement,
     fontFamily,
     fontColor,
     updateFontFamily,
@@ -61,11 +42,12 @@ function Toolbar() {
     updateShapeIsActive,
     shape,
     shapeColor,
+    eraseType,
+    updateEraseType,
+    discardActiveObject,
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
-    eraseType,
-    updateEraseType,
     penLine,
     updatePenLine,
     penColor,
@@ -84,9 +66,35 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
+    // Set Erase Type in initial value
+    updateEraseType(null);
+
+    /*
+      It is setted to true when you select Add Text Tool,
+      otherwise will be setted in false
+    */
     updateTextIsActive(tool === ELEMENTS.ADD_TEXT_TOOL);
+
+    /*
+      It is setted to true when you select Add Shape Tool,
+      otherwise will be setted in false
+    */
     updateShapeIsActive(tool === ELEMENTS.ADD_SHAPE_TOOL);
+
+    /*
+      It is setted to false when you select Pointer Tool,
+      otherwise will be setted in true
+    */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
+
+    /*
+      If you click on another button different that Erase Type Tool
+      and Add Text Tool the selected object will be deselected;
+      Erase Type and Add Text cases will be handled in WhiteboardContext
+    */
+    if (tool !== ELEMENTS.ERASE_TYPE_TOOL && tool !== ELEMENTS.ADD_TEXT_TOOL) {
+      discardActiveObject();
+    }
 
     // set the clicked tool like active style in Toolbar
     setTools({
@@ -101,6 +109,8 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleActionsElementClick(tool: string) {
+    discardActiveObject();
+
     switch (tool) {
       case ELEMENTS.CLEAR_WHITEBOARD_ACTION: {
         openClearWhiteboardModal();
@@ -117,10 +127,6 @@ function Toolbar() {
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
         updatePointer(option);
-        break;
-
-      case ELEMENTS.ERASE_TYPE_TOOL:
-        updateEraseType(option);
         break;
 
       case ELEMENTS.LINE_TYPE_TOOL:
@@ -155,13 +161,15 @@ function Toolbar() {
    * @param {string} specific (optional) - specific value/option to use
    */
   function handleToolsElementAction(tool: string, specific?: string) {
-    switch (true) {
-      case tool === ELEMENTS.ERASE_TYPE_TOOL && specific === 'erase object':
-        removeSelectedElement();
+    updateEraseType(null);
+
+    switch (tool) {
+      case ELEMENTS.ERASE_TYPE_TOOL:
+        updateEraseType(specific);
         break;
 
-      case tool === ELEMENTS.ADD_SHAPE_TOOL:
-        addShape(specific);
+      case ELEMENTS.ADD_TEXT_TOOL:
+        updateFontFamily(specific);
         break;
     }
   }
