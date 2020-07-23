@@ -13,7 +13,6 @@ import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
-import { useStyles } from './hooks/useStyles';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
 import { setSize, setCircleSize, setPathSize } from './utils/scaling';
 import { usePointerEvents } from './hooks/usePointerEvents';
@@ -51,14 +50,6 @@ export const WhiteboardProvider = ({
     openModal,
     closeModal,
   } = useWhiteboardClearModal();
-
-  const { styles, updateStyles } = useStyles({
-    border: '1px solid blue',
-    width: canvasWidth + 'px',
-    height: canvasHeight + 'px',
-    position: 'absolute',
-    pointerEvents: pointerEvents ? 'auto' : 'none',
-  });
 
   const { textIsActive, updateTextIsActive } = useTextIsActive();
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
@@ -165,8 +156,6 @@ export const WhiteboardProvider = ({
     if (!pointerEvents && canvas) {
       canvas.discardActiveObject().renderAll();
     }
-
-    updateStyles({ ...styles, pointerEvents: pointerEvents ? 'auto' : 'none' });
   }, [canvas, pointerEvents]);
 
   /**
@@ -455,8 +444,6 @@ export const WhiteboardProvider = ({
     discardActiveObject,
     openClearWhiteboardModal,
     clearWhiteboard,
-    styles,
-    updateStyles,
     pointerEvents,
     textIsActive,
     updateTextIsActive,
@@ -501,7 +488,12 @@ export const WhiteboardProvider = ({
           {children}
           <div
             className="canvas-wrapper"
-            style={styles}
+            style={{
+              width: canvasWidth + 'px',
+              height: canvasHeight + 'px',
+              position: 'absolute',
+              pointerEvents: pointerEvents ? 'auto' : 'none',
+            }}
             onClick={() => {
               addShape();
             }}
