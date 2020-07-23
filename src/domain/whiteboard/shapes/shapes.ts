@@ -55,7 +55,7 @@ export const pentagon = (color: string): fabric.Object => {
     { x: 150, y: 42 },
   ]);
 
-  return shape.set({ scaleX: 0.2, scaleY: 0.2, fill: color });
+  return shape.set({ scaleX: 0.02, scaleY: 0.02, fill: color });
 };
 
 /**
@@ -72,7 +72,7 @@ export const hexagon = (color: string): fabric.Object => {
     { x: 50, y: 175 },
   ]);
 
-  return shape.set({ scaleX: 0.2, scaleY: 0.2, fill: color });
+  return shape.set({ scaleX: 0.02, scaleY: 0.02, fill: color });
 };
 
 /**

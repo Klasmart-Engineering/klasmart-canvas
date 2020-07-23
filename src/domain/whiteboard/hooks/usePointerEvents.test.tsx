@@ -1,10 +1,9 @@
-import React from 'react';
 import { renderHook, act } from '@testing-library/react-hooks';
 import { usePointerEvents } from './usePointerEvents';
 
 test('should set pointerEvents from initial value', () => {
   const { result } = renderHook(() => usePointerEvents());
-  expect(result.current.pointerEvents).toBe(false);
+  expect(result.current.pointerEvents).toBe(true);
   expect(typeof result.current.setPointerEvents).toBe('function');
 });
 
