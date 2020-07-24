@@ -368,11 +368,19 @@ const toolsSection: IBasicToolbarSection = {
       icon: FiberManualRecordRoundedIcon,
       styleOptions: [
         {
+          id: 'thick_2px',
+          value: 2,
+          title: '2px',
+          style: {
+            fontSize: 4,
+          },
+        },
+        {
           id: 'thick_4px',
           value: 4,
           title: '4px',
           style: {
-            fontSize: 4,
+            fontSize: 8,
           },
         },
         {
@@ -380,7 +388,7 @@ const toolsSection: IBasicToolbarSection = {
           value: 8,
           title: '8px',
           style: {
-            fontSize: 8,
+            fontSize: 16,
           },
         },
         {
@@ -388,7 +396,7 @@ const toolsSection: IBasicToolbarSection = {
           value: 12,
           title: '12px',
           style: {
-            fontSize: 12,
+            fontSize: 24,
           },
         },
         {
@@ -396,15 +404,7 @@ const toolsSection: IBasicToolbarSection = {
           value: 16,
           title: '16px',
           style: {
-            fontSize: 16,
-          },
-        },
-        {
-          id: 'thick_20px',
-          value: '20px',
-          title: '20px',
-          style: {
-            fontSize: 20,
+            fontSize: 32,
           },
         },
       ],

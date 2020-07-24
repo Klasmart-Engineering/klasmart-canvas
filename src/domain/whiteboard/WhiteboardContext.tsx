@@ -13,19 +13,19 @@ import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
-import { useStyles } from './hooks/useStyles';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
 import { setSize, setCircleSize, setPathSize } from './utils/scaling';
 import { usePointerEvents } from './hooks/usePointerEvents';
 import { useFontColor } from './hooks/useFontColor';
 import { useTextIsActive } from './hooks/useTextIsActive';
 import { useShapeIsActive } from './hooks/useShapeIsActive';
+import { useBrushIsActive } from './hooks/useBrushIsActive';
 import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 import { useLineWidth } from './hooks/useLineWidth';
-import { Canvas } from 'fabric/fabric-impl';
+import { Canvas, IEvent, ITextOptions } from 'fabric/fabric-impl';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -58,16 +58,10 @@ export const WhiteboardProvider = ({
     openModal,
     closeModal,
   } = useWhiteboardClearModal();
-  const { styles, updateStyles } = useStyles({
-    border: '1px solid blue',
-    width: canvasWidth + 'px',
-    height: canvasHeight + 'px',
-    position: 'absolute',
-    pointerEvents: pointerEvents ? 'auto' : 'none',
-  });
 
   const { textIsActive, updateTextIsActive } = useTextIsActive();
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
+  const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -85,6 +79,7 @@ export const WhiteboardProvider = ({
       backgroundColor: 'white',
       width: parseInt(canvasWidth, 10),
       height: parseInt(canvasHeight, 10),
+      isDrawingMode: false,
     });
 
     setCanvas(canvasInstance);
@@ -95,16 +90,17 @@ export const WhiteboardProvider = ({
    * */
   useEffect(() => {
     if (textIsActive) {
-      canvas?.on('mouse:down', (e: any) => {
-        if (e.target === null) {
+      //@ts-ignore
+      canvas?.on('mouse:down', (options: { target: null; e: any }) => {
+        if (options.target === null) {
           let text = new fabric.IText(' ', {
             fontFamily: fontFamily,
             fontSize: 30,
             fontWeight: 400,
             fill: fontColor,
             fontStyle: 'normal',
-            top: e.offsetY,
-            left: e.offsetX,
+            top: options.e.offsetY,
+            left: options.e.offsetX,
             cursorDuration: 500,
           });
 
@@ -172,7 +168,30 @@ export const WhiteboardProvider = ({
       canvas?.discardActiveObject();
       canvas?.renderAll();
     }
-  }, [canvas, textIsActive]);
+  }, [canvas, pointerEvents, textIsActive]);
+
+  /**
+   * Activates or deactivates drawing mode.
+   */
+  useEffect(() => {
+    if (brushIsActive && canvas) {
+      canvas.isDrawingMode = true;
+      canvas.freeDrawingBrush.color = penColor || '#000';
+      canvas.freeDrawingBrush.width = lineWidth;
+    } else if (canvas && !brushIsActive) {
+      canvas.isDrawingMode = false;
+
+      /*
+        This is for no change the line width
+        in a free drawing object if this is resized
+      */
+      canvas.getObjects().forEach((object: fabric.Object) => {
+        if (isFreeDrawingObject(object)) {
+          object.strokeUniform = true;
+        }
+      });
+    }
+  }, [brushIsActive, canvas, lineWidth, penColor]);
 
   /**
    * Disables shape canvas mouse events.
@@ -296,53 +315,29 @@ export const WhiteboardProvider = ({
    * Adds shape to whiteboard.
    * @param specific Indicates shape type that should be added in whiteboard.
    */
-  const shapeSelector = (
-    specific: string
-  ): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
-    switch (specific || shape) {
-      case 'rectangle':
-        return shapes.rectangle(10, 10, shapeColor);
-      case 'triangle':
-        return shapes.triangle(10, 16, shapeColor);
-      case 'star':
-        return shapes.star(10, 10, shapeColor);
-      case 'rightArrow':
-        return shapes.arrow(10, 10, shapeColor);
-      case 'chatBubble':
-        return shapes.chat(10, 10, shapeColor);
-      case 'pentagon':
-        return shapes.pentagon(shapeColor);
-      case 'hexagon':
-        return shapes.hexagon(shapeColor);
-      default:
-        return shapes.circle(10, 10, shapeColor);
-    }
-  };
-
-  /**
-   * Mouse down event listener for canvas.
-   * @param shape Shape being added on canvas.
-   * @param isCircle Indicates if shape is a circle.
-   */
-  const mouseDown = (specific: string, color?: string): void => {
-    //@ts-ignore
-    canvas?.on('mouse:down', (e: CanvasEvent): void => {
-      if (e.target) {
-        return;
+  const shapeSelector = useCallback(
+    (specific: string): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
+      switch (specific || shape) {
+        case 'rectangle':
+          return shapes.rectangle(2, 2, shapeColor);
+        case 'triangle':
+          return shapes.triangle(2, 4, shapeColor);
+        case 'star':
+          return shapes.star(2, 2, shapeColor);
+        case 'rightArrow':
+          return shapes.arrow(2, 2, shapeColor);
+        case 'chatBubble':
+          return shapes.chat(2, 2, shapeColor);
+        case 'pentagon':
+          return shapes.pentagon(shapeColor);
+        case 'hexagon':
+          return shapes.hexagon(shapeColor);
+        default:
+          return shapes.circle(2, 2, shapeColor);
       }
-
-      const shape = shapeSelector(specific);
-      shape.set({
-        top: e.pointer.y,
-        left: e.pointer.x,
-        fill: color || shapeColor,
-      });
-      clearOnMouseEvent();
-      mouseMove(shape, e.pointer, specific);
-      mouseUp(shape);
-      canvas.add(shape);
-    });
-  };
+    },
+    [shape, shapeColor]
+  );
 
   /**
    *
@@ -350,61 +345,111 @@ export const WhiteboardProvider = ({
    * @param coordsStart Coordinates of initial click on canvas.
    * @param isCircle Indicates if shape added is a circle.
    */
-  const mouseMove = (
-    shape: fabric.Object | fabric.Rect | fabric.Ellipse,
-    coordsStart: any,
-    specific?: string
-  ): void => {
-    //@ts-ignore
-    canvas?.on('mouse:move', (e: CanvasEvent): void => {
-      if (specific === 'circle') {
-        setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
-      } else if (specific === 'rectangle' || specific === 'triangle') {
-        setSize(shape, coordsStart, e.pointer);
-      } else {
-        setPathSize(shape, coordsStart, e.pointer);
-      }
+  const mouseMove = useCallback(
+    (
+      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
+      coordsStart: any,
+      specific?: string
+    ): void => {
+      //@ts-ignore
+      canvas?.on('mouse:move', (e: CanvasEvent): void => {
+        if (specific === 'circle') {
+          setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
+        } else if (specific === 'rectangle' || specific === 'triangle') {
+          setSize(shape, coordsStart, e.pointer);
+        } else {
+          setPathSize(shape, coordsStart, e.pointer);
+        }
 
-      let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
+        let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
 
-      if (coordsStart.x > e.pointer.x) {
-        anchor = { ...anchor, originX: 'right' };
-      }
+        if (coordsStart.x > e.pointer.x) {
+          anchor = { ...anchor, originX: 'right' };
+        }
 
-      if (coordsStart.y > e.pointer.y) {
-        anchor = { ...anchor, originY: 'bottom' };
-      }
+        if (coordsStart.y > e.pointer.y) {
+          anchor = { ...anchor, originY: 'bottom' };
+        }
 
-      shape.set(anchor);
-      canvas.renderAll();
-    });
-  };
-
-  /**
-   * Mouse up event listener for canvas.
-   */
-  const mouseUp = (
-    shape: fabric.Object | fabric.Rect | fabric.Ellipse
-  ): void => {
-    canvas?.on('mouse:up', (): void => {
-      shape.setCoords();
-      canvas.renderAll();
-      clearOnMouseEvent();
-      clearMouseEvents();
-    });
-  };
+        shape.set(anchor);
+        canvas.renderAll();
+      });
+    },
+    [canvas]
+  );
 
   /**
    * Clears all mouse event listeners from canvas.
    */
-  const clearMouseEvents = (): void => {
+  const clearMouseEvents = useCallback((): void => {
     canvas?.off('mouse:move');
     canvas?.off('mouse:up');
-  };
+  }, [canvas]);
 
-  const clearOnMouseEvent = (): void => {
+  const clearOnMouseEvent = useCallback((): void => {
     canvas?.off('mouse:down');
-  };
+  }, [canvas]);
+
+  /**
+   * Mouse up event listener for canvas.
+   */
+  const mouseUp = useCallback(
+    (
+      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
+      coordsStart: any,
+      specific: string
+    ): void => {
+      //@ts-ignore
+      canvas?.on('mouse:up', (e: CanvasEvent): void => {
+        let size;
+
+        if (specific === 'circle') {
+          size = setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
+        } else if (specific === 'rectangle' || specific === 'triangle') {
+          size = setSize(shape, coordsStart, e.pointer);
+        } else {
+          size = setPathSize(shape, coordsStart, e.pointer);
+        }
+
+        if (size.width <= 2 && size.height <= 2) {
+          canvas.remove(shape);
+        } else {
+          shape.setCoords();
+          canvas.renderAll();
+        }
+      });
+    },
+    [canvas]
+  );
+
+  /**
+   * Mouse down event listener for canvas.
+   * @param shape Shape being added on canvas.
+   * @param isCircle Indicates if shape is a circle.
+   */
+  const mouseDown = useCallback(
+    (specific: string, color?: string): void => {
+      //@ts-ignore
+      canvas?.on('mouse:down', (e: CanvasEvent): void => {
+        if (e.target) {
+          return;
+        }
+
+        const shape = shapeSelector(specific);
+        shape.set({
+          top: e.pointer.y,
+          left: e.pointer.x,
+          fill: color || shapeColor,
+        });
+
+        clearOnMouseEvent();
+        mouseMove(shape, e.pointer, specific);
+        mouseUp(shape, e.pointer, specific);
+        canvas.add(shape);
+      });
+    },
+    [canvas, clearOnMouseEvent, mouseMove, mouseUp, shapeColor, shapeSelector]
+  );
 
   /**
    * Add specific shape to whiteboard
@@ -435,6 +480,18 @@ export const WhiteboardProvider = ({
       canvas.renderAll();
     }
   };
+
+  useEffect(() => {
+    if (shape && shapeIsActive) {
+      mouseDown(shape, shapeColor);
+    }
+
+    return () => {
+      canvas?.off('mouse:down');
+      canvas?.off('mouse:move');
+      canvas?.off('mouse:up');
+    };
+  }, [canvas, shape, shapeIsActive, mouseDown, shapeColor]);
 
   /**
    * Add specific color to selected text
@@ -539,6 +596,49 @@ export const WhiteboardProvider = ({
   };
 
   /**
+   * Check if the given object is a free drawing object
+   * @param {fabric.Object} object - Object to check
+   */
+  const isFreeDrawingObject = (object: fabric.Object) => {
+    return object.strokeWidth && !(object as ITextOptions).text;
+  };
+
+  /**
+   * Changes the lineWidth variable if a free line drawing is selected
+   * to be setted in the width of that draw
+   * @param {IEvent} event - event that contains the selected object
+   */
+  const changeLineWidth = (event: IEvent) => {
+    if (event.target && isFreeDrawingObject(event.target)) {
+      updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
+    }
+  };
+
+  /**
+   * If lineWidth variable changes and a free line drawing is selected
+   * that drawing line width will changes to the selected width on Toolbar
+   */
+  useEffect(() => {
+    if (
+      canvas?.getActiveObject() &&
+      isFreeDrawingObject(canvas.getActiveObject())
+    ) {
+      canvas.getActiveObject().set('strokeWidth', lineWidth);
+      canvas?.renderAll();
+    }
+  }, [lineWidth, canvas]);
+
+  /**
+   * If an object selection is made it, the changeLineWidth function
+   * will be executed to determine if is a free line drawing or not
+   * and know if the lineWidth variable must change or not
+   */
+  canvas?.on({
+    'selection:created': changeLineWidth,
+    'selection:updated': changeLineWidth,
+  });
+
+  /**
    * List of available colors in toolbar
    * */
   const colorsList = [
@@ -567,8 +667,6 @@ export const WhiteboardProvider = ({
     discardActiveObject,
     openClearWhiteboardModal,
     clearWhiteboard,
-    styles,
-    updateStyles,
     pointerEvents,
     eraseObject,
     eraseType,
@@ -577,6 +675,8 @@ export const WhiteboardProvider = ({
     updateTextIsActive,
     shapeIsActive,
     updateShapeIsActive,
+    brushIsActive,
+    updateBrushIsActive,
     updateFontColor,
     lineWidth,
     updateLineWidth,
@@ -614,7 +714,12 @@ export const WhiteboardProvider = ({
           {children}
           <div
             className="canvas-wrapper"
-            style={styles}
+            style={{
+              width: canvasWidth + 'px',
+              height: canvasHeight + 'px',
+              position: 'absolute',
+              pointerEvents: pointerEvents ? 'auto' : 'none',
+            }}
             onClick={() => {
               addShape();
             }}
