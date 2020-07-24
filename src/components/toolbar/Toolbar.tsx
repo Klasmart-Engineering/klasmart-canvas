@@ -52,7 +52,7 @@ function Toolbar() {
     penLine,
     updatePenLine,
     penColor,
-    updatePenColor,
+    changeStrokeColor,
     thickness,
     updateThickness,
     floodFill,
@@ -93,12 +93,19 @@ function Toolbar() {
     */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
+    console.log('tool: ', tool);
+
     /*
-      If you click on another button different that Erase Type Tool
-      and Add Text Tool the selected object will be deselected;
+      If you click on another button different than Erase Type Tool,
+      Add Shape Tool, and Add Text Tool the selected object will be deselected;
       Erase Type and Add Text cases will be handled in WhiteboardContext
     */
-    if (tool !== ELEMENTS.ERASE_TYPE_TOOL && tool !== ELEMENTS.ADD_TEXT_TOOL) {
+    if (
+      tool !== ELEMENTS.ERASE_TYPE_TOOL &&
+      tool !== ELEMENTS.ADD_TEXT_TOOL &&
+      tool !== ELEMENTS.ADD_SHAPE_TOOL &&
+      tool !== ELEMENTS.LINE_TYPE_TOOL
+    ) {
       discardActiveObject();
     }
 
@@ -130,7 +137,6 @@ function Toolbar() {
    * @param {string} value - new selected value
    */
   function handleToolSelectorChange(tool: string, option: string) {
-
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
         updatePointer(option);
@@ -189,7 +195,7 @@ function Toolbar() {
   function changeColor(tool: string, color: string) {
     switch (tool) {
       case ELEMENTS.LINE_TYPE_TOOL:
-        updatePenColor(color);
+        changeStrokeColor(color);
         break;
 
       case ELEMENTS.ADD_TEXT_TOOL:

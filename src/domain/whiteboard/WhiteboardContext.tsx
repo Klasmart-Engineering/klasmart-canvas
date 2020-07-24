@@ -172,8 +172,11 @@ export const WhiteboardProvider = ({
    */
   useEffect(() => {
     if (brushIsActive && canvas) {
-      canvas.isDrawingMode = true;
+      canvas.freeDrawingBrush = new fabric.PencilBrush();
+      canvas.freeDrawingBrush.canvas = canvas;
       canvas.freeDrawingBrush.color = penColor || '#000';
+      canvas.freeDrawingBrush.width = 10;
+      canvas.isDrawingMode = true;
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
     }
@@ -448,6 +451,15 @@ export const WhiteboardProvider = ({
     mouseDown(specific || shape, shapeColor);
   };
 
+  const changeStrokeColor = (color: string) => {
+    updatePenColor(color);
+
+    if (canvas.getActiveObject()) {
+      canvas.getActiveObject().set('stroke', color);
+      canvas.renderAll();
+    }
+  };
+
   /**
    * Add specific color to selected shape
    * */
@@ -627,6 +639,7 @@ export const WhiteboardProvider = ({
     stamp,
     updateStamp,
     setPointerEvents,
+    changeStrokeColor,
   };
 
   return (
