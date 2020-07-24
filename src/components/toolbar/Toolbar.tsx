@@ -54,7 +54,7 @@ function Toolbar() {
     penLine,
     updatePenLine,
     penColor,
-    updatePenColor,
+    changeStrokeColor,
     floodFill,
     updateFloodFill,
     stamp,
@@ -92,6 +92,8 @@ function Toolbar() {
       otherwise will be setted in true
     */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
+
+    console.log('tool: ', tool);
 
     /*
       If you click on another button different than
@@ -194,7 +196,7 @@ function Toolbar() {
   function changeColor(tool: string, color: string) {
     switch (tool) {
       case ELEMENTS.LINE_TYPE_TOOL:
-        updatePenColor(color);
+        changeStrokeColor(color);
         break;
 
       case ELEMENTS.ADD_TEXT_TOOL:
