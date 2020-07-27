@@ -24,6 +24,7 @@ import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
+import { Canvas, TextOptions } from 'fabric/fabric-impl';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -48,7 +49,7 @@ export const WhiteboardProvider = ({
   const { shape, updateShape } = useShape();
   const { eraseType, updateEraseType } = useEraseType();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
-  const [canvas, setCanvas] = useState();
+  const [canvas, setCanvas] = useState<Canvas>();
 
   const {
     ClearWhiteboardModal,
@@ -80,9 +81,9 @@ export const WhiteboardProvider = ({
   useEffect(() => {
     // @ts-ignore
     const canvasInstance = new fabric.Canvas(canvasId, {
-      backgroundColor: null,
-      width: canvasWidth,
-      height: canvasHeight,
+      backgroundColor: 'white',
+      width: parseInt(canvasWidth, 10) || 0,
+      height: parseInt(canvasHeight, 10) || 0,
     });
 
     setCanvas(canvasInstance);
@@ -93,6 +94,7 @@ export const WhiteboardProvider = ({
    * */
   useEffect(() => {
     if (textIsActive) {
+      //@ts-ignore
       canvas?.on('mouse:down', (options: { target: null; e: any }) => {
         if (options.target === null) {
           let text = new fabric.IText(' ', {
@@ -220,6 +222,7 @@ export const WhiteboardProvider = ({
         .load()
         .then(() => {
           if (canvas?.getActiveObject()) {
+            //@ts-ignore
             canvas.getActiveObject().set('fontFamily', font);
             canvas.requestRenderAll();
           }
@@ -244,7 +247,7 @@ export const WhiteboardProvider = ({
    * Deselect the actual selected object
    */
   const discardActiveObject = () => {
-    canvas.discardActiveObject().renderAll();
+    canvas?.discardActiveObject().renderAll();
   };
 
   /**
@@ -252,7 +255,7 @@ export const WhiteboardProvider = ({
    * */
   useEffect(() => {
     if (text.length) {
-      canvas.discardActiveObject().renderAll();
+      canvas?.discardActiveObject().renderAll();
     }
   }, [text, canvas]);
 
@@ -293,51 +296,49 @@ export const WhiteboardProvider = ({
    * Adds shape to whiteboard.
    * @param specific Indicates shape type that should be added in whiteboard.
    */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const shapeSelector = (
     specific: string
   ): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
     switch (specific || shape) {
       case 'rectangle':
-        return shapes.rectangle(10, 10, shapeColor);
+        return shapes.rectangle(2, 2, shapeColor, false);
       case 'triangle':
-        return shapes.triangle(10, 16, shapeColor);
+        return shapes.triangle(2, 4, shapeColor, false);
       case 'star':
-        return shapes.star(10, 10, shapeColor);
-      case 'rightArrow':
-        return shapes.arrow(10, 10, shapeColor);
+        return shapes.star(2, 2, shapeColor, false);
+      case 'arrow':
+        return shapes.arrow(2, 2, shapeColor, false);
       case 'chatBubble':
-        return shapes.chat(10, 10, shapeColor);
+        return shapes.chat(2, 2, shapeColor, false);
       case 'pentagon':
-        return shapes.pentagon(shapeColor);
+        return shapes.pentagon(shapeColor, false);
       case 'hexagon':
-        return shapes.hexagon(shapeColor);
+        return shapes.hexagon(shapeColor, false);
+      case 'filledRectangle':
+        return shapes.rectangle(2, 2, shapeColor, true);
+      case 'filledCircle':
+        return shapes.circle(2, 2, shapeColor, true);
+      case 'filledTriangle':
+        return shapes.triangle(2, 4, shapeColor, true);
+      case 'filledStar':
+        return shapes.star(2, 2, shapeColor, true);
+      case 'filledArrow':
+        return shapes.arrow(2, 2, shapeColor, true);
+      case 'filledChatBubble':
+        return shapes.chat(2, 2, shapeColor, true);
+      case 'filledPentagon':
+        return shapes.pentagon(shapeColor, true);
+      case 'filledHexagon':
+        return shapes.hexagon(shapeColor, true);
       default:
-        return shapes.circle(10, 10, shapeColor);
+        return shapes.circle(2, 2, shapeColor, false);
     }
   };
 
-  /**
-   * Mouse down event listener for canvas.
-   * @param shape Shape being added on canvas.
-   * @param isCircle Indicates if shape is a circle.
-   */
-  const mouseDown = (specific: string, color?: string): void => {
-    canvas.on('mouse:down', (e: CanvasEvent): void => {
-      if (e.target) {
-        return;
-      }
-
-      const shape = shapeSelector(specific);
-      shape.set({
-        top: e.pointer.y,
-        left: e.pointer.x,
-        fill: color || shapeColor,
-      });
-      clearOnMouseEvent();
-      mouseMove(shape, e.pointer, specific);
-      mouseUp(shape);
-      canvas.add(shape);
-    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const clearOnMouseEvent = (): void => {
+    canvas?.off('mouse:down');
   };
 
   /**
@@ -346,59 +347,120 @@ export const WhiteboardProvider = ({
    * @param coordsStart Coordinates of initial click on canvas.
    * @param isCircle Indicates if shape added is a circle.
    */
-  const mouseMove = (
-    shape: fabric.Object | fabric.Rect | fabric.Ellipse,
-    coordsStart: any,
-    specific?: string
-  ): void => {
-    canvas.on('mouse:move', (e: CanvasEvent): void => {
-      if (specific === 'circle') {
-        setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
-      } else if (specific === 'rectangle' || specific === 'triangle') {
-        setSize(shape, coordsStart, e.pointer);
-      } else {
-        setPathSize(shape, coordsStart, e.pointer);
-      }
+  const mouseMove = useCallback(
+    (
+      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
+      coordsStart: any,
+      specific?: string
+    ): void => {
+      //@ts-ignore
+      canvas?.on('mouse:move', (e: CanvasEvent): void => {
+        if (specific === 'filledCircle' || specific === 'circle') {
+          setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
+        } else if (
+          specific === 'filledRectangle' ||
+          specific === 'filledTriangle' ||
+          specific === 'rectangle' ||
+          specific === 'triangle'
+        ) {
+          setSize(shape, coordsStart, e.pointer);
+        } else {
+          setPathSize(shape, coordsStart, e.pointer);
+        }
 
-      let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
+        let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
 
-      if (coordsStart.x > e.pointer.x) {
-        anchor = { ...anchor, originX: 'right' };
-      }
+        if (coordsStart.x > e.pointer.x) {
+          anchor = { ...anchor, originX: 'right' };
+        }
 
-      if (coordsStart.y > e.pointer.y) {
-        anchor = { ...anchor, originY: 'bottom' };
-      }
+        if (coordsStart.y > e.pointer.y) {
+          anchor = { ...anchor, originY: 'bottom' };
+        }
 
-      shape.set(anchor);
-      canvas.renderAll();
-    });
-  };
+        shape.set(anchor);
+        canvas.renderAll();
+      });
+    },
+    [canvas]
+  );
 
   /**
    * Mouse up event listener for canvas.
    */
-  const mouseUp = (
-    shape: fabric.Object | fabric.Rect | fabric.Ellipse
-  ): void => {
-    canvas.on('mouse:up', (): void => {
-      shape.setCoords();
-      canvas.renderAll();
-      clearOnMouseEvent();
-      clearMouseEvents();
-    });
-  };
+  const mouseUp = useCallback(
+    (
+      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
+      coordsStart: any,
+      specific: string
+    ): void => {
+      //@ts-ignore
+      canvas?.on('mouse:up', (e: CanvasEvent): void => {
+        let size;
+
+        if (specific === 'filledCircle' || specific === 'circle') {
+          size = setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
+        } else if (
+          specific === 'filledRectangle' ||
+          specific === 'filledTriangle' ||
+          specific === 'rectangle' ||
+          specific === 'triangle'
+        ) {
+          size = setSize(shape, coordsStart, e.pointer);
+        } else {
+          size = setPathSize(shape, coordsStart, e.pointer);
+        }
+
+        if (size.width <= 2 && size.height <= 2) {
+          canvas.remove(shape);
+        } else {
+          shape.setCoords();
+          canvas.renderAll();
+        }
+      });
+    },
+    [canvas]
+  );
+
+  /**
+   * Mouse down event listener for canvas.
+   * @param shape Shape being added on canvas.
+   * @param isCircle Indicates if shape is a circle.
+   */
+  const mouseDown = useCallback(
+    (specific: string, color?: string): void => {
+      //@ts-ignore
+      canvas?.on('mouse:down', (e: CanvasEvent): void => {
+        if (e.target) {
+          return;
+        }
+
+        const shape = shapeSelector(specific);
+        shape.set({
+          top: e.pointer.y,
+          left: e.pointer.x,
+        });
+
+        // fill property just can be resetted if is an filled shape
+        if (shape.fill !== 'transparent') {
+          shape.set({ fill: color || shapeColor });
+        }
+
+        clearOnMouseEvent();
+        mouseMove(shape, e.pointer, specific);
+        mouseUp(shape, e.pointer, specific);
+        canvas.add(shape);
+      });
+    },
+    [canvas, clearOnMouseEvent, mouseMove, mouseUp, shapeColor, shapeSelector]
+  );
 
   /**
    * Clears all mouse event listeners from canvas.
    */
   const clearMouseEvents = (): void => {
-    canvas.off('mouse:move');
-    canvas.off('mouse:up');
-  };
-
-  const clearOnMouseEvent = (): void => {
-    canvas.off('mouse:down');
+    canvas?.off('mouse:move');
+    canvas?.off('mouse:up');
   };
 
   /**
@@ -420,14 +482,28 @@ export const WhiteboardProvider = ({
    * Add specific color to selected shape
    * */
   const fillColor = (color: string) => {
+    const actualColor = shapeColor;
+
     updateShapeColor(color);
     clearOnMouseEvent();
     clearMouseEvents();
     mouseDown(shape, color);
 
-    if (canvas.getActiveObject()) {
+    // Just the filled shapes can be recolored
+    if (
+      canvas?.getActiveObject() &&
+      canvas.getActiveObject().fill !== 'transparent'
+    ) {
       canvas.getActiveObject().set('fill', color);
       canvas.renderAll();
+    }
+
+    /*
+      If you are trying to change the color in an empty shape
+      colorShape variable will not change in colorPalette
+    */
+    if (canvas?.getActiveObject()?.fill === 'transparent') {
+      updateShapeColor(actualColor);
     }
   };
 
@@ -437,7 +513,10 @@ export const WhiteboardProvider = ({
    */
   const textColor = (color: string) => {
     updateFontColor(color);
-    if (canvas.getActiveObject() && canvas.getActiveObject().text) {
+    if (
+      canvas?.getActiveObject() &&
+      (canvas.getActiveObject() as TextOptions).text
+    ) {
       canvas.getActiveObject().set('fill', color);
       // @ts-ignore
       canvas.renderAll();
@@ -448,9 +527,11 @@ export const WhiteboardProvider = ({
    * Clears all whiteboard elements
    * */
   const clearWhiteboard = (): void => {
-    canvas.clear();
-    canvas.backgroundColor = 'white';
-    canvas.renderAll();
+    if (canvas) {
+      canvas.clear();
+      canvas.backgroundColor = 'white';
+      canvas.renderAll();
+    }
     closeModal();
   };
 
@@ -472,7 +553,7 @@ export const WhiteboardProvider = ({
     setCanvasSelection(false);
 
     // When mouse down eraser is able to remove objects
-    canvas.on('mouse:down', (e: any) => {
+    canvas?.on('mouse:down', (e: any) => {
       if (eraser) {
         return false;
       }
@@ -497,7 +578,7 @@ export const WhiteboardProvider = ({
     });
 
     // When mouse is over an object
-    canvas.on('mouse:over', (e: any) => {
+    canvas?.on('mouse:over', (e: any) => {
       if (!eraser) {
         return false;
       }
@@ -507,7 +588,7 @@ export const WhiteboardProvider = ({
     });
 
     // When mouse up eraser is unable to remove objects
-    canvas.on('mouse:up', () => {
+    canvas?.on('mouse:up', () => {
       if (!eraser) {
         return false;
       }
@@ -521,12 +602,14 @@ export const WhiteboardProvider = ({
    * @param {boolean} selection - value to set in canvas and objects selection
    */
   const setCanvasSelection = (selection: boolean): void => {
-    canvas.selection = selection;
-    canvas.forEachObject((object: fabric.Object) => {
-      object.selectable = selection;
-    });
+    if (canvas) {
+      canvas.selection = selection;
+      canvas.forEachObject((object: fabric.Object) => {
+        object.selectable = selection;
+      });
 
-    canvas.renderAll();
+      canvas.renderAll();
+    }
   };
 
   /**

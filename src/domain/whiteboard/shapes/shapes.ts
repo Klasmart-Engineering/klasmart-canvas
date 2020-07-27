@@ -1,16 +1,37 @@
 import { fabric } from 'fabric';
 
+// filled shape default values
+const filledShape = {
+  stroke: 'none',
+  strokeWidth: 0,
+};
+
+// empty shape default values
+const emptyShape = {
+  stroke: '#000',
+  strokeWidth: 2,
+  fill: 'transparent',
+};
+
 /**
  * Creates Rectangle Shape
  * @param width With of shape
  * @param height Height of shape
  * @param color Color of shape
+ * @param filled Flag to set a shape filled or not
  */
-export const rectangle = (width: number, height: number, color: string) => {
+export const rectangle = (
+  width: number,
+  height: number,
+  color: string,
+  filled: boolean
+) => {
   return new fabric.Rect({
     width: width,
     height: height,
-    fill: color,
+    stroke: filled ? filledShape.stroke : emptyShape.stroke,
+    strokeWidth: filled ? filledShape.strokeWidth : emptyShape.strokeWidth,
+    fill: filled ? color : emptyShape.fill,
   });
 };
 
@@ -19,12 +40,20 @@ export const rectangle = (width: number, height: number, color: string) => {
  * @param width With of shape
  * @param height Height of shape
  * @param color Color of shape
+ * @param filled Flag to set a shape filled or not
  */
-export const triangle = (width: number, height: number, color: string) => {
+export const triangle = (
+  width: number,
+  height: number,
+  color: string,
+  filled: boolean
+) => {
   return new fabric.Triangle({
     width: width,
     height: height,
-    fill: color,
+    stroke: filled ? filledShape.stroke : emptyShape.stroke,
+    strokeWidth: filled ? filledShape.strokeWidth : emptyShape.strokeWidth,
+    fill: filled ? color : emptyShape.fill,
   });
 };
 
@@ -33,20 +62,29 @@ export const triangle = (width: number, height: number, color: string) => {
  * @param width With of shape
  * @param height Height of shape
  * @param color Color of shape
+ * @param filled Flag to set a shape filled or not
  */
-export const circle = (width: number, height: number, color: string) => {
+export const circle = (
+  width: number,
+  height: number,
+  color: string,
+  filled: boolean
+) => {
   return new fabric.Ellipse({
     rx: width,
     ry: height,
-    fill: color,
+    stroke: filled ? filledShape.stroke : emptyShape.stroke,
+    strokeWidth: filled ? filledShape.strokeWidth : emptyShape.strokeWidth,
+    fill: filled ? color : emptyShape.fill,
   });
 };
 
 /**
  * Creates pentagon shape.
  * @param color Color of shape
+ * @param filled Flag to set a shape filled or not
  */
-export const pentagon = (color: string): fabric.Object => {
+export const pentagon = (color: string, filled: boolean): fabric.Object => {
   const shape = new fabric.Polygon([
     { x: 200, y: 0 },
     { x: 250, y: 42 },
@@ -55,14 +93,21 @@ export const pentagon = (color: string): fabric.Object => {
     { x: 150, y: 42 },
   ]);
 
-  return shape.set({ scaleX: 0.2, scaleY: 0.2, fill: color });
+  return shape.set({
+    scaleX: 0.02,
+    scaleY: 0.02,
+    stroke: filled ? filledShape.stroke : emptyShape.stroke,
+    strokeWidth: filled ? filledShape.strokeWidth : emptyShape.strokeWidth,
+    fill: filled ? color : emptyShape.fill,
+  });
 };
 
 /**
  * Creates pentagon shape.
  * @param color Color of shape
+ * @param filled Flag to set a shape filled or not
  */
-export const hexagon = (color: string): fabric.Object => {
+export const hexagon = (color: string, filled: boolean): fabric.Object => {
   const shape = new fabric.Polygon([
     { x: 125, y: 0 },
     { x: 275, y: 0 },
@@ -72,7 +117,13 @@ export const hexagon = (color: string): fabric.Object => {
     { x: 50, y: 175 },
   ]);
 
-  return shape.set({ scaleX: 0.2, scaleY: 0.2, fill: color });
+  return shape.set({
+    scaleX: 0.02,
+    scaleY: 0.02,
+    stroke: filled ? filledShape.stroke : emptyShape.stroke,
+    strokeWidth: filled ? filledShape.strokeWidth : emptyShape.strokeWidth,
+    fill: filled ? color : emptyShape.fill,
+  });
 };
 
 /**
@@ -81,17 +132,25 @@ export const hexagon = (color: string): fabric.Object => {
  * @param width Width of shape
  * @param height Height of shape
  * @param color Color of shape.
+ * @param filled Flag to set a shape filled or not
  */
 export const generic = (
   path: string,
   width: number,
   height: number,
-  color: string
+  color: string,
+  filled: boolean
 ): fabric.Object => {
   const shape = new fabric.Path(path);
   const scaleX = 1 / (((shape.width as unknown) as number) / width);
   const scaleY = 1 / (((shape.height as unknown) as number) / height);
-  return shape.set({ scaleX, scaleY, fill: color });
+  return shape.set({
+    scaleX,
+    scaleY,
+    stroke: filled ? filledShape.stroke : emptyShape.stroke,
+    strokeWidth: filled ? filledShape.strokeWidth : emptyShape.strokeWidth,
+    fill: filled ? color : emptyShape.fill,
+  });
 };
 
 /**
@@ -99,11 +158,13 @@ export const generic = (
  * @param width Width of shape
  * @param height Height of shape
  * @param color Color of shape
+ * @param filled Flag to set a shape filled or not
  */
 export const star = (
   width: number,
   height: number,
-  color: string
+  color: string,
+  filled: boolean
 ): fabric.Object => {
   const path: string = `
     M 202.000 222.000 \
@@ -119,7 +180,7 @@ export const star = (
     L 202.000 222.000 \
     z
   `;
-  return generic(path, width, height, color);
+  return generic(path, width, height, color, filled);
 };
 
 /**
@@ -127,11 +188,13 @@ export const star = (
  * @param width Width of shape
  * @param height Height of shape
  * @param color Color of shape
+ * @param filled Flag to set a shape filled or not
  */
 export const arrow = (
   width: number,
   height: number,
-  color: string
+  color: string,
+  filled: boolean
 ): fabric.Object => {
   const path: string = `
     M421.976,196.712L236.111,10.848C228.884,3.615,220.219,0,210.131,0c-9.9,0-18.464,3.615-25.697,10.848L163.023,32.26
@@ -142,7 +205,7 @@ export const arrow = (
     c7.043-7.043,10.567-15.701,10.567-25.981C432.54,211.939,429.016,203.37,421.976,196.712z
   `;
 
-  return generic(path, width, height, color);
+  return generic(path, width, height, color, filled);
 };
 
 /**
@@ -150,11 +213,13 @@ export const arrow = (
  * @param width Width of shape
  * @param height Height of shape
  * @param color Color of shape
+ * @param filled Flag to set a shape filled or not
  */
 export const chat = (
   width: number,
   height: number,
-  color: string
+  color: string,
+  filled: boolean
 ): fabric.Object => {
   const path: string = `
     M29,1.5c-16.016,0-29,11.641-29,26c0,5.292,1.768,10.211,4.796,14.318
@@ -163,5 +228,10 @@ export const chat = (
     c0.01,0.622-0.005,0.784-5.585,4.421C22.146,52.933,25.498,53.5,29,53.5c16.016,0,29-11.641,29-26S45.016,1.5,29,1.5z
   `;
 
-  return generic(path, width, height, color);
+  return generic(path, width, height, color, filled);
+};
+
+export const brush = () => {
+  const shape = new fabric.PatternBrush();
+  return shape;
 };
