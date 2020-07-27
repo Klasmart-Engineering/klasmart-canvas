@@ -3,7 +3,7 @@ import { useLineWidth } from './useLineWidth';
 
 test('should set lineWidth from initial value', () => {
   const { result } = renderHook(() => useLineWidth());
-  expect(result.current.lineWidth).toBe(4);
+  expect(result.current.lineWidth).toBe(2);
   expect(typeof result.current.updateLineWidth).toBe('function');
   act(() => {
     result.current.updateLineWidth(8);
