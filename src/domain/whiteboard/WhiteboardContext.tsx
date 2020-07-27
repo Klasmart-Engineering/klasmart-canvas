@@ -13,13 +13,13 @@ import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
-import { useStyles } from './hooks/useStyles';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
 import { setSize, setCircleSize, setPathSize } from './utils/scaling';
 import { usePointerEvents } from './hooks/usePointerEvents';
 import { useFontColor } from './hooks/useFontColor';
 import { useTextIsActive } from './hooks/useTextIsActive';
 import { useShapeIsActive } from './hooks/useShapeIsActive';
+import { useBrushIsActive } from './hooks/useBrushIsActive';
 import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
@@ -56,16 +56,10 @@ export const WhiteboardProvider = ({
     openModal,
     closeModal,
   } = useWhiteboardClearModal();
-  const { styles, updateStyles } = useStyles({
-    border: '1px solid blue',
-    width: canvasWidth + 'px',
-    height: canvasHeight + 'px',
-    position: 'absolute',
-    pointerEvents: pointerEvents ? 'auto' : 'none',
-  });
 
   const { textIsActive, updateTextIsActive } = useTextIsActive();
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
+  const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -84,6 +78,7 @@ export const WhiteboardProvider = ({
       backgroundColor: 'white',
       width: parseInt(canvasWidth, 10) || 0,
       height: parseInt(canvasHeight, 10) || 0,
+      isDrawingMode: false,
     });
 
     setCanvas(canvasInstance);
@@ -172,7 +167,23 @@ export const WhiteboardProvider = ({
       canvas?.discardActiveObject();
       canvas?.renderAll();
     }
-  }, [canvas, textIsActive]);
+  }, [canvas, pointerEvents, textIsActive]);
+
+  /**
+   * Activates or deactivates drawing mode.
+   */
+  useEffect(() => {
+    if (brushIsActive && canvas) {
+      canvas.freeDrawingBrush = new fabric.PencilBrush();
+      //@ts-ignore
+      canvas.freeDrawingBrush.canvas = canvas;
+      canvas.freeDrawingBrush.color = penColor || '#000';
+      canvas.freeDrawingBrush.width = 10;
+      canvas.isDrawingMode = true;
+    } else if (canvas && !brushIsActive) {
+      canvas.isDrawingMode = false;
+    }
+  }, [brushIsActive, canvas, penColor]);
 
   /**
    * Disables shape canvas mouse events.
@@ -478,6 +489,15 @@ export const WhiteboardProvider = ({
     mouseDown(specific || shape, shapeColor);
   };
 
+  const changeStrokeColor = (color: string) => {
+    updatePenColor(color);
+
+    if (canvas?.getActiveObject()) {
+      canvas.getActiveObject().set('stroke', color);
+      canvas.renderAll();
+    }
+  };
+
   /**
    * Add specific color to selected shape
    * */
@@ -506,6 +526,18 @@ export const WhiteboardProvider = ({
       updateShapeColor(actualColor);
     }
   };
+
+  useEffect(() => {
+    if (shape && shapeIsActive) {
+      mouseDown(shape, shapeColor);
+    }
+
+    return () => {
+      canvas?.off('mouse:down');
+      canvas?.off('mouse:move');
+      canvas?.off('mouse:up');
+    };
+  }, [canvas, shape, shapeIsActive, mouseDown, shapeColor]);
 
   /**
    * Add specific color to selected text
@@ -641,8 +673,6 @@ export const WhiteboardProvider = ({
     discardActiveObject,
     openClearWhiteboardModal,
     clearWhiteboard,
-    styles,
-    updateStyles,
     pointerEvents,
     eraseObject,
     eraseType,
@@ -651,6 +681,8 @@ export const WhiteboardProvider = ({
     updateTextIsActive,
     shapeIsActive,
     updateShapeIsActive,
+    brushIsActive,
+    updateBrushIsActive,
     updateFontColor,
     // Just for control selectors' value they can be modified in the future
     pointer,
@@ -666,6 +698,7 @@ export const WhiteboardProvider = ({
     stamp,
     updateStamp,
     setPointerEvents,
+    changeStrokeColor,
   };
 
   return (
@@ -688,7 +721,12 @@ export const WhiteboardProvider = ({
           {children}
           <div
             className="canvas-wrapper"
-            style={styles}
+            style={{
+              width: canvasWidth + 'px',
+              height: canvasHeight + 'px',
+              position: 'absolute',
+              pointerEvents: pointerEvents ? 'auto' : 'none',
+            }}
             onClick={() => {
               addShape();
             }}

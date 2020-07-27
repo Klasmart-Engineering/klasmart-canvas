@@ -40,6 +40,7 @@ function Toolbar() {
     setPointerEvents,
     updateTextIsActive,
     updateShapeIsActive,
+    updateBrushIsActive,
     shape,
     shapeColor,
     eraseType,
@@ -51,7 +52,7 @@ function Toolbar() {
     penLine,
     updatePenLine,
     penColor,
-    updatePenColor,
+    changeStrokeColor,
     thickness,
     updateThickness,
     floodFill,
@@ -81,18 +82,30 @@ function Toolbar() {
     */
     updateShapeIsActive(tool === ELEMENTS.ADD_SHAPE_TOOL);
 
+    /**
+     * Indicates if brush / pencil / pen tool is active.
+     */
+    updateBrushIsActive(tool === ELEMENTS.LINE_TYPE_TOOL);
+
     /*
       It is setted to false when you select Pointer Tool,
       otherwise will be setted in true
     */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
+    console.log('tool: ', tool);
+
     /*
-      If you click on another button different that Erase Type Tool
-      and Add Text Tool the selected object will be deselected;
+      If you click on another button different than Erase Type Tool,
+      Add Shape Tool, and Add Text Tool the selected object will be deselected;
       Erase Type and Add Text cases will be handled in WhiteboardContext
     */
-    if (tool !== ELEMENTS.ERASE_TYPE_TOOL && tool !== ELEMENTS.ADD_TEXT_TOOL) {
+    if (
+      tool !== ELEMENTS.ERASE_TYPE_TOOL &&
+      tool !== ELEMENTS.ADD_TEXT_TOOL &&
+      tool !== ELEMENTS.ADD_SHAPE_TOOL &&
+      tool !== ELEMENTS.LINE_TYPE_TOOL
+    ) {
       discardActiveObject();
     }
 
@@ -182,7 +195,7 @@ function Toolbar() {
   function changeColor(tool: string, color: string) {
     switch (tool) {
       case ELEMENTS.LINE_TYPE_TOOL:
-        updatePenColor(color);
+        changeStrokeColor(color);
         break;
 
       case ELEMENTS.ADD_TEXT_TOOL:
