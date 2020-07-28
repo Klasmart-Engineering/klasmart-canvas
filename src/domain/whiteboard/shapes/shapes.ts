@@ -1,4 +1,5 @@
 import { fabric } from 'fabric';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Creates Rectangle Shape
@@ -21,11 +22,21 @@ export const rectangle = (width: number, height: number, color: string) => {
  * @param color Color of shape
  */
 export const triangle = (width: number, height: number, color: string) => {
-  return new fabric.Triangle({
+  const triangle = new fabric.Triangle({
     width: width,
     height: height,
     fill: color,
   });
+
+  return fabric.util.object.extend(triangle, {
+    uuid: uuidv4()
+  });
+  // return new fabric.Triangle({
+  //   id: uuidv4(),
+  //   width: width,
+  //   height: height,
+  //   fill: color,
+  // });
 };
 
 /**

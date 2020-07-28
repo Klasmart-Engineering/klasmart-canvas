@@ -16,6 +16,8 @@ import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elem
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
 
+import { UNDO, REDO } from '../../domain/whiteboard/reducers/undo-redo';
+
 // Toolbar Element Available Types
 type ToolbarElementTypes =
   | IBasicToolbarButton
@@ -59,6 +61,7 @@ function Toolbar() {
     updateFloodFill,
     stamp,
     updateStamp,
+    dispatch
   } = useContext(WhiteboardContext);
 
   /**
@@ -125,9 +128,16 @@ function Toolbar() {
     discardActiveObject();
 
     switch (tool) {
-      case ELEMENTS.CLEAR_WHITEBOARD_ACTION: {
+      case ELEMENTS.CLEAR_WHITEBOARD_ACTION:
         openClearWhiteboardModal();
-      }
+        break;
+
+      case ELEMENTS.UNDO_ACTION:
+        dispatch({ type: UNDO });
+        break;
+
+      case ELEMENTS.REDO_ACTION:
+        dispatch({ type: REDO });
     }
   }
 

@@ -25,6 +25,8 @@ import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 
+import { UndoRedo } from './hooks/useUndoRedoEffect';
+
 // @ts-ignore
 export const WhiteboardContext = createContext();
 
@@ -192,6 +194,10 @@ export const WhiteboardProvider = ({
       canvas.off('mouse:down');
     }
   }, [shapeIsActive, canvas]);
+
+
+
+  const { dispatch } = UndoRedo(canvas);
 
   /**
    * General handler for keyboard events
@@ -640,6 +646,7 @@ export const WhiteboardProvider = ({
     updateStamp,
     setPointerEvents,
     changeStrokeColor,
+    dispatch,
   };
 
   return (
