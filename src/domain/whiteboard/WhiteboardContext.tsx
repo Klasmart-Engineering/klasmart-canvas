@@ -83,7 +83,6 @@ export const WhiteboardProvider = ({
       selectionBorderColor: 'rgba(100, 100, 255, 1)',
       selectionLineWidth: 2,
       selectionColor: 'rgba(100, 100, 255, 0.1)',
-      selectionFullyContained: true,
       selectionDashArray: [10],
     });
 
