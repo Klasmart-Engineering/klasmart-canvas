@@ -372,7 +372,7 @@ const toolsSection: IBasicToolbarSection = {
     },
     // Thickness - SpecialToolbarSelector
     {
-      id: 'thickness_size',
+      id: 'line_width',
       icon: FiberManualRecordRoundedIcon,
       styleOptions: [
         {

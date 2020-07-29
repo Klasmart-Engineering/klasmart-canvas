@@ -103,7 +103,7 @@ function Toolbar() {
       tool !== ELEMENTS.ADD_TEXT_TOOL &&
       tool !== ELEMENTS.ADD_SHAPE_TOOL &&
       tool !== ELEMENTS.LINE_TYPE_TOOL &&
-      tool !== ELEMENTS.THICKNESS_SIZE_TOOL
+      tool !== ELEMENTS.LINE_WIDTH_TOOL
     ) {
       discardActiveObject();
     }
@@ -145,7 +145,7 @@ function Toolbar() {
         updatePenLine(option);
         break;
 
-      case ELEMENTS.THICKNESS_SIZE_TOOL:
+      case ELEMENTS.LINE_WIDTH_TOOL:
         updateLineWidth(option);
         break;
 
@@ -261,7 +261,7 @@ function Toolbar() {
       case ELEMENTS.LINE_TYPE_TOOL:
         return penLine;
 
-      case ELEMENTS.THICKNESS_SIZE_TOOL:
+      case ELEMENTS.LINE_WIDTH_TOOL:
         return lineWidth;
 
       case ELEMENTS.FLOOD_FILL_TOOL:

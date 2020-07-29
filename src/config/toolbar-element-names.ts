@@ -9,7 +9,7 @@ export const ELEMENTS = {
   MOVE_OBJECTS_TOOL: 'move_objects',
   ERASE_TYPE_TOOL: 'erase_type',
   LINE_TYPE_TOOL: 'line_type',
-  THICKNESS_SIZE_TOOL: 'thickness_size',
+  LINE_WIDTH_TOOL: 'line_width',
   FLOOD_FILL_TOOL: 'flood_fill',
   ADD_TEXT_TOOL: 'add_text',
   ADD_SHAPE_TOOL: 'add_shape',

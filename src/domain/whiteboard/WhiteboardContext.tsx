@@ -80,6 +80,11 @@ export const WhiteboardProvider = ({
       width: parseInt(canvasWidth, 10),
       height: parseInt(canvasHeight, 10),
       isDrawingMode: false,
+      selectionBorderColor: 'rgba(100, 100, 255, 1)',
+      selectionLineWidth: 2,
+      selectionColor: 'rgba(100, 100, 255, 0.1)',
+      selectionFullyContained: true,
+      selectionDashArray: [10],
     });
 
     setCanvas(canvasInstance);
@@ -178,7 +183,7 @@ export const WhiteboardProvider = ({
       canvas.freeDrawingBrush = new fabric.PencilBrush();
       //@ts-ignore
       canvas.freeDrawingBrush.canvas = canvas;
-      canvas.freeDrawingBrush.color = penColor || '#000';
+      canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
       canvas.freeDrawingBrush.width = lineWidth;
       canvas.isDrawingMode = true;
     } else if (canvas && !brushIsActive) {
@@ -357,6 +362,7 @@ export const WhiteboardProvider = ({
       canvas.selection = selection;
       canvas.forEachObject((object: fabric.Object) => {
         object.selectable = selection;
+        object.hoverCursor = selection ? 'move' : 'pointer';
       });
 
       canvas.renderAll();
@@ -453,6 +459,8 @@ export const WhiteboardProvider = ({
     ): void => {
       //@ts-ignore
       canvas?.on('mouse:move', (e: CanvasEvent): void => {
+        canvas.selection = false;
+
         if (specific === 'filledCircle' || specific === 'circle') {
           setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
         } else if (
@@ -714,19 +722,21 @@ export const WhiteboardProvider = ({
       (event.target && isFreeDrawing(event.target)) ||
       (event.target && isEmptyShape(event.target))
     ) {
-      updatePenColor(event.target.stroke || '#000');
-      updateLineWidth(event.target.strokeWidth || 2);
+      updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
+      updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
     }
 
     // Shape Selected
     if (event.target && isShape(event.target)) {
-      updateShape(event.target.name || '');
+      updateShape(event.target.name || DEFAULT_VALUES.SHAPE);
 
       if (event.target.type === 'shape') {
-        updatePenColor(event.target.stroke || '#000');
-        updateLineWidth(event.target.strokeWidth || 2);
+        updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
+        updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
       } else if (event.target.fill) {
-        updateShapeColor(event.target.fill.toString() || '#000');
+        updateShapeColor(
+          event.target.fill.toString() || DEFAULT_VALUES.SHAPE_COLOR
+        );
       }
     }
   };
