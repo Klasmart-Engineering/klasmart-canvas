@@ -93,8 +93,6 @@ function Toolbar() {
     */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
-    console.log('tool: ', tool);
-
     /*
       If you click on another button different than
       the mentioned below the selected object will be deselected;

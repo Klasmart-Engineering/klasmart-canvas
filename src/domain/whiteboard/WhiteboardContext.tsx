@@ -203,7 +203,6 @@ export const WhiteboardProvider = ({
     if (!shapeIsActive && canvas) {
       canvas.off('mouse:move');
       canvas.off('mouse:up');
-      canvas.off('mouse:down');
     }
   }, [shapeIsActive, canvas]);
 
@@ -293,6 +292,78 @@ export const WhiteboardProvider = ({
   }, [pointerEvents, canvas]);
 
   /**
+   * Creates the listeners to erase objects from the whiteboard
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const eraseObject = (): void => {
+    let eraser: boolean = false;
+    let activeObjects: any = null;
+
+    // Deactivate selection
+    setCanvasSelection(false);
+
+    // When mouse down eraser is able to remove objects
+    canvas?.on('mouse:down', (e: any) => {
+      if (eraser) {
+        return false;
+      }
+
+      // if the click is made over an object
+      if (e.target) {
+        activeObjects = canvas.getActiveObjects();
+        canvas.remove(e.target);
+        canvas.renderAll();
+      }
+
+      // if the click is made over an object group
+      if (e.target && activeObjects.length) {
+        activeObjects.forEach(function (object: any) {
+          canvas.remove(object);
+        });
+
+        canvas.discardActiveObject().renderAll();
+      }
+
+      eraser = true;
+    });
+
+    // When mouse is over an object
+    canvas?.on('mouse:over', (e: any) => {
+      if (!eraser) {
+        return false;
+      }
+
+      canvas.remove(e.target);
+      canvas.renderAll();
+    });
+
+    // When mouse up eraser is unable to remove objects
+    canvas?.on('mouse:up', () => {
+      if (!eraser) {
+        return false;
+      }
+
+      eraser = false;
+    });
+  };
+
+  /**
+   * Set Canvas Whiteboard selection hability
+   * @param {boolean} selection - value to set in canvas and objects selection
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const setCanvasSelection = (selection: boolean): void => {
+    if (canvas) {
+      canvas.selection = selection;
+      canvas.forEachObject((object: fabric.Object) => {
+        object.selectable = selection;
+      });
+
+      canvas.renderAll();
+    }
+  };
+
+  /**
    * When eraseType value changes, listeners and states
    * necessaries to erase objects are setted or removed
    */
@@ -312,8 +383,7 @@ export const WhiteboardProvider = ({
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eraseType, canvas]);
+  }, [eraseType, canvas, eraseObject, setCanvasSelection]);
 
   /**
    * Adds shape to whiteboard.
@@ -469,6 +539,7 @@ export const WhiteboardProvider = ({
           left: e.pointer.x,
           type: 'shape',
           name: specific,
+          strokeUniform: true,
         });
 
         // fill and type properties just can be resetted if is an filled shape
@@ -608,76 +679,6 @@ export const WhiteboardProvider = ({
   };
 
   /**
-   * Creates the listeners to erase objects from the whiteboard
-   */
-  const eraseObject = (): void => {
-    let eraser: boolean = false;
-    let activeObjects: any = null;
-
-    // Deactivate selection
-    setCanvasSelection(false);
-
-    // When mouse down eraser is able to remove objects
-    canvas?.on('mouse:down', (e: any) => {
-      if (eraser) {
-        return false;
-      }
-
-      // if the click is made over an object
-      if (e.target) {
-        activeObjects = canvas.getActiveObjects();
-        canvas.remove(e.target);
-        canvas.renderAll();
-      }
-
-      // if the click is made over an object group
-      if (e.target && activeObjects.length) {
-        activeObjects.forEach(function (object: any) {
-          canvas.remove(object);
-        });
-
-        canvas.discardActiveObject().renderAll();
-      }
-
-      eraser = true;
-    });
-
-    // When mouse is over an object
-    canvas?.on('mouse:over', (e: any) => {
-      if (!eraser) {
-        return false;
-      }
-
-      canvas.remove(e.target);
-      canvas.renderAll();
-    });
-
-    // When mouse up eraser is unable to remove objects
-    canvas?.on('mouse:up', () => {
-      if (!eraser) {
-        return false;
-      }
-
-      eraser = false;
-    });
-  };
-
-  /**
-   * Set Canvas Whiteboard selection hability
-   * @param {boolean} selection - value to set in canvas and objects selection
-   */
-  const setCanvasSelection = (selection: boolean): void => {
-    if (canvas) {
-      canvas.selection = selection;
-      canvas.forEachObject((object: fabric.Object) => {
-        object.selectable = selection;
-      });
-
-      canvas.renderAll();
-    }
-  };
-
-  /**
    * Check if the given object is a free drawing object
    * @param {fabric.Object} object - object to check
    */
@@ -744,8 +745,7 @@ export const WhiteboardProvider = ({
 
       canvas.renderAll();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lineWidth, canvas]);
+  }, [lineWidth, canvas, isEmptyShape]);
 
   /**
    * If an object selection is made it, the changeLineWidth function
