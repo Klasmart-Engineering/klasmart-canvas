@@ -325,39 +325,39 @@ export const WhiteboardProvider = ({
   ): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
     switch (specific || shape) {
       case 'rectangle':
-        return shapes.rectangle(2, 2, penColor, false);
+        return shapes.rectangle(2, 2, penColor, false, lineWidth);
       case 'circle':
-        return shapes.circle(2, 2, penColor, false);
+        return shapes.circle(2, 2, penColor, false, lineWidth);
       case 'triangle':
-        return shapes.triangle(2, 4, penColor, false);
+        return shapes.triangle(2, 4, penColor, false, lineWidth);
       case 'star':
-        return shapes.star(2, 2, penColor, false);
+        return shapes.star(2, 2, penColor, false, lineWidth);
       case 'arrow':
-        return shapes.arrow(2, 2, penColor, false);
+        return shapes.arrow(2, 2, penColor, false, lineWidth);
       case 'chatBubble':
-        return shapes.chat(2, 2, penColor, false);
+        return shapes.chat(2, 2, penColor, false, lineWidth);
       case 'pentagon':
-        return shapes.pentagon(penColor, false);
+        return shapes.pentagon(penColor, false, lineWidth);
       case 'hexagon':
-        return shapes.hexagon(penColor, false);
+        return shapes.hexagon(penColor, false, lineWidth);
       case 'filledRectangle':
-        return shapes.rectangle(2, 2, shapeColor, true);
+        return shapes.rectangle(2, 2, shapeColor, true, 0);
       case 'filledCircle':
-        return shapes.circle(2, 2, shapeColor, true);
+        return shapes.circle(2, 2, shapeColor, true, 0);
       case 'filledTriangle':
-        return shapes.triangle(2, 4, shapeColor, true);
+        return shapes.triangle(2, 4, shapeColor, true, 0);
       case 'filledStar':
-        return shapes.star(2, 2, shapeColor, true);
+        return shapes.star(2, 2, shapeColor, true, 0);
       case 'filledArrow':
-        return shapes.arrow(2, 2, shapeColor, true);
+        return shapes.arrow(2, 2, shapeColor, true, 0);
       case 'filledChatBubble':
-        return shapes.chat(2, 2, shapeColor, true);
+        return shapes.chat(2, 2, shapeColor, true, 0);
       case 'filledPentagon':
-        return shapes.pentagon(shapeColor, true);
+        return shapes.pentagon(shapeColor, true, 0);
       case 'filledHexagon':
-        return shapes.hexagon(shapeColor, true);
+        return shapes.hexagon(shapeColor, true, 0);
       default:
-        return shapes.circle(2, 2, penColor, false);
+        return shapes.circle(2, 2, penColor, false, lineWidth);
     }
   };
 
@@ -412,18 +412,6 @@ export const WhiteboardProvider = ({
     },
     [canvas]
   );
-
-  /**
-   * Clears all mouse event listeners from canvas.
-   */
-  // const clearMouseEvents = useCallback((): void => {
-  //   canvas?.off('mouse:move');
-  //   canvas?.off('mouse:up');
-  // }, [canvas]);
-
-  // const clearOnMouseEvent = useCallback((): void => {
-  //   canvas?.off('mouse:down');
-  // }, [canvas]);
 
   /**
    * Mouse up event listener for canvas.
@@ -706,14 +694,27 @@ export const WhiteboardProvider = ({
   };
 
   /**
+   * Check if the given object is an empty shape
+   * @param {fabric.Object} object - object to check
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const isEmptyShape = (object: fabric.Object) => {
+    return isShape(object) && object.type === 'shape';
+  };
+
+  /**
    * Trigger the changes in the required variables
    * when a certain object is selected
    * @param {IEvent} event - event that contains the selected object
    */
   const manageChanges = (event: IEvent) => {
     // Free Drawing Line Selected
-    if (event.target && isFreeDrawing(event.target)) {
+    if (
+      (event.target && isFreeDrawing(event.target)) ||
+      (event.target && isEmptyShape(event.target))
+    ) {
       updatePenColor(event.target.stroke || '#000');
+      updateLineWidth(event.target.strokeWidth || 2);
     }
 
     // Shape Selected
@@ -722,6 +723,7 @@ export const WhiteboardProvider = ({
 
       if (event.target.type === 'shape') {
         updatePenColor(event.target.stroke || '#000');
+        updateLineWidth(event.target.strokeWidth || 2);
       } else if (event.target.fill) {
         updateShapeColor(event.target.fill.toString() || '#000');
       }
@@ -733,10 +735,16 @@ export const WhiteboardProvider = ({
    * that drawing line width will changes to the selected width on Toolbar
    */
   useEffect(() => {
-    if (canvas?.getActiveObject() && isFreeDrawing(canvas.getActiveObject())) {
-      canvas.getActiveObject().set('strokeWidth', lineWidth);
-      canvas?.renderAll();
+    if (canvas?.getActiveObjects()) {
+      canvas.getActiveObjects().forEach((object) => {
+        if (isEmptyShape(object) || isFreeDrawing(object)) {
+          object.set('strokeWidth', lineWidth);
+        }
+      });
+
+      canvas.renderAll();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lineWidth, canvas]);
 
   /**
