@@ -755,7 +755,8 @@ export const WhiteboardProvider = ({
 
       canvas.renderAll();
     }
-  }, [lineWidth, canvas, isEmptyShape]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lineWidth, canvas]);
 
   /**
    * If an object selection is made it, the changeLineWidth function
