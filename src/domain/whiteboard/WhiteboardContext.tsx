@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import React, {
   createContext,
   ReactComponentElement,
@@ -22,6 +23,7 @@ import { useShapeIsActive } from './hooks/useShapeIsActive';
 import { useBrushIsActive } from './hooks/useBrushIsActive';
 import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
+import { eventEmitter } from './events';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 
@@ -34,12 +36,14 @@ export const WhiteboardProvider = ({
   canvasWidth,
   canvasHeight,
   toolbar,
+  master,
 }: {
   children: React.ReactNode;
   canvasId: string;
   toolbar: ReactComponentElement<any>;
   canvasWidth: string;
   canvasHeight: string;
+  master: boolean;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();
@@ -112,6 +116,7 @@ export const WhiteboardProvider = ({
             delete toObject.text;
             delete toObject.type;
             const clonedTextObj = JSON.parse(JSON.stringify(toObject));
+            clonedTextObj.id = uuidv4();
 
             if (typeof textCopy === 'string') {
               text = new fabric.Textbox(textCopy, clonedTextObj);
@@ -261,10 +266,109 @@ export const WhiteboardProvider = ({
    * If the input field (text) has length will unselect whiteboard active objects
    * */
   useEffect(() => {
-    if (text.length) {
-      canvas.discardActiveObject().renderAll();
-    }
-  }, [text, canvas]);
+    canvas?.on('object:added', function (e: any) {
+      if (master) {
+        const type = e.target.get('type');
+        const target = e.target;
+        const id = (type: string) => {
+          return type === 'path'
+            ? e.target.canvas.freeDrawingBrush.id
+            : e.target.id;
+        };
+
+        const payload = {
+          type,
+          target,
+          id: id(type),
+        };
+
+        eventEmitter.emit('object:added', payload);
+      }
+    });
+
+    canvas?.on('object:moved', function (e: any) {
+      if (master) {
+        const type = e.target.get('type');
+        const target = e.target;
+        const id = (type: string) => {
+          return type === 'path'
+            ? e.target.canvas.freeDrawingBrush.id
+            : e.target.id;
+        };
+
+        const payload = {
+          type,
+          target,
+          id: id(type),
+        };
+
+        eventEmitter.emit('object:moved', payload);
+      }
+    });
+
+    eventEmitter.on('object:added', (e: any) => {
+      if (!master) {
+        console.log('Data Received  object:added', e, { master });
+
+        if (e.type === 'textbox') {
+          let text = new fabric.Textbox(e.target.text, {
+            fontFamily: e.target.fontFamily,
+            fontSize: 30,
+            fontWeight: 400,
+            fill: e.target.fill,
+            fontStyle: 'normal',
+            top: e.target.top,
+            left: e.target.left,
+            width: e.target.width,
+          });
+
+          // @ts-ignore
+          text.id = e.id;
+
+          canvas?.add(text);
+        }
+
+        if (e.type === 'path') {
+          const pencil = new fabric.PencilBrush();
+          pencil.color = e.target.stroke || '#000';
+          pencil.width = e.target.strokeWidth;
+
+          // Convert Points to SVG Path
+          const res = pencil.createPath(e.target.path);
+          // @ts-ignore
+          res.id = e.id;
+          canvas?.add(res);
+        }
+      }
+    });
+
+    eventEmitter.on('object:moved', (e: any) => {
+      if (!master) {
+        console.log('Data Received  object:moved', e, { master });
+
+        canvas?.forEachObject(function (obj: any) {
+          const type = e.target.get('type');
+
+          if (type === 'path') {
+            const id = (type: string) => {
+              return type === 'path'
+                ? e.target.canvas.freeDrawingBrush.id
+                : e.target.id;
+            };
+
+            if (obj.id && obj.id === id(type)) {
+              obj.set({ top: e.target.top, left: e.target.left });
+            }
+          } else {
+            if (obj.id && obj.id === e.target.id) {
+              obj.set({ top: e.target.top, left: e.target.left });
+            }
+          }
+        });
+        canvas?.renderAll();
+      }
+    });
+  }, [text, canvas, master]);
 
   /**
    * If pointerEvents changes to false, all the selected objects
