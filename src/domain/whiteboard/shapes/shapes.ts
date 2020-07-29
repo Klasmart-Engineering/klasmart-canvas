@@ -8,7 +8,6 @@ const filledShape = {
 
 // empty shape default values
 const emptyShape = {
-  stroke: '#000',
   strokeWidth: 2,
   fill: 'transparent',
 };
@@ -29,7 +28,7 @@ export const rectangle = (
   return new fabric.Rect({
     width: width,
     height: height,
-    stroke: filled ? filledShape.stroke : emptyShape.stroke,
+    stroke: filled ? filledShape.stroke : color,
     strokeWidth: filled ? filledShape.strokeWidth : emptyShape.strokeWidth,
     fill: filled ? color : emptyShape.fill,
   });
@@ -51,7 +50,7 @@ export const triangle = (
   return new fabric.Triangle({
     width: width,
     height: height,
-    stroke: filled ? filledShape.stroke : emptyShape.stroke,
+    stroke: filled ? filledShape.stroke : color,
     strokeWidth: filled ? filledShape.strokeWidth : emptyShape.strokeWidth,
     fill: filled ? color : emptyShape.fill,
   });
@@ -73,7 +72,7 @@ export const circle = (
   return new fabric.Ellipse({
     rx: width,
     ry: height,
-    stroke: filled ? filledShape.stroke : emptyShape.stroke,
+    stroke: filled ? filledShape.stroke : color,
     strokeWidth: filled ? filledShape.strokeWidth : emptyShape.strokeWidth,
     fill: filled ? color : emptyShape.fill,
   });
@@ -96,7 +95,7 @@ export const pentagon = (color: string, filled: boolean): fabric.Object => {
   return shape.set({
     scaleX: 0.02,
     scaleY: 0.02,
-    stroke: filled ? filledShape.stroke : emptyShape.stroke,
+    stroke: filled ? filledShape.stroke : color,
     strokeWidth: filled ? filledShape.strokeWidth : emptyShape.strokeWidth,
     fill: filled ? color : emptyShape.fill,
   });
@@ -120,7 +119,7 @@ export const hexagon = (color: string, filled: boolean): fabric.Object => {
   return shape.set({
     scaleX: 0.02,
     scaleY: 0.02,
-    stroke: filled ? filledShape.stroke : emptyShape.stroke,
+    stroke: filled ? filledShape.stroke : color,
     strokeWidth: filled ? filledShape.strokeWidth : emptyShape.strokeWidth,
     fill: filled ? color : emptyShape.fill,
   });
@@ -147,7 +146,7 @@ export const generic = (
   return shape.set({
     scaleX,
     scaleY,
-    stroke: filled ? filledShape.stroke : emptyShape.stroke,
+    stroke: filled ? filledShape.stroke : color,
     strokeWidth: filled ? filledShape.strokeWidth : emptyShape.strokeWidth,
     fill: filled ? color : emptyShape.fill,
   });

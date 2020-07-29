@@ -24,7 +24,7 @@ import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
-import { Canvas, TextOptions } from 'fabric/fabric-impl';
+import { Canvas, TextOptions, IEvent } from 'fabric/fabric-impl';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -262,7 +262,8 @@ export const WhiteboardProvider = ({
   };
 
   /**
-   * If the input field (text) has length will unselect whiteboard active objects
+   * If the input field (text) has length
+   * will unselect whiteboard active objects
    * */
   useEffect(() => {
     if (text.length) {
@@ -313,19 +314,21 @@ export const WhiteboardProvider = ({
   ): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
     switch (specific || shape) {
       case 'rectangle':
-        return shapes.rectangle(2, 2, shapeColor, false);
+        return shapes.rectangle(2, 2, penColor, false);
+      case 'circle':
+        return shapes.circle(2, 2, penColor, false);
       case 'triangle':
-        return shapes.triangle(2, 4, shapeColor, false);
+        return shapes.triangle(2, 4, penColor, false);
       case 'star':
-        return shapes.star(2, 2, shapeColor, false);
+        return shapes.star(2, 2, penColor, false);
       case 'arrow':
-        return shapes.arrow(2, 2, shapeColor, false);
+        return shapes.arrow(2, 2, penColor, false);
       case 'chatBubble':
-        return shapes.chat(2, 2, shapeColor, false);
+        return shapes.chat(2, 2, penColor, false);
       case 'pentagon':
-        return shapes.pentagon(shapeColor, false);
+        return shapes.pentagon(penColor, false);
       case 'hexagon':
-        return shapes.hexagon(shapeColor, false);
+        return shapes.hexagon(penColor, false);
       case 'filledRectangle':
         return shapes.rectangle(2, 2, shapeColor, true);
       case 'filledCircle':
@@ -343,17 +346,20 @@ export const WhiteboardProvider = ({
       case 'filledHexagon':
         return shapes.hexagon(shapeColor, true);
       default:
-        return shapes.circle(2, 2, shapeColor, false);
+        return shapes.circle(2, 2, penColor, false);
     }
   };
 
+  /**
+   * Removes mouse:down event from canvas
+   */
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const clearOnMouseEvent = (): void => {
     canvas?.off('mouse:down');
   };
 
   /**
-   *
+   * Set the size of the shape when the mouse drawing action is made
    * @param shape Shape that was added to canvas.
    * @param coordsStart Coordinates of initial click on canvas.
    * @param isCircle Indicates if shape added is a circle.
@@ -450,11 +456,16 @@ export const WhiteboardProvider = ({
         shape.set({
           top: e.pointer.y,
           left: e.pointer.x,
+          type: 'shape',
+          name: specific,
         });
 
-        // fill property just can be resetted if is an filled shape
+        // fill and type properties just can be resetted if is an filled shape
         if (shape.fill !== 'transparent') {
-          shape.set({ fill: color || shapeColor });
+          shape.set({
+            type: 'filledShape',
+            fill: color || shapeColor,
+          });
         }
 
         clearOnMouseEvent();
@@ -478,22 +489,41 @@ export const WhiteboardProvider = ({
    * Add specific shape to whiteboard
    * */
   const addShape = (specific?: string): void => {
-    // Required to prevent multiple shapes add at once
-    // if user clicked more than one shape during selection.
+    const shapeToAdd = specific || shape;
+    /*
+      Required to prevent multiple shapes add at once
+      if user clicked more than one shape during selection.
+    */
     if (!shapeIsActive) {
       return;
     }
 
     clearOnMouseEvent();
     clearMouseEvents();
-    mouseDown(specific || shape, shapeColor);
+    mouseDown(
+      shapeToAdd,
+      shapeToAdd.startsWith('filled') ? shapeColor : penColor
+    );
   };
 
+  /**
+   * Changes the penColor value and if one or more objects are selected
+   * also changes the stroke color in free drawing and empty shape objects
+   * @param {string} color - new color to change
+   */
   const changeStrokeColor = (color: string) => {
     updatePenColor(color);
 
-    if (canvas?.getActiveObject()) {
-      canvas.getActiveObject().set('stroke', color);
+    if (canvas?.getActiveObjects()) {
+      canvas.getActiveObjects().forEach((object) => {
+        if (
+          (isShape(object) && object.type === 'shape') ||
+          isFreeDrawing(object)
+        ) {
+          object.set('stroke', color);
+        }
+      });
+
       canvas.renderAll();
     }
   };
@@ -502,8 +532,6 @@ export const WhiteboardProvider = ({
    * Add specific color to selected shape
    * */
   const fillColor = (color: string) => {
-    const actualColor = shapeColor;
-
     updateShapeColor(color);
     clearOnMouseEvent();
     clearMouseEvents();
@@ -517,19 +545,14 @@ export const WhiteboardProvider = ({
       canvas.getActiveObject().set('fill', color);
       canvas.renderAll();
     }
-
-    /*
-      If you are trying to change the color in an empty shape
-      colorShape variable will not change in colorPalette
-    */
-    if (canvas?.getActiveObject()?.fill === 'transparent') {
-      updateShapeColor(actualColor);
-    }
   };
 
+  /**
+   * Activates the mouseDown event if shape exists and shapeIsActive is true
+   */
   useEffect(() => {
     if (shape && shapeIsActive) {
-      mouseDown(shape, shapeColor);
+      mouseDown(shape, shape.startsWith('filled') ? shapeColor : penColor);
     }
 
     return () => {
@@ -537,7 +560,7 @@ export const WhiteboardProvider = ({
       canvas?.off('mouse:move');
       canvas?.off('mouse:up');
     };
-  }, [canvas, shape, shapeIsActive, mouseDown, shapeColor]);
+  }, [canvas, shape, shapeIsActive, mouseDown, penColor, shapeColor]);
 
   /**
    * Add specific color to selected text
@@ -643,6 +666,55 @@ export const WhiteboardProvider = ({
       canvas.renderAll();
     }
   };
+
+  /**
+   * Check if the given object is a free drawing object
+   * @param {fabric.Object} object - object to check
+   */
+  const isFreeDrawing = (object: fabric.Object) => {
+    return object.strokeLineCap === 'round';
+  };
+
+  /**
+   * Check if the given object is a shape
+   * @param {fabric.Object} object - object to check
+   */
+  const isShape = (object: fabric.Object) => {
+    return object.fill && !(object as TextOptions).text;
+  };
+
+  /**
+   * Trigger the changes in the required variables
+   * when a certain object is selected
+   * @param {IEvent} event - event that contains the selected object
+   */
+  const manageChanges = (event: IEvent) => {
+    // Free Drawing Line Selected
+    if (event.target && isFreeDrawing(event.target)) {
+      updatePenColor(event.target.stroke || '#000');
+    }
+
+    // Shape Selected
+    if (event.target && isShape(event.target)) {
+      updateShape(event.target.name || '');
+
+      if (event.target.type === 'shape') {
+        updatePenColor(event.target.stroke || '#000');
+      } else if (event.target.fill) {
+        updateShapeColor(event.target.fill.toString() || '#000');
+      }
+    }
+  };
+
+  /**
+   * If an object selection is made it, the changeLineWidth function
+   * will be executed to determine if is a free line drawing or not
+   * and know if the lineWidth variable must change or not
+   */
+  canvas?.on({
+    'selection:created': manageChanges,
+    'selection:updated': manageChanges,
+  });
 
   /**
    * List of available colors in toolbar

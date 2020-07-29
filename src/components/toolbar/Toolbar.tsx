@@ -59,7 +59,7 @@ function Toolbar() {
     updateFloodFill,
     stamp,
     updateStamp,
-  } = useContext(WhiteboardContext);
+  }: any = useContext(WhiteboardContext);
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
