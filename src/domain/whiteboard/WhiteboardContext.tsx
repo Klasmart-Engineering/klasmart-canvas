@@ -26,6 +26,8 @@ import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 import { useLineWidth } from './hooks/useLineWidth';
 import { Canvas, IEvent, TextOptions } from 'fabric/fabric-impl';
+import { useFloodFill } from './hooks/useFloodFill';
+import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -50,6 +52,7 @@ export const WhiteboardProvider = ({
   const { shape, updateShape } = useShape();
   const { eraseType, updateEraseType } = useEraseType();
   const { lineWidth, updateLineWidth } = useLineWidth();
+  const { floodFill, updateFloodFill } = useFloodFill();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const [canvas, setCanvas] = useState<Canvas>();
 
@@ -62,12 +65,13 @@ export const WhiteboardProvider = ({
   const { textIsActive, updateTextIsActive } = useTextIsActive();
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
+  const { floodFillIsActive, updateFloodFillIsActive } = useFloodFillIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
   const [penLine, updatePenLine] = useState(DEFAULT_VALUES.PEN_LINE);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
-  const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
+  // const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
 
   /**
@@ -747,6 +751,24 @@ export const WhiteboardProvider = ({
     }
   }, [lineWidth, canvas, isEmptyShape]);
 
+  useEffect(() => {
+    if (floodFillIsActive) {
+      console.log('flood fill up');
+      canvas?.on('mouse:down', (event: IEvent) => {
+        console.log('object click: ', event.target);
+        if (event.target && isEmptyShape(event.target)) {
+          event.target.set('fill', floodFill);
+        }
+
+        if (event.target && isFreeDrawing(event.target)) {
+          console.log(event.target);
+        }
+      });
+    } else {
+      console.log('flood fill down');
+    }
+  }, [canvas, floodFill, floodFillIsActive, isEmptyShape]);
+
   /**
    * If an object selection is made it, the changeLineWidth function
    * will be executed to determine if is a free line drawing or not
@@ -799,6 +821,10 @@ export const WhiteboardProvider = ({
     updateFontColor,
     lineWidth,
     updateLineWidth,
+    floodFill,
+    updateFloodFill,
+    floodFillIsActive,
+    updateFloodFillIsActive,
     // Just for control selectors' value they can be modified in the future
     pointer,
     updatePointer,
@@ -806,8 +832,6 @@ export const WhiteboardProvider = ({
     updatePenLine,
     penColor,
     updatePenColor,
-    floodFill,
-    updateFloodFill,
     stamp,
     updateStamp,
     setPointerEvents,
