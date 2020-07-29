@@ -24,7 +24,8 @@ import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
-import { Canvas, TextOptions, IEvent } from 'fabric/fabric-impl';
+import { useLineWidth } from './hooks/useLineWidth';
+import { Canvas, IEvent, TextOptions } from 'fabric/fabric-impl';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -48,6 +49,7 @@ export const WhiteboardProvider = ({
   const { shapeColor, updateShapeColor } = useShapeColor();
   const { shape, updateShape } = useShape();
   const { eraseType, updateEraseType } = useEraseType();
+  const { lineWidth, updateLineWidth } = useLineWidth();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const [canvas, setCanvas] = useState<Canvas>();
 
@@ -65,7 +67,6 @@ export const WhiteboardProvider = ({
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
   const [penLine, updatePenLine] = useState(DEFAULT_VALUES.PEN_LINE);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
-  const [thickness, updateThickness] = useState(DEFAULT_VALUES.THICKNESS);
   const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
 
@@ -76,8 +77,8 @@ export const WhiteboardProvider = ({
     // @ts-ignore
     const canvasInstance = new fabric.Canvas(canvasId, {
       backgroundColor: 'white',
-      width: parseInt(canvasWidth, 10) || 0,
-      height: parseInt(canvasHeight, 10) || 0,
+      width: parseInt(canvasWidth, 10),
+      height: parseInt(canvasHeight, 10),
       isDrawingMode: false,
     });
 
@@ -178,12 +179,22 @@ export const WhiteboardProvider = ({
       //@ts-ignore
       canvas.freeDrawingBrush.canvas = canvas;
       canvas.freeDrawingBrush.color = penColor || '#000';
-      canvas.freeDrawingBrush.width = 10;
+      canvas.freeDrawingBrush.width = lineWidth;
       canvas.isDrawingMode = true;
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
+
+      /*
+        This is for no change the line width
+        in a free drawing object if this is resized
+      */
+      canvas.getObjects().forEach((object: fabric.Object) => {
+        if (isFreeDrawing(object)) {
+          object.strokeUniform = true;
+        }
+      });
     }
-  }, [brushIsActive, canvas, penColor]);
+  }, [brushIsActive, canvas, lineWidth, penColor]);
 
   /**
    * Disables shape canvas mouse events.
@@ -403,6 +414,18 @@ export const WhiteboardProvider = ({
   );
 
   /**
+   * Clears all mouse event listeners from canvas.
+   */
+  // const clearMouseEvents = useCallback((): void => {
+  //   canvas?.off('mouse:move');
+  //   canvas?.off('mouse:up');
+  // }, [canvas]);
+
+  // const clearOnMouseEvent = useCallback((): void => {
+  //   canvas?.off('mouse:down');
+  // }, [canvas]);
+
+  /**
    * Mouse up event listener for canvas.
    */
   const mouseUp = useCallback(
@@ -573,7 +596,6 @@ export const WhiteboardProvider = ({
       (canvas.getActiveObject() as TextOptions).text
     ) {
       canvas.getActiveObject().set('fill', color);
-      // @ts-ignore
       canvas.renderAll();
     }
   };
@@ -707,6 +729,17 @@ export const WhiteboardProvider = ({
   };
 
   /**
+   * If lineWidth variable changes and a free line drawing is selected
+   * that drawing line width will changes to the selected width on Toolbar
+   */
+  useEffect(() => {
+    if (canvas?.getActiveObject() && isFreeDrawing(canvas.getActiveObject())) {
+      canvas.getActiveObject().set('strokeWidth', lineWidth);
+      canvas?.renderAll();
+    }
+  }, [lineWidth, canvas]);
+
+  /**
    * If an object selection is made it, the changeLineWidth function
    * will be executed to determine if is a free line drawing or not
    * and know if the lineWidth variable must change or not
@@ -756,6 +789,8 @@ export const WhiteboardProvider = ({
     brushIsActive,
     updateBrushIsActive,
     updateFontColor,
+    lineWidth,
+    updateLineWidth,
     // Just for control selectors' value they can be modified in the future
     pointer,
     updatePointer,
@@ -763,8 +798,6 @@ export const WhiteboardProvider = ({
     updatePenLine,
     penColor,
     updatePenColor,
-    thickness,
-    updateThickness,
     floodFill,
     updateFloodFill,
     stamp,

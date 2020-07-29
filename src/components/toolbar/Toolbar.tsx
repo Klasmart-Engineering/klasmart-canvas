@@ -46,6 +46,8 @@ function Toolbar() {
     eraseType,
     updateEraseType,
     discardActiveObject,
+    lineWidth,
+    updateLineWidth,
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
@@ -53,8 +55,6 @@ function Toolbar() {
     updatePenLine,
     penColor,
     changeStrokeColor,
-    thickness,
-    updateThickness,
     floodFill,
     updateFloodFill,
     stamp,
@@ -96,15 +96,16 @@ function Toolbar() {
     console.log('tool: ', tool);
 
     /*
-      If you click on another button different than Erase Type Tool,
-      Add Shape Tool, and Add Text Tool the selected object will be deselected;
-      Erase Type and Add Text cases will be handled in WhiteboardContext
+      If you click on another button different than
+      the mentioned below the selected object will be deselected;
+      the cases mentioned below will be handled in WhiteboardContext
     */
     if (
       tool !== ELEMENTS.ERASE_TYPE_TOOL &&
       tool !== ELEMENTS.ADD_TEXT_TOOL &&
       tool !== ELEMENTS.ADD_SHAPE_TOOL &&
-      tool !== ELEMENTS.LINE_TYPE_TOOL
+      tool !== ELEMENTS.LINE_TYPE_TOOL &&
+      tool !== ELEMENTS.THICKNESS_SIZE_TOOL
     ) {
       discardActiveObject();
     }
@@ -147,7 +148,7 @@ function Toolbar() {
         break;
 
       case ELEMENTS.THICKNESS_SIZE_TOOL:
-        updateThickness(option);
+        updateLineWidth(option);
         break;
 
       case ELEMENTS.FLOOD_FILL_TOOL:
@@ -263,7 +264,7 @@ function Toolbar() {
         return penLine;
 
       case ELEMENTS.THICKNESS_SIZE_TOOL:
-        return thickness;
+        return lineWidth;
 
       case ELEMENTS.FLOOD_FILL_TOOL:
         return floodFill;
