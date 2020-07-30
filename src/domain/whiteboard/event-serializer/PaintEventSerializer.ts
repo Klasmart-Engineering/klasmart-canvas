@@ -17,15 +17,15 @@ export declare interface PaintEventSerializer {
 }
 
 export interface ObjectEvent {
-  id: string,
-  type: ObjectType,
-  target: any,
+  id: string;
+  type: ObjectType;
+  target: any;
 }
 
+export type ObjectType = 'path' | 'textbox';
 
-export type ObjectType = "path" | "textbox"
-
-export class PaintEventSerializer extends EventEmitter implements PaintEventSerializer {
+export class PaintEventSerializer extends EventEmitter
+  implements PaintEventSerializer {
   readonly multiplier: number;
   readonly serializedEventIDs: string[] = [];
 
@@ -39,12 +39,12 @@ export class PaintEventSerializer extends EventEmitter implements PaintEventSeri
    */
   push(type: PainterEventType, object: ObjectEvent): void {
     // TODO: Optmization of which data get serialized, for example:
-    // we wouldn't need to send anything other than id and position 
-    // for move events, or the updated color if object color was 
+    // we wouldn't need to send anything other than id and position
+    // for move events, or the updated color if object color was
     // modified.
 
     // TODO: In the case of line shapes, we will want the users to see
-    // the line appear directly, not just when it's finished. In this 
+    // the line appear directly, not just when it's finished. In this
     // case we want to just send the object ID and the additional points
     // being added. In the PoC I solved this by having begin/end events
     // which just set up the properties of the line (color/thickness).
@@ -56,7 +56,7 @@ export class PaintEventSerializer extends EventEmitter implements PaintEventSeri
     // const data: OperationData = {
     //  brush: brushParameters,
     // };
-    // 
+    //
     // const event: PainterEvent = {
     //   type: 'shapeBegin',
     //   id: id,
@@ -72,7 +72,7 @@ export class PaintEventSerializer extends EventEmitter implements PaintEventSeri
       type,
       objectType: object.type,
       param: JSON.stringify(object.target),
-    }
+    };
 
     // NOTE: The list of ID's this serialized generated is for filtering
     // purposes. Preventing the local user from handling the same event

@@ -5,8 +5,8 @@ import { PainterEvent } from './PainterEvent';
 /**
  * This class is responsible for receiving remote events and translating that into
  * commands we can use to update the canvas. It needs to understand any optimizations
- * the PaintEventSerializer might do and decode those into usable data again. In the 
- * PoC code the only optimization used was multiplying/dividing the coordinates to 
+ * the PaintEventSerializer might do and decode those into usable data again. In the
+ * PoC code the only optimization used was multiplying/dividing the coordinates to
  * reduce number of bytes in the data stream.
  */
 export class EventPainterController extends EventEmitter
@@ -43,8 +43,8 @@ export class EventPainterController extends EventEmitter
     let eventParam = event.param ? event.param : "{}";
 
     // NOTE: In our case (based on the PaintEventSerializer implementation) the param
-    // will be a JSON stringified fabric.js target object. We may want to introduce 
-    // some more type safety for this once we start doing data optimizations in the 
+    // will be a JSON stringified fabric.js target object. We may want to introduce
+    // some more type safety for this once we start doing data optimizations in the
     // serializer. Param data will not be modified by the server.
     let target = JSON.parse(eventParam);
 
@@ -56,15 +56,15 @@ export class EventPainterController extends EventEmitter
     // delete, moved. etc.
 
     switch (event.type) {
-      case "add": this.add(event.id, event.objectType, target); break;
+      case "added": this.added(event.id, event.objectType, target); break;
       case "moved": this.moved(event.id, event.objectType, target); break;
       case "delete": console.error("Not implemented yet!"); break;
       case "move": console.error("Not implemented yet!"); break;
     }
   }
 
-  private add(id: string, objectType: string, target: any) {
-    this.emit("add", id, objectType, target);
+  private added(id: string, objectType: string, target: any) {
+    this.emit("added", id, objectType, target);
   }
 
   private moved(id: string, objectType: string, target: any) {

@@ -23,7 +23,7 @@ import { useShapeIsActive } from './hooks/useShapeIsActive';
 import { useBrushIsActive } from './hooks/useBrushIsActive';
 import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
-import { eventEmitter } from './events';
+// import { eventEmitter } from './events';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
@@ -76,8 +76,12 @@ export const WhiteboardProvider = ({
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
 
   // Event serialization for synchronizing whiteboard state.
-  const { state: { eventSerializer } } = useSharedEventSerializer();
-  const [remotePainter, setRemotePainter] = useState<EventPainterController | undefined>();
+  const {
+    state: { eventSerializer },
+  } = useSharedEventSerializer();
+  const [remotePainter, setRemotePainter] = useState<
+    EventPainterController | undefined
+  >();
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -96,7 +100,7 @@ export const WhiteboardProvider = ({
 
   /**
    * Set up the EventPainterController (remotePainter) it will handle incoming
-   * events (from the server) and convert those into commands we can use for 
+   * events (from the server) and convert those into commands we can use for
    * updating our local whiteboard.
    */
   useEffect(() => {
@@ -333,9 +337,9 @@ export const WhiteboardProvider = ({
         };
 
         // Serialize the event for synchronization
-        eventSerializer?.push("add", payload);
+        eventSerializer?.push('added', payload);
 
-        eventEmitter.emit('object:added', payload);
+        // eventEmitter.emit('object:added', payload);
       }
     });
 
@@ -357,15 +361,15 @@ export const WhiteboardProvider = ({
 
         // Serialize the event for synchronization
         if (master) {
-          eventSerializer?.push("moved", payload);
+          eventSerializer?.push('moved', payload);
         }
 
-        eventEmitter.emit('object:moved', payload);
+        //eventEmitter.emit('object:moved', payload);
       }
     });
 
-    remotePainter?.on("add", (id: string, objectType: string, target: any) => {
-      console.log(`add: ${id} ${objectType} ${target}`);
+    remotePainter?.on('added', (id: string, objectType: string, target: any) => {
+      console.log(`added: ${id} ${objectType} ${target}`);
 
       // TODO: We'll want to filter events based on the user ID. This can
       // be done like this. Example of extracting user id from object ID:
@@ -378,50 +382,50 @@ export const WhiteboardProvider = ({
       if (master) return;
 
       if (objectType === 'textbox') {
-          let text = new fabric.Textbox(target.text, {
-            fontFamily: target.fontFamily,
-            fontSize: 30,
-            fontWeight: 400,
-            fill: target.fill,
-            fontStyle: 'normal',
-            top: target.top,
-            left: target.left,
-            width: target.width,
-          });
+        let text = new fabric.Textbox(target.text, {
+          fontFamily: target.fontFamily,
+          fontSize: 30,
+          fontWeight: 400,
+          fill: target.fill,
+          fontStyle: 'normal',
+          top: target.top,
+          left: target.left,
+          width: target.width,
+        });
 
-          // @ts-ignore
-          text.id = id;
+        // @ts-ignore
+        text.id = id;
 
-          canvas?.add(text);
-        }
+        canvas?.add(text);
+      }
 
-        if (objectType === 'path') {
-          const pencil = new fabric.PencilBrush();
-          pencil.color = target.stroke || '#000';
-          pencil.width = target.strokeWidth;
+      if (objectType === 'path') {
+        const pencil = new fabric.PencilBrush();
+        pencil.color = target.stroke || '#000';
+        pencil.width = target.strokeWidth;
 
-          // Convert Points to SVG Path
-          const res = pencil.createPath(target.path);
-          // @ts-ignore
-          res.id = id;
-          canvas?.add(res);
-        }
+        // Convert Points to SVG Path
+        const res = pencil.createPath(target.path);
+        // @ts-ignore
+        res.id = id;
+        canvas?.add(res);
+      }
     });
 
-    remotePainter?.on("moved", (id: string, objectType: string, target: any) => {
-      //if (eventSerializer?.didSerializeEvent(id)) return;
-      if (master) return;
+    remotePainter?.on(
+      'moved',
+      (id: string, objectType: string, target: any) => {
+        //if (eventSerializer?.didSerializeEvent(id)) return;
+        if (master) return;
 
-      console.log('Data Received  object:moved', target, { master });
+        console.log('Data Received  object:moved', target, { master });
 
-      const type = objectType;
+        const type = objectType;
 
         canvas?.forEachObject(function (obj: any) {
           if (type === 'path') {
             const id = (type: string) => {
-              return type === 'path'
-                ? target.canvas.freeDrawingBrush.id
-                : id;
+              return type === 'path' ? target.canvas.freeDrawingBrush.id : id;
             };
 
             if (obj.id && obj.id === id(type)) {
@@ -434,7 +438,8 @@ export const WhiteboardProvider = ({
           }
         });
         canvas?.renderAll();
-    });
+      }
+    );
   }, [text, canvas, master, eventSerializer, remotePainter]);
 
   /**

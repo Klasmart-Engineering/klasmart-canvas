@@ -7,7 +7,7 @@ export interface IPainterController {
   // TODO: Theres a "ease of use" concern we should think about with this event interface. We can
   // choose to consolidate all events in one single event or we can have specific events for each
   // operation. I think both ways work, but if we have a huge amount of event types code listening
-  // to the event will have to handle dispatch manually. It might be a help for the caller if 
+  // to the event will have to handle dispatch manually. It might be a help for the caller if
   // dispatch is handled by the controller. Example:
   //
   // Caller handle dispatch:
@@ -19,10 +19,10 @@ export interface IPainterController {
   // etc.
   //
 
-  on(event: "add", listener: (id: string, objectType: string, target: any) => void): this;
+  on(event: "added", listener: (id: string, objectType: string, target: any) => void): this;
   on(event: "moved", listener: (id: string, objectType: string, target: any) => void): this;
 
-  removeListener(event: "add", listener: (id: string, objectType: string, target: any) => void): this;
+  removeListener(event: "added", listener: (id: string, objectType: string, target: any) => void): this;
   removeListener(event: "moved", listener: (id: string, objectType: string, target: any) => void): this;
 
   replayEvents(): Promise<void>;
