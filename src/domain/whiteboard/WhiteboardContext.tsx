@@ -26,6 +26,9 @@ import './whiteboard.css';
 import { eventEmitter } from './events';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
+import { useSharedEventSerializer } from './SharedEventSerializerProvider';
+import { PainterEvent } from './event-serializer/PainterEvent';
+import { EventPainterController } from './event-serializer/EventPainterController';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -72,6 +75,10 @@ export const WhiteboardProvider = ({
   const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
 
+  // Event serialization for synchronizing whiteboard state.
+  const { state: { eventSerializer } } = useSharedEventSerializer();
+  const [remotePainter, setRemotePainter] = useState<EventPainterController | undefined>();
+
   /**
    * Creates Canvas/Whiteboard instance
    */
@@ -86,6 +93,47 @@ export const WhiteboardProvider = ({
 
     setCanvas(canvasInstance);
   }, [canvasHeight, canvasWidth, canvasId]);
+
+  /**
+   * Set up the EventPainterController (remotePainter) it will handle incoming
+   * events (from the server) and convert those into commands we can use for 
+   * updating our local whiteboard.
+   */
+  useEffect(() => {
+    if (!eventSerializer) return;
+
+    const remotePainter = new EventPainterController();
+
+    // NOTE: We will receive events from the server as arrays of serialized
+    // events. When joining a room the user will receive a big list of events
+    // of all that's been painted so far. After they received the initial big
+    // list the will receive individual events or smaller chunks of events as
+    // others users (and themselves) interact more with the whiteboard.
+
+    // The function receiving events might look like this:
+    const handleRemoteEvent = (payload: PainterEvent) => {
+      // IMPORTANT: We should keep in mind the user's own events
+      // will appear in this list as well. The server doesn't do
+      // any filtering based on the user at this point.
+
+      // Once the events have been received, there needs to be some code
+      // transforming the event data into commands for drawing or updating
+      // objects on the canvas.
+
+      remotePainter.handlePainterEvent([payload]);
+    };
+
+    // NOTE: This handler simulates receiving events from the server
+    // usually we wouldn't feed remote events directly in to the event
+    // serializer.
+    eventSerializer.on('event', handleRemoteEvent);
+
+    setRemotePainter(remotePainter);
+
+    return () => {
+      eventSerializer.removeListener('event', handleRemoteEvent);
+    };
+  }, [eventSerializer]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -170,7 +218,7 @@ export const WhiteboardProvider = ({
       canvas?.discardActiveObject();
       canvas?.renderAll();
     }
-  }, [canvas, pointerEvents]);
+  }, [canvas, pointerEvents, textIsActive]);
 
   /**
    * Activates or deactivates drawing mode.
@@ -276,11 +324,16 @@ export const WhiteboardProvider = ({
             : e.target.id;
         };
 
+        console.log(`adding object: ${id(type)}`);
+
         const payload = {
           type,
           target,
           id: id(type),
         };
+
+        // Serialize the event for synchronization
+        eventSerializer?.push("add", payload);
 
         eventEmitter.emit('object:added', payload);
       }
@@ -302,73 +355,87 @@ export const WhiteboardProvider = ({
           id: id(type),
         };
 
+        // Serialize the event for synchronization
+        if (master) {
+          eventSerializer?.push("moved", payload);
+        }
+
         eventEmitter.emit('object:moved', payload);
       }
     });
 
-    eventEmitter.on('object:added', (e: any) => {
-      if (!master) {
-        console.log('Data Received  object:added', e, { master });
+    remotePainter?.on("add", (id: string, objectType: string, target: any) => {
+      console.log(`add: ${id} ${objectType} ${target}`);
 
-        if (e.type === 'textbox') {
-          let text = new fabric.Textbox(e.target.text, {
-            fontFamily: e.target.fontFamily,
+      // TODO: We'll want to filter events based on the user ID. This can
+      // be done like this. Example of extracting user id from object ID:
+      // let { user } = new ShapeID(id);
+      // if (eventSerializer?.didSerializeEvent(id)) return;
+
+      // TODO: We'll have to replace this with the user based filtering. Because
+      // we want to allow bi-directional events (Teacher <-> Student) as opposed
+      // to (Teacher --> Student).
+      if (master) return;
+
+      if (objectType === 'textbox') {
+          let text = new fabric.Textbox(target.text, {
+            fontFamily: target.fontFamily,
             fontSize: 30,
             fontWeight: 400,
-            fill: e.target.fill,
+            fill: target.fill,
             fontStyle: 'normal',
-            top: e.target.top,
-            left: e.target.left,
-            width: e.target.width,
+            top: target.top,
+            left: target.left,
+            width: target.width,
           });
 
           // @ts-ignore
-          text.id = e.id;
+          text.id = id;
 
           canvas?.add(text);
         }
 
-        if (e.type === 'path') {
+        if (objectType === 'path') {
           const pencil = new fabric.PencilBrush();
-          pencil.color = e.target.stroke || '#000';
-          pencil.width = e.target.strokeWidth;
+          pencil.color = target.stroke || '#000';
+          pencil.width = target.strokeWidth;
 
           // Convert Points to SVG Path
-          const res = pencil.createPath(e.target.path);
+          const res = pencil.createPath(target.path);
           // @ts-ignore
-          res.id = e.id;
+          res.id = id;
           canvas?.add(res);
         }
-      }
     });
 
-    eventEmitter.on('object:moved', (e: any) => {
-      if (!master) {
-        console.log('Data Received  object:moved', e, { master });
+    remotePainter?.on("moved", (id: string, objectType: string, target: any) => {
+      //if (eventSerializer?.didSerializeEvent(id)) return;
+      if (master) return;
+
+      console.log('Data Received  object:moved', target, { master });
+
+      const type = objectType;
 
         canvas?.forEachObject(function (obj: any) {
-          const type = e.target.get('type');
-
           if (type === 'path') {
             const id = (type: string) => {
               return type === 'path'
-                ? e.target.canvas.freeDrawingBrush.id
-                : e.target.id;
+                ? target.canvas.freeDrawingBrush.id
+                : id;
             };
 
             if (obj.id && obj.id === id(type)) {
-              obj.set({ top: e.target.top, left: e.target.left });
+              obj.set({ top: target.top, left: target.left });
             }
           } else {
-            if (obj.id && obj.id === e.target.id) {
-              obj.set({ top: e.target.top, left: e.target.left });
+            if (obj.id && obj.id === id) {
+              obj.set({ top: target.top, left: target.left });
             }
           }
         });
         canvas?.renderAll();
-      }
     });
-  }, [text, canvas, master]);
+  }, [text, canvas, master, eventSerializer, remotePainter]);
 
   /**
    * If pointerEvents changes to false, all the selected objects
@@ -509,7 +576,7 @@ export const WhiteboardProvider = ({
         }
       });
     },
-    [canvas, clearMouseEvents, clearOnMouseEvent]
+    [canvas]
   );
 
   /**
@@ -589,7 +656,7 @@ export const WhiteboardProvider = ({
       canvas?.off('mouse:move');
       canvas?.off('mouse:up');
     };
-  }, [canvas, shape, shapeIsActive, mouseDown]);
+  }, [canvas, shape, shapeIsActive, mouseDown, shapeColor]);
 
   /**
    * Add specific color to selected text
