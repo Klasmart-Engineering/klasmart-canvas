@@ -309,6 +309,7 @@ export const WhiteboardProvider = ({
 
     // Deactivate selection
     setCanvasSelection(false);
+    setHoverCursorObjects('pointer');
 
     // When mouse down eraser is able to remove objects
     canvas?.on('mouse:down', (e: any) => {
@@ -365,7 +366,21 @@ export const WhiteboardProvider = ({
       canvas.selection = selection;
       canvas.forEachObject((object: fabric.Object) => {
         object.selectable = selection;
-        object.hoverCursor = selection ? 'move' : 'pointer';
+      });
+
+      canvas.renderAll();
+    }
+  };
+
+  /**
+   * Set the cursor to be showed when a object hover happens
+   * @param {string} cursor - Cursor name to show
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const setHoverCursorObjects = (cursor: string): void => {
+    if (canvas) {
+      canvas.forEachObject((object: fabric.Object) => {
+        object.hoverCursor = cursor;
       });
 
       canvas.renderAll();
@@ -715,6 +730,14 @@ export const WhiteboardProvider = ({
   };
 
   /**
+   * Check if the given object is a text object
+   * @param {fabric.Object} object - object to check
+   */
+  const isText = (object: fabric.Object) => {
+    return object.fill && !object.stroke && (object as TextOptions).text;
+  };
+
+  /**
    * Trigger the changes in the required variables
    * when a certain object is selected
    * @param {IEvent} event - event that contains the selected object
@@ -761,23 +784,132 @@ export const WhiteboardProvider = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lineWidth, canvas]);
 
+  /**
+   * Manages the logic for Flood-fill Feature
+   */
   useEffect(() => {
+    let originalFill = null;
+    let originalStroke = null;
+    let mousePointer = null;
+    let clickedColorValues = null;
+
     if (floodFillIsActive) {
-      console.log('flood fill up');
+      setCanvasSelection(false);
+      setHoverCursorObjects('default');
+
       canvas?.on('mouse:down', (event: IEvent) => {
-        console.log('object click: ', event.target);
-        if (event.target && isEmptyShape(event.target)) {
-          event.target.set('fill', floodFill);
+        // Click out of any shape
+        if (!event.target) {
+          canvas.backgroundColor = floodFill;
         }
 
-        if (event.target && isFreeDrawing(event.target)) {
-          console.log(event.target);
+        // Click on object shape
+        if (event.target && isEmptyShape(event.target)) {
+          // Store the current colors to reset it (if is necesary)
+          originalFill = event.target.fill;
+          originalStroke = event.target.stroke;
+
+          /*
+            Change fill and stroke to a provisional colors
+            to difference shape fill, shape stroke and whiteboard
+          */
+          event.target.set('fill', 'rgba(220, 220, 220)');
+          event.target.set('stroke', 'rgba(200, 200, 200)');
+          canvas.renderAll();
+
+          // Getting the color in which user makes click
+          mousePointer = canvas.getPointer(event.e);
+          clickedColorValues = canvas
+            .getContext()
+            .getImageData(mousePointer.x, mousePointer.y, 1, 1)
+            .data.slice(0, 3);
+
+          // If user click inside of a shape
+          if (!clickedColorValues.find((value) => value !== 220)) {
+            event.target.set('fill', floodFill);
+            event.target.set('stroke', originalStroke);
+
+            // If user clicks in the border of the shape
+          } else if (!clickedColorValues.find((value) => value !== 200)) {
+            event.target.set('fill', originalFill);
+            event.target.set('stroke', originalStroke);
+          } else {
+            // return to previous color
+            event.target.set('fill', originalFill);
+            event.target.set('stroke', originalStroke);
+            canvas.backgroundColor = floodFill;
+          }
         }
+
+        // Click on free line drawing
+        if (event.target && isFreeDrawing(event.target)) {
+          // Store the current stroke color to reset it (if is necesary)
+          originalStroke = event.target.stroke;
+
+          /*
+            Change stroke to a provisional color
+            to difference line and whiteboard
+          */
+          event.target.set('stroke', 'rgba(200, 200, 200)');
+          canvas.renderAll();
+
+          // Getting the color in which user makes click
+          mousePointer = canvas.getPointer(event.e);
+          clickedColorValues = canvas
+            .getContext()
+            .getImageData(mousePointer.x, mousePointer.y, 1, 1)
+            .data.slice(0, 3);
+
+          // If the user clicks over the line
+          if (!clickedColorValues.find((value) => value !== 200)) {
+            event.target.set('stroke', originalStroke);
+          } else {
+            // return to previous color
+            event.target.set('stroke', originalStroke);
+            canvas.backgroundColor = floodFill;
+          }
+        }
+
+        // Click over text object
+        if (event.target && isText(event.target)) {
+          // Store the current fill color to reset it (if is necesary)
+          originalFill = event.target.fill;
+
+          /*
+            Change fill to a provisional color
+            to difference shape and whiteboard
+          */
+          event.target.set('fill', 'rgba(220, 220, 220)');
+          canvas.renderAll();
+
+          // Getting the color in which user makes click
+          mousePointer = canvas.getPointer(event.e);
+          clickedColorValues = canvas
+            .getContext()
+            .getImageData(mousePointer.x, mousePointer.y, 1, 1)
+            .data.slice(0, 3);
+
+          // If the user clicks the text
+          if (!clickedColorValues.find((value) => value !== 220)) {
+            event.target.set('fill', originalFill);
+          } else {
+            // return to previous color
+            event.target.set('fill', originalFill);
+            canvas.backgroundColor = floodFill;
+          }
+        }
+
+        canvas.renderAll();
       });
-    } else {
-      console.log('flood fill down');
     }
-  }, [canvas, floodFill, floodFillIsActive, isEmptyShape]);
+  }, [
+    canvas,
+    floodFill,
+    floodFillIsActive,
+    isEmptyShape,
+    setCanvasSelection,
+    setHoverCursorObjects,
+  ]);
 
   /**
    * If an object selection is made it, the changeLineWidth function
