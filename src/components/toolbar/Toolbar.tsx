@@ -48,6 +48,11 @@ function Toolbar() {
     eraseType,
     updateEraseType,
     discardActiveObject,
+    lineWidth,
+    updateLineWidth,
+    floodFill,
+    updateFloodFill,
+    updateFloodFillIsActive,
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
@@ -55,15 +60,11 @@ function Toolbar() {
     updatePenLine,
     penColor,
     changeStrokeColor,
-    thickness,
-    updateThickness,
-    floodFill,
-    updateFloodFill,
     stamp,
     updateStamp,
     dispatch,
     updateShapesAreSelectable,
-  } = useContext(WhiteboardContext);
+  }: any = useContext(WhiteboardContext);
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -91,24 +92,28 @@ function Toolbar() {
      */
     updateBrushIsActive(tool === ELEMENTS.LINE_TYPE_TOOL);
 
+    /**
+     * Indicates if flood-fill/paint bucket is active.
+     */
+    updateFloodFillIsActive(tool === ELEMENTS.FLOOD_FILL_TOOL);
+
     /*
       It is setted to false when you select Pointer Tool,
       otherwise will be setted in true
     */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
-    console.log('tool: ', tool);
-
     /*
-      If you click on another button different than Erase Type Tool,
-      Add Shape Tool, and Add Text Tool the selected object will be deselected;
-      Erase Type and Add Text cases will be handled in WhiteboardContext
+      If you click on another button different than
+      the mentioned below the selected object will be deselected;
+      the cases mentioned below will be handled in WhiteboardContext
     */
     if (
       tool !== ELEMENTS.ERASE_TYPE_TOOL &&
       tool !== ELEMENTS.ADD_TEXT_TOOL &&
       tool !== ELEMENTS.ADD_SHAPE_TOOL &&
-      tool !== ELEMENTS.LINE_TYPE_TOOL
+      tool !== ELEMENTS.LINE_TYPE_TOOL &&
+      tool !== ELEMENTS.LINE_WIDTH_TOOL
     ) {
       discardActiveObject();
     }
@@ -164,8 +169,8 @@ function Toolbar() {
         updatePenLine(option);
         break;
 
-      case ELEMENTS.THICKNESS_SIZE_TOOL:
-        updateThickness(option);
+      case ELEMENTS.LINE_WIDTH_TOOL:
+        updateLineWidth(option);
         break;
 
       case ELEMENTS.FLOOD_FILL_TOOL:
@@ -280,8 +285,8 @@ function Toolbar() {
       case ELEMENTS.LINE_TYPE_TOOL:
         return penLine;
 
-      case ELEMENTS.THICKNESS_SIZE_TOOL:
-        return thickness;
+      case ELEMENTS.LINE_WIDTH_TOOL:
+        return lineWidth;
 
       case ELEMENTS.FLOOD_FILL_TOOL:
         return floodFill;

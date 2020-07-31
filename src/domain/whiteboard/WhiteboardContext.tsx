@@ -25,6 +25,10 @@ import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 import { useShapesAreSelectable } from './hooks/useShapesAreSelectable';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
+import { useLineWidth } from './hooks/useLineWidth';
+import { Canvas, IEvent, TextOptions } from 'fabric/fabric-impl';
+import { useFloodFill } from './hooks/useFloodFill';
+import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 
 import { UndoRedo } from './hooks/useUndoRedoEffect';
 import { SET } from './reducers/undo-redo';
@@ -51,8 +55,10 @@ export const WhiteboardProvider = ({
   const { shapeColor, updateShapeColor } = useShapeColor();
   const { shape, updateShape } = useShape();
   const { eraseType, updateEraseType } = useEraseType();
-  const { pointerEvents, setPointerEvents } = usePointerEvents(false);
-  const [canvas, setCanvas] = useState();
+  const { lineWidth, updateLineWidth } = useLineWidth();
+  const { floodFill, updateFloodFill } = useFloodFill();
+  const { pointerEvents, setPointerEvents } = usePointerEvents();
+  const [canvas, setCanvas] = useState<Canvas>();
 
   const {
     ClearWhiteboardModal,
@@ -64,13 +70,13 @@ export const WhiteboardProvider = ({
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
   const { shapesAreSelectable, updateShapesAreSelectable } = useShapesAreSelectable();
+  const { floodFillIsActive, updateFloodFillIsActive } = useFloodFillIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
   const [penLine, updatePenLine] = useState(DEFAULT_VALUES.PEN_LINE);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
-  const [thickness, updateThickness] = useState(DEFAULT_VALUES.THICKNESS);
-  const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
+  // const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
   const { dispatch } = UndoRedo(canvas);
 
@@ -80,10 +86,14 @@ export const WhiteboardProvider = ({
   useEffect(() => {
     // @ts-ignore
     const canvasInstance = new fabric.Canvas(canvasId, {
-      backgroundColor: null,
-      width: canvasWidth,
-      height: canvasHeight,
+      backgroundColor: 'white',
+      width: parseInt(canvasWidth, 10),
+      height: parseInt(canvasHeight, 10),
       isDrawingMode: false,
+      selectionBorderColor: 'rgba(100, 100, 255, 1)',
+      selectionLineWidth: 2,
+      selectionColor: 'rgba(100, 100, 255, 0.1)',
+      selectionDashArray: [10],
     });
 
     setCanvas(canvasInstance);
@@ -106,6 +116,7 @@ export const WhiteboardProvider = ({
    * */
   useEffect(() => {
     if (textIsActive) {
+      //@ts-ignore
       canvas?.on('mouse:down', (options: { target: null; e: any }) => {
         if (options.target === null) {
           let text = new fabric.IText(' ', {
@@ -187,7 +198,7 @@ export const WhiteboardProvider = ({
       canvas?.discardActiveObject();
       canvas?.renderAll();
     }
-  }, [canvas, pointerEvents]);
+  }, [canvas, pointerEvents, textIsActive]);
 
 
   /**
@@ -196,9 +207,10 @@ export const WhiteboardProvider = ({
   useEffect(() => {
     if (brushIsActive && canvas) {
       canvas.freeDrawingBrush = new fabric.PencilBrush();
+      //@ts-ignore
       canvas.freeDrawingBrush.canvas = canvas;
-      canvas.freeDrawingBrush.color = penColor || '#000';
-      canvas.freeDrawingBrush.width = 10;
+      canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
+      canvas.freeDrawingBrush.width = lineWidth;
       canvas.isDrawingMode = true;
 
       canvas.on('path:created', (e: any) => {
@@ -208,12 +220,22 @@ export const WhiteboardProvider = ({
 
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
+
+      /*
+        This is for no change the line width
+        in a free drawing object if this is resized
+      */
+      canvas.getObjects().forEach((object: fabric.Object) => {
+        if (isFreeDrawing(object)) {
+          object.strokeUniform = true;
+        }
+      });
     }
 
     return(() => {
       canvas?.off('path:created');
     });
-  }, [brushIsActive, canvas, penColor, dispatch]);
+  }, [brushIsActive, canvas, lineWidth, penColor, dispatch]);
 
   /**
    * Disables shape canvas mouse events.
@@ -222,7 +244,6 @@ export const WhiteboardProvider = ({
     if (!shapeIsActive && canvas) {
       canvas.off('mouse:move');
       canvas.off('mouse:up');
-      canvas.off('mouse:down');
     }
   }, [shapeIsActive, canvas]);
 
@@ -263,6 +284,7 @@ export const WhiteboardProvider = ({
         .load()
         .then(() => {
           if (canvas?.getActiveObject()) {
+            //@ts-ignore
             canvas.getActiveObject().set('fontFamily', font);
             canvas.requestRenderAll();
           }
@@ -287,15 +309,16 @@ export const WhiteboardProvider = ({
    * Deselect the actual selected object
    */
   const discardActiveObject = () => {
-    canvas.discardActiveObject().renderAll();
+    canvas?.discardActiveObject().renderAll();
   };
 
   /**
-   * If the input field (text) has length will unselect whiteboard active objects
+   * If the input field (text) has length
+   * will unselect whiteboard active objects
    * */
   useEffect(() => {
     if (text.length) {
-      canvas.discardActiveObject().renderAll();
+      canvas?.discardActiveObject().renderAll();
     }
   }, [text, canvas]);
 
@@ -310,260 +333,19 @@ export const WhiteboardProvider = ({
   }, [pointerEvents, canvas]);
 
   /**
-   * When eraseType value changes, listeners and states
-   * necessaries to erase objects are setted or removed
-   */
-  useEffect(() => {
-    if (eraseType === 'object' && canvas) {
-      eraseObject();
-
-      if (canvas.getActiveObjects().length === 1) {
-        canvas.discardActiveObject().renderAll();
-      }
-    } else if (canvas) {
-      setCanvasSelection(true);
-    }
-
-    return () => {
-      canvas?.off('mouse:down');
-      canvas?.off('mouse:up');
-      canvas?.off('mouse:over');
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eraseType, canvas]);
-
-  /**
-   * Adds shape to whiteboard.
-   * @param specific Indicates shape type that should be added in whiteboard.
-   */
-  const shapeSelector = useCallback(
-    (specific: string): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
-      switch (specific || shape) {
-        case 'rectangle':
-          return shapes.rectangle(2, 2, shapeColor);
-        case 'triangle':
-          return shapes.triangle(2, 4, shapeColor);
-        case 'star':
-          return shapes.star(2, 2, shapeColor);
-        case 'rightArrow':
-          return shapes.arrow(2, 2, shapeColor);
-        case 'chatBubble':
-          return shapes.chat(2, 2, shapeColor);
-        case 'pentagon':
-          return shapes.pentagon(shapeColor);
-        case 'hexagon':
-          return shapes.hexagon(shapeColor);
-        default:
-          return shapes.circle(2, 2, shapeColor);
-      }
-    },
-    [shape, shapeColor]
-  );
-
-  /**
-   *
-   * @param shape Shape that was added to canvas.
-   * @param coordsStart Coordinates of initial click on canvas.
-   * @param isCircle Indicates if shape added is a circle.
-   */
-  const mouseMove = useCallback(
-    (
-      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
-      coordsStart: any,
-      specific?: string
-    ): void => {
-      canvas.on('mouse:move', (e: CanvasEvent): void => {
-        if (specific === 'circle') {
-          setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
-        } else if (specific === 'rectangle' || specific === 'triangle') {
-          setSize(shape, coordsStart, e.pointer);
-        } else {
-          setPathSize(shape, coordsStart, e.pointer);
-        }
-
-        let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
-
-        if (coordsStart.x > e.pointer.x) {
-          anchor = { ...anchor, originX: 'right' };
-        }
-
-        if (coordsStart.y > e.pointer.y) {
-          anchor = { ...anchor, originY: 'bottom' };
-        }
-
-        shape.set(anchor);
-        canvas.renderAll();
-      });
-    },
-    [canvas]
-  );
-
-  /**
-   * Clears all mouse event listeners from canvas.
-   */
-  const clearMouseEvents = useCallback((): void => {
-    canvas.off('mouse:move');
-    canvas.off('mouse:up');
-  }, [canvas]);
-
-  const clearOnMouseEvent = useCallback((): void => {
-    canvas.off('mouse:down');
-  }, [canvas]);
-
-  /**
-   * Mouse up event listener for canvas.
-   */
-  const mouseUp = useCallback(
-    (
-      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
-      coordsStart: any,
-      specific: string
-    ): void => {
-      canvas.on('mouse:up', (e: CanvasEvent): void => {
-        let size;
-
-        if (specific === 'circle') {
-          size = setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
-        } else if (specific === 'rectangle' || specific === 'triangle') {
-          size = setSize(shape, coordsStart, e.pointer);
-        } else {
-          size = setPathSize(shape, coordsStart, e.pointer);
-        }
-
-        if (size.width <= 2 && size.height <= 2) {
-          canvas.remove(shape);
-        } else {
-          shape.setCoords();
-          canvas.renderAll();
-          dispatch({ type: SET, payload: canvas.getObjects() });
-        }
-      });
-    },
-    [canvas, clearMouseEvents, clearOnMouseEvent]
-  );
-
-  /**
-   * Mouse down event listener for canvas.
-   * @param shape Shape being added on canvas.
-   * @param isCircle Indicates if shape is a circle.
-   */
-  const mouseDown = useCallback(
-    (specific: string, color?: string): void => {
-      canvas.on('mouse:down', (e: CanvasEvent): void => {
-        if (e.target) {
-          return;
-        }
-
-        const shape = shapeSelector(specific);
-        shape.set({
-          top: e.pointer.y,
-          left: e.pointer.x,
-          fill: color || shapeColor,
-        });
-
-        clearOnMouseEvent();
-        mouseMove(shape, e.pointer, specific);
-        mouseUp(shape, e.pointer, specific);
-        canvas.add(shape);
-      });
-    },
-    [canvas, clearOnMouseEvent, mouseMove, mouseUp, shapeColor, shapeSelector]
-  );
-
-  /**
-   * Add specific shape to whiteboard
-   * */
-  const addShape = (specific?: string): void => {
-    // Required to prevent multiple shapes add at once
-    // if user clicked more than one shape during selection.
-    if (!shapeIsActive) {
-      return;
-    }
-
-    clearOnMouseEvent();
-    clearMouseEvents();
-    mouseDown(specific || shape, shapeColor);
-  };
-
-  const changeStrokeColor = (color: string) => {
-    updatePenColor(color);
-
-    if (canvas.getActiveObject()) {
-      canvas.getActiveObject().set('stroke', color);
-      canvas.renderAll();
-    }
-  };
-
-  /**
-   * Add specific color to selected shape
-   * */
-  const fillColor = (color: string) => {
-    updateShapeColor(color);
-    clearOnMouseEvent();
-    clearMouseEvents();
-    mouseDown(shape, color);
-
-    if (canvas.getActiveObject()) {
-      canvas.getActiveObject().set('fill', color);
-      canvas.renderAll();
-      dispatch({ type: SET, payload: canvas.getObjects() });
-    }
-  };
-
-  useEffect(() => {
-    if (shape && shapeIsActive) {
-      mouseDown(shape, shapeColor);
-    }
-
-    return () => {
-      canvas?.off('mouse:down');
-      canvas?.off('mouse:move');
-      canvas?.off('mouse:up');
-    };
-  }, [canvas, shape, shapeIsActive, mouseDown]);
-
-  /**
-   * Add specific color to selected text
-   * @param {string} color - color to set
-   */
-  const textColor = (color: string) => {
-    updateFontColor(color);
-    if (canvas.getActiveObject() && canvas.getActiveObject().text) {
-      canvas.getActiveObject().set('fill', color);
-      // @ts-ignore
-      canvas.renderAll();
-    }
-  };
-
-  /**
-   * Clears all whiteboard elements
-   * */
-  const clearWhiteboard = (): void => {
-    canvas.clear();
-    canvas.backgroundColor = 'white';
-    canvas.renderAll();
-    closeModal();
-  };
-
-  /**
-   * Opens ClearWhiteboardModal
-   */
-  const openClearWhiteboardModal = () => {
-    openModal();
-  };
-
-  /**
    * Creates the listeners to erase objects from the whiteboard
    */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const eraseObject = (): void => {
     let eraser: boolean = false;
     let activeObjects: any = null;
 
     // Deactivate selection
     setCanvasSelection(false);
+    setHoverCursorObjects('pointer');
 
     // When mouse down eraser is able to remove objects
-    canvas.on('mouse:down', (e: any) => {
+    canvas?.on('mouse:down', (e: any) => {
       if (eraser) {
         return false;
       }
@@ -588,7 +370,7 @@ export const WhiteboardProvider = ({
     });
 
     // When mouse is over an object
-    canvas.on('mouse:over', (e: any) => {
+    canvas?.on('mouse:over', (e: any) => {
       if (!eraser) {
         return false;
       }
@@ -598,7 +380,7 @@ export const WhiteboardProvider = ({
     });
 
     // When mouse up eraser is unable to remove objects
-    canvas.on('mouse:up', () => {
+    canvas?.on('mouse:up', () => {
       if (!eraser) {
         return false;
       }
@@ -611,14 +393,574 @@ export const WhiteboardProvider = ({
    * Set Canvas Whiteboard selection hability
    * @param {boolean} selection - value to set in canvas and objects selection
    */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const setCanvasSelection = (selection: boolean): void => {
-    canvas.selection = selection;
-    canvas.forEachObject((object: fabric.Object) => {
-      object.selectable = selection;
-    });
+    if (canvas) {
+      canvas.selection = selection;
+      canvas.forEachObject((object: fabric.Object) => {
+        object.selectable = selection;
+      });
 
-    canvas.renderAll();
+      canvas.renderAll();
+    }
   };
+
+  /**
+   * Set the cursor to be showed when a object hover happens
+   * @param {string} cursor - Cursor name to show
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const setHoverCursorObjects = (cursor: string): void => {
+    if (canvas) {
+      canvas.forEachObject((object: fabric.Object) => {
+        object.hoverCursor = cursor;
+      });
+
+      canvas.renderAll();
+    }
+  };
+
+  /**
+   * When eraseType value changes, listeners and states
+   * necessaries to erase objects are setted or removed
+   */
+  useEffect(() => {
+    if (eraseType === 'object' && canvas) {
+      eraseObject();
+
+      if (canvas.getActiveObjects().length === 1) {
+        canvas.discardActiveObject().renderAll();
+      }
+    } else if (canvas) {
+      setCanvasSelection(true);
+    }
+
+    return () => {
+      canvas?.off('mouse:down');
+      canvas?.off('mouse:up');
+      canvas?.off('mouse:over');
+    };
+  }, [eraseType, canvas, eraseObject, setCanvasSelection]);
+
+  /**
+   * Adds shape to whiteboard.
+   * @param specific Indicates shape type that should be added in whiteboard.
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const shapeSelector = (
+    specific: string
+  ): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
+    switch (specific || shape) {
+      case 'rectangle':
+        return shapes.rectangle(2, 2, penColor, false, lineWidth);
+      case 'circle':
+        return shapes.circle(2, 2, penColor, false, lineWidth);
+      case 'triangle':
+        return shapes.triangle(2, 4, penColor, false, lineWidth);
+      case 'star':
+        return shapes.star(2, 2, penColor, false, lineWidth);
+      case 'arrow':
+        return shapes.arrow(2, 2, penColor, false, lineWidth);
+      case 'chatBubble':
+        return shapes.chat(2, 2, penColor, false, lineWidth);
+      case 'pentagon':
+        return shapes.pentagon(penColor, false, lineWidth);
+      case 'hexagon':
+        return shapes.hexagon(penColor, false, lineWidth);
+      case 'filledRectangle':
+        return shapes.rectangle(2, 2, shapeColor, true, 0);
+      case 'filledCircle':
+        return shapes.circle(2, 2, shapeColor, true, 0);
+      case 'filledTriangle':
+        return shapes.triangle(2, 4, shapeColor, true, 0);
+      case 'filledStar':
+        return shapes.star(2, 2, shapeColor, true, 0);
+      case 'filledArrow':
+        return shapes.arrow(2, 2, shapeColor, true, 0);
+      case 'filledChatBubble':
+        return shapes.chat(2, 2, shapeColor, true, 0);
+      case 'filledPentagon':
+        return shapes.pentagon(shapeColor, true, 0);
+      case 'filledHexagon':
+        return shapes.hexagon(shapeColor, true, 0);
+      default:
+        return shapes.circle(2, 2, penColor, false, lineWidth);
+    }
+  };
+
+  /**
+   * Removes mouse:down event from canvas
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const clearOnMouseEvent = (): void => {
+    canvas?.off('mouse:down');
+  };
+
+  /**
+   * Set the size of the shape when the mouse drawing action is made
+   * @param shape Shape that was added to canvas.
+   * @param coordsStart Coordinates of initial click on canvas.
+   * @param isCircle Indicates if shape added is a circle.
+   */
+  const mouseMove = useCallback(
+    (
+      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
+      coordsStart: any,
+      specific?: string
+    ): void => {
+      //@ts-ignore
+      canvas?.on('mouse:move', (e: CanvasEvent): void => {
+        canvas.selection = false;
+
+        if (specific === 'filledCircle' || specific === 'circle') {
+          setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
+        } else if (
+          specific === 'filledRectangle' ||
+          specific === 'filledTriangle' ||
+          specific === 'rectangle' ||
+          specific === 'triangle'
+        ) {
+          setSize(shape, coordsStart, e.pointer);
+        } else {
+          setPathSize(shape, coordsStart, e.pointer);
+        }
+
+        let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
+
+        if (coordsStart.x > e.pointer.x) {
+          anchor = { ...anchor, originX: 'right' };
+        }
+
+        if (coordsStart.y > e.pointer.y) {
+          anchor = { ...anchor, originY: 'bottom' };
+        }
+
+        shape.set(anchor);
+        canvas.renderAll();
+      });
+    },
+    [canvas]
+  );
+
+  /**
+   * Mouse up event listener for canvas.
+   */
+  const mouseUp = useCallback(
+    (
+      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
+      coordsStart: any,
+      specific: string
+    ): void => {
+      //@ts-ignore
+      canvas?.on('mouse:up', (e: CanvasEvent): void => {
+        let size;
+
+        if (specific === 'filledCircle' || specific === 'circle') {
+          size = setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
+        } else if (
+          specific === 'filledRectangle' ||
+          specific === 'filledTriangle' ||
+          specific === 'rectangle' ||
+          specific === 'triangle'
+        ) {
+          size = setSize(shape, coordsStart, e.pointer);
+        } else {
+          size = setPathSize(shape, coordsStart, e.pointer);
+        }
+
+        if (size.width <= 2 && size.height <= 2) {
+          canvas.remove(shape);
+        } else {
+          shape.setCoords();
+          canvas.renderAll();
+          dispatch({ type: SET, payload: canvas.getObjects() });
+        }
+      });
+    },
+    [canvas]
+  );
+
+  /**
+   * Mouse down event listener for canvas.
+   * @param shape Shape being added on canvas.
+   * @param isCircle Indicates if shape is a circle.
+   */
+  const mouseDown = useCallback(
+    (specific: string, color?: string): void => {
+      //@ts-ignore
+      canvas?.on('mouse:down', (e: CanvasEvent): void => {
+        if (e.target) {
+          return;
+        }
+
+        const shape = shapeSelector(specific);
+        shape.set({
+          top: e.pointer.y,
+          left: e.pointer.x,
+          type: 'shape',
+          name: specific,
+          strokeUniform: true,
+        });
+
+        // fill and type properties just can be resetted if is an filled shape
+        if (shape.fill !== 'transparent') {
+          shape.set({
+            type: 'filledShape',
+            fill: color || shapeColor,
+          });
+        }
+
+        clearOnMouseEvent();
+        mouseMove(shape, e.pointer, specific);
+        mouseUp(shape, e.pointer, specific);
+        canvas.add(shape);
+      });
+    },
+    [canvas, clearOnMouseEvent, mouseMove, mouseUp, shapeColor, shapeSelector]
+  );
+
+  /**
+   * Clears all mouse event listeners from canvas.
+   */
+  const clearMouseEvents = (): void => {
+    canvas?.off('mouse:move');
+    canvas?.off('mouse:up');
+  };
+
+  /**
+   * Add specific shape to whiteboard
+   * */
+  const addShape = (specific?: string): void => {
+    const shapeToAdd = specific || shape;
+    /*
+      Required to prevent multiple shapes add at once
+      if user clicked more than one shape during selection.
+    */
+    if (!shapeIsActive) {
+      return;
+    }
+
+    clearOnMouseEvent();
+    clearMouseEvents();
+    mouseDown(
+      shapeToAdd,
+      shapeToAdd.startsWith('filled') ? shapeColor : penColor
+    );
+  };
+
+  /**
+   * Changes the penColor value and if one or more objects are selected
+   * also changes the stroke color in free drawing and empty shape objects
+   * @param {string} color - new color to change
+   */
+  const changeStrokeColor = (color: string) => {
+    updatePenColor(color);
+
+    if (canvas?.getActiveObjects()) {
+      canvas.getActiveObjects().forEach((object) => {
+        if (
+          (isShape(object) && object.type === 'shape') ||
+          isFreeDrawing(object)
+        ) {
+          object.set('stroke', color);
+        }
+      });
+
+      canvas.renderAll();
+    }
+  };
+
+  /**
+   * Add specific color to selected shape
+   * */
+  const fillColor = (color: string) => {
+    updateShapeColor(color);
+    clearOnMouseEvent();
+    clearMouseEvents();
+    mouseDown(shape, color);
+
+    // Just the filled shapes can be recolored
+    if (
+      canvas?.getActiveObject() &&
+      canvas.getActiveObject().fill !== 'transparent'
+    ) {
+      canvas.getActiveObject().set('fill', color);
+      canvas.renderAll();
+      dispatch({ type: SET, payload: canvas.getObjects() });
+    }
+  };
+
+  /**
+   * Activates the mouseDown event if shape exists and shapeIsActive is true
+   */
+  useEffect(() => {
+    if (shape && shapeIsActive) {
+      mouseDown(shape, shape.startsWith('filled') ? shapeColor : penColor);
+    }
+
+    return () => {
+      canvas?.off('mouse:down');
+      canvas?.off('mouse:move');
+      canvas?.off('mouse:up');
+    };
+  }, [canvas, shape, shapeIsActive, mouseDown, penColor, shapeColor]);
+
+  /**
+   * Add specific color to selected text
+   * @param {string} color - color to set
+   */
+  const textColor = (color: string) => {
+    updateFontColor(color);
+    if (
+      canvas?.getActiveObject() &&
+      (canvas.getActiveObject() as TextOptions).text
+    ) {
+      canvas.getActiveObject().set('fill', color);
+      canvas.renderAll();
+    }
+  };
+
+  /**
+   * Clears all whiteboard elements
+   * */
+  const clearWhiteboard = (): void => {
+    if (canvas) {
+      canvas.clear();
+      canvas.backgroundColor = 'white';
+      canvas.renderAll();
+    }
+    closeModal();
+  };
+
+  /**
+   * Opens ClearWhiteboardModal
+   */
+  const openClearWhiteboardModal = () => {
+    openModal();
+  };
+
+  /**
+   * Check if the given object is a free drawing object
+   * @param {fabric.Object} object - object to check
+   */
+  const isFreeDrawing = (object: fabric.Object) => {
+    return object.strokeLineCap === 'round';
+  };
+
+  /**
+   * Check if the given object is a shape
+   * @param {fabric.Object} object - object to check
+   */
+  const isShape = (object: fabric.Object) => {
+    return object.fill && !(object as TextOptions).text;
+  };
+
+  /**
+   * Check if the given object is an empty shape
+   * @param {fabric.Object} object - object to check
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const isEmptyShape = (object: fabric.Object) => {
+    return isShape(object) && object.type === 'shape';
+  };
+
+  /**
+   * Check if the given object is a text object
+   * @param {fabric.Object} object - object to check
+   */
+  const isText = (object: fabric.Object) => {
+    return object.fill && !object.stroke && (object as TextOptions).text;
+  };
+
+  /**
+   * Trigger the changes in the required variables
+   * when a certain object is selected
+   * @param {IEvent} event - event that contains the selected object
+   */
+  const manageChanges = (event: IEvent) => {
+    // Free Drawing Line Selected
+    if (
+      (event.target && isFreeDrawing(event.target)) ||
+      (event.target && isEmptyShape(event.target))
+    ) {
+      updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
+      updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
+    }
+
+    // Shape Selected
+    if (event.target && isShape(event.target)) {
+      updateShape(event.target.name || DEFAULT_VALUES.SHAPE);
+
+      if (event.target.type === 'shape') {
+        updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
+        updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
+      } else if (event.target.fill) {
+        updateShapeColor(
+          event.target.fill.toString() || DEFAULT_VALUES.SHAPE_COLOR
+        );
+      }
+    }
+  };
+
+  /**
+   * If lineWidth variable changes and a free line drawing is selected
+   * that drawing line width will changes to the selected width on Toolbar
+   */
+  useEffect(() => {
+    if (canvas?.getActiveObjects()) {
+      canvas.getActiveObjects().forEach((object) => {
+        if (isEmptyShape(object) || isFreeDrawing(object)) {
+          object.set('strokeWidth', lineWidth);
+        }
+      });
+
+      canvas.renderAll();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lineWidth, canvas]);
+
+  /**
+   * Manages the logic for Flood-fill Feature
+   */
+  useEffect(() => {
+    let originalFill = null;
+    let originalStroke = null;
+    let mousePointer = null;
+    let clickedColorValues = null;
+    const fillValue = 220;
+    const strokeValue = 200;
+    const differentFill = `rgba(${fillValue}, ${fillValue}, ${fillValue})`;
+    const differentStroke = `rgba(${strokeValue}, ${strokeValue}, ${strokeValue})`;
+
+    if (floodFillIsActive) {
+      setCanvasSelection(false);
+      setHoverCursorObjects('default');
+
+      canvas?.on('mouse:down', (event: IEvent) => {
+        // Click out of any shape
+        if (!event.target) {
+          canvas.backgroundColor = floodFill;
+        }
+
+        // Click on object shape
+        if (event.target && isEmptyShape(event.target)) {
+          // Store the current colors to reset it (if is necesary)
+          originalFill = event.target.fill;
+          originalStroke = event.target.stroke;
+
+          /*
+            Change fill and stroke to a provisional colors
+            to difference shape fill, shape stroke and whiteboard
+          */
+          event.target.set('fill', differentFill);
+          event.target.set('stroke', differentStroke);
+          canvas.renderAll();
+
+          // Getting the color in which user makes click
+          mousePointer = canvas.getPointer(event.e);
+          clickedColorValues = canvas
+            .getContext()
+            .getImageData(mousePointer.x, mousePointer.y, 1, 1)
+            .data.slice(0, 3);
+
+          // If user click inside of a shape
+          if (!clickedColorValues.find((value) => value !== fillValue)) {
+            event.target.set('fill', floodFill);
+            event.target.set('stroke', originalStroke);
+
+            // If user clicks in the border of the shape
+          } else if (
+            !clickedColorValues.find((value) => value !== strokeValue)
+          ) {
+            event.target.set('fill', originalFill);
+            event.target.set('stroke', originalStroke);
+          } else {
+            // return to previous color
+            event.target.set('fill', originalFill);
+            event.target.set('stroke', originalStroke);
+            canvas.backgroundColor = floodFill;
+          }
+        }
+
+        // Click on free line drawing
+        if (event.target && isFreeDrawing(event.target)) {
+          // Store the current stroke color to reset it (if is necesary)
+          originalStroke = event.target.stroke;
+
+          /*
+            Change stroke to a provisional color
+            to difference line and whiteboard
+          */
+          event.target.set('stroke', differentStroke);
+          canvas.renderAll();
+
+          // Getting the color in which user makes click
+          mousePointer = canvas.getPointer(event.e);
+          clickedColorValues = canvas
+            .getContext()
+            .getImageData(mousePointer.x, mousePointer.y, 1, 1)
+            .data.slice(0, 3);
+
+          // If the user clicks over the line
+          if (!clickedColorValues.find((value) => value !== strokeValue)) {
+            event.target.set('stroke', originalStroke);
+          } else {
+            // return to previous color
+            event.target.set('stroke', originalStroke);
+            canvas.backgroundColor = floodFill;
+          }
+        }
+
+        // Click over text object
+        if (event.target && isText(event.target)) {
+          // Store the current fill color to reset it (if is necesary)
+          originalFill = event.target.fill;
+
+          /*
+            Change fill to a provisional color
+            to difference shape and whiteboard
+          */
+          event.target.set('fill', differentFill);
+          canvas.renderAll();
+
+          // Getting the color in which user makes click
+          mousePointer = canvas.getPointer(event.e);
+          clickedColorValues = canvas
+            .getContext()
+            .getImageData(mousePointer.x, mousePointer.y, 1, 1)
+            .data.slice(0, 3);
+
+          // If the user clicks the text
+          if (!clickedColorValues.find((value) => value !== fillValue)) {
+            event.target.set('fill', originalFill);
+          } else {
+            // return to previous color
+            event.target.set('fill', originalFill);
+            canvas.backgroundColor = floodFill;
+          }
+        }
+
+        canvas.renderAll();
+      });
+    }
+  }, [
+    canvas,
+    floodFill,
+    floodFillIsActive,
+    isEmptyShape,
+    setCanvasSelection,
+    setHoverCursorObjects,
+  ]);
+
+  /**
+   * If an object selection is made it, the changeLineWidth function
+   * will be executed to determine if is a free line drawing or not
+   * and know if the lineWidth variable must change or not
+   */
+  canvas?.on({
+    'selection:created': manageChanges,
+    'selection:updated': manageChanges,
+  });
 
   /**
    * List of available colors in toolbar
@@ -660,6 +1002,12 @@ export const WhiteboardProvider = ({
     brushIsActive,
     updateBrushIsActive,
     updateFontColor,
+    lineWidth,
+    updateLineWidth,
+    floodFill,
+    updateFloodFill,
+    floodFillIsActive,
+    updateFloodFillIsActive,
     // Just for control selectors' value they can be modified in the future
     pointer,
     updatePointer,
@@ -667,10 +1015,6 @@ export const WhiteboardProvider = ({
     updatePenLine,
     penColor,
     updatePenColor,
-    thickness,
-    updateThickness,
-    floodFill,
-    updateFloodFill,
     stamp,
     updateStamp,
     setPointerEvents,

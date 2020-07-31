@@ -48,9 +48,11 @@ import IStyleOption from '../../interfaces/toolbar/toolbar-special-elements/styl
 const colorPaletteOptions: IStyleOption[] = [
   {
     id: 'transparent',
-    value: '',
+    value: 'transparent',
     title: 'Transparent',
-    style: {},
+    style: {
+      color: 'rgba(125, 125, 125, 0.1)',
+    },
   },
   {
     id: 'white_color',
@@ -58,6 +60,8 @@ const colorPaletteOptions: IStyleOption[] = [
     title: 'White',
     style: {
       color: '#fff',
+      backgroundColor: 'rgba(80, 80, 80, 0.1)',
+      borderRadius: '4px',
     },
   },
   {
@@ -364,47 +368,47 @@ const toolsSection: IBasicToolbarSection = {
     },
     // Thickness - SpecialToolbarSelector
     {
-      id: 'thickness_size',
+      id: 'line_width',
       icon: FiberManualRecordRoundedIcon,
       styleOptions: [
         {
-          id: 'thick_8px',
-          value: '8px',
-          title: '8px',
+          id: 'thick_2px',
+          value: 2,
+          title: '2px',
+          style: {
+            fontSize: 4,
+          },
+        },
+        {
+          id: 'thick_4px',
+          value: 4,
+          title: '4px',
           style: {
             fontSize: 8,
           },
         },
         {
-          id: 'thick_12px',
-          value: '12px',
-          title: '12px',
-          style: {
-            fontSize: 12,
-          },
-        },
-        {
-          id: 'thick_16px',
-          value: '16px',
-          title: '16px',
+          id: 'thick_8px',
+          value: 8,
+          title: '8px',
           style: {
             fontSize: 16,
           },
         },
         {
-          id: 'thick_20px',
-          value: '20px',
-          title: '20px',
+          id: 'thick_12px',
+          value: 12,
+          title: '12px',
           style: {
-            fontSize: 20,
+            fontSize: 24,
           },
         },
         {
-          id: 'thick_24px',
-          value: '24px',
-          title: '24px',
+          id: 'thick_16px',
+          value: 16,
+          title: '16px',
           style: {
-            fontSize: 24,
+            fontSize: 32,
           },
         },
       ],
@@ -483,11 +487,11 @@ const toolsSection: IBasicToolbarSection = {
           iconName: 'Hexagon',
         },
         {
-          id: 'right_arrow_shape',
-          value: 'rightArrow',
-          title: 'Right Arrow',
+          id: 'arrow_shape',
+          value: 'arrow',
+          title: 'Arrow',
           iconSrc: right,
-          iconName: 'Right Arrow',
+          iconName: 'Arrow',
         },
         {
           id: 'star_shape',
@@ -504,7 +508,6 @@ const toolsSection: IBasicToolbarSection = {
           iconName: 'Chat Bubble',
         },
       ],
-      colorPaletteIcon: FiberManualRecordRoundedIcon,
     },
     // Stamps - ToolbarSelector
     {
