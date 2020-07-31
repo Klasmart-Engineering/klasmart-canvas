@@ -792,6 +792,10 @@ export const WhiteboardProvider = ({
     let originalStroke = null;
     let mousePointer = null;
     let clickedColorValues = null;
+    const fillValue = 220;
+    const strokeValue = 200;
+    const differentFill = `rgba(${fillValue}, ${fillValue}, ${fillValue})`;
+    const differentStroke = `rgba(${strokeValue}, ${strokeValue}, ${strokeValue})`;
 
     if (floodFillIsActive) {
       setCanvasSelection(false);
@@ -813,8 +817,8 @@ export const WhiteboardProvider = ({
             Change fill and stroke to a provisional colors
             to difference shape fill, shape stroke and whiteboard
           */
-          event.target.set('fill', 'rgba(220, 220, 220)');
-          event.target.set('stroke', 'rgba(200, 200, 200)');
+          event.target.set('fill', differentFill);
+          event.target.set('stroke', differentStroke);
           canvas.renderAll();
 
           // Getting the color in which user makes click
@@ -825,12 +829,14 @@ export const WhiteboardProvider = ({
             .data.slice(0, 3);
 
           // If user click inside of a shape
-          if (!clickedColorValues.find((value) => value !== 220)) {
+          if (!clickedColorValues.find((value) => value !== fillValue)) {
             event.target.set('fill', floodFill);
             event.target.set('stroke', originalStroke);
 
             // If user clicks in the border of the shape
-          } else if (!clickedColorValues.find((value) => value !== 200)) {
+          } else if (
+            !clickedColorValues.find((value) => value !== strokeValue)
+          ) {
             event.target.set('fill', originalFill);
             event.target.set('stroke', originalStroke);
           } else {
@@ -850,7 +856,7 @@ export const WhiteboardProvider = ({
             Change stroke to a provisional color
             to difference line and whiteboard
           */
-          event.target.set('stroke', 'rgba(200, 200, 200)');
+          event.target.set('stroke', differentStroke);
           canvas.renderAll();
 
           // Getting the color in which user makes click
@@ -861,7 +867,7 @@ export const WhiteboardProvider = ({
             .data.slice(0, 3);
 
           // If the user clicks over the line
-          if (!clickedColorValues.find((value) => value !== 200)) {
+          if (!clickedColorValues.find((value) => value !== strokeValue)) {
             event.target.set('stroke', originalStroke);
           } else {
             // return to previous color
@@ -879,7 +885,7 @@ export const WhiteboardProvider = ({
             Change fill to a provisional color
             to difference shape and whiteboard
           */
-          event.target.set('fill', 'rgba(220, 220, 220)');
+          event.target.set('fill', differentFill);
           canvas.renderAll();
 
           // Getting the color in which user makes click
@@ -890,7 +896,7 @@ export const WhiteboardProvider = ({
             .data.slice(0, 3);
 
           // If the user clicks the text
-          if (!clickedColorValues.find((value) => value !== 220)) {
+          if (!clickedColorValues.find((value) => value !== fillValue)) {
             event.target.set('fill', originalFill);
           } else {
             // return to previous color
