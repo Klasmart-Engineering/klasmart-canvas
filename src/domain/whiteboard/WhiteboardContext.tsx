@@ -83,6 +83,16 @@ export const WhiteboardProvider = ({
     EventPainterController | undefined
   >();
 
+  const isLocalObject = (id: string, canvasId: string) => {
+    const object = id.split(':');
+
+    if (!object.length) {
+      throw new Error('Invalid ID');
+    }
+
+    return object[0] === canvasId;
+  };
+
   /**
    * Creates Canvas/Whiteboard instance
    */
@@ -168,7 +178,7 @@ export const WhiteboardProvider = ({
             delete toObject.text;
             delete toObject.type;
             const clonedTextObj = JSON.parse(JSON.stringify(toObject));
-            clonedTextObj.id = uuidv4();
+            clonedTextObj.id = `${canvasId}:${uuidv4()}`;
 
             if (typeof textCopy === 'string') {
               text = new fabric.Textbox(textCopy, clonedTextObj);
@@ -211,6 +221,7 @@ export const WhiteboardProvider = ({
     fontFamily,
     updateFontFamily,
     updateFontColor,
+    canvasId,
   ]);
 
   /**
@@ -319,7 +330,7 @@ export const WhiteboardProvider = ({
     canvas?.on('object:rotated', (e: any) => {
       if (!master) return;
 
-      console.log('object:rotated', e);
+      // console.log('object:rotated', e);
 
       const id = e.target.id;
       const type = e.target.get('type');
@@ -338,30 +349,34 @@ export const WhiteboardProvider = ({
     });
 
     canvas?.on('path:created', (e: any) => {
-      if (!master) return;
+      e.path.id = `${canvasId}:${uuidv4()}`; //fabric.Object.__uid++;
 
-      // @ts-ignore
-      e.path.id = uuidv4(); //fabric.Object.__uid++;
+      if (isLocalObject(e.path.id, canvasId)) {
+        const target = {
+          stroke: e.path.stroke,
+          strokeWidth: e.path.strokeWidth,
+          path: e.path.path,
+        };
 
-      const target = {
-        stroke: e.path.stroke,
-        strokeWidth: e.path.strokeWidth,
-        path: e.path.path,
-      };
+        // console.log(`path:created: ${e.path.id}`, e.path, target);
 
-      console.log(`path:created: ${e.path.id}`, e.path, target);
+        const payload = {
+          type: 'path',
+          target,
+          id: e.path.id,
+        };
 
-      const payload = {
-        type: 'path',
-        target,
-        id: e.path.id,
-      };
-
-      eventSerializer?.push('added', payload as ObjectEvent);
+        eventSerializer?.push('added', payload as ObjectEvent);
+      }
     });
 
     canvas?.on('object:added', function (e: any) {
-      if (master) {
+      if (!e.target.id) {
+        return;
+      }
+
+      // Only send local elements
+      if (isLocalObject(e.target.id, canvasId)) {
         const type = e.target.get('type');
 
         if (type === 'path') {
@@ -393,7 +408,11 @@ export const WhiteboardProvider = ({
     });
 
     canvas?.on('object:moved', function (e: any) {
-      if (master) {
+      if (!e.target.id) {
+        return;
+      }
+
+      if (isLocalObject(e.target.id, canvasId)) {
         const type = e.target.get('type');
         const target = {
           top: e.target.top,
@@ -407,7 +426,7 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        console.log('object:moved', payload);
+        // console.log('object:moved', payload);
 
         // Serialize the event for synchronization
         eventSerializer?.push('moved', payload);
@@ -422,16 +441,24 @@ export const WhiteboardProvider = ({
         // TODO: We'll want to filter events based on the user ID. This can
         // be done like this. Example of extracting user id from object ID:
         // let { user } = new ShapeID(id);
+        // Help!
         // if (eventSerializer?.didSerializeEvent(id)) return;
 
         // TODO: We'll have to replace this with the user based filtering. Because
         // we want to allow bi-directional events (Teacher <-> Student) as opposed
         // to (Teacher --> Student).
-        if (master) return;
 
         // Events come from another user
         // Pass as props to user context
         // Ids of shapes + userId  uuid()
+
+        if (!id) {
+          return;
+        }
+
+        // No queremos agregar nuestros propios eventos
+        if (isLocalObject(id, canvasId)) return;
+
         if (objectType === 'textbox') {
           let text = new fabric.Textbox(target.text, {
             fontSize: 30,
@@ -442,12 +469,14 @@ export const WhiteboardProvider = ({
             top: target.top,
             left: target.left,
             width: target.width,
+            selectable: false,
           });
 
           // @ts-ignore
           text.id = id;
 
           canvas?.add(text);
+          return;
         }
 
         if (objectType === 'path') {
@@ -455,27 +484,32 @@ export const WhiteboardProvider = ({
           pencil.color = target.stroke || '#000';
           pencil.width = target.strokeWidth;
 
-          // @ts-ignore
-          pencil.selectable = false;
-
           // Convert Points to SVG Path
           const res = pencil.createPath(target.path);
           // @ts-ignore
           res.id = id;
+          res.selectable = false;
+          res.evented = false;
 
           canvas?.add(res);
         }
 
-        canvas?.forEachObject(function (object: any) {
-          object.selectable = false;
-          object.evented = false;
-        });
+        // canvas?.forEachObject(function (object: any) {
+        //   object.selectable = false;
+        //   object.evented = false;
+        // });
       }
     );
 
     remotePainter?.on('moved', (id: string, target: any) => {
-      //if (eventSerializer?.didSerializeEvent(id)) return;
-      if (master) return;
+      // if (eventSerializer?.didSerializeEvent(id)) return;
+
+      if (!id) {
+        return;
+      }
+
+      // No queremos agregar nuestros propios eventos
+      if (isLocalObject(id, canvasId)) return;
 
       console.log('Data Received  object:moved', target, { master });
 
@@ -493,9 +527,8 @@ export const WhiteboardProvider = ({
 
     remotePainter?.on('rotated', (id: string, target: any) => {
       //if (eventSerializer?.didSerializeEvent(id)) return;
-      if (master) return;
-
-      console.log('Data Received  object:rotated', target, { master });
+      if (isLocalObject(id, canvasId)) return;
+      // console.log('Data Received  object:rotated', target, { master });
 
       canvas?.forEachObject(function (obj: any) {
         if (obj.id && obj.id === id) {
@@ -508,7 +541,7 @@ export const WhiteboardProvider = ({
       });
       canvas?.renderAll();
     });
-  }, [text, canvas, master, eventSerializer, remotePainter]);
+  }, [text, canvas, master, eventSerializer, remotePainter, canvasId]);
 
   /**
    * If pointerEvents changes to false, all the selected objects
