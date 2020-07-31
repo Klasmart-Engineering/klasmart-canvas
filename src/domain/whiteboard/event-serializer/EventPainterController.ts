@@ -40,7 +40,7 @@ export class EventPainterController extends EventEmitter
 
   private parseAndEmitEvent(event: PainterEvent) {
     // NOTE: Empty object if param is undefined.
-    let eventParam = event.param ? event.param : "{}";
+    let eventParam = event.param ? event.param : '{}';
 
     // NOTE: In our case (based on the PaintEventSerializer implementation) the param
     // will be a JSON stringified fabric.js target object. We may want to introduce
@@ -56,18 +56,30 @@ export class EventPainterController extends EventEmitter
     // delete, moved. etc.
 
     switch (event.type) {
-      case "added": this.added(event.id, event.objectType, target); break;
-      case "moved": this.moved(event.id, event.objectType, target); break;
-      case "delete": console.error("Not implemented yet!"); break;
-      case "move": console.error("Not implemented yet!"); break;
+      case 'added':
+        this.added(event.id, event.objectType, target);
+        break;
+      case 'moved':
+        this.moved(event.id, target);
+        break;
+      case 'rotated':
+        this.rotated(event.id, target);
+        break;
+      case 'moving':
+        console.error('Not implemented yet!');
+        break;
     }
   }
 
   private added(id: string, objectType: string, target: any) {
-    this.emit("added", id, objectType, target);
+    this.emit('added', id, objectType, target);
   }
 
-  private moved(id: string, objectType: string, target: any) {
-    this.emit("moved", id, objectType, target);
+  private moved(id: string, target: any) {
+    this.emit('moved', id, target);
+  }
+
+  private rotated(id: string, target: any) {
+    this.emit('rotated', id, target);
   }
 }

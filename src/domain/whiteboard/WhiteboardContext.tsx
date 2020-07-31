@@ -23,12 +23,12 @@ import { useShapeIsActive } from './hooks/useShapeIsActive';
 import { useBrushIsActive } from './hooks/useBrushIsActive';
 import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
-// import { eventEmitter } from './events';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { PainterEvent } from './event-serializer/PainterEvent';
 import { EventPainterController } from './event-serializer/EventPainterController';
+import { ObjectEvent } from './event-serializer/PaintEventSerializer';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -229,11 +229,9 @@ export const WhiteboardProvider = ({
    */
   useEffect(() => {
     if (brushIsActive && canvas) {
-      canvas.freeDrawingBrush = new fabric.PencilBrush();
-      canvas.freeDrawingBrush.canvas = canvas;
+      canvas.isDrawingMode = true;
       canvas.freeDrawingBrush.color = penColor || '#000';
       canvas.freeDrawingBrush.width = 10;
-      canvas.isDrawingMode = true;
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
     }
@@ -318,128 +316,198 @@ export const WhiteboardProvider = ({
    * If the input field (text) has length will unselect whiteboard active objects
    * */
   useEffect(() => {
+    canvas?.on('object:rotated', (e: any) => {
+      if (!master) return;
+
+      console.log('object:rotated', e);
+
+      const id = e.target.id;
+      const type = e.target.get('type');
+      const target = {
+        angle: e.target.angle,
+        top: e.target.top,
+        left: e.target.left,
+      };
+      const payload = {
+        type,
+        target,
+        id,
+      };
+
+      eventSerializer?.push('rotated', payload);
+    });
+
+    canvas?.on('path:created', (e: any) => {
+      if (!master) return;
+
+      // @ts-ignore
+      e.path.id = uuidv4(); //fabric.Object.__uid++;
+
+      const target = {
+        stroke: e.path.stroke,
+        strokeWidth: e.path.strokeWidth,
+        path: e.path.path,
+      };
+
+      console.log(`path:created: ${e.path.id}`, e.path, target);
+
+      const payload = {
+        type: 'path',
+        target,
+        id: e.path.id,
+      };
+
+      eventSerializer?.push('added', payload as ObjectEvent);
+    });
+
     canvas?.on('object:added', function (e: any) {
       if (master) {
         const type = e.target.get('type');
-        const target = e.target;
-        const id = (type: string) => {
-          return type === 'path'
-            ? e.target.canvas.freeDrawingBrush.id
-            : e.target.id;
+
+        if (type === 'path') {
+          return;
+        }
+
+        const target = {
+          ...(type === 'textbox' && {
+            text: e.target.text,
+            fontFamily: e.target.fontFamily,
+            stroke: e.target.fill,
+            top: e.target.top,
+            left: e.target.left,
+            width: e.target.width,
+          }),
         };
 
-        console.log(`adding object: ${id(type)}`);
+        console.log(`adding object: ${e.target.id} ${type}`, e.target);
 
         const payload = {
           type,
           target,
-          id: id(type),
+          id: e.target.id,
         };
 
         // Serialize the event for synchronization
         eventSerializer?.push('added', payload);
-
-        // eventEmitter.emit('object:added', payload);
       }
     });
 
     canvas?.on('object:moved', function (e: any) {
       if (master) {
         const type = e.target.get('type');
-        const target = e.target;
-        const id = (type: string) => {
-          return type === 'path'
-            ? e.target.canvas.freeDrawingBrush.id
-            : e.target.id;
+        const target = {
+          top: e.target.top,
+          left: e.target.left,
+          angle: e.target.angle,
         };
 
         const payload = {
           type,
           target,
-          id: id(type),
+          id: e.target.id,
         };
 
+        console.log('object:moved', payload);
+
         // Serialize the event for synchronization
-        if (master) {
-          eventSerializer?.push('moved', payload);
-        }
-
-        //eventEmitter.emit('object:moved', payload);
-      }
-    });
-
-    remotePainter?.on('added', (id: string, objectType: string, target: any) => {
-      console.log(`added: ${id} ${objectType} ${target}`);
-
-      // TODO: We'll want to filter events based on the user ID. This can
-      // be done like this. Example of extracting user id from object ID:
-      // let { user } = new ShapeID(id);
-      // if (eventSerializer?.didSerializeEvent(id)) return;
-
-      // TODO: We'll have to replace this with the user based filtering. Because
-      // we want to allow bi-directional events (Teacher <-> Student) as opposed
-      // to (Teacher --> Student).
-      if (master) return;
-
-      if (objectType === 'textbox') {
-        let text = new fabric.Textbox(target.text, {
-          fontFamily: target.fontFamily,
-          fontSize: 30,
-          fontWeight: 400,
-          fill: target.fill,
-          fontStyle: 'normal',
-          top: target.top,
-          left: target.left,
-          width: target.width,
-        });
-
-        // @ts-ignore
-        text.id = id;
-
-        canvas?.add(text);
-      }
-
-      if (objectType === 'path') {
-        const pencil = new fabric.PencilBrush();
-        pencil.color = target.stroke || '#000';
-        pencil.width = target.strokeWidth;
-
-        // Convert Points to SVG Path
-        const res = pencil.createPath(target.path);
-        // @ts-ignore
-        res.id = id;
-        canvas?.add(res);
+        eventSerializer?.push('moved', payload);
       }
     });
 
     remotePainter?.on(
-      'moved',
+      'added',
       (id: string, objectType: string, target: any) => {
-        //if (eventSerializer?.didSerializeEvent(id)) return;
+        console.log(`added: ${id} ${objectType}`, target);
+
+        // TODO: We'll want to filter events based on the user ID. This can
+        // be done like this. Example of extracting user id from object ID:
+        // let { user } = new ShapeID(id);
+        // if (eventSerializer?.didSerializeEvent(id)) return;
+
+        // TODO: We'll have to replace this with the user based filtering. Because
+        // we want to allow bi-directional events (Teacher <-> Student) as opposed
+        // to (Teacher --> Student).
         if (master) return;
 
-        console.log('Data Received  object:moved', target, { master });
+        // Events come from another user
+        // Pass as props to user context
+        // Ids of shapes + userId  uuid()
+        if (objectType === 'textbox') {
+          let text = new fabric.Textbox(target.text, {
+            fontSize: 30,
+            fontWeight: 400,
+            fontStyle: 'normal',
+            fontFamily: target.fontFamily,
+            fill: target.stroke,
+            top: target.top,
+            left: target.left,
+            width: target.width,
+          });
 
-        const type = objectType;
+          // @ts-ignore
+          text.id = id;
 
-        canvas?.forEachObject(function (obj: any) {
-          if (type === 'path') {
-            const id = (type: string) => {
-              return type === 'path' ? target.canvas.freeDrawingBrush.id : id;
-            };
+          canvas?.add(text);
+        }
 
-            if (obj.id && obj.id === id(type)) {
-              obj.set({ top: target.top, left: target.left });
-            }
-          } else {
-            if (obj.id && obj.id === id) {
-              obj.set({ top: target.top, left: target.left });
-            }
-          }
+        if (objectType === 'path') {
+          const pencil = new fabric.PencilBrush();
+          pencil.color = target.stroke || '#000';
+          pencil.width = target.strokeWidth;
+
+          // @ts-ignore
+          pencil.selectable = false;
+
+          // Convert Points to SVG Path
+          const res = pencil.createPath(target.path);
+          // @ts-ignore
+          res.id = id;
+
+          canvas?.add(res);
+        }
+
+        canvas?.forEachObject(function (object: any) {
+          object.selectable = false;
+          object.evented = false;
         });
-        canvas?.renderAll();
       }
     );
+
+    remotePainter?.on('moved', (id: string, target: any) => {
+      //if (eventSerializer?.didSerializeEvent(id)) return;
+      if (master) return;
+
+      console.log('Data Received  object:moved', target, { master });
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          obj.set({
+            angle: target.angle,
+            top: target.top,
+            left: target.left,
+          });
+        }
+      });
+      canvas?.renderAll();
+    });
+
+    remotePainter?.on('rotated', (id: string, target: any) => {
+      //if (eventSerializer?.didSerializeEvent(id)) return;
+      if (master) return;
+
+      console.log('Data Received  object:rotated', target, { master });
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          obj.set({
+            angle: target.angle,
+            top: target.top,
+            left: target.left,
+          });
+        }
+      });
+      canvas?.renderAll();
+    });
   }, [text, canvas, master, eventSerializer, remotePainter]);
 
   /**
@@ -749,7 +817,7 @@ export const WhiteboardProvider = ({
   };
 
   /**
-   * Set Canvas Whiteboard selection hability
+   * Set Canvas Whiteboard selection ability
    * @param {boolean} selection - value to set in canvas and objects selection
    */
   const setCanvasSelection = (selection: boolean): void => {

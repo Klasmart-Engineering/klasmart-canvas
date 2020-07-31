@@ -1,15 +1,4 @@
-// import { Point2D } from '../../../poc/whiteboard/types/Point2D';
-// import { BrushParameters } from '../../../poc/whiteboard/types/BrushParameters';
-
-export type PainterEventType = 'added' | 'move' | 'moved' | 'delete';
-
-// export interface OperationData {
-//   brush?: BrushParameters | undefined;
-// }
-//
-// export interface LineData {
-//   points: Point2D[];
-// }
+export type PainterEventType = 'added' | 'moved' | 'rotated' | 'moving';
 
 export interface PainterEvent {
   // The event type.
