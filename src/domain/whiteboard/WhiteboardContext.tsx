@@ -23,9 +23,11 @@ import { useBrushIsActive } from './hooks/useBrushIsActive';
 import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
+import { useShapesAreSelectable } from './hooks/useShapesAreSelectable';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 
 import { UndoRedo } from './hooks/useUndoRedoEffect';
+import { SET } from './reducers/undo-redo';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -61,6 +63,7 @@ export const WhiteboardProvider = ({
   const { textIsActive, updateTextIsActive } = useTextIsActive();
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
+  const { shapesAreSelectable, updateShapesAreSelectable } = useShapesAreSelectable();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -69,6 +72,7 @@ export const WhiteboardProvider = ({
   const [thickness, updateThickness] = useState(DEFAULT_VALUES.THICKNESS);
   const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
+  const { dispatch } = UndoRedo(canvas);
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -84,6 +88,18 @@ export const WhiteboardProvider = ({
 
     setCanvas(canvasInstance);
   }, [canvasHeight, canvasWidth, canvasId]);
+  
+  useEffect(() => {
+    if (!canvas) {
+      return;
+    }
+
+    canvas.getObjects().forEach((object: any) => {
+      object.set({ selectable: shapesAreSelectable });
+    });
+
+    canvas.renderAll();
+  }, [canvas, shapesAreSelectable]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -143,6 +159,10 @@ export const WhiteboardProvider = ({
             });
           });
         }
+
+        canvas.on('text:changed', () => {
+          dispatch({ type: SET, payload: canvas.getObjects() });
+        });
       });
     }
 
@@ -169,6 +189,7 @@ export const WhiteboardProvider = ({
     }
   }, [canvas, pointerEvents]);
 
+
   /**
    * Activates or deactivates drawing mode.
    */
@@ -179,10 +200,20 @@ export const WhiteboardProvider = ({
       canvas.freeDrawingBrush.color = penColor || '#000';
       canvas.freeDrawingBrush.width = 10;
       canvas.isDrawingMode = true;
+
+      canvas.on('path:created', (e: any) => {
+        e.path.selectable = false;
+        dispatch({ type: SET, payload: canvas.getObjects() })
+      });
+
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
     }
-  }, [brushIsActive, canvas, penColor]);
+
+    return(() => {
+      canvas?.off('path:created');
+    });
+  }, [brushIsActive, canvas, penColor, dispatch]);
 
   /**
    * Disables shape canvas mouse events.
@@ -194,10 +225,6 @@ export const WhiteboardProvider = ({
       canvas.off('mouse:down');
     }
   }, [shapeIsActive, canvas]);
-
-
-
-  const { dispatch } = UndoRedo(canvas);
 
   /**
    * General handler for keyboard events
@@ -408,6 +435,7 @@ export const WhiteboardProvider = ({
         } else {
           shape.setCoords();
           canvas.renderAll();
+          dispatch({ type: SET, payload: canvas.getObjects() });
         }
       });
     },
@@ -478,6 +506,7 @@ export const WhiteboardProvider = ({
     if (canvas.getActiveObject()) {
       canvas.getActiveObject().set('fill', color);
       canvas.renderAll();
+      dispatch({ type: SET, payload: canvas.getObjects() });
     }
   };
 
@@ -647,6 +676,7 @@ export const WhiteboardProvider = ({
     setPointerEvents,
     changeStrokeColor,
     dispatch,
+    updateShapesAreSelectable,
   };
 
   return (

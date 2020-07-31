@@ -61,7 +61,8 @@ function Toolbar() {
     updateFloodFill,
     stamp,
     updateStamp,
-    dispatch
+    dispatch,
+    updateShapesAreSelectable,
   } = useContext(WhiteboardContext);
 
   /**
@@ -112,6 +113,12 @@ function Toolbar() {
       discardActiveObject();
     }
 
+    if (tool === ELEMENTS.POINTERS_TOOL || tool === ELEMENTS.MOVE_OBJECTS_TOOL) {
+      updateShapesAreSelectable(true);
+    } else {
+      updateShapesAreSelectable(false);
+    }
+
     // set the clicked tool like active style in Toolbar
     setTools({
       active: tool,
@@ -147,6 +154,7 @@ function Toolbar() {
    * @param {string} value - new selected value
    */
   function handleToolSelectorChange(tool: string, option: string) {
+    console.log('tool', tool);
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
         updatePointer(option);

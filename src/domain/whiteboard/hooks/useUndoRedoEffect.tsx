@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
-import { useUndoRedo, SET, MODIFY, UNDO } from '../reducers/undo-redo';
-import { fabric } from 'fabric';
+import { useUndoRedo, SET, UNDO, REDO, MODIFY } from '../reducers/undo-redo';
 
-
+/**
+ * Custom hook to track canvas history.
+ * @param canvas Canvas being manipulated.
+ */
 export const UndoRedo = (canvas: any) => {
   const { state, dispatch } = useUndoRedo();
 
@@ -11,53 +13,25 @@ export const UndoRedo = (canvas: any) => {
       return;
     }
 
-    console.log('STATE: ', state);
+    // Dispatches an update to the state when an object has been modified.
+    canvas?.on('object:modified', () => {
+      dispatch({ type: MODIFY, payload: canvas.getObjects() });
+    });
 
+    // Dispatches an update to the state when an object has been removed.
+    canvas?.on('object:removed', (e: any) => {
+      if (e.target?.type === 'i-text') {
+        return;
+      }
 
-    if (state.actionType === SET || state.actionType === null) {
-      canvas?.on('object:added', (e: any) => {
-        console.log('added: ', e);
-        // dispatch({ type: SET, payload: e });
-        console.log(canvas.getObjects());
-        dispatch({ type: SET, payload: canvas.getObjects() });
-      });
+      dispatch({ type: SET, payload: canvas.getObjects() });
+    });
     
-
-      canvas?.on('object:modified', (e: any) => {
-        console.log('modified: ', e);
-        dispatch({ type: MODIFY, payload: e });
-      });
-
-      canvas?.on('object:removed', (e: any) => {
-        console.log('removed: ', e);
-        // dispatch({ type: REMOVE, payload: e });
-      });
-    } else if (state.actionType === UNDO) {
+    // Rerenders canvas when an undo or redo event has been executed.
+    if (state.actionType === UNDO || state.actionType === REDO) {
       canvas.clear();
-      console.log(fabric, canvas);
-
-      canvas.loadFromJSON(JSON.stringify({ objects: state.activeState }));
-      
-      // fabric.util.enlivenObjects(state.activeState, (objects: any) => {
-      //   debugger;
-      //   objects.forEach((object: any) => {
-      //     canvas.add(object);
-      //   });
-      // });
-      // canvas.loadFromJSON(JSON.parse(state.activeState), canvas.renderAll.bind(canvas));
+      canvas.loadFromJSON(state.activeState);
     }
-    // } else if (state.actionType === UNDO && state.event && state.event === 'remove') {
-    //   console.log(state);
-    //   console.log(canvas.getObjects());
-    //   let canvasObject = canvas.getObjects().find((object: any) => (object.uuid === state.event.uuid));
-    //   console.log(canvasObject);
-    //   canvas.setActiveObject(canvasObject);
-    //   canvas.remove(canvas.getActiveObject());
-    //   canvas.renderAll();
-    // } else if (state.actionType === UNDO && state.event && state.event === 'modify') {
-    //   console.log(state);
-    //   // let canvasObject = canvas.getObjects().find((object: any) => (object.uuid === state.event.uuid));
-    // }
 
     return(() => {
       canvas?.off('object:added');
@@ -65,7 +39,7 @@ export const UndoRedo = (canvas: any) => {
       canvas?.off('object:removed');
     });
 
-  }, [state, canvas, dispatch]);
+  }, [state, canvas]);
 
   return { state, dispatch };
 }

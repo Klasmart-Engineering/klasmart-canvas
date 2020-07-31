@@ -12,6 +12,7 @@ export const rectangle = (width: number, height: number, color: string) => {
     width: width,
     height: height,
     fill: color,
+    selectable: false,
   });
 };
 
@@ -26,17 +27,12 @@ export const triangle = (width: number, height: number, color: string) => {
     width: width,
     height: height,
     fill: color,
+    selectable: false,
   });
 
   return fabric.util.object.extend(triangle, {
     uuid: uuidv4()
   });
-  // return new fabric.Triangle({
-  //   id: uuidv4(),
-  //   width: width,
-  //   height: height,
-  //   fill: color,
-  // });
 };
 
 /**
@@ -50,6 +46,7 @@ export const circle = (width: number, height: number, color: string) => {
     rx: width,
     ry: height,
     fill: color,
+    selectable: false,
   });
 };
 
@@ -66,7 +63,7 @@ export const pentagon = (color: string): fabric.Object => {
     { x: 150, y: 42 },
   ]);
 
-  return shape.set({ scaleX: 0.02, scaleY: 0.02, fill: color });
+  return shape.set({ scaleX: 0.02, scaleY: 0.02, fill: color, selectable: false });
 };
 
 /**
@@ -83,7 +80,7 @@ export const hexagon = (color: string): fabric.Object => {
     { x: 50, y: 175 },
   ]);
 
-  return shape.set({ scaleX: 0.02, scaleY: 0.02, fill: color });
+  return shape.set({ scaleX: 0.02, scaleY: 0.02, fill: color, selectable: false, });
 };
 
 /**
@@ -102,7 +99,7 @@ export const generic = (
   const shape = new fabric.Path(path);
   const scaleX = 1 / (((shape.width as unknown) as number) / width);
   const scaleY = 1 / (((shape.height as unknown) as number) / height);
-  return shape.set({ scaleX, scaleY, fill: color });
+  return shape.set({ scaleX, scaleY, fill: color, selectable: false, });
 };
 
 /**
