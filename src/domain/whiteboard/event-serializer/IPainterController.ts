@@ -30,6 +30,8 @@ export interface IPainterController {
   ): this;
   on(event: 'moved', listener: (id: string, target: any) => void): this;
   on(event: 'rotated', listener: (id: string, target: any) => void): this;
+  on(event: 'scaled', listener: (id: string, target: any) => void): this;
+  on(event: 'skewed', listener: (id: string, target: any) => void): this;
 
   removeListener(
     event: 'added',
@@ -40,7 +42,11 @@ export interface IPainterController {
     listener: (id: string, target: any) => void
   ): this;
   removeListener(
-    event: 'rotated',
+    event: 'scaled',
+    listener: (id: string, target: any) => void
+  ): this;
+  removeListener(
+    event: 'skewed',
     listener: (id: string, target: any) => void
   ): this;
 

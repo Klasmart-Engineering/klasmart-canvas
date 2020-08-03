@@ -1,4 +1,10 @@
-export type PainterEventType = 'added' | 'moved' | 'rotated' | 'moving';
+export type PainterEventType =
+  | 'added'
+  | 'moved'
+  | 'rotated'
+  | 'scaled'
+  | 'skewed'
+  | 'moving';
 
 export interface PainterEvent {
   // The event type.

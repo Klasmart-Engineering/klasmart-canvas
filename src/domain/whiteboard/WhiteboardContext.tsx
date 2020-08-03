@@ -327,27 +327,6 @@ export const WhiteboardProvider = ({
    * If the input field (text) has length will unselect whiteboard active objects
    * */
   useEffect(() => {
-    canvas?.on('object:rotated', (e: any) => {
-      if (!master) return;
-
-      // console.log('object:rotated', e);
-
-      const id = e.target.id;
-      const type = e.target.get('type');
-      const target = {
-        angle: e.target.angle,
-        top: e.target.top,
-        left: e.target.left,
-      };
-      const payload = {
-        type,
-        target,
-        id,
-      };
-
-      eventSerializer?.push('rotated', payload);
-    });
-
     canvas?.on('path:created', (e: any) => {
       e.path.id = `${canvasId}:${uuidv4()}`; //fabric.Object.__uid++;
 
@@ -433,10 +412,91 @@ export const WhiteboardProvider = ({
       }
     });
 
+    canvas?.on('object:rotated', (e: any) => {
+      if (!master) return;
+
+      // console.log('object:rotated', e);
+
+      const id = e.target.id;
+      const type = e.target.get('type');
+      const target = {
+        angle: e.target.angle,
+        top: e.target.top,
+        left: e.target.left,
+      };
+      const payload = {
+        type,
+        target,
+        id,
+      };
+
+      eventSerializer?.push('rotated', payload);
+    });
+
+    canvas?.on('object:scaled', (e: any) => {
+      if (!e.target.id) {
+        return;
+      }
+
+      if (isLocalObject(e.target.id, canvasId)) {
+        const type = e.target.get('type');
+        const target = {
+          top: e.target.top,
+          left: e.target.left,
+          angle: e.target.angle,
+          scaleX: e.target.scaleX,
+          scaleY: e.target.scaleY,
+          flipX: e.target.flipX,
+          flipY: e.target.flipY,
+        };
+
+        const payload = {
+          type,
+          target,
+          id: e.target.id,
+        };
+
+        // console.log('object:moved', payload);
+
+        // Serialize the event for synchronization
+        eventSerializer?.push('scaled', payload);
+      }
+    });
+
+    canvas?.on('object:skewed', (e: any) => {
+      if (!e.target.id) {
+        return;
+      }
+
+      if (isLocalObject(e.target.id, canvasId)) {
+        const type = e.target.get('type');
+        const target = {
+          top: e.target.top,
+          left: e.target.left,
+          angle: e.target.angle,
+          scaleX: e.target.scaleX,
+          scaleY: e.target.scaleY,
+          skewX: e.target.skewX,
+          skewY: e.target.skewY,
+        };
+
+        const payload = {
+          type,
+          target,
+          id: e.target.id,
+        };
+
+        // console.log('object:moved', payload);
+
+        // Serialize the event for synchronization
+        eventSerializer?.push('skewed', payload);
+      }
+    });
+
     remotePainter?.on(
       'added',
       (id: string, objectType: string, target: any) => {
-        console.log(`added: ${id} ${objectType}`, target);
+        // console.log(`added: ${id} ${objectType}`, target);
 
         // TODO: We'll want to filter events based on the user ID. This can
         // be done like this. Example of extracting user id from object ID:
@@ -511,7 +571,7 @@ export const WhiteboardProvider = ({
       // No queremos agregar nuestros propios eventos
       if (isLocalObject(id, canvasId)) return;
 
-      console.log('Data Received  object:moved', target, { master });
+      // console.log('Data Received  object:moved', target, { master });
 
       canvas?.forEachObject(function (obj: any) {
         if (obj.id && obj.id === id) {
@@ -536,6 +596,50 @@ export const WhiteboardProvider = ({
             angle: target.angle,
             top: target.top,
             left: target.left,
+          });
+        }
+      });
+      canvas?.renderAll();
+    });
+
+    remotePainter?.on('scaled', (id: string, target: any) => {
+      //if (eventSerializer?.didSerializeEvent(id)) return;
+      if (isLocalObject(id, canvasId)) return;
+      // console.log('Data Received  object:scaled', target);
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          obj.set({
+            angle: target.angle,
+            top: target.top,
+            left: target.left,
+            scaleX: target.scaleX,
+            scaleY: target.scaleY,
+            flipX: target.flipX,
+            flipY: target.flipY,
+          });
+        }
+      });
+      canvas?.renderAll();
+    });
+
+    remotePainter?.on('skewed', (id: string, target: any) => {
+      //if (eventSerializer?.didSerializeEvent(id)) return;
+      if (isLocalObject(id, canvasId)) return;
+      // console.log('Data Received  object:rotated', target, { master });
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          obj.set({
+            angle: target.angle,
+            top: target.top,
+            left: target.left,
+            scaleX: target.scaleX,
+            scaleY: target.scaleY,
+            flipX: target.flipX,
+            flipY: target.flipY,
+            skewX: target.skewX,
+            skewY: target.skewY,
           });
         }
       });

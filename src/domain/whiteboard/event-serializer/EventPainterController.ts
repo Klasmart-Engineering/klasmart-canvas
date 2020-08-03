@@ -65,6 +65,12 @@ export class EventPainterController extends EventEmitter
       case 'rotated':
         this.rotated(event.id, target);
         break;
+      case 'scaled':
+        this.scaled(event.id, target);
+        break;
+      case 'skewed':
+        this.skewed(event.id, target);
+        break;
       case 'moving':
         console.error('Not implemented yet!');
         break;
@@ -81,5 +87,13 @@ export class EventPainterController extends EventEmitter
 
   private rotated(id: string, target: any) {
     this.emit('rotated', id, target);
+  }
+
+  private scaled(id: string, target: any) {
+    this.emit('scaled', id, target);
+  }
+
+  private skewed(id: string, target: any) {
+    this.emit('skewed', id, target);
   }
 }
