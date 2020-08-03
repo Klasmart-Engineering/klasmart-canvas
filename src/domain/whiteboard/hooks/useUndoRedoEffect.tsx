@@ -30,7 +30,7 @@ export const UndoRedo = (canvas: any) => {
     // Rerenders canvas when an undo or redo event has been executed.
     if (state.actionType === UNDO || state.actionType === REDO) {
       canvas.clear();
-      canvas.loadFromJSON(state.activeState);
+      canvas.loadFromJSON(state.activeState, () => {});
     }
 
     return(() => {
@@ -39,7 +39,7 @@ export const UndoRedo = (canvas: any) => {
       canvas?.off('object:removed');
     });
 
-  }, [state, canvas]);
+  }, [state, canvas, dispatch]);
 
   return { state, dispatch };
 }

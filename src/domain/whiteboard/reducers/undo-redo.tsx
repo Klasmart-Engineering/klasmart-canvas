@@ -44,7 +44,7 @@ export interface CanvasAction {
   /**
    * Array of fabric objects.
    */
-  payload: any;
+  payload?: fabric.Object[];
 }
 
 /**
@@ -62,7 +62,7 @@ const defaultState: CanvasHistoryState = {
  * and render to canvas.
  * @param payload
  */
-const objectStringifier = (payload: any) => {
+const objectStringifier = (payload: fabric.Object[]) => {
   return JSON.stringify({ objects: payload });
 };
 
@@ -79,7 +79,8 @@ const reducer = (
   switch (action.type) {
     // Sets state when new object is created.
     case SET: {
-      const currentState = objectStringifier(action.payload);
+      const currentState = objectStringifier(action.payload as fabric.Object[]);
+      console.log(action.payload);
       let states = [...state.states];
 
       if (
@@ -104,7 +105,7 @@ const reducer = (
 
     // Sets state when an object is modified.
     case MODIFY: {
-      const currentState = objectStringifier(action.payload);
+      const currentState = objectStringifier(action.payload as fabric.Object[]);
       const states = [...state.states, currentState];
 
       return {
@@ -156,8 +157,6 @@ const reducer = (
         activeStateIndex !== null && activeStateIndex >= 0
           ? state.states[activeStateIndex]
           : null;
-
-      console.log('states: ', state.states);
 
       return {
         ...state,

@@ -69,7 +69,10 @@ export const WhiteboardProvider = ({
   const { textIsActive, updateTextIsActive } = useTextIsActive();
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
-  const { shapesAreSelectable, updateShapesAreSelectable } = useShapesAreSelectable();
+  const {
+    shapesAreSelectable,
+    updateShapesAreSelectable,
+  } = useShapesAreSelectable();
   const { floodFillIsActive, updateFloodFillIsActive } = useFloodFillIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
@@ -78,7 +81,7 @@ export const WhiteboardProvider = ({
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
   // const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
-  const { dispatch } = UndoRedo(canvas);
+  const { dispatch } = UndoRedo(canvas as fabric.Canvas);
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -98,16 +101,20 @@ export const WhiteboardProvider = ({
 
     setCanvas(canvasInstance);
   }, [canvasHeight, canvasWidth, canvasId]);
-  
+
   useEffect(() => {
     if (!canvas) {
       return;
     }
 
     canvas.getObjects().forEach((object: any) => {
-      object.set({ selectable: shapesAreSelectable });
+      object.set({
+        selectable: shapesAreSelectable,
+        evented: shapesAreSelectable,
+      });
     });
 
+    canvas.selection = shapesAreSelectable;
     canvas.renderAll();
   }, [canvas, shapesAreSelectable]);
 
@@ -187,6 +194,7 @@ export const WhiteboardProvider = ({
     fontFamily,
     updateFontFamily,
     updateFontColor,
+    dispatch
   ]);
 
   /**
@@ -199,7 +207,6 @@ export const WhiteboardProvider = ({
       canvas?.renderAll();
     }
   }, [canvas, pointerEvents, textIsActive]);
-
 
   /**
    * Activates or deactivates drawing mode.
@@ -215,9 +222,10 @@ export const WhiteboardProvider = ({
 
       canvas.on('path:created', (e: any) => {
         e.path.selectable = false;
-        dispatch({ type: SET, payload: canvas.getObjects() })
+        e.path.evented = false;
+        canvas.renderAll();
+        dispatch({ type: SET, payload: canvas.getObjects() });
       });
-
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
 
@@ -232,9 +240,9 @@ export const WhiteboardProvider = ({
       });
     }
 
-    return(() => {
+    return () => {
       canvas?.off('path:created');
-    });
+    };
   }, [brushIsActive, canvas, lineWidth, penColor, dispatch]);
 
   /**
@@ -577,7 +585,7 @@ export const WhiteboardProvider = ({
         }
       });
     },
-    [canvas]
+    [canvas, dispatch]
   );
 
   /**

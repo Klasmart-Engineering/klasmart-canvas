@@ -1,5 +1,4 @@
 import { fabric } from 'fabric';
-import { v4 as uuidv4 } from 'uuid';
 
 // filled shape default values
 const filledShape = {
@@ -31,6 +30,7 @@ export const rectangle = (
     width: width,
     height: height,
     selectable: false,
+    evented: false,
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
@@ -60,6 +60,7 @@ export const triangle = (
     fill: filled ? color : emptyShape.fill,
     padding: 15,
     selectable: false,
+    evented: false,
   });
 };
 
@@ -85,6 +86,7 @@ export const circle = (
     fill: filled ? color : emptyShape.fill,
     padding: 15,
     selectable: false,
+    evented: false,
   });
 };
 
@@ -114,6 +116,7 @@ export const pentagon = (
     fill: filled ? color : emptyShape.fill,
     padding: 15,
     selectable: false,
+    evented: false,
   });
 };
 
@@ -144,6 +147,7 @@ export const hexagon = (
     fill: filled ? color : emptyShape.fill,
     padding: 15,
     selectable: false,
+    evented: false,
   });
 };
 
@@ -174,6 +178,7 @@ export const generic = (
     fill: filled ? color : emptyShape.fill,
     padding: 15,
     selectable: false,
+    evented: false,
   });
 };
 
