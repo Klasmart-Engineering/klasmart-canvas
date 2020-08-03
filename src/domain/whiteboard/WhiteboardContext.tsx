@@ -39,14 +39,12 @@ export const WhiteboardProvider = ({
   canvasWidth,
   canvasHeight,
   toolbar,
-  master,
 }: {
   children: React.ReactNode;
   canvasId: string;
   toolbar: ReactComponentElement<any>;
   canvasWidth: string;
   canvasHeight: string;
-  master: boolean;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();
@@ -337,8 +335,6 @@ export const WhiteboardProvider = ({
           path: e.path.path,
         };
 
-        // console.log(`path:created: ${e.path.id}`, e.path, target);
-
         const payload = {
           type: 'path',
           target,
@@ -373,8 +369,6 @@ export const WhiteboardProvider = ({
           }),
         };
 
-        console.log(`adding object: ${e.target.id} ${type}`, e.target);
-
         const payload = {
           type,
           target,
@@ -387,12 +381,38 @@ export const WhiteboardProvider = ({
     });
 
     canvas?.on('object:moved', function (e: any) {
+      const type = e.target.get('type');
+      if (type === 'activeSelection') {
+        console.log(e);
+        e.target._objects.forEach((activeObject: any) => {
+          if (isLocalObject(activeObject.id, canvasId)) {
+            //console.log({ activeObject });
+
+            const target = {
+              top: e.target.top + activeObject.top + e.target.height / 2,
+              left: e.target.left + activeObject.left + e.target.width / 2,
+              angle: activeObject.angle,
+            };
+
+            const payload = {
+              type,
+              target,
+              id: activeObject.id,
+            };
+
+            //console.log({ payload });
+
+            eventSerializer?.push('moved', payload);
+          }
+        });
+        return;
+      }
+
       if (!e.target.id) {
         return;
       }
 
       if (isLocalObject(e.target.id, canvasId)) {
-        const type = e.target.get('type');
         const target = {
           top: e.target.top,
           left: e.target.left,
@@ -405,17 +425,14 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // console.log('object:moved', payload);
-
-        // Serialize the event for synchronization
         eventSerializer?.push('moved', payload);
       }
     });
 
     canvas?.on('object:rotated', (e: any) => {
-      if (!master) return;
-
-      // console.log('object:rotated', e);
+      if (!e.target.id) {
+        return;
+      }
 
       const id = e.target.id;
       const type = e.target.get('type');
@@ -456,8 +473,6 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // console.log('object:moved', payload);
-
         // Serialize the event for synchronization
         eventSerializer?.push('scaled', payload);
       }
@@ -486,18 +501,47 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // console.log('object:moved', payload);
-
         // Serialize the event for synchronization
         eventSerializer?.push('skewed', payload);
+      }
+    });
+
+    canvas?.on('object:modified', (e: any) => {
+      if (!e.target.id) {
+        return;
+      }
+
+      if (isLocalObject(e.target.id, canvasId)) {
+        const type = e.target.get('type');
+
+        // If text has been modified
+        if (type === 'textbox') {
+          const target = {
+            ...(type === 'textbox' && {
+              text: e.target.text,
+              fontFamily: e.target.fontFamily,
+              stroke: e.target.fill,
+              top: e.target.top,
+              left: e.target.left,
+              width: e.target.width,
+            }),
+          };
+
+          const payload = {
+            type,
+            target,
+            id: e.target.id,
+          };
+
+          // Serialize the event for synchronization
+          eventSerializer?.push('modified', payload);
+        }
       }
     });
 
     remotePainter?.on(
       'added',
       (id: string, objectType: string, target: any) => {
-        // console.log(`added: ${id} ${objectType}`, target);
-
         // TODO: We'll want to filter events based on the user ID. This can
         // be done like this. Example of extracting user id from object ID:
         // let { user } = new ShapeID(id);
@@ -564,6 +608,10 @@ export const WhiteboardProvider = ({
     remotePainter?.on('moved', (id: string, target: any) => {
       // if (eventSerializer?.didSerializeEvent(id)) return;
 
+      // if (objectType === 'activeSelection') {
+      //
+      // }
+
       if (!id) {
         return;
       }
@@ -571,10 +619,11 @@ export const WhiteboardProvider = ({
       // No queremos agregar nuestros propios eventos
       if (isLocalObject(id, canvasId)) return;
 
-      // console.log('Data Received  object:moved', target, { master });
+      // console.log('jijo',id, target);
 
       canvas?.forEachObject(function (obj: any) {
         if (obj.id && obj.id === id) {
+          console.log({ obj }, target.top, target.left);
           obj.set({
             angle: target.angle,
             top: target.top,
@@ -588,7 +637,6 @@ export const WhiteboardProvider = ({
     remotePainter?.on('rotated', (id: string, target: any) => {
       //if (eventSerializer?.didSerializeEvent(id)) return;
       if (isLocalObject(id, canvasId)) return;
-      // console.log('Data Received  object:rotated', target, { master });
 
       canvas?.forEachObject(function (obj: any) {
         if (obj.id && obj.id === id) {
@@ -605,7 +653,6 @@ export const WhiteboardProvider = ({
     remotePainter?.on('scaled', (id: string, target: any) => {
       //if (eventSerializer?.didSerializeEvent(id)) return;
       if (isLocalObject(id, canvasId)) return;
-      // console.log('Data Received  object:scaled', target);
 
       canvas?.forEachObject(function (obj: any) {
         if (obj.id && obj.id === id) {
@@ -626,7 +673,6 @@ export const WhiteboardProvider = ({
     remotePainter?.on('skewed', (id: string, target: any) => {
       //if (eventSerializer?.didSerializeEvent(id)) return;
       if (isLocalObject(id, canvasId)) return;
-      // console.log('Data Received  object:rotated', target, { master });
 
       canvas?.forEachObject(function (obj: any) {
         if (obj.id && obj.id === id) {
@@ -645,7 +691,81 @@ export const WhiteboardProvider = ({
       });
       canvas?.renderAll();
     });
-  }, [text, canvas, master, eventSerializer, remotePainter, canvasId]);
+
+    remotePainter?.on(
+      'colorChanged',
+      (id: string, objectType: string, target: any) => {
+        //if (eventSerializer?.didSerializeEvent(id)) return;
+        if (isLocalObject(id, canvasId)) return;
+
+        canvas?.forEachObject(function (obj: any) {
+          if (obj.id && obj.id === id) {
+            if (objectType === 'textbox') {
+              obj.set({
+                fill: target.fill,
+              });
+            } else {
+              obj.set({
+                stroke: target.stroke,
+              });
+            }
+          }
+        });
+        canvas?.renderAll();
+      }
+    );
+
+    remotePainter?.on(
+      'modified',
+      (id: string, objectType: string, target: any) => {
+        //if (eventSerializer?.didSerializeEvent(id)) return;
+        if (isLocalObject(id, canvasId)) return;
+
+        canvas?.forEachObject(function (obj: any) {
+          if (obj.id && obj.id === id) {
+            if (objectType === 'textbox') {
+              obj.set({
+                text: target.text,
+                fontFamily: target.fontFamily,
+                stroke: target.fill,
+                top: target.top,
+                left: target.left,
+                width: target.width,
+              });
+            }
+          }
+        });
+        canvas?.renderAll();
+      }
+    );
+  }, [text, canvas, eventSerializer, remotePainter, canvasId]);
+
+  /**
+   * Synchronization event handler for penColor and fontColor
+   * */
+  useEffect(() => {
+    const objects = canvas?.getActiveObjects();
+
+    if (objects && objects.length) {
+      objects.forEach((obj: any) => {
+        if (isLocalObject(obj.id, canvasId)) {
+          const type = obj.get('type');
+          const target = (type: string) => {
+            return type === 'textbox'
+              ? { fill: obj.fill }
+              : { stroke: obj.stroke };
+          };
+          const payload = {
+            type,
+            target: target(type),
+            id: obj.id,
+          };
+
+          eventSerializer?.push('colorChanged', payload);
+        }
+      });
+    }
+  }, [canvas, eventSerializer, canvasId, penColor, fontColor]);
 
   /**
    * If pointerEvents changes to false, all the selected objects

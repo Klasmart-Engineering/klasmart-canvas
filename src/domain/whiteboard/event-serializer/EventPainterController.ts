@@ -71,6 +71,12 @@ export class EventPainterController extends EventEmitter
       case 'skewed':
         this.skewed(event.id, target);
         break;
+      case 'colorChanged':
+        this.colorChanged(event.id, event.objectType, target);
+        break;
+      case 'modified':
+        this.modified(event.id, event.objectType, target);
+        break;
       case 'moving':
         console.error('Not implemented yet!');
         break;
@@ -95,5 +101,13 @@ export class EventPainterController extends EventEmitter
 
   private skewed(id: string, target: any) {
     this.emit('skewed', id, target);
+  }
+
+  private colorChanged(id: string, objectType: string, target: any) {
+    this.emit('colorChanged', id, objectType, target);
+  }
+
+  private modified(id: string, objectType: string, target: any) {
+    this.emit('modified', id, objectType, target);
   }
 }

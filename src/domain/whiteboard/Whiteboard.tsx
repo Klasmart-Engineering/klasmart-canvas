@@ -11,7 +11,6 @@ function Whiteboard() {
         canvasWidth={'740'}
         canvasHeight={'460'}
         toolbar={<Toolbar />}
-        master={true}
       >
         <button>Teacher</button>
       </WhiteboardProvider>
@@ -20,7 +19,6 @@ function Whiteboard() {
         canvasWidth={'740'}
         canvasHeight={'460'}
         toolbar={<Toolbar />}
-        master={false}
       >
         <button>Student</button>
       </WhiteboardProvider>

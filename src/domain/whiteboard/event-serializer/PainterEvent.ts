@@ -4,6 +4,8 @@ export type PainterEventType =
   | 'rotated'
   | 'scaled'
   | 'skewed'
+  | 'colorChanged'
+  | 'modified'
   | 'moving';
 
 export interface PainterEvent {
