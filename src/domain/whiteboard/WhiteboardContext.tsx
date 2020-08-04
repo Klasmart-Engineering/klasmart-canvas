@@ -534,6 +534,21 @@ export const WhiteboardProvider = ({
       }
     });
 
+    canvas?.on('object:removed', (e: any) => {
+      if (!e.target.id) {
+        return;
+      }
+
+      if (isLocalObject(e.target.id, canvasId)) {
+        const payload = {
+          id: e.target.id,
+        };
+
+        // Serialize the event for synchronization
+        eventSerializer?.push('removed', payload as ObjectEvent);
+      }
+    });
+
     remotePainter?.on(
       'added',
       (id: string, objectType: string, target: any) => {
@@ -734,6 +749,19 @@ export const WhiteboardProvider = ({
           obj.set({
             fontFamily: target.fontFamily,
           });
+        }
+      });
+      canvas?.renderAll();
+    });
+
+    remotePainter?.on('removed', (id: string) => {
+      // if (eventSerializer?.didSerializeEvent(id)) return;
+
+      if (isLocalObject(id, canvasId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          canvas?.remove(obj);
         }
       });
       canvas?.renderAll();

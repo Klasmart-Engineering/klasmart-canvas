@@ -41,6 +41,7 @@ export interface IPainterController {
     event: 'fontFamilyChanged',
     listener: (id: string, target: any) => void
   ): this;
+  on(event: 'removed', listener: (id: string) => void): this;
 
   removeListener(
     event: 'added',
@@ -70,6 +71,7 @@ export interface IPainterController {
     event: 'fontFamilyChanged',
     listener: (id: string, target: any) => void
   ): this;
+  removeListener(event: 'removed', listener: (id: string) => void): this;
 
   replayEvents(): Promise<void>;
 }

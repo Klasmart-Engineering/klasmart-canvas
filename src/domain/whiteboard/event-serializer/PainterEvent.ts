@@ -7,6 +7,7 @@ export type PainterEventType =
   | 'colorChanged'
   | 'modified'
   | 'fontFamilyChanged'
+  | 'removed'
   | 'moving';
 
 export interface PainterEvent {
