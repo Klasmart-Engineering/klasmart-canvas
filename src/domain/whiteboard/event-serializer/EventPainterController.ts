@@ -40,13 +40,13 @@ export class EventPainterController extends EventEmitter
 
   private parseAndEmitEvent(event: PainterEvent) {
     // NOTE: Empty object if param is undefined.
-    let eventParam = event.param ? event.param : '{}';
+    const eventParam = event.param ? event.param : '{}';
 
     // NOTE: In our case (based on the PaintEventSerializer implementation) the param
     // will be a JSON stringified fabric.js target object. We may want to introduce
     // some more type safety for this once we start doing data optimizations in the
     // serializer. Param data will not be modified by the server.
-    let target = JSON.parse(eventParam);
+    const target = JSON.parse(eventParam);
 
     // this.emit(event.type, event.objectType, target);
 
@@ -76,6 +76,9 @@ export class EventPainterController extends EventEmitter
         break;
       case 'modified':
         this.modified(event.id, event.objectType, target);
+        break;
+      case 'fontFamilyChanged':
+        this.fontFamilyChanged(event.id, target);
         break;
       case 'moving':
         console.error('Not implemented yet!');
@@ -109,5 +112,9 @@ export class EventPainterController extends EventEmitter
 
   private modified(id: string, objectType: string, target: any) {
     this.emit('modified', id, objectType, target);
+  }
+
+  private fontFamilyChanged(id: string, target: any) {
+    this.emit('fontFamilyChanged', id, target);
   }
 }

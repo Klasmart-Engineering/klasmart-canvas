@@ -6,6 +6,7 @@ export type PainterEventType =
   | 'skewed'
   | 'colorChanged'
   | 'modified'
+  | 'fontFamilyChanged'
   | 'moving';
 
 export interface PainterEvent {

@@ -37,6 +37,10 @@ export interface IPainterController {
     listener: (id: string, objectType: string, target: any) => void
   ): this;
   on(event: 'modified', listener: (id: string, target: any) => void): this;
+  on(
+    event: 'fontFamilyChanged',
+    listener: (id: string, target: any) => void
+  ): this;
 
   removeListener(
     event: 'added',
@@ -60,6 +64,10 @@ export interface IPainterController {
   ): this;
   removeListener(
     event: 'modified',
+    listener: (id: string, target: any) => void
+  ): this;
+  removeListener(
+    event: 'fontFamilyChanged',
     listener: (id: string, target: any) => void
   ): this;
 
