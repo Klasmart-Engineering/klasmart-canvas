@@ -1,4 +1,5 @@
 import { useReducer } from 'react';
+import { TypedShape } from '../../../interfaces/shapes/shapes';
 
 export const UNDO = 'CANVAS_UNDO';
 export const REDO = 'CANVAS_REDO';
@@ -62,8 +63,16 @@ const defaultState: CanvasHistoryState = {
  * and render to canvas.
  * @param payload
  */
-const objectStringifier = (payload: fabric.Object[]) => {
-  return JSON.stringify({ objects: payload });
+const objectStringifier = (payload: [fabric.Object | TypedShape]) => {
+  let formatted: (string)[] = [];
+
+  if (payload) {
+    formatted = payload.map((object: fabric.Object | TypedShape) => (
+      object.toJSON(['strokeUniform'])
+    ));
+  }
+
+  return JSON.stringify({ objects: formatted });
 };
 
 /**
@@ -79,8 +88,7 @@ const reducer = (
   switch (action.type) {
     // Sets state when new object is created.
     case SET: {
-      const currentState = objectStringifier(action.payload as fabric.Object[]);
-      console.log(action.payload);
+      const currentState = objectStringifier(action.payload as [fabric.Object | TypedShape]);
       let states = [...state.states];
 
       if (
@@ -105,7 +113,7 @@ const reducer = (
 
     // Sets state when an object is modified.
     case MODIFY: {
-      const currentState = objectStringifier(action.payload as fabric.Object[]);
+      const currentState = objectStringifier(action.payload as [fabric.Object | TypedShape]);
       const states = [...state.states, currentState];
 
       return {

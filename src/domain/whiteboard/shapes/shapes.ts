@@ -26,7 +26,7 @@ export const rectangle = (
   filled: boolean,
   thickness: number
 ) => {
-  return new fabric.Rect({
+  const shape = new fabric.Rect({
     width: width,
     height: height,
     selectable: false,
@@ -35,6 +35,11 @@ export const rectangle = (
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
     padding: 15,
+    strokeUniform: true,
+  });
+
+  return fabric.util.object.extend(shape, {
+    shapeType: 'shape'
   });
 };
 
@@ -52,7 +57,7 @@ export const triangle = (
   filled: boolean,
   thickness: number
 ) => {
-  return new fabric.Triangle({
+  const shape = new fabric.Triangle({
     width: width,
     height: height,
     stroke: filled ? filledShape.stroke : color,
@@ -61,6 +66,11 @@ export const triangle = (
     padding: 15,
     selectable: false,
     evented: false,
+    strokeUniform: true,
+  });
+
+  return fabric.util.object.extend(shape, {
+    shapeType: 'shape'
   });
 };
 
@@ -78,7 +88,7 @@ export const circle = (
   filled: boolean,
   thickness: number
 ) => {
-  return new fabric.Ellipse({
+  const shape = new fabric.Ellipse({
     rx: width,
     ry: height,
     stroke: filled ? filledShape.stroke : color,
@@ -87,6 +97,11 @@ export const circle = (
     padding: 15,
     selectable: false,
     evented: false,
+    strokeUniform: true,
+  });
+
+  return fabric.util.object.extend(shape, {
+    shapeType: 'shape'
   });
 };
 
@@ -100,13 +115,17 @@ export const pentagon = (
   filled: boolean,
   thickness: number
 ): fabric.Object => {
-  const shape = new fabric.Polygon([
+  let shape = new fabric.Polygon([
     { x: 200, y: 0 },
     { x: 250, y: 42 },
     { x: 230, y: 100 },
     { x: 170, y: 100 },
     { x: 150, y: 42 },
   ]);
+
+  shape = fabric.util.object.extend(shape, {
+    shapeType: 'shape'
+  });
 
   return shape.set({
     scaleX: 0.02,
@@ -117,6 +136,7 @@ export const pentagon = (
     padding: 15,
     selectable: false,
     evented: false,
+    strokeUniform: true,
   });
 };
 
@@ -130,7 +150,7 @@ export const hexagon = (
   filled: boolean,
   thickness: number
 ): fabric.Object => {
-  const shape = new fabric.Polygon([
+  let shape = new fabric.Polygon([
     { x: 125, y: 0 },
     { x: 275, y: 0 },
     { x: 350, y: 175 },
@@ -138,6 +158,10 @@ export const hexagon = (
     { x: 125, y: 350 },
     { x: 50, y: 175 },
   ]);
+
+  shape = fabric.util.object.extend(shape, {
+    shapeType: 'shape'
+  });
 
   return shape.set({
     scaleX: 0.02,
@@ -148,6 +172,7 @@ export const hexagon = (
     padding: 15,
     selectable: false,
     evented: false,
+    strokeUniform: true,
   });
 };
 
@@ -167,9 +192,14 @@ export const generic = (
   filled: boolean,
   thickness: number
 ): fabric.Object => {
-  const shape = new fabric.Path(path);
+  let  shape = new fabric.Path(path);
   const scaleX = 1 / (((shape.width as unknown) as number) / width);
   const scaleY = 1 / (((shape.height as unknown) as number) / height);
+
+  fabric.util.object.extend(shape, {
+    shapeType: 'shape'
+  });
+
   return shape.set({
     scaleX,
     scaleY,
@@ -179,6 +209,7 @@ export const generic = (
     padding: 15,
     selectable: false,
     evented: false,
+    strokeUniform: true,
   });
 };
 

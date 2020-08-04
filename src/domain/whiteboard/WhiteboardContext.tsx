@@ -29,7 +29,7 @@ import { useLineWidth } from './hooks/useLineWidth';
 import { Canvas, IEvent, TextOptions } from 'fabric/fabric-impl';
 import { useFloodFill } from './hooks/useFloodFill';
 import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
-
+import { TypedShape } from '../../interfaces/shapes/shapes';
 import { UndoRedo } from './hooks/useUndoRedoEffect';
 import { SET } from './reducers/undo-redo';
 
@@ -457,7 +457,7 @@ export const WhiteboardProvider = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const shapeSelector = (
     specific: string
-  ): fabric.Rect | fabric.Triangle | fabric.Ellipse => {
+  ): TypedShape => {
     switch (specific || shape) {
       case 'rectangle':
         return shapes.rectangle(2, 2, penColor, false, lineWidth);
@@ -555,7 +555,7 @@ export const WhiteboardProvider = ({
    */
   const mouseUp = useCallback(
     (
-      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
+      shape: fabric.Object | fabric.Rect | fabric.Ellipse | TypedShape,
       coordsStart: any,
       specific: string
     ): void => {
@@ -605,7 +605,7 @@ export const WhiteboardProvider = ({
         shape.set({
           top: e.pointer.y,
           left: e.pointer.x,
-          type: 'shape',
+          shapeType: 'shape',
           name: specific,
           strokeUniform: true,
         });
@@ -665,9 +665,9 @@ export const WhiteboardProvider = ({
     updatePenColor(color);
 
     if (canvas?.getActiveObjects()) {
-      canvas.getActiveObjects().forEach((object) => {
+      canvas.getActiveObjects().forEach((object: TypedShape) => {
         if (
-          (isShape(object) && object.type === 'shape') ||
+          (isShape(object) && object.shapeType === 'shape') ||
           isFreeDrawing(object)
         ) {
           object.set('stroke', color);
@@ -768,8 +768,8 @@ export const WhiteboardProvider = ({
    * @param {fabric.Object} object - object to check
    */
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const isEmptyShape = (object: fabric.Object) => {
-    return isShape(object) && object.type === 'shape';
+  const isEmptyShape = (object: TypedShape) => {
+    return isShape(object) && object.shapeType === 'shape';
   };
 
   /**
@@ -799,7 +799,7 @@ export const WhiteboardProvider = ({
     if (event.target && isShape(event.target)) {
       updateShape(event.target.name || DEFAULT_VALUES.SHAPE);
 
-      if (event.target.type === 'shape') {
+      if ((event.target as TypedShape).shapeType === 'shape') {
         updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
         updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
       } else if (event.target.fill) {
