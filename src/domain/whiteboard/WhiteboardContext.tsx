@@ -194,7 +194,7 @@ export const WhiteboardProvider = ({
     fontFamily,
     updateFontFamily,
     updateFontColor,
-    dispatch
+    dispatch,
   ]);
 
   /**
@@ -455,9 +455,7 @@ export const WhiteboardProvider = ({
    * @param specific Indicates shape type that should be added in whiteboard.
    */
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const shapeSelector = (
-    specific: string
-  ): TypedShape => {
+  const shapeSelector = (specific: string): TypedShape => {
     switch (specific || shape) {
       case 'rectangle':
         return shapes.rectangle(2, 2, penColor, false, lineWidth);

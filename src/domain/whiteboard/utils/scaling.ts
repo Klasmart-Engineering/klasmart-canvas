@@ -7,7 +7,7 @@ import { fabric } from 'fabric';
 export interface Dimensions {
   width: number;
   height: number;
-};
+}
 
 /**
  * Gets length from one point to another.
@@ -17,12 +17,16 @@ export interface Dimensions {
 export const getLength = (x1: number, x2: number): number => Math.abs(x1 - x2);
 
 /**
- * 
+ *
  * @param shape Fabric shape. Either rectangle or triangle.
  * @param start Start coordinates.
  * @param end End coordinates.
  */
-export const setSize = (shape: fabric.Rect | fabric.Triangle, start: any, end: any): Dimensions => {
+export const setSize = (
+  shape: fabric.Rect | fabric.Triangle,
+  start: any,
+  end: any
+): Dimensions => {
   const width = getLength(end.x, start.x);
   const height = getLength(end.y, start.y);
   shape.set({ width, height });
@@ -36,7 +40,11 @@ export const setSize = (shape: fabric.Rect | fabric.Triangle, start: any, end: a
  * @param start Start coordinates.
  * @param end End coordinates.
  */
-export const setCircleSize = (shape: fabric.Ellipse, start: any, end: any): Dimensions => {
+export const setCircleSize = (
+  shape: fabric.Ellipse,
+  start: any,
+  end: any
+): Dimensions => {
   const rx = getLength(end.x, start.x) / 2;
   const ry = getLength(end.y, start.y) / 2;
   shape.set({ rx, ry });
@@ -50,11 +58,15 @@ export const setCircleSize = (shape: fabric.Ellipse, start: any, end: any): Dime
  * @param start Start coordinates.
  * @param end End coordinates.
  */
-export const setPathSize = (shape: fabric.Object, start: any, end: any): Dimensions => {
+export const setPathSize = (
+  shape: fabric.Object,
+  start: any,
+  end: any
+): Dimensions => {
   const width = getLength(end.x, start.x) / 2;
   const height = getLength(end.y, start.y) / 2;
-  const scaleX = 2 / (shape.width as unknown as number / width);
-  const scaleY = 2 / (shape.height as unknown as number / height);
+  const scaleX = 2 / (((shape.width as unknown) as number) / width);
+  const scaleY = 2 / (((shape.height as unknown) as number) / height);
 
   shape.set({ scaleX, scaleY });
   return { width, height };

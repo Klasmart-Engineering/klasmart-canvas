@@ -118,7 +118,10 @@ function Toolbar() {
       discardActiveObject();
     }
 
-    if (tool === ELEMENTS.POINTERS_TOOL || tool === ELEMENTS.MOVE_OBJECTS_TOOL) {
+    if (
+      tool === ELEMENTS.POINTERS_TOOL ||
+      tool === ELEMENTS.MOVE_OBJECTS_TOOL
+    ) {
       updateShapesAreSelectable(true);
     } else {
       updateShapesAreSelectable(false);
@@ -159,7 +162,6 @@ function Toolbar() {
    * @param {string} value - new selected value
    */
   function handleToolSelectorChange(tool: string, option: string) {
-    console.log('tool', tool);
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
         updatePointer(option);

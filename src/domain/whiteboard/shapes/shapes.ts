@@ -39,7 +39,7 @@ export const rectangle = (
   });
 
   return fabric.util.object.extend(shape, {
-    shapeType: 'shape'
+    shapeType: 'shape',
   });
 };
 
@@ -70,7 +70,7 @@ export const triangle = (
   });
 
   return fabric.util.object.extend(shape, {
-    shapeType: 'shape'
+    shapeType: 'shape',
   });
 };
 
@@ -101,7 +101,7 @@ export const circle = (
   });
 
   return fabric.util.object.extend(shape, {
-    shapeType: 'shape'
+    shapeType: 'shape',
   });
 };
 
@@ -124,7 +124,7 @@ export const pentagon = (
   ]);
 
   shape = fabric.util.object.extend(shape, {
-    shapeType: 'shape'
+    shapeType: 'shape',
   });
 
   return shape.set({
@@ -160,7 +160,7 @@ export const hexagon = (
   ]);
 
   shape = fabric.util.object.extend(shape, {
-    shapeType: 'shape'
+    shapeType: 'shape',
   });
 
   return shape.set({
@@ -192,12 +192,12 @@ export const generic = (
   filled: boolean,
   thickness: number
 ): fabric.Object => {
-  let  shape = new fabric.Path(path);
+  let shape = new fabric.Path(path);
   const scaleX = 1 / (((shape.width as unknown) as number) / width);
   const scaleY = 1 / (((shape.height as unknown) as number) / height);
 
   fabric.util.object.extend(shape, {
-    shapeType: 'shape'
+    shapeType: 'shape',
   });
 
   return shape.set({
