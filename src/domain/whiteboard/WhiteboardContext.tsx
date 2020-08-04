@@ -29,6 +29,7 @@ import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { PainterEvent } from './event-serializer/PainterEvent';
 import { EventPainterController } from './event-serializer/EventPainterController';
 import { ObjectEvent } from './event-serializer/PaintEventSerializer';
+import { PainterEvents } from './event-serializer/PainterEvents';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -322,27 +323,22 @@ export const WhiteboardProvider = ({
   };
 
   /**
-   * If the input field (text) has length will unselect whiteboard active objects
+   * Handles PainterEvents
    * */
   useEffect(() => {
     canvas?.on('path:created', (e: any) => {
-      e.path.id = `${canvasId}:${uuidv4()}`; //fabric.Object.__uid++;
+      e.path.id = PainterEvents.createId(canvasId); // fabric.Object.__uid++;
 
-      if (isLocalObject(e.path.id, canvasId)) {
-        const target = {
-          stroke: e.path.stroke,
-          strokeWidth: e.path.strokeWidth,
-          path: e.path.path,
-        };
+      const target = {
+        stroke: e.path.stroke,
+        strokeWidth: e.path.strokeWidth,
+        path: e.path.path,
+      };
 
-        const payload = {
-          type: 'path',
-          target,
-          id: e.path.id,
-        };
-
-        eventSerializer?.push('added', payload as ObjectEvent);
-      }
+      eventSerializer?.push(
+        'added',
+        PainterEvents.pathCreated(target, e.path.id, canvasId) as ObjectEvent
+      );
     });
 
     canvas?.on('object:added', function (e: any) {
@@ -350,7 +346,6 @@ export const WhiteboardProvider = ({
         return;
       }
 
-      // Only send local elements
       if (isLocalObject(e.target.id, canvasId)) {
         const type = e.target.get('type');
 
@@ -612,7 +607,6 @@ export const WhiteboardProvider = ({
 
     remotePainter?.on('moved', (id: string, target: any) => {
       // if (eventSerializer?.didSerializeEvent(id)) return;
-      console.log(remotePainter?.events);
 
       if (!id) {
         return;
