@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import React, {
   createContext,
   ReactComponentElement,
@@ -32,6 +33,11 @@ import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 import { TypedShape } from '../../interfaces/shapes/shapes';
 import { UndoRedo } from './hooks/useUndoRedoEffect';
 import { SET } from './reducers/undo-redo';
+import { useSharedEventSerializer } from './SharedEventSerializerProvider';
+import { PainterEvent } from './event-serializer/PainterEvent';
+import { EventPainterController } from './event-serializer/EventPainterController';
+import { ObjectEvent } from './event-serializer/PaintEventSerializer';
+import { PainterEvents } from './event-serializer/PainterEvents';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -83,6 +89,24 @@ export const WhiteboardProvider = ({
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
   const { dispatch } = UndoRedo(canvas as fabric.Canvas);
 
+  // Event serialization for synchronizing whiteboard state.
+  const {
+    state: { eventSerializer },
+  } = useSharedEventSerializer();
+  const [remotePainter, setRemotePainter] = useState<
+    EventPainterController | undefined
+  >();
+
+  const isLocalObject = (id: string, canvasId: string) => {
+    const object = id.split(':');
+
+    if (!object.length) {
+      throw new Error('Invalid ID');
+    }
+
+    return object[0] === canvasId;
+  };
+
   /**
    * Creates Canvas/Whiteboard instance
    */
@@ -119,6 +143,47 @@ export const WhiteboardProvider = ({
   }, [canvas, shapesAreSelectable]);
 
   /**
+   * Set up the EventPainterController (remotePainter) it will handle incoming
+   * events (from the server) and convert those into commands we can use for
+   * updating our local whiteboard.
+   */
+  useEffect(() => {
+    if (!eventSerializer) return;
+
+    const remotePainter = new EventPainterController();
+
+    // NOTE: We will receive events from the server as arrays of serialized
+    // events. When joining a room the user will receive a big list of events
+    // of all that's been painted so far. After they received the initial big
+    // list the will receive individual events or smaller chunks of events as
+    // others users (and themselves) interact more with the whiteboard.
+
+    // The function receiving events might look like this:
+    const handleRemoteEvent = (payload: PainterEvent) => {
+      // IMPORTANT: We should keep in mind the user's own events
+      // will appear in this list as well. The server doesn't do
+      // any filtering based on the user at this point.
+
+      // Once the events have been received, there needs to be some code
+      // transforming the event data into commands for drawing or updating
+      // objects on the canvas.
+
+      remotePainter.handlePainterEvent([payload]);
+    };
+
+    // NOTE: This handler simulates receiving events from the server
+    // usually we wouldn't feed remote events directly in to the event
+    // serializer.
+    eventSerializer.on('event', handleRemoteEvent);
+
+    setRemotePainter(remotePainter);
+
+    return () => {
+      eventSerializer.removeListener('event', handleRemoteEvent);
+    };
+  }, [eventSerializer]);
+
+  /**
    * Handles the logic to write text on the whiteboard
    * */
   useEffect(() => {
@@ -148,6 +213,7 @@ export const WhiteboardProvider = ({
             delete toObject.text;
             delete toObject.type;
             const clonedTextObj = JSON.parse(JSON.stringify(toObject));
+            clonedTextObj.id = `${canvasId}:${uuidv4()}`;
 
             if (typeof textCopy === 'string') {
               text = new fabric.Textbox(textCopy, clonedTextObj);
@@ -195,6 +261,7 @@ export const WhiteboardProvider = ({
     updateFontFamily,
     updateFontColor,
     dispatch,
+    canvasId,
   ]);
 
   /**
@@ -328,7 +395,502 @@ export const WhiteboardProvider = ({
     if (text.length) {
       canvas?.discardActiveObject().renderAll();
     }
-  }, [text, canvas]);
+  }, [canvas, text]);
+
+  /**
+   * Handles PainterEvents
+   * */
+  useEffect(() => {
+    canvas?.on('path:created', (e: any) => {
+      e.path.id = PainterEvents.createId(canvasId); // fabric.Object.__uid++;
+
+      const target = {
+        stroke: e.path.stroke,
+        strokeWidth: e.path.strokeWidth,
+        path: e.path.path,
+      };
+
+      eventSerializer?.push(
+        'added',
+        PainterEvents.pathCreated(target, e.path.id, canvasId) as ObjectEvent
+      );
+    });
+
+    canvas?.on('object:added', function (e: any) {
+      if (!e.target.id) {
+        return;
+      }
+
+      if (isLocalObject(e.target.id, canvasId)) {
+        const type = e.target.get('type');
+
+        if (type === 'path') {
+          return;
+        }
+
+        const target = {
+          ...(type === 'textbox' && {
+            text: e.target.text,
+            fontFamily: e.target.fontFamily,
+            stroke: e.target.fill,
+            top: e.target.top,
+            left: e.target.left,
+            width: e.target.width,
+          }),
+        };
+
+        const payload = {
+          type,
+          target,
+          id: e.target.id,
+        };
+
+        // Serialize the event for synchronization
+        eventSerializer?.push('added', payload);
+      }
+    });
+
+    canvas?.on('object:moved', function (e: any) {
+      const type = e.target.get('type');
+      if (type === 'activeSelection') {
+        e.target._objects.forEach((activeObject: any) => {
+          if (isLocalObject(activeObject.id, canvasId)) {
+            const target = {
+              top: e.target.top + activeObject.top + e.target.height / 2,
+              left: e.target.left + activeObject.left + e.target.width / 2,
+              angle: activeObject.angle,
+            };
+
+            const payload = {
+              type,
+              target,
+              id: activeObject.id,
+            };
+
+            eventSerializer?.push('moved', payload);
+          }
+        });
+        return;
+      }
+
+      if (!e.target.id) {
+        return;
+      }
+
+      if (isLocalObject(e.target.id, canvasId)) {
+        const target = {
+          top: e.target.top,
+          left: e.target.left,
+          angle: e.target.angle,
+        };
+
+        const payload = {
+          type,
+          target,
+          id: e.target.id,
+        };
+
+        eventSerializer?.push('moved', payload);
+      }
+    });
+
+    canvas?.on('object:rotated', (e: any) => {
+      if (!e.target.id) {
+        return;
+      }
+
+      const id = e.target.id;
+      const type = e.target.get('type');
+      const target = {
+        angle: e.target.angle,
+        top: e.target.top,
+        left: e.target.left,
+      };
+      const payload = {
+        type,
+        target,
+        id,
+      };
+
+      eventSerializer?.push('rotated', payload);
+    });
+
+    canvas?.on('object:scaled', (e: any) => {
+      if (!e.target.id) {
+        return;
+      }
+
+      if (isLocalObject(e.target.id, canvasId)) {
+        const type = e.target.get('type');
+        const target = {
+          top: e.target.top,
+          left: e.target.left,
+          angle: e.target.angle,
+          scaleX: e.target.scaleX,
+          scaleY: e.target.scaleY,
+          flipX: e.target.flipX,
+          flipY: e.target.flipY,
+        };
+
+        const payload = {
+          type,
+          target,
+          id: e.target.id,
+        };
+
+        // Serialize the event for synchronization
+        eventSerializer?.push('scaled', payload);
+      }
+    });
+
+    canvas?.on('object:skewed', (e: any) => {
+      if (!e.target.id) {
+        return;
+      }
+
+      if (isLocalObject(e.target.id, canvasId)) {
+        const type = e.target.get('type');
+        const target = {
+          top: e.target.top,
+          left: e.target.left,
+          angle: e.target.angle,
+          scaleX: e.target.scaleX,
+          scaleY: e.target.scaleY,
+          skewX: e.target.skewX,
+          skewY: e.target.skewY,
+        };
+
+        const payload = {
+          type,
+          target,
+          id: e.target.id,
+        };
+
+        // Serialize the event for synchronization
+        eventSerializer?.push('skewed', payload);
+      }
+    });
+
+    canvas?.on('object:modified', (e: any) => {
+      if (!e.target.id) {
+        return;
+      }
+
+      if (isLocalObject(e.target.id, canvasId)) {
+        const type = e.target.get('type');
+
+        // If text has been modified
+        if (type === 'textbox') {
+          const target = {
+            ...(type === 'textbox' && {
+              text: e.target.text,
+              fontFamily: e.target.fontFamily,
+              stroke: e.target.fill,
+              top: e.target.top,
+              left: e.target.left,
+              width: e.target.width,
+            }),
+          };
+
+          const payload = {
+            type,
+            target,
+            id: e.target.id,
+          };
+
+          // Serialize the event for synchronization
+          eventSerializer?.push('modified', payload);
+        }
+      }
+    });
+
+    canvas?.on('object:removed', (e: any) => {
+      if (!e.target.id) {
+        return;
+      }
+
+      if (isLocalObject(e.target.id, canvasId)) {
+        const payload = {
+          id: e.target.id,
+        };
+
+        // Serialize the event for synchronization
+        eventSerializer?.push('removed', payload as ObjectEvent);
+      }
+    });
+
+    remotePainter?.on(
+      'added',
+      (id: string, objectType: string, target: any) => {
+        // TODO: We'll want to filter events based on the user ID. This can
+        // be done like this. Example of extracting user id from object ID:
+        // let { user } = new ShapeID(id);
+        // Help!
+        // if (eventSerializer?.didSerializeEvent(id)) return;
+
+        // TODO: We'll have to replace this with the user based filtering. Because
+        // we want to allow bi-directional events (Teacher <-> Student) as opposed
+        // to (Teacher --> Student).
+
+        // Events come from another user
+        // Pass as props to user context
+        // Ids of shapes + userId  uuid()
+
+        if (!id) {
+          return;
+        }
+
+        // No queremos agregar nuestros propios eventos
+        if (isLocalObject(id, canvasId)) return;
+
+        if (objectType === 'textbox') {
+          let text = new fabric.Textbox(target.text, {
+            fontSize: 30,
+            fontWeight: 400,
+            fontStyle: 'normal',
+            fontFamily: target.fontFamily,
+            fill: target.stroke,
+            top: target.top,
+            left: target.left,
+            width: target.width,
+            selectable: false,
+          });
+
+          // @ts-ignore
+          text.id = id;
+
+          canvas?.add(text);
+          return;
+        }
+
+        if (objectType === 'path') {
+          const pencil = new fabric.PencilBrush();
+          pencil.color = target.stroke || '#000';
+          pencil.width = target.strokeWidth;
+
+          // Convert Points to SVG Path
+          const res = pencil.createPath(target.path);
+          // @ts-ignore
+          res.id = id;
+          res.selectable = false;
+          res.evented = false;
+
+          canvas?.add(res);
+        }
+      }
+    );
+
+    remotePainter?.on('moved', (id: string, target: any) => {
+      // if (eventSerializer?.didSerializeEvent(id)) return;
+
+      if (!id) {
+        return;
+      }
+
+      // No queremos agregar nuestros propios eventos
+      if (isLocalObject(id, canvasId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          obj.set({
+            angle: target.angle,
+            top: target.top,
+            left: target.left,
+          });
+        }
+      });
+      canvas?.renderAll();
+    });
+
+    remotePainter?.on('rotated', (id: string, target: any) => {
+      //if (eventSerializer?.didSerializeEvent(id)) return;
+      if (isLocalObject(id, canvasId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          obj.set({
+            angle: target.angle,
+            top: target.top,
+            left: target.left,
+          });
+        }
+      });
+      canvas?.renderAll();
+    });
+
+    remotePainter?.on('scaled', (id: string, target: any) => {
+      //if (eventSerializer?.didSerializeEvent(id)) return;
+      if (isLocalObject(id, canvasId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          obj.set({
+            angle: target.angle,
+            top: target.top,
+            left: target.left,
+            scaleX: target.scaleX,
+            scaleY: target.scaleY,
+            flipX: target.flipX,
+            flipY: target.flipY,
+          });
+        }
+      });
+      canvas?.renderAll();
+    });
+
+    remotePainter?.on('skewed', (id: string, target: any) => {
+      //if (eventSerializer?.didSerializeEvent(id)) return;
+      if (isLocalObject(id, canvasId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          obj.set({
+            angle: target.angle,
+            top: target.top,
+            left: target.left,
+            scaleX: target.scaleX,
+            scaleY: target.scaleY,
+            flipX: target.flipX,
+            flipY: target.flipY,
+            skewX: target.skewX,
+            skewY: target.skewY,
+          });
+        }
+      });
+      canvas?.renderAll();
+    });
+
+    remotePainter?.on(
+      'colorChanged',
+      (id: string, objectType: string, target: any) => {
+        //if (eventSerializer?.didSerializeEvent(id)) return;
+        if (isLocalObject(id, canvasId)) return;
+
+        canvas?.forEachObject(function (obj: any) {
+          if (obj.id && obj.id === id) {
+            if (objectType === 'textbox') {
+              obj.set({
+                fill: target.fill,
+              });
+            } else {
+              obj.set({
+                stroke: target.stroke,
+              });
+            }
+          }
+        });
+        canvas?.renderAll();
+      }
+    );
+
+    remotePainter?.on(
+      'modified',
+      (id: string, objectType: string, target: any) => {
+        // if (eventSerializer?.didSerializeEvent(id)) return;
+
+        if (isLocalObject(id, canvasId)) return;
+
+        canvas?.forEachObject(function (obj: any) {
+          if (obj.id && obj.id === id) {
+            if (objectType === 'textbox') {
+              obj.set({
+                text: target.text,
+                fontFamily: target.fontFamily,
+                stroke: target.fill,
+                top: target.top,
+                left: target.left,
+                width: target.width,
+              });
+            }
+          }
+        });
+        canvas?.renderAll();
+      }
+    );
+
+    remotePainter?.on('fontFamilyChanged', (id: string, target: any) => {
+      // if (eventSerializer?.didSerializeEvent(id)) return;
+
+      if (isLocalObject(id, canvasId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          obj.set({
+            fontFamily: target.fontFamily,
+          });
+        }
+      });
+      canvas?.renderAll();
+    });
+
+    remotePainter?.on('removed', (id: string) => {
+      // if (eventSerializer?.didSerializeEvent(id)) return;
+
+      if (isLocalObject(id, canvasId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          canvas?.remove(obj);
+        }
+      });
+      canvas?.renderAll();
+    });
+  }, [text, canvas, eventSerializer, remotePainter, canvasId]);
+
+  /**
+   * Send synchronization event for penColor and fontColor changes.
+   * */
+  useEffect(() => {
+    const objects = canvas?.getActiveObjects();
+
+    if (objects && objects.length) {
+      objects.forEach((obj: any) => {
+        if (isLocalObject(obj.id, canvasId)) {
+          const type = obj.get('type');
+          const target = (type: string) => {
+            return type === 'textbox'
+              ? { fill: obj.fill }
+              : { stroke: obj.stroke };
+          };
+          const payload = {
+            type,
+            target: target(type),
+            id: obj.id,
+          };
+
+          eventSerializer?.push('colorChanged', payload);
+        }
+      });
+    }
+  }, [canvas, eventSerializer, canvasId, penColor, fontColor]);
+
+  /**
+   * Send synchronization event for fontFamily changes.
+   * */
+  useEffect(() => {
+    const objects = canvas?.getActiveObjects();
+
+    if (objects && objects.length) {
+      objects.forEach((obj: any) => {
+        if (isLocalObject(obj.id, canvasId)) {
+          const type = obj.get('type');
+
+          if (type === 'textbox') {
+            const target = {
+              fontFamily,
+            };
+            const payload = {
+              type,
+              target,
+              id: obj.id,
+            };
+
+            eventSerializer?.push('fontFamilyChanged', payload);
+          }
+        }
+      });
+    }
+  }, [canvas, eventSerializer, canvasId, fontFamily]);
 
   /**
    * If pointerEvents changes to false, all the selected objects
@@ -959,9 +1521,8 @@ export const WhiteboardProvider = ({
   ]);
 
   /**
-   * If an object selection is made it, the changeLineWidth function
-   * will be executed to determine if is a free line drawing or not
-   * and know if the lineWidth variable must change or not
+   * Set Canvas Whiteboard selection ability
+   * @param {boolean} selection - value to set in canvas and objects selection
    */
   canvas?.on({
     'selection:created': manageChanges,
