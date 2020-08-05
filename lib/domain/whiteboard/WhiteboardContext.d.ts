@@ -1,5 +1,5 @@
 import React from 'react';
-import './whiteboard.css';
+import '../../assets/style/whiteboard.css';
 export declare const WhiteboardContext: any;
 export declare const WhiteboardProvider: ({ children, canvasId, canvasWidth, canvasHeight, toolbar, }: {
     children: React.ReactNode;
