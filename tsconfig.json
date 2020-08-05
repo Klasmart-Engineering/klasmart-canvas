@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -16,7 +12,7 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
+    "noEmit": false,
     "jsx": "react",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
@@ -25,10 +21,12 @@
     "declaration": true,
     "sourceMap": true
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/serviceWorker.ts",
+    "src/setupTests.ts",
+    "src/index.tsx",
+    "src/App.tsx"
   ]
 }
