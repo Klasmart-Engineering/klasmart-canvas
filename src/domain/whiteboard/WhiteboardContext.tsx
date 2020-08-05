@@ -32,7 +32,7 @@ import { PainterEvents } from './event-serializer/PainterEvents';
 import { Canvas, IText, IEvent } from 'fabric/fabric-impl';
 
 // @ts-ignore
-export const WhiteboardContext = createContext();
+export const WhiteboardContext = createContext<any>();
 
 export const WhiteboardProvider = ({
   children,
@@ -1015,6 +1015,10 @@ export const WhiteboardProvider = ({
     (specific: string, color?: string): void => {
       canvas?.on('mouse:down', (e: IEvent): void => {
         if (e.target) {
+          return;
+        }
+
+        if (!e.pointer) {
           return;
         }
 

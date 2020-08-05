@@ -3,6 +3,11 @@ import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogActions from '@material-ui/core/DialogActions';
+
+export interface IClearWhiteboardModal {
+  clearWhiteboard(): void;
+}
+
 export const useWhiteboardClearModal = () => {
   const [clearWhiteboardModal, setOpen] = useState(false);
   const openModal = () => {
@@ -12,10 +17,7 @@ export const useWhiteboardClearModal = () => {
   const closeModal = () => {
     setOpen(false);
   };
-
-  interface IClearWhiteboardModal {
-    clearWhiteboard(): void;
-  }
+  
   const ClearWhiteboardModal = (props: IClearWhiteboardModal) => {
     return (
       <div>
