@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import ToolbarSection from './toolbar-section/ToolbarSection';
-import './toolbar.css';
+import '../../assets/style/toolbar.css';
 import ToolbarButton from './toolbar-button/ToolbarButton';
 import ToolbarSelector from './toolbar-selector/ToolbarSelector';
 import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';

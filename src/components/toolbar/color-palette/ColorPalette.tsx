@@ -3,7 +3,7 @@ import { colorPaletteOptions } from '../toolbar-sections';
 import SpecialButton from '../special-button/SpecialButton';
 import { OverridableComponent } from '@material-ui/core/OverridableComponent';
 import { SvgIconTypeMap } from '@material-ui/core';
-import './color-palette.css';
+import '../../../assets/style/color-palette.css';
 
 interface IColorPalette {
   Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;

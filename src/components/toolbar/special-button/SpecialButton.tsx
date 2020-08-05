@@ -1,5 +1,5 @@
 import React from 'react';
-import '../toolbar-button/toolbar-button.css';
+import '../../../assets/style/toolbar-button.css';
 import ISpecialButton from '../../../interfaces/toolbar/toolbar-special-elements/special-button';
 
 /**

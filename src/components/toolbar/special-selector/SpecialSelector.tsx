@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import SpecialButton from '../special-button/SpecialButton';
-import '../toolbar-selector/toolbar-selector.css';
+import '../../../assets/style/toolbar-selector.css';
 import ISpecialSelector from '../../../interfaces/toolbar/toolbar-special-elements/toolbar-special-selector';
 import IStyleOption from '../../../interfaces/toolbar/toolbar-special-elements/style-option';
 

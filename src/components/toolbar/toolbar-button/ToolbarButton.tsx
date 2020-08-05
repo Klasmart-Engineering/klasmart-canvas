@@ -1,6 +1,6 @@
 import React from 'react';
 import IToolbarButton from '../../../interfaces/toolbar/toolbar-button/toolbar-button';
-import './toolbar-button.css';
+import '../../../assets/style/toolbar-button.css';
 
 /**
  * Render each button that will be included in the toolbar

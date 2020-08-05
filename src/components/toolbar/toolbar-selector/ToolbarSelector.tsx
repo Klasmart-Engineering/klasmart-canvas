@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import './toolbar-selector.css';
+import '../../../assets/style/toolbar-selector.css';
 import IToolbarSelector from '../../../interfaces/toolbar/toolbar-selector/toolbar-selector';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import ColorPalette from '../color-palette/ColorPalette';
