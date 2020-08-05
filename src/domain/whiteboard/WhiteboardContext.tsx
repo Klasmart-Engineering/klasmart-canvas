@@ -831,9 +831,24 @@ export const WhiteboardProvider = ({
         object.evented = true;
         if (object.fill === 'transparent') {
           object.set({
-            fill: canvas.backgroundColor,
             mimicBackground: true,
           });
+        }
+      });
+
+      canvas?.renderAll();
+
+      canvas?.on('mouse:over', (event: IEvent) => {
+        if (event.target && (event.target as TypedShape).mimicBackground) {
+          event.target?.set('fill', canvas.backgroundColor);
+          canvas.renderAll();
+        }
+      });
+
+      canvas?.on('mouse:out', (event: IEvent) => {
+        if (event.target && (event.target as TypedShape).mimicBackground) {
+          event.target?.set('fill', 'transparent');
+          canvas.renderAll();
         }
       });
 
