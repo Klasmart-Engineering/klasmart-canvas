@@ -1,0 +1,1 @@
+{"version":3,"file":"useTextIsActive.js","sourceRoot":"","sources":["../../../../src/domain/whiteboard/hooks/useTextIsActive.tsx"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,OAAO,CAAC;AAEjC,MAAM,CAAC,IAAM,eAAe,GAAG;IACvB,IAAA,oBAAoD,EAAnD,oBAAY,EAAE,0BAAqC,CAAC;IAE3D,OAAO,EAAE,YAAY,cAAA,EAAE,kBAAkB,oBAAA,EAAE,CAAC;AAC9C,CAAC,CAAC"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"useShape.js","sourceRoot":"","sources":["../../../../src/domain/whiteboard/hooks/useShape.tsx"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,OAAO,CAAC;AACjC,MAAM,CAAC,IAAM,QAAQ,GAAG,UAAC,QAA8B;IAA9B,yBAAA,EAAA,sBAA8B;IAC/C,IAAA,uBAAyC,EAAxC,aAAK,EAAE,mBAAiC,CAAC;IAChD,OAAO,EAAE,KAAK,OAAA,EAAE,WAAW,aAAA,EAAE,CAAC;AAChC,CAAC,CAAC"}
