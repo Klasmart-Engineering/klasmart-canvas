@@ -2,32 +2,23 @@
   "name": "kidsloop-canvas",
   "version": "0.1.0",
   "private": true,
+  "main": "lib/exports.js",
   "dependencies": {
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^4.9.1",
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.5.0",
-    "@testing-library/user-event": "^7.2.1",
-    "@types/fabric": "^3.6.7",
-    "@types/jest": "^24.9.1",
-    "@types/node": "^12.12.47",
-    "@types/react": "^16.9.41",
-    "@types/react-color": "^3.0.4",
-    "@types/react-dom": "^16.9.8",
     "fabric": "^3.6.3",
     "fontfaceobserver": "^2.1.0",
     "react": "^16.13.1",
     "react-color": "^2.18.1",
     "react-dom": "^16.13.1",
     "react-player": "^2.5.0",
-    "react-scripts": "3.4.1",
     "typescript": "^3.7.5",
     "uuid": "^8.3.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "build:lib": "rimraf ./lib && tsc",
+    "build:lib": "rimraf ./lib && tsc && cp -R src/assets lib/assets",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -51,6 +42,16 @@
     "@types/uuid": "^8.0.0",
     "prettier": "2.0.5",
     "react-test-renderer": "^16.13.1",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "@types/fabric": "^3.6.7",
+    "@types/jest": "^24.9.1",
+    "@types/node": "^12.12.47",
+    "@types/react": "^16.9.41",
+    "@types/react-color": "^3.0.4",
+    "@types/react-dom": "^16.9.8",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.5.0",
+    "@testing-library/user-event": "^7.2.1",
+    "react-scripts": "3.4.1"
   }
 }
