@@ -1,0 +1,1 @@
+{"version":3,"file":"useText.js","sourceRoot":"","sources":["../../../../src/domain/whiteboard/hooks/useText.tsx"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,OAAO,CAAC;AACjC,MAAM,CAAC,IAAM,OAAO,GAAG,UAAC,OAAoB;IAApB,wBAAA,EAAA,YAAoB;IACpC,IAAA,sBAAsC,EAArC,YAAI,EAAE,kBAA+B,CAAC;IAC7C,OAAO,EAAE,IAAI,MAAA,EAAE,UAAU,YAAA,EAAE,CAAC;AAC9B,CAAC,CAAC"}
