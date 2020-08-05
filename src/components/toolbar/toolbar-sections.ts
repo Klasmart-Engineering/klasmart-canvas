@@ -56,10 +56,10 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'white_color',
-    value: '#fff',
+    value: '#ffffff',
     title: 'White',
     style: {
-      color: '#fff',
+      color: '#ffffff',
       backgroundColor: 'rgba(80, 80, 80, 0.1)',
       borderRadius: '4px',
     },
@@ -82,10 +82,10 @@ const colorPaletteOptions: IStyleOption[] = [
   },
   {
     id: 'black_color',
-    value: '#000',
+    value: '#000000',
     title: 'Black',
     style: {
-      color: '#000',
+      color: '#000000',
     },
   },
   {

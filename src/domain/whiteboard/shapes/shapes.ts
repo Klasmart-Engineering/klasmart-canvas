@@ -26,13 +26,21 @@ export const rectangle = (
   filled: boolean,
   thickness: number
 ) => {
-  return new fabric.Rect({
+  const shape = new fabric.Rect({
     width: width,
     height: height,
+    selectable: false,
+    evented: false,
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
+    strokeUniform: true,
     padding: 15,
+  });
+
+  return fabric.util.object.extend(shape, {
+    shapeType: 'shape',
+    mimicBackground: true,
   });
 };
 
@@ -50,13 +58,20 @@ export const triangle = (
   filled: boolean,
   thickness: number
 ) => {
-  return new fabric.Triangle({
+  const shape = new fabric.Triangle({
     width: width,
     height: height,
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
+    selectable: false,
+    evented: false,
     padding: 15,
+  });
+
+  return fabric.util.object.extend(shape, {
+    shapeType: 'shape',
+    mimicBackground: true,
   });
 };
 
@@ -74,13 +89,21 @@ export const circle = (
   filled: boolean,
   thickness: number
 ) => {
-  return new fabric.Ellipse({
+  const shape = new fabric.Ellipse({
     rx: width,
     ry: height,
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
+    selectable: false,
+    evented: false,
+    strokeUniform: true,
     padding: 15,
+  });
+
+  return fabric.util.object.extend(shape, {
+    shapeType: 'shape',
+    mimicBackground: true,
   });
 };
 
@@ -94,7 +117,7 @@ export const pentagon = (
   filled: boolean,
   thickness: number
 ): fabric.Object => {
-  const shape = new fabric.Polygon([
+  let shape = new fabric.Polygon([
     { x: 200, y: 0 },
     { x: 250, y: 42 },
     { x: 230, y: 100 },
@@ -102,12 +125,20 @@ export const pentagon = (
     { x: 150, y: 42 },
   ]);
 
+  shape = fabric.util.object.extend(shape, {
+    shapeType: 'shape',
+    mimicBackground: true,
+  });
+
   return shape.set({
     scaleX: 0.02,
     scaleY: 0.02,
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
+    selectable: false,
+    evented: false,
+    strokeUniform: true,
     padding: 15,
   });
 };
@@ -122,7 +153,7 @@ export const hexagon = (
   filled: boolean,
   thickness: number
 ): fabric.Object => {
-  const shape = new fabric.Polygon([
+  let shape = new fabric.Polygon([
     { x: 125, y: 0 },
     { x: 275, y: 0 },
     { x: 350, y: 175 },
@@ -131,12 +162,20 @@ export const hexagon = (
     { x: 50, y: 175 },
   ]);
 
+  shape = fabric.util.object.extend(shape, {
+    shapeType: 'shape',
+    mimicBackground: true,
+  });
+
   return shape.set({
     scaleX: 0.02,
     scaleY: 0.02,
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
+    selectable: false,
+    evented: false,
+    strokeUniform: true,
     padding: 15,
   });
 };
@@ -157,15 +196,24 @@ export const generic = (
   filled: boolean,
   thickness: number
 ): fabric.Object => {
-  const shape = new fabric.Path(path);
+  let shape = new fabric.Path(path);
   const scaleX = 1 / (((shape.width as unknown) as number) / width);
   const scaleY = 1 / (((shape.height as unknown) as number) / height);
+
+  fabric.util.object.extend(shape, {
+    shapeType: 'shape',
+    mimicBackground: true,
+  });
+
   return shape.set({
     scaleX,
     scaleY,
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
+    selectable: false,
+    evented: false,
+    strokeUniform: true,
     padding: 15,
   });
 };
