@@ -370,7 +370,6 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // Serialize the event for synchronization
         eventSerializer?.push('added', payload);
       }
     });
@@ -463,7 +462,6 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // Serialize the event for synchronization
         eventSerializer?.push('scaled', payload);
       }
     });
@@ -491,7 +489,6 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // Serialize the event for synchronization
         eventSerializer?.push('skewed', payload);
       }
     });
@@ -523,7 +520,6 @@ export const WhiteboardProvider = ({
             id: e.target.id,
           };
 
-          // Serialize the event for synchronization
           eventSerializer?.push('modified', payload);
         }
       }
@@ -539,7 +535,6 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // Serialize the event for synchronization
         eventSerializer?.push('removed', payload as ObjectEvent);
       }
     });
@@ -612,7 +607,6 @@ export const WhiteboardProvider = ({
         return;
       }
 
-      // No queremos agregar nuestros propios eventos
       if (isLocalObject(id, canvasId)) return;
 
       canvas?.forEachObject(function (obj: any) {
