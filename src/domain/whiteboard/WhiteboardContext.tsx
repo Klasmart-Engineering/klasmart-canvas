@@ -30,6 +30,7 @@ import { PainterEvent } from './event-serializer/PainterEvent';
 import { EventPainterController } from './event-serializer/EventPainterController';
 import { ObjectEvent } from './event-serializer/PaintEventSerializer';
 import { PainterEvents } from './event-serializer/PainterEvents';
+import { EventDrivenCanvasRenderer } from './EventDrivenCanvasRenderer';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -55,6 +56,7 @@ export const WhiteboardProvider = ({
   const { eraseType, updateEraseType } = useEraseType();
   const { pointerEvents, setPointerEvents } = usePointerEvents(false);
   const [canvas, setCanvas] = useState();
+  const { remoteRenderer, setRemoteRenderer } = useState<EventDrivenCanvasRenderer>();
 
   const {
     ClearWhiteboardModal,
@@ -105,7 +107,10 @@ export const WhiteboardProvider = ({
     });
 
     setCanvas(canvasInstance);
-  }, [canvasHeight, canvasWidth, canvasId]);
+
+    setRemoteRenderer(new EventDrivenCanvasRenderer(canvasInstance));
+    // TODO: Need to attach the remotePainter using remoteRenderer.attachEvents(remotePainter)
+  }, [canvasHeight, canvasWidth, canvasId, setRemoteRenderer]);
 
   /**
    * Set up the EventPainterController (remotePainter) it will handle incoming
