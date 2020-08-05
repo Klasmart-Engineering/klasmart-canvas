@@ -27,6 +27,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:lib": "rimraf ./lib && tsc",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -49,6 +50,7 @@
     "@testing-library/react-hooks": "^3.3.0",
     "@types/uuid": "^8.0.0",
     "prettier": "2.0.5",
-    "react-test-renderer": "^16.13.1"
+    "react-test-renderer": "^16.13.1",
+    "rimraf": "^3.0.2"
   }
 }
