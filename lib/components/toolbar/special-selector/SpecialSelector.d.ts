@@ -1,5 +1,5 @@
 /// <reference types="react" />
-import '../toolbar-selector/toolbar-selector.css';
+import '../../../assets/style/toolbar-selector.css';
 import ISpecialSelector from '../../../interfaces/toolbar/toolbar-special-elements/toolbar-special-selector';
 /**
  * Render an SpecialSelector that uses a stylizable Icon (Font like)

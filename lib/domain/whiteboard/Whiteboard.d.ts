@@ -1,4 +1,4 @@
 /// <reference types="react" />
-import './whiteboard.css';
+import '../../assets/style/whiteboard.css';
 declare function Whiteboard(): JSX.Element;
 export default Whiteboard;

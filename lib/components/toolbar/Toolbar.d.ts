@@ -1,5 +1,5 @@
 /// <reference types="react" />
-import './toolbar.css';
+import '../../assets/style/toolbar.css';
 /**
  * Render the toolbar that will be used in the whiteboard
  */

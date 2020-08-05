@@ -1,5 +1,5 @@
 /// <reference types="react" />
-import './toolbar-selector.css';
+import '../../../assets/style/toolbar-selector.css';
 import IToolbarSelector from '../../../interfaces/toolbar/toolbar-selector/toolbar-selector';
 /**
  * Render a ToolbarSelector
