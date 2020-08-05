@@ -21,7 +21,7 @@ import { useFontColor } from './hooks/useFontColor';
 import { useTextIsActive } from './hooks/useTextIsActive';
 import { useShapeIsActive } from './hooks/useShapeIsActive';
 import { useBrushIsActive } from './hooks/useBrushIsActive';
-import './whiteboard.css';
+import '../../assets/style/whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 import { useShapesAreSelectable } from './hooks/useShapesAreSelectable';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
