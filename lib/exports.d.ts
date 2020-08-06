@@ -3,11 +3,10 @@ import Toolbar from './components/toolbar/Toolbar';
 declare const _default: {
     EventSerializerProvider: import("react").FunctionComponent<{
         children?: any;
+        simulateNetworkSynchronization?: boolean | undefined;
     }>;
-    WhiteboardProvider: ({ children, canvasId, canvasWidth, canvasHeight, toolbar, }: {
+    WhiteboardProvider: ({ children, canvasWidth, canvasHeight, }: {
         children: import("react").ReactNode;
-        canvasId: string;
-        toolbar: import("react").ReactComponentElement<any, Pick<any, string | number | symbol>>;
         canvasWidth: string;
         canvasHeight: string;
     }) => JSX.Element;
