@@ -21,13 +21,12 @@ import { useFontColor } from './hooks/useFontColor';
 import { useTextIsActive } from './hooks/useTextIsActive';
 import { useShapeIsActive } from './hooks/useShapeIsActive';
 import { useBrushIsActive } from './hooks/useBrushIsActive';
-import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 import { useShapesAreSelectable } from './hooks/useShapesAreSelectable';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 import { useLineWidth } from './hooks/useLineWidth';
-import { Canvas, IEvent, TextOptions } from 'fabric/fabric-impl';
+import { Canvas, IEvent, TextOptions, IText } from 'fabric/fabric-impl';
 import { useFloodFill } from './hooks/useFloodFill';
 import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 import { TypedShape } from '../../interfaces/shapes/shapes';
@@ -114,9 +113,9 @@ export const WhiteboardProvider = ({
   useEffect(() => {
     // @ts-ignore
     const canvasInstance = new fabric.Canvas(canvasId, {
-      backgroundColor: 'white',
-      width: parseInt(canvasWidth, 10),
-      height: parseInt(canvasHeight, 10),
+      backgroundColor: undefined,
+      width: Number(canvasWidth),
+      height: Number(canvasHeight),
       isDrawingMode: false,
       selectionBorderColor: 'rgba(100, 100, 255, 1)',
       selectionLineWidth: 2,
@@ -189,17 +188,16 @@ export const WhiteboardProvider = ({
    * */
   useEffect(() => {
     if (textIsActive) {
-      //@ts-ignore
-      canvas?.on('mouse:down', (options: { target: null; e: any }) => {
-        if (options.target === null) {
+      canvas?.on('mouse:down', (e: IEvent) => {
+        if (e.target === null && e) {
           let text = new fabric.IText(' ', {
             fontFamily: fontFamily,
             fontSize: 30,
             fontWeight: 400,
             fill: fontColor,
             fontStyle: 'normal',
-            top: options.e.offsetY,
-            left: options.e.offsetX,
+            top: e.pointer?.y,
+            left: e.pointer?.x,
             cursorDuration: 500,
           });
 
@@ -359,8 +357,7 @@ export const WhiteboardProvider = ({
         .load()
         .then(() => {
           if (canvas?.getActiveObject()) {
-            //@ts-ignore
-            canvas.getActiveObject().set('fontFamily', font);
+            (canvas.getActiveObject() as IText).set('fontFamily', font);
             canvas.requestRenderAll();
           }
         })
@@ -472,10 +469,12 @@ export const WhiteboardProvider = ({
       if (type === 'activeSelection') {
         e.target._objects.forEach((activeObject: any) => {
           if (isLocalObject(activeObject.id, canvasId)) {
+            const matrix = activeObject.calcTransformMatrix();
+            const options = fabric.util.qrDecompose(matrix);
             const target = {
-              top: e.target.top + activeObject.top + e.target.height / 2,
-              left: e.target.left + activeObject.left + e.target.width / 2,
-              angle: activeObject.angle,
+              top: options.translateY,
+              left: options.translateX,
+              angle: options.angle,
             };
 
             const payload = {
@@ -521,12 +520,36 @@ export const WhiteboardProvider = ({
     });
 
     canvas?.on('object:rotated', (e: any) => {
+      const type = e.target.get('type');
+      if (type === 'activeSelection') {
+        //object is your desired object inside the group.
+        e.target._objects.forEach((activeObject: any) => {
+          if (isLocalObject(activeObject.id, canvasId)) {
+            const matrix = activeObject.calcTransformMatrix();
+            const options = fabric.util.qrDecompose(matrix);
+            const target = {
+              top: options.translateY,
+              left: options.translateX,
+              angle: options.angle,
+            };
+
+            const payload = {
+              type,
+              target,
+              id: activeObject.id,
+            };
+
+            eventSerializer?.push('rotated', payload);
+          }
+        });
+        return;
+      }
+
       if (!e.target.id) {
         return;
       }
 
       const id = e.target.id;
-      const type = e.target.get('type');
       const target = {
         angle: e.target.angle,
         top: e.target.top,
@@ -601,7 +624,6 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // Serialize the event for synchronization
         eventSerializer?.push('skewed', payload);
       }
     });
@@ -633,7 +655,6 @@ export const WhiteboardProvider = ({
             id: e.target.id,
           };
 
-          // Serialize the event for synchronization
           eventSerializer?.push('modified', payload);
         }
       }
@@ -729,43 +750,69 @@ export const WhiteboardProvider = ({
       }
     );
 
-    remotePainter?.on('moved', (id: string, target: any) => {
-      // if (eventSerializer?.didSerializeEvent(id)) return;
+    remotePainter?.on(
+      'moved',
+      (id: string, objectType: string, target: any) => {
+        if (!id) {
+          return;
+        }
 
-      if (!id) {
-        return;
+        if (isLocalObject(id, canvasId)) return;
+
+        canvas?.forEachObject(function (obj: any) {
+          if (obj.id && obj.id === id) {
+            if (objectType === 'activeSelection') {
+              obj.set({
+                angle: target.angle,
+                top: target.top,
+                left: target.left,
+                originX: 'center',
+                originY: 'center',
+              });
+            } else {
+              obj.set({
+                angle: target.angle,
+                top: target.top,
+                left: target.left,
+                originX: 'left',
+                originY: 'top',
+              });
+            }
+          }
+        });
+        canvas?.renderAll();
       }
+    );
 
-      // No queremos agregar nuestros propios eventos
-      if (isLocalObject(id, canvasId)) return;
+    remotePainter?.on(
+      'rotated',
+      (id: string, objectType: string, target: any) => {
+        if (isLocalObject(id, canvasId)) return;
 
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          obj.set({
-            angle: target.angle,
-            top: target.top,
-            left: target.left,
-          });
-        }
-      });
-      canvas?.renderAll();
-    });
-
-    remotePainter?.on('rotated', (id: string, target: any) => {
-      //if (eventSerializer?.didSerializeEvent(id)) return;
-      if (isLocalObject(id, canvasId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          obj.set({
-            angle: target.angle,
-            top: target.top,
-            left: target.left,
-          });
-        }
-      });
-      canvas?.renderAll();
-    });
+        canvas?.forEachObject(function (obj: any) {
+          if (obj.id && obj.id === id) {
+            if (objectType === 'activeSelection') {
+              obj.set({
+                angle: target.angle,
+                top: target.top,
+                left: target.left,
+                originX: 'center',
+                originY: 'center',
+              });
+            } else {
+              obj.set({
+                angle: target.angle,
+                top: target.top,
+                left: target.left,
+                originX: 'left',
+                originY: 'top',
+              });
+            }
+          }
+        });
+        canvas?.renderAll();
+      }
+    );
 
     remotePainter?.on('scaled', (id: string, target: any) => {
       //if (eventSerializer?.didSerializeEvent(id)) return;
@@ -1132,7 +1179,7 @@ export const WhiteboardProvider = ({
       specific?: string
     ): void => {
       //@ts-ignore
-      canvas?.on('mouse:move', (e: CanvasEvent): void => {
+      canvas?.on('mouse:move', (e: IEvent): void => {
         canvas.selection = false;
 
         if (specific === 'filledCircle' || specific === 'circle') {
@@ -1150,11 +1197,11 @@ export const WhiteboardProvider = ({
 
         let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
 
-        if (coordsStart.x > e.pointer.x) {
+        if (e.pointer && coordsStart.x > e.pointer.x) {
           anchor = { ...anchor, originX: 'right' };
         }
 
-        if (coordsStart.y > e.pointer.y) {
+        if (e.pointer && coordsStart.y > e.pointer.y) {
           anchor = { ...anchor, originY: 'bottom' };
         }
 
@@ -1174,8 +1221,7 @@ export const WhiteboardProvider = ({
       coordsStart: any,
       specific: string
     ): void => {
-      //@ts-ignore
-      canvas?.on('mouse:up', (e: CanvasEvent): void => {
+      canvas?.on('mouse:up', (e: IEvent): void => {
         let size;
 
         if (specific === 'filledCircle' || specific === 'circle') {
@@ -1210,20 +1256,21 @@ export const WhiteboardProvider = ({
    */
   const mouseDown = useCallback(
     (specific: string, color?: string): void => {
-      //@ts-ignore
-      canvas?.on('mouse:down', (e: CanvasEvent): void => {
+      canvas?.on('mouse:down', (e: IEvent): void => {
         if (e.target) {
           return;
         }
 
         const shape = shapeSelector(specific);
-        shape.set({
-          top: e.pointer.y,
-          left: e.pointer.x,
-          shapeType: 'shape',
-          name: specific,
-          strokeUniform: true,
-        });
+        if (e.pointer) {
+          shape.set({
+            top: e.pointer.y,
+            left: e.pointer.x,
+            shapeType: 'shape',
+            name: specific,
+            strokeUniform: true,
+          });
+        }
 
         // fill and type properties just can be resetted if is an filled shape
         if (shape.fill !== 'transparent') {
@@ -1336,7 +1383,7 @@ export const WhiteboardProvider = ({
     updateFontColor(color);
     if (
       canvas?.getActiveObject() &&
-      (canvas.getActiveObject() as TextOptions).text
+      (canvas.getActiveObject() as IText).text
     ) {
       canvas.getActiveObject().set('fill', color);
       canvas.renderAll();

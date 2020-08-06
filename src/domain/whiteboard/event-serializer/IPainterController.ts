@@ -28,8 +28,14 @@ export interface IPainterController {
     event: 'added',
     listener: (id: string, objectType: string, target: any) => void
   ): this;
-  on(event: 'moved', listener: (id: string, target: any) => void): this;
-  on(event: 'rotated', listener: (id: string, target: any) => void): this;
+  on(
+    event: 'moved',
+    listener: (id: string, objectType: string, target: any) => void
+  ): this;
+  on(
+    event: 'rotated',
+    listener: (id: string, objectType: string, target: any) => void
+  ): this;
   on(event: 'scaled', listener: (id: string, target: any) => void): this;
   on(event: 'skewed', listener: (id: string, target: any) => void): this;
   on(
@@ -49,7 +55,11 @@ export interface IPainterController {
   ): this;
   removeListener(
     event: 'moved',
-    listener: (id: string, target: any) => void
+    listener: (id: string, objectType: string, target: any) => void
+  ): this;
+  removeListener(
+    event: 'rotated',
+    listener: (id: string, objectType: string, target: any) => void
   ): this;
   removeListener(
     event: 'scaled',
