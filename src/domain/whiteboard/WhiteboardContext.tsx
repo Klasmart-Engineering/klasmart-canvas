@@ -25,8 +25,6 @@ import '../../assets/style/whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
-import { PainterEvent } from './event-serializer/PainterEvent';
-import { EventPainterController } from './event-serializer/EventPainterController';
 import { ObjectEvent } from './event-serializer/PaintEventSerializer';
 import { PainterEvents } from './event-serializer/PainterEvents';
 import { Canvas, IText, IEvent } from 'fabric/fabric-impl';
@@ -76,11 +74,8 @@ export const WhiteboardProvider = ({
 
   // Event serialization for synchronizing whiteboard state.
   const {
-    state: { eventSerializer },
+    state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
-  const [remotePainter, setRemotePainter] = useState<
-    EventPainterController | undefined
-  >();
 
   const isLocalObject = (id: string, canvasId: string) => {
     const object = id.split(':');
@@ -106,47 +101,6 @@ export const WhiteboardProvider = ({
 
     setCanvas(canvasInstance);
   }, [canvasHeight, canvasWidth, canvasId]);
-
-  /**
-   * Set up the EventPainterController (remotePainter) it will handle incoming
-   * events (from the server) and convert those into commands we can use for
-   * updating our local whiteboard.
-   */
-  useEffect(() => {
-    if (!eventSerializer) return;
-
-    const remotePainter = new EventPainterController();
-
-    // NOTE: We will receive events from the server as arrays of serialized
-    // events. When joining a room the user will receive a big list of events
-    // of all that's been painted so far. After they received the initial big
-    // list the will receive individual events or smaller chunks of events as
-    // others users (and themselves) interact more with the whiteboard.
-
-    // The function receiving events might look like this:
-    const handleRemoteEvent = (payload: PainterEvent) => {
-      // IMPORTANT: We should keep in mind the user's own events
-      // will appear in this list as well. The server doesn't do
-      // any filtering based on the user at this point.
-
-      // Once the events have been received, there needs to be some code
-      // transforming the event data into commands for drawing or updating
-      // objects on the canvas.
-
-      remotePainter.handlePainterEvent([payload]);
-    };
-
-    // NOTE: This handler simulates receiving events from the server
-    // usually we wouldn't feed remote events directly in to the event
-    // serializer.
-    eventSerializer.on('event', handleRemoteEvent);
-
-    setRemotePainter(remotePainter);
-
-    return () => {
-      eventSerializer.removeListener('event', handleRemoteEvent);
-    };
-  }, [eventSerializer]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -565,7 +519,7 @@ export const WhiteboardProvider = ({
       }
     });
 
-    remotePainter?.on(
+    eventController?.on(
       'added',
       (id: string, objectType: string, target: any) => {
         // TODO: We'll want to filter events based on the user ID. This can
@@ -626,7 +580,7 @@ export const WhiteboardProvider = ({
       }
     );
 
-    remotePainter?.on(
+    eventController?.on(
       'moved',
       (id: string, objectType: string, target: any) => {
         if (!id) {
@@ -660,7 +614,7 @@ export const WhiteboardProvider = ({
       }
     );
 
-    remotePainter?.on(
+    eventController?.on(
       'rotated',
       (id: string, objectType: string, target: any) => {
         if (isLocalObject(id, canvasId)) return;
@@ -690,7 +644,7 @@ export const WhiteboardProvider = ({
       }
     );
 
-    remotePainter?.on('scaled', (id: string, target: any) => {
+    eventController?.on('scaled', (id: string, target: any) => {
       //if (eventSerializer?.didSerializeEvent(id)) return;
       if (isLocalObject(id, canvasId)) return;
 
@@ -710,7 +664,7 @@ export const WhiteboardProvider = ({
       canvas?.renderAll();
     });
 
-    remotePainter?.on('skewed', (id: string, target: any) => {
+    eventController?.on('skewed', (id: string, target: any) => {
       //if (eventSerializer?.didSerializeEvent(id)) return;
       if (isLocalObject(id, canvasId)) return;
 
@@ -732,7 +686,7 @@ export const WhiteboardProvider = ({
       canvas?.renderAll();
     });
 
-    remotePainter?.on(
+    eventController?.on(
       'colorChanged',
       (id: string, objectType: string, target: any) => {
         //if (eventSerializer?.didSerializeEvent(id)) return;
@@ -755,7 +709,7 @@ export const WhiteboardProvider = ({
       }
     );
 
-    remotePainter?.on(
+    eventController?.on(
       'modified',
       (id: string, objectType: string, target: any) => {
         // if (eventSerializer?.didSerializeEvent(id)) return;
@@ -780,7 +734,7 @@ export const WhiteboardProvider = ({
       }
     );
 
-    remotePainter?.on('fontFamilyChanged', (id: string, target: any) => {
+    eventController?.on('fontFamilyChanged', (id: string, target: any) => {
       // if (eventSerializer?.didSerializeEvent(id)) return;
 
       if (isLocalObject(id, canvasId)) return;
@@ -795,7 +749,7 @@ export const WhiteboardProvider = ({
       canvas?.renderAll();
     });
 
-    remotePainter?.on('removed', (id: string) => {
+    eventController?.on('removed', (id: string) => {
       // if (eventSerializer?.didSerializeEvent(id)) return;
 
       if (isLocalObject(id, canvasId)) return;
@@ -807,7 +761,7 @@ export const WhiteboardProvider = ({
       });
       canvas?.renderAll();
     });
-  }, [text, canvas, eventSerializer, remotePainter, canvasId]);
+  }, [text, canvas, eventSerializer, eventController, canvasId]);
 
   /**
    * Send synchronization event for penColor and fontColor changes.
