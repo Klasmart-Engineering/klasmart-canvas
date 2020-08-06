@@ -381,22 +381,11 @@ export const WhiteboardProvider = ({
           if (isLocalObject(activeObject.id, canvasId)) {
             const matrix = activeObject.calcTransformMatrix();
             const options = fabric.util.qrDecompose(matrix);
-
-            console.log(e.target.top, activeObject.top, options.translateY);
-            console.log(e.target.left, activeObject.left, options.translateX);
-            // console.log(e.target.angle, activeObject.angle, options.angle);
-
             const target = {
               top: options.translateY,
               left: options.translateX,
               angle: options.angle,
             };
-
-            // const target = {
-            //   top: e.target.top + activeObject.top + e.target.height / 2,
-            //   left: e.target.left + activeObject.left + e.target.width / 2,
-            //   angle: activeObject.angle,
-            // };
 
             const payload = {
               type,
@@ -439,26 +428,17 @@ export const WhiteboardProvider = ({
           if (isLocalObject(activeObject.id, canvasId)) {
             const matrix = activeObject.calcTransformMatrix();
             const options = fabric.util.qrDecompose(matrix);
-
-            console.log('origins', activeObject.originX, activeObject.originY);
-            console.log(e.target.top, activeObject.top, options.translateY);
-            console.log(e.target.left, activeObject.left, options.translateX);
-            // console.log(e.target.angle, activeObject.angle, options.angle);
-
             const target = {
               top: options.translateY,
               left: options.translateX,
               angle: options.angle,
             };
 
-            // console.log({ target });
             const payload = {
               type,
               target,
               id: activeObject.id,
             };
-
-            // console.log({payload})
 
             eventSerializer?.push('rotated', payload);
           }
