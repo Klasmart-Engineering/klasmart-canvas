@@ -5,10 +5,8 @@ declare const _default: {
         children?: any;
         simulateNetworkSynchronization?: boolean | undefined;
     }>;
-    WhiteboardProvider: ({ children, canvasWidth, canvasHeight, }: {
+    WhiteboardProvider: ({ children, }: {
         children: import("react").ReactNode;
-        canvasWidth: string;
-        canvasHeight: string;
     }) => JSX.Element;
     Toolbar: typeof Toolbar;
 };
