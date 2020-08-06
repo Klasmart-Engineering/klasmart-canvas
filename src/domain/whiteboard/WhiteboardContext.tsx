@@ -21,7 +21,6 @@ import { useFontColor } from './hooks/useFontColor';
 import { useTextIsActive } from './hooks/useTextIsActive';
 import { useShapeIsActive } from './hooks/useShapeIsActive';
 import { useBrushIsActive } from './hooks/useBrushIsActive';
-import CanvasEvent from '../../interfaces/canvas-events/canvas-events';
 import './whiteboard.css';
 import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
@@ -30,6 +29,7 @@ import { PainterEvent } from './event-serializer/PainterEvent';
 import { EventPainterController } from './event-serializer/EventPainterController';
 import { ObjectEvent } from './event-serializer/PaintEventSerializer';
 import { PainterEvents } from './event-serializer/PainterEvents';
+import { Canvas, IText, IEvent } from 'fabric/fabric-impl';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -54,7 +54,7 @@ export const WhiteboardProvider = ({
   const { shape, updateShape } = useShape();
   const { eraseType, updateEraseType } = useEraseType();
   const { pointerEvents, setPointerEvents } = usePointerEvents(false);
-  const [canvas, setCanvas] = useState();
+  const [canvas, setCanvas] = useState<Canvas>();
 
   const {
     ClearWhiteboardModal,
@@ -98,9 +98,9 @@ export const WhiteboardProvider = ({
   useEffect(() => {
     // @ts-ignore
     const canvasInstance = new fabric.Canvas(canvasId, {
-      backgroundColor: null,
-      width: canvasWidth,
-      height: canvasHeight,
+      backgroundColor: undefined,
+      width: Number(canvasWidth),
+      height: Number(canvasHeight),
       isDrawingMode: false,
     });
 
@@ -153,16 +153,16 @@ export const WhiteboardProvider = ({
    * */
   useEffect(() => {
     if (textIsActive) {
-      canvas?.on('mouse:down', (options: { target: null; e: any }) => {
-        if (options.target === null) {
+      canvas?.on('mouse:down', (e: IEvent) => {
+        if (e.target === null && e) {
           let text = new fabric.IText(' ', {
             fontFamily: fontFamily,
             fontSize: 30,
             fontWeight: 400,
             fill: fontColor,
             fontStyle: 'normal',
-            top: options.e.offsetY,
-            left: options.e.offsetX,
+            top: e.pointer?.y,
+            left: e.pointer?.x,
             cursorDuration: 500,
           });
 
@@ -295,7 +295,7 @@ export const WhiteboardProvider = ({
         .load()
         .then(() => {
           if (canvas?.getActiveObject()) {
-            canvas.getActiveObject().set('fontFamily', font);
+            (canvas.getActiveObject() as IText).set('fontFamily', font);
             canvas.requestRenderAll();
           }
         })
@@ -319,7 +319,7 @@ export const WhiteboardProvider = ({
    * Deselect the actual selected object
    */
   const discardActiveObject = () => {
-    canvas.discardActiveObject().renderAll();
+    canvas?.discardActiveObject().renderAll();
   };
 
   /**
@@ -890,7 +890,7 @@ export const WhiteboardProvider = ({
       coordsStart: any,
       specific?: string
     ): void => {
-      canvas.on('mouse:move', (e: CanvasEvent): void => {
+      canvas?.on('mouse:move', (e: IEvent): void => {
         if (specific === 'circle') {
           setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
         } else if (specific === 'rectangle' || specific === 'triangle') {
@@ -901,11 +901,11 @@ export const WhiteboardProvider = ({
 
         let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
 
-        if (coordsStart.x > e.pointer.x) {
+        if (e.pointer && coordsStart.x > e.pointer.x) {
           anchor = { ...anchor, originX: 'right' };
         }
 
-        if (coordsStart.y > e.pointer.y) {
+        if (e.pointer && coordsStart.y > e.pointer.y) {
           anchor = { ...anchor, originY: 'bottom' };
         }
 
@@ -920,12 +920,12 @@ export const WhiteboardProvider = ({
    * Clears all mouse event listeners from canvas.
    */
   const clearMouseEvents = useCallback((): void => {
-    canvas.off('mouse:move');
-    canvas.off('mouse:up');
+    canvas?.off('mouse:move');
+    canvas?.off('mouse:up');
   }, [canvas]);
 
   const clearOnMouseEvent = useCallback((): void => {
-    canvas.off('mouse:down');
+    canvas?.off('mouse:down');
   }, [canvas]);
 
   /**
@@ -937,7 +937,7 @@ export const WhiteboardProvider = ({
       coordsStart: any,
       specific: string
     ): void => {
-      canvas.on('mouse:up', (e: CanvasEvent): void => {
+      canvas?.on('mouse:up', (e: IEvent): void => {
         let size;
 
         if (specific === 'circle') {
@@ -966,17 +966,19 @@ export const WhiteboardProvider = ({
    */
   const mouseDown = useCallback(
     (specific: string, color?: string): void => {
-      canvas.on('mouse:down', (e: CanvasEvent): void => {
+      canvas?.on('mouse:down', (e: IEvent): void => {
         if (e.target) {
           return;
         }
 
         const shape = shapeSelector(specific);
-        shape.set({
-          top: e.pointer.y,
-          left: e.pointer.x,
-          fill: color || shapeColor,
-        });
+        if (e.pointer) {
+          shape.set({
+            top: e.pointer.y,
+            left: e.pointer.x,
+            fill: color || shapeColor,
+          });
+        }
 
         clearOnMouseEvent();
         mouseMove(shape, e.pointer, specific);
@@ -1005,7 +1007,7 @@ export const WhiteboardProvider = ({
   const changeStrokeColor = (color: string) => {
     updatePenColor(color);
 
-    if (canvas.getActiveObject()) {
+    if (canvas?.getActiveObject()) {
       canvas.getActiveObject().set('stroke', color);
       canvas.renderAll();
     }
@@ -1020,7 +1022,7 @@ export const WhiteboardProvider = ({
     clearMouseEvents();
     mouseDown(shape, color);
 
-    if (canvas.getActiveObject()) {
+    if (canvas?.getActiveObject()) {
       canvas.getActiveObject().set('fill', color);
       canvas.renderAll();
     }
@@ -1044,7 +1046,7 @@ export const WhiteboardProvider = ({
    */
   const textColor = (color: string) => {
     updateFontColor(color);
-    if (canvas.getActiveObject() && canvas.getActiveObject().text) {
+    if (canvas?.getActiveObject() && (canvas.getActiveObject() as IText).text) {
       canvas.getActiveObject().set('fill', color);
       // @ts-ignore
       canvas.renderAll();
@@ -1055,9 +1057,11 @@ export const WhiteboardProvider = ({
    * Clears all whiteboard elements
    * */
   const clearWhiteboard = (): void => {
-    canvas.clear();
-    canvas.backgroundColor = 'white';
-    canvas.renderAll();
+    if (canvas) {
+      canvas.clear();
+      canvas.backgroundColor = 'white';
+      canvas.renderAll();
+    }
     closeModal();
   };
 
@@ -1079,7 +1083,7 @@ export const WhiteboardProvider = ({
     setCanvasSelection(false);
 
     // When mouse down eraser is able to remove objects
-    canvas.on('mouse:down', (e: any) => {
+    canvas?.on('mouse:down', (e: any) => {
       if (eraser) {
         return false;
       }
@@ -1104,7 +1108,7 @@ export const WhiteboardProvider = ({
     });
 
     // When mouse is over an object
-    canvas.on('mouse:over', (e: any) => {
+    canvas?.on('mouse:over', (e: any) => {
       if (!eraser) {
         return false;
       }
@@ -1114,7 +1118,7 @@ export const WhiteboardProvider = ({
     });
 
     // When mouse up eraser is unable to remove objects
-    canvas.on('mouse:up', () => {
+    canvas?.on('mouse:up', () => {
       if (!eraser) {
         return false;
       }
@@ -1128,12 +1132,14 @@ export const WhiteboardProvider = ({
    * @param {boolean} selection - value to set in canvas and objects selection
    */
   const setCanvasSelection = (selection: boolean): void => {
-    canvas.selection = selection;
-    canvas.forEachObject((object: fabric.Object) => {
-      object.selectable = selection;
-    });
+    if (canvas) {
+      canvas.selection = selection;
+      canvas.forEachObject((object: fabric.Object) => {
+        object.selectable = selection;
+      });
 
-    canvas.renderAll();
+      canvas.renderAll();
+    }
   };
 
   /**
