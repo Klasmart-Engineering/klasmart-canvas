@@ -21,12 +21,21 @@ import { ObjectEvent } from './event-serializer/PaintEventSerializer';
 
 import { useCanvasActions } from './canvas-actions/useCanvasActions';
 
+/**
+ * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
+ * @field userId: The user's ID, events originating from this canvas will contain this ID.
+ * @field style: How the canvas should be styled.
+ * @field pointerEvents: Enable or disable pointer interaction.
+ * @field width: The width of this canvas.
+ * @field height: The height of this canvas.
+ * @field filterUsers: Only render remote events originating from userId's in this list.
+ */
 export type Props = {
   children?: ReactChild | ReactChildren | null | any;
   instanceId: string;
   userId: string;
+  style: CSSProperties;
   pointerEvents: boolean;
-  display: boolean;
   width?: string | number;
   height: string | number;
   filterUsers?: string[];
@@ -36,8 +45,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   children,
   instanceId,
   userId,
+  style,
   pointerEvents,
-  display,
   width,
   height,
   filterUsers,
@@ -77,8 +86,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     // @ts-ignore
     const canvasInstance = new fabric.Canvas(instanceId, {
       backgroundColor: undefined,
-      width: 1024,
-      height: 1024,
       isDrawingMode: false,
     });
 
@@ -487,6 +494,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas?.renderAll();
     };
 
+    // TODO: Use the filterUsers property to ignore events coming from
+    // users not in that array (if the array is defined).
+
     eventController?.on('added', added);
     eventController?.on('moved', moved);
     eventController?.on('rotated', rotated);
@@ -514,7 +524,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Handles events emitted from the canvas.
    * */
   useEffect(() => {
-
     const pathCreated = (e: any) => {
       e.path.id = PainterEvents.createId(userId); // fabric.Object.__uid++;
 
@@ -882,31 +891,25 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateCanvasActions(actions);
   }, [actions, updateCanvasActions]);
 
-  const canvasStyle: CSSProperties = {
-    border: '2px blue solid',
-    position: 'absolute',
-    top: '0px',
-    left: '0px',
-    width: '100%',
-  };
-
-  const pointerEventsStyle = pointerEvents ? undefined : 'none';
+  // TODO: Possible to have dynamically sized canvas? With raw canvas it's
+  // possible to set the "pixel (background)" size separately from the 
+  // style size. So we can have a fixed resolution draw buffer and it will
+  // be scaled based on the style size. This might be important to make
+  // the canvas size adopt to the content behind it. The content behind
+  // canvas doesn't have a fixed size and could vary between different 
+  // activities etc. For now the user will have to pass in the exact 
+  // width and height they want to have the canvas in. 
 
   return (
-    <div
-      className="canvas-wrapper"
-      style={{
-        ...canvasStyle,
-        height,
-        pointerEvents: pointerEventsStyle,
-        display: display ? 'inline-block' : 'none',
-      }}
+    <canvas
+      width={width}
+      height={height}
+      id={instanceId}
+      style={style}
       onClick={() => {
         actions.addShape();
-      }}
-    >
+      }}>
       {children}
-      <canvas width="1024" height="1024" id={instanceId} />
-    </div>
+    </canvas>
   );
 };

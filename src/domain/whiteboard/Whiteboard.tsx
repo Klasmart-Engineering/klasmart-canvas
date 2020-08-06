@@ -1,13 +1,20 @@
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import '../../assets/style/whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
 import { WhiteboardCanvas } from './WhiteboardCanvas';
-import '../../assets/style/whiteboard.css';
 
 function Whiteboard() {
+  const canvasStyle: CSSProperties = {
+    border: '2px blue solid',
+    position: 'absolute',
+    top: '0px',
+    left: '0px',
+    width: '100%',
+  };
+
   return (
-    <div>
+    <>
       <WhiteboardProvider>
         <div className="whiteboard">
           <Toolbar />
@@ -26,8 +33,9 @@ function Whiteboard() {
             <WhiteboardCanvas
               instanceId="canvas1"
               userId="teacher"
+              style={canvasStyle}
               pointerEvents={true}
-              display={true}
+              width={740}
               height={460}
             >
               <button>Teacher</button>
@@ -53,8 +61,9 @@ function Whiteboard() {
             <WhiteboardCanvas
               instanceId="canvas2"
               userId="student"
+              style={canvasStyle}
               pointerEvents={true}
-              display={true}
+              width={740}
               height={460}
             >
               <button>Student</button>
@@ -62,7 +71,7 @@ function Whiteboard() {
           </div>
         </div>
       </WhiteboardProvider>
-    </div>
+    </>
   );
 }
 
