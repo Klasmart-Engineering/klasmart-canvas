@@ -60,10 +60,10 @@ export class EventPainterController extends EventEmitter
         this.added(event.id, event.objectType, target);
         break;
       case 'moved':
-        this.moved(event.id, target);
+        this.moved(event.id, event.objectType, target);
         break;
       case 'rotated':
-        this.rotated(event.id, target);
+        this.rotated(event.id, event.objectType, target);
         break;
       case 'scaled':
         this.scaled(event.id, target);
@@ -93,12 +93,12 @@ export class EventPainterController extends EventEmitter
     this.emit('added', id, objectType, target);
   }
 
-  private moved(id: string, target: any) {
-    this.emit('moved', id, target);
+  private moved(id: string, objectType: string, target: any) {
+    this.emit('moved', id, objectType, target);
   }
 
-  private rotated(id: string, target: any) {
-    this.emit('rotated', id, target);
+  private rotated(id: string, objectType: string, target: any) {
+    this.emit('rotated', id, objectType, target);
   }
 
   private scaled(id: string, target: any) {

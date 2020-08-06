@@ -370,7 +370,6 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // Serialize the event for synchronization
         eventSerializer?.push('added', payload);
       }
     });
@@ -380,10 +379,12 @@ export const WhiteboardProvider = ({
       if (type === 'activeSelection') {
         e.target._objects.forEach((activeObject: any) => {
           if (isLocalObject(activeObject.id, canvasId)) {
+            const matrix = activeObject.calcTransformMatrix();
+            const options = fabric.util.qrDecompose(matrix);
             const target = {
-              top: e.target.top + activeObject.top + e.target.height / 2,
-              left: e.target.left + activeObject.left + e.target.width / 2,
-              angle: activeObject.angle,
+              top: options.translateY,
+              left: options.translateX,
+              angle: options.angle,
             };
 
             const payload = {
@@ -420,12 +421,36 @@ export const WhiteboardProvider = ({
     });
 
     canvas?.on('object:rotated', (e: any) => {
+      const type = e.target.get('type');
+      if (type === 'activeSelection') {
+        //object is your desired object inside the group.
+        e.target._objects.forEach((activeObject: any) => {
+          if (isLocalObject(activeObject.id, canvasId)) {
+            const matrix = activeObject.calcTransformMatrix();
+            const options = fabric.util.qrDecompose(matrix);
+            const target = {
+              top: options.translateY,
+              left: options.translateX,
+              angle: options.angle,
+            };
+
+            const payload = {
+              type,
+              target,
+              id: activeObject.id,
+            };
+
+            eventSerializer?.push('rotated', payload);
+          }
+        });
+        return;
+      }
+
       if (!e.target.id) {
         return;
       }
 
       const id = e.target.id;
-      const type = e.target.get('type');
       const target = {
         angle: e.target.angle,
         top: e.target.top,
@@ -463,7 +488,6 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // Serialize the event for synchronization
         eventSerializer?.push('scaled', payload);
       }
     });
@@ -491,7 +515,6 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // Serialize the event for synchronization
         eventSerializer?.push('skewed', payload);
       }
     });
@@ -523,7 +546,6 @@ export const WhiteboardProvider = ({
             id: e.target.id,
           };
 
-          // Serialize the event for synchronization
           eventSerializer?.push('modified', payload);
         }
       }
@@ -539,7 +561,6 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // Serialize the event for synchronization
         eventSerializer?.push('removed', payload as ObjectEvent);
       }
     });
@@ -605,43 +626,69 @@ export const WhiteboardProvider = ({
       }
     );
 
-    remotePainter?.on('moved', (id: string, target: any) => {
-      // if (eventSerializer?.didSerializeEvent(id)) return;
+    remotePainter?.on(
+      'moved',
+      (id: string, objectType: string, target: any) => {
+        if (!id) {
+          return;
+        }
 
-      if (!id) {
-        return;
+        if (isLocalObject(id, canvasId)) return;
+
+        canvas?.forEachObject(function (obj: any) {
+          if (obj.id && obj.id === id) {
+            if (objectType === 'activeSelection') {
+              obj.set({
+                angle: target.angle,
+                top: target.top,
+                left: target.left,
+                originX: 'center',
+                originY: 'center',
+              });
+            } else {
+              obj.set({
+                angle: target.angle,
+                top: target.top,
+                left: target.left,
+                originX: 'left',
+                originY: 'top',
+              });
+            }
+          }
+        });
+        canvas?.renderAll();
       }
+    );
 
-      // No queremos agregar nuestros propios eventos
-      if (isLocalObject(id, canvasId)) return;
+    remotePainter?.on(
+      'rotated',
+      (id: string, objectType: string, target: any) => {
+        if (isLocalObject(id, canvasId)) return;
 
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          obj.set({
-            angle: target.angle,
-            top: target.top,
-            left: target.left,
-          });
-        }
-      });
-      canvas?.renderAll();
-    });
-
-    remotePainter?.on('rotated', (id: string, target: any) => {
-      //if (eventSerializer?.didSerializeEvent(id)) return;
-      if (isLocalObject(id, canvasId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          obj.set({
-            angle: target.angle,
-            top: target.top,
-            left: target.left,
-          });
-        }
-      });
-      canvas?.renderAll();
-    });
+        canvas?.forEachObject(function (obj: any) {
+          if (obj.id && obj.id === id) {
+            if (objectType === 'activeSelection') {
+              obj.set({
+                angle: target.angle,
+                top: target.top,
+                left: target.left,
+                originX: 'center',
+                originY: 'center',
+              });
+            } else {
+              obj.set({
+                angle: target.angle,
+                top: target.top,
+                left: target.left,
+                originX: 'left',
+                originY: 'top',
+              });
+            }
+          }
+        });
+        canvas?.renderAll();
+      }
+    );
 
     remotePainter?.on('scaled', (id: string, target: any) => {
       //if (eventSerializer?.didSerializeEvent(id)) return;
