@@ -64,6 +64,7 @@ function Toolbar() {
     updateStamp,
     dispatch,
     updateShapesAreSelectable,
+    canvasId,
   }: any = useContext(WhiteboardContext);
 
   /**
@@ -148,11 +149,11 @@ function Toolbar() {
         break;
 
       case ELEMENTS.UNDO_ACTION:
-        dispatch({ type: UNDO });
+        dispatch({ type: UNDO, canvasId });
         break;
 
       case ELEMENTS.REDO_ACTION:
-        dispatch({ type: REDO });
+        dispatch({ type: REDO, canvasId });
     }
   }
 
