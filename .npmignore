@@ -3,3 +3,4 @@
 /build
 .prettierrc
 .tsconfig.json
+.eslintrc
