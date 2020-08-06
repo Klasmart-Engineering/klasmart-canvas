@@ -253,11 +253,272 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [fontFamily, keyDownHandler, fontFamilyLoader]);
 
   /**
-   * Handles PainterEvents
+   * Handles events emitted from the event controller (remote).
+   */
+
+  useEffect(() => {
+    const added = (id: string, objectType: string, target: any) => {
+      // TODO: We'll want to filter events based on the user ID. This can
+      // be done like this. Example of extracting user id from object ID:
+      // let { user } = new ShapeID(id);
+      // Help!
+      // if (eventSerializer?.didSerializeEvent(id)) return;
+
+      // TODO: We'll have to replace this with the user based filtering. Because
+      // we want to allow bi-directional events (Teacher <-> Student) as opposed
+      // to (Teacher --> Student).
+
+      // Events come from another user
+      // Pass as props to user context
+      // Ids of shapes + userId  uuid()
+
+      if (!id) {
+        return;
+      }
+
+      // No queremos agregar nuestros propios eventos
+      if (isLocalObject(id, userId)) return;
+
+      console.log(`remote path created: ${id}`)
+
+      if (objectType === 'textbox') {
+        let text = new fabric.Textbox(target.text, {
+          fontSize: 30,
+          fontWeight: 400,
+          fontStyle: 'normal',
+          fontFamily: target.fontFamily,
+          fill: target.stroke,
+          top: target.top,
+          left: target.left,
+          width: target.width,
+          selectable: false,
+        });
+
+        // @ts-ignore
+        text.id = id;
+
+        canvas?.add(text);
+        return;
+      }
+
+      if (objectType === 'path') {
+        const pencil = new fabric.PencilBrush();
+        pencil.color = target.stroke || '#000';
+        pencil.width = target.strokeWidth;
+
+        // Convert Points to SVG Path
+        const res = pencil.createPath(target.path);
+        // @ts-ignore
+        res.id = id;
+        res.selectable = false;
+        res.evented = false;
+
+        canvas?.add(res);
+      }
+    };
+
+    const moved = (id: string, objectType: string, target: any) => {
+      if (!id) {
+        return;
+      }
+
+      if (isLocalObject(id, userId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          if (objectType === 'activeSelection') {
+            obj.set({
+              angle: target.angle,
+              top: target.top,
+              left: target.left,
+              originX: 'center',
+              originY: 'center',
+            });
+          } else {
+            obj.set({
+              angle: target.angle,
+              top: target.top,
+              left: target.left,
+              originX: 'left',
+              originY: 'top',
+            });
+          }
+        }
+      });
+      canvas?.renderAll();
+    };
+
+    const rotated = (id: string, objectType: string, target: any) => {
+      if (isLocalObject(id, userId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          if (objectType === 'activeSelection') {
+            obj.set({
+              angle: target.angle,
+              top: target.top,
+              left: target.left,
+              originX: 'center',
+              originY: 'center',
+            });
+          } else {
+            obj.set({
+              angle: target.angle,
+              top: target.top,
+              left: target.left,
+              originX: 'left',
+              originY: 'top',
+            });
+          }
+        }
+      });
+      canvas?.renderAll();
+    };
+
+    const scaled = (id: string, target: any) => {
+      //if (eventSerializer?.didSerializeEvent(id)) return;
+      if (isLocalObject(id, userId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          obj.set({
+            angle: target.angle,
+            top: target.top,
+            left: target.left,
+            scaleX: target.scaleX,
+            scaleY: target.scaleY,
+            flipX: target.flipX,
+            flipY: target.flipY,
+          });
+        }
+      });
+      canvas?.renderAll();
+    };
+
+    const skewed = (id: string, target: any) => {
+      //if (eventSerializer?.didSerializeEvent(id)) return;
+      if (isLocalObject(id, userId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          obj.set({
+            angle: target.angle,
+            top: target.top,
+            left: target.left,
+            scaleX: target.scaleX,
+            scaleY: target.scaleY,
+            flipX: target.flipX,
+            flipY: target.flipY,
+            skewX: target.skewX,
+            skewY: target.skewY,
+          });
+        }
+      });
+      canvas?.renderAll();
+    }
+
+    const colorChanged = (id: string, objectType: string, target: any) => {
+      //if (eventSerializer?.didSerializeEvent(id)) return;
+      if (isLocalObject(id, userId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          if (objectType === 'textbox') {
+            obj.set({
+              fill: target.fill,
+            });
+          } else {
+            obj.set({
+              stroke: target.stroke,
+            });
+          }
+        }
+      });
+      canvas?.renderAll();
+    };
+
+    const modified = (id: string, objectType: string, target: any) => {
+      // if (eventSerializer?.didSerializeEvent(id)) return;
+
+      if (isLocalObject(id, userId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          if (objectType === 'textbox') {
+            obj.set({
+              text: target.text,
+              fontFamily: target.fontFamily,
+              stroke: target.fill,
+              top: target.top,
+              left: target.left,
+              width: target.width,
+            });
+          }
+        }
+      });
+      canvas?.renderAll();
+    };
+
+    const fontFamilyChanged = (id: string, target: any) => {
+      // if (eventSerializer?.didSerializeEvent(id)) return;
+
+      if (isLocalObject(id, userId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          obj.set({
+            fontFamily: target.fontFamily,
+          });
+        }
+      });
+      canvas?.renderAll();
+    };
+
+    const removed = (id: string) => {
+      // if (eventSerializer?.didSerializeEvent(id)) return;
+
+      if (isLocalObject(id, userId)) return;
+
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          canvas?.remove(obj);
+        }
+      });
+      canvas?.renderAll();
+    };
+
+    eventController?.on('added', added);
+    eventController?.on('moved', moved);
+    eventController?.on('rotated', rotated);
+    eventController?.on('scaled', scaled);
+    eventController?.on('skewed', skewed);
+    eventController?.on('colorChanged', colorChanged);
+    eventController?.on('modified', modified);
+    eventController?.on('fontFamilyChanged', fontFamilyChanged);
+    eventController?.on('removed', removed);
+
+    return () => {
+      eventController?.removeListener('added', added);
+      eventController?.removeListener('moved', moved);
+      eventController?.removeListener('rotated', rotated);
+      eventController?.removeListener('scaled', scaled);
+      eventController?.removeListener('skewed', skewed);
+      eventController?.removeListener('colorChanged', colorChanged);
+      eventController?.removeListener('modified', modified);
+      eventController?.removeListener('fontFamilyChanged', fontFamilyChanged);
+      eventController?.removeListener('removed', removed);
+    }
+  }, [canvas, eventController, isLocalObject, userId]);
+
+  /**
+   * Handles events emitted from the canvas.
    * */
   useEffect(() => {
-    canvas?.on('path:created', (e: any) => {
+
+    const pathCreated = (e: any) => {
       e.path.id = PainterEvents.createId(userId); // fabric.Object.__uid++;
+
+      console.log(`local path created: ${e.path.id}`)
 
       const target = {
         stroke: e.path.stroke,
@@ -269,9 +530,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         'added',
         PainterEvents.pathCreated(target, e.path.id, userId) as ObjectEvent
       );
-    });
+    };
 
-    canvas?.on('object:added', function (e: any) {
+    const objectAdded = (e: any) => {
       if (!e.target.id) {
         return;
       }
@@ -302,9 +563,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         eventSerializer?.push('added', payload);
       }
-    });
+    };
 
-    canvas?.on('object:moved', function (e: any) {
+    const objectMoved = (e: any) => {
       const type = e.target.get('type');
       if (type === 'activeSelection') {
         e.target._objects.forEach((activeObject: any) => {
@@ -348,9 +609,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         eventSerializer?.push('moved', payload);
       }
-    });
+    };
 
-    canvas?.on('object:rotated', (e: any) => {
+    const objectRotated = (e: any) => {
       const type = e.target.get('type');
       if (type === 'activeSelection') {
         //object is your desired object inside the group.
@@ -393,9 +654,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       };
 
       eventSerializer?.push('rotated', payload);
-    });
+    }
 
-    canvas?.on('object:scaled', (e: any) => {
+    const objectScaled = (e: any) => {
       if (!e.target.id) {
         return;
       }
@@ -420,9 +681,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         eventSerializer?.push('scaled', payload);
       }
-    });
+    };
 
-    canvas?.on('object:skewed', (e: any) => {
+    const objectSkewed = (e: any) => {
       if (!e.target.id) {
         return;
       }
@@ -447,9 +708,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         eventSerializer?.push('skewed', payload);
       }
-    });
+    };
 
-    canvas?.on('object:modified', (e: any) => {
+    const objectModified = (e: any) => {
       if (!e.target.id) {
         return;
       }
@@ -479,9 +740,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           eventSerializer?.push('modified', payload);
         }
       }
-    });
+    };
 
-    canvas?.on('object:removed', (e: any) => {
+    const objectRemoved = (e: any) => {
       if (!e.target.id) {
         return;
       }
@@ -493,250 +754,27 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         eventSerializer?.push('removed', payload as ObjectEvent);
       }
-    });
+    }
 
-    eventController?.on(
-      'added',
-      (id: string, objectType: string, target: any) => {
-        // TODO: We'll want to filter events based on the user ID. This can
-        // be done like this. Example of extracting user id from object ID:
-        // let { user } = new ShapeID(id);
-        // Help!
-        // if (eventSerializer?.didSerializeEvent(id)) return;
+    canvas?.on('path:created', pathCreated);
+    canvas?.on('object:added', objectAdded);
+    canvas?.on('object:moved', objectMoved);
+    canvas?.on('object:rotated', objectRotated);
+    canvas?.on('object:scaled', objectScaled);
+    canvas?.on('object:skewed', objectSkewed);
+    canvas?.on('object:modified', objectModified);
+    canvas?.on('object:removed', objectRemoved);
 
-        // TODO: We'll have to replace this with the user based filtering. Because
-        // we want to allow bi-directional events (Teacher <-> Student) as opposed
-        // to (Teacher --> Student).
-
-        // Events come from another user
-        // Pass as props to user context
-        // Ids of shapes + userId  uuid()
-
-        if (!id) {
-          return;
-        }
-
-        // No queremos agregar nuestros propios eventos
-        if (isLocalObject(id, userId)) return;
-
-        if (objectType === 'textbox') {
-          let text = new fabric.Textbox(target.text, {
-            fontSize: 30,
-            fontWeight: 400,
-            fontStyle: 'normal',
-            fontFamily: target.fontFamily,
-            fill: target.stroke,
-            top: target.top,
-            left: target.left,
-            width: target.width,
-            selectable: false,
-          });
-
-          // @ts-ignore
-          text.id = id;
-
-          canvas?.add(text);
-          return;
-        }
-
-        if (objectType === 'path') {
-          const pencil = new fabric.PencilBrush();
-          pencil.color = target.stroke || '#000';
-          pencil.width = target.strokeWidth;
-
-          // Convert Points to SVG Path
-          const res = pencil.createPath(target.path);
-          // @ts-ignore
-          res.id = id;
-          res.selectable = false;
-          res.evented = false;
-
-          canvas?.add(res);
-        }
-      }
-    );
-
-    eventController?.on(
-      'moved',
-      (id: string, objectType: string, target: any) => {
-        if (!id) {
-          return;
-        }
-
-        if (isLocalObject(id, userId)) return;
-
-        canvas?.forEachObject(function (obj: any) {
-          if (obj.id && obj.id === id) {
-            if (objectType === 'activeSelection') {
-              obj.set({
-                angle: target.angle,
-                top: target.top,
-                left: target.left,
-                originX: 'center',
-                originY: 'center',
-              });
-            } else {
-              obj.set({
-                angle: target.angle,
-                top: target.top,
-                left: target.left,
-                originX: 'left',
-                originY: 'top',
-              });
-            }
-          }
-        });
-        canvas?.renderAll();
-      }
-    );
-
-    eventController?.on(
-      'rotated',
-      (id: string, objectType: string, target: any) => {
-        if (isLocalObject(id, userId)) return;
-
-        canvas?.forEachObject(function (obj: any) {
-          if (obj.id && obj.id === id) {
-            if (objectType === 'activeSelection') {
-              obj.set({
-                angle: target.angle,
-                top: target.top,
-                left: target.left,
-                originX: 'center',
-                originY: 'center',
-              });
-            } else {
-              obj.set({
-                angle: target.angle,
-                top: target.top,
-                left: target.left,
-                originX: 'left',
-                originY: 'top',
-              });
-            }
-          }
-        });
-        canvas?.renderAll();
-      }
-    );
-
-    eventController?.on('scaled', (id: string, target: any) => {
-      //if (eventSerializer?.didSerializeEvent(id)) return;
-      if (isLocalObject(id, userId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          obj.set({
-            angle: target.angle,
-            top: target.top,
-            left: target.left,
-            scaleX: target.scaleX,
-            scaleY: target.scaleY,
-            flipX: target.flipX,
-            flipY: target.flipY,
-          });
-        }
-      });
-      canvas?.renderAll();
-    });
-
-    eventController?.on('skewed', (id: string, target: any) => {
-      //if (eventSerializer?.didSerializeEvent(id)) return;
-      if (isLocalObject(id, userId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          obj.set({
-            angle: target.angle,
-            top: target.top,
-            left: target.left,
-            scaleX: target.scaleX,
-            scaleY: target.scaleY,
-            flipX: target.flipX,
-            flipY: target.flipY,
-            skewX: target.skewX,
-            skewY: target.skewY,
-          });
-        }
-      });
-      canvas?.renderAll();
-    });
-
-    eventController?.on(
-      'colorChanged',
-      (id: string, objectType: string, target: any) => {
-        //if (eventSerializer?.didSerializeEvent(id)) return;
-        if (isLocalObject(id, userId)) return;
-
-        canvas?.forEachObject(function (obj: any) {
-          if (obj.id && obj.id === id) {
-            if (objectType === 'textbox') {
-              obj.set({
-                fill: target.fill,
-              });
-            } else {
-              obj.set({
-                stroke: target.stroke,
-              });
-            }
-          }
-        });
-        canvas?.renderAll();
-      }
-    );
-
-    eventController?.on(
-      'modified',
-      (id: string, objectType: string, target: any) => {
-        // if (eventSerializer?.didSerializeEvent(id)) return;
-
-        if (isLocalObject(id, userId)) return;
-
-        canvas?.forEachObject(function (obj: any) {
-          if (obj.id && obj.id === id) {
-            if (objectType === 'textbox') {
-              obj.set({
-                text: target.text,
-                fontFamily: target.fontFamily,
-                stroke: target.fill,
-                top: target.top,
-                left: target.left,
-                width: target.width,
-              });
-            }
-          }
-        });
-        canvas?.renderAll();
-      }
-    );
-
-    eventController?.on('fontFamilyChanged', (id: string, target: any) => {
-      // if (eventSerializer?.didSerializeEvent(id)) return;
-
-      if (isLocalObject(id, userId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          obj.set({
-            fontFamily: target.fontFamily,
-          });
-        }
-      });
-      canvas?.renderAll();
-    });
-
-    eventController?.on('removed', (id: string) => {
-      // if (eventSerializer?.didSerializeEvent(id)) return;
-
-      if (isLocalObject(id, userId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          canvas?.remove(obj);
-        }
-      });
-      canvas?.renderAll();
-    });
+    return () => {
+      canvas?.off('path:created', pathCreated);
+      canvas?.off('object:added', objectAdded);
+      canvas?.off('object:moved', objectMoved);
+      canvas?.off('object:rotated', objectRotated);
+      canvas?.off('object:scaled', objectScaled);
+      canvas?.off('object:skewed', objectSkewed);
+      canvas?.off('object:modified', objectModified);
+      canvas?.off('object:removed', objectRemoved);
+    }
   }, [isLocalObject, canvas, eventSerializer, eventController, userId]);
 
   /**
