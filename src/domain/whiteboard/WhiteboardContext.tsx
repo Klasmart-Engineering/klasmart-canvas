@@ -20,12 +20,8 @@ export const WhiteboardContext = createContext<any>();
 
 export const WhiteboardProvider = ({
   children,
-  canvasWidth,
-  canvasHeight,
 }: {
   children: React.ReactNode;
-  canvasWidth: string;
-  canvasHeight: string;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();

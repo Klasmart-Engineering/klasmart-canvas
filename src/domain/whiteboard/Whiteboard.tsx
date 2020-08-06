@@ -8,13 +8,13 @@ import '../../assets/style/whiteboard.css';
 function Whiteboard() {
   return (
     <div>
-      <WhiteboardProvider canvasWidth={'740'} canvasHeight={'460'}>
+      <WhiteboardProvider>
         <div className="whiteboard">
           <Toolbar />
           <div
             style={{
               border: '1px solid black',
-              width: '640px',
+              width: '740px',
               height: '460px',
               display: 'flex',
               alignItems: 'center',
@@ -35,13 +35,13 @@ function Whiteboard() {
           </div>
         </div>
       </WhiteboardProvider>
-      <WhiteboardProvider canvasWidth={'740'} canvasHeight={'460'}>
+      <WhiteboardProvider>
         <div className="whiteboard">
           <Toolbar />
           <div
             style={{
               border: '1px solid black',
-              width: '640px',
+              width: '740px',
               height: '460px',
               display: 'flex',
               alignItems: 'center',
