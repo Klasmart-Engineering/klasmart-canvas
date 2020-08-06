@@ -2,25 +2,65 @@ import React from 'react';
 import '../../assets/style/whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
+import { WhiteboardCanvas } from './WhiteboardCanvas';
+import '../../assets/style/whiteboard.css';
 
 function Whiteboard() {
   return (
     <div>
-      <WhiteboardProvider
-        canvasId={'canvas'}
-        canvasWidth={'740'}
-        canvasHeight={'460'}
-        toolbar={<Toolbar />}
-      >
-        <button>Teacher</button>
+      <WhiteboardProvider canvasWidth={'740'} canvasHeight={'460'}>
+        <div className="whiteboard">
+          <Toolbar />
+          <div
+            style={{
+              border: '1px solid black',
+              width: '640px',
+              height: '460px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              backgroundColor: 'white',
+            }}
+          >
+            <WhiteboardCanvas
+              instanceId="canvas1"
+              userId="teacher"
+              pointerEvents={true}
+              display={true}
+              height={460}
+            >
+              <button>Teacher</button>
+            </WhiteboardCanvas>
+          </div>
+        </div>
       </WhiteboardProvider>
-      <WhiteboardProvider
-        canvasId={'student'}
-        canvasWidth={'740'}
-        canvasHeight={'460'}
-        toolbar={<Toolbar />}
-      >
-        <button>Student</button>
+      <WhiteboardProvider canvasWidth={'740'} canvasHeight={'460'}>
+        <div className="whiteboard">
+          <Toolbar />
+          <div
+            style={{
+              border: '1px solid black',
+              width: '640px',
+              height: '460px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              backgroundColor: 'white',
+            }}
+          >
+            <WhiteboardCanvas
+              instanceId="canvas2"
+              userId="student"
+              pointerEvents={true}
+              display={true}
+              height={460}
+            >
+              <button>Student</button>
+            </WhiteboardCanvas>
+          </div>
+        </div>
       </WhiteboardProvider>
     </div>
   );

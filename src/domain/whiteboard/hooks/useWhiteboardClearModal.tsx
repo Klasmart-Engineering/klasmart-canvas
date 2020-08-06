@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
@@ -10,13 +10,13 @@ export interface IClearWhiteboardModal {
 
 export const useWhiteboardClearModal = () => {
   const [clearWhiteboardModal, setOpen] = useState(false);
-  const openModal = () => {
+  const openModal = useCallback(() => {
     setOpen(true);
-  };
+  }, [setOpen]);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setOpen(false);
-  };
+  }, [setOpen]);
   
   const ClearWhiteboardModal = (props: IClearWhiteboardModal) => {
     return (
