@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, CSSProperties } from 'react';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import SpecialButton from '../special-button/SpecialButton';
 import '../../../assets/style/toolbar-selector.css';
@@ -108,11 +108,53 @@ function SpecialSelector(props: ISpecialSelector) {
     }
   }
 
+  const selectorContainerStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "row",
+  }
+
+  const toolbarSelectorStyle: CSSProperties = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    height: "32px",
+    border: "none",
+    marginLeft: "4px",
+    paddingRight: 0,
+    backgroundColor: active ? "#d9d9d9" : "#fff",
+    borderRadius: "4px",
+    outline: 0,
+  };
+
+  const arrowStyle: CSSProperties = {
+    width: "8px",
+    height: "8px",
+  }
+
+  const optionsContainerStyle: CSSProperties = {
+    position: "absolute",
+    margin: "0 0 8px 56px",
+    padding: "2px",
+    border: "none",
+    backgroundColor: "#fff",
+    borderRadius: "4px",
+    zIndex: 2,
+  }
+
+  const optionsStyle: CSSProperties = {
+    display: "grid",
+    rowGap: "2px",
+    padding: "2px 2px 4px 0",
+    gridAutoColumns: "repeat(6, auto)",
+  }
+
   return (
-    <div className="selector-container">
+    <div className="selector-container" style={selectorContainerStyle}>
       <button
         title={selectedOption.title}
         ref={buttonRef}
+        style={toolbarSelectorStyle}
         className={[
           'toolbar-selector',
           active ? 'selected' : '',
@@ -120,11 +162,11 @@ function SpecialSelector(props: ISpecialSelector) {
         ].join(' ')}
       >
         <Icon style={selectedOption.style} onClick={handleClick} />
-        <ArrowRightIcon onClick={handleArrowClick} />
+        <ArrowRightIcon onClick={handleArrowClick} style={arrowStyle} />
       </button>
       {showOptions && active ? (
-        <div className="options-container">
-          <div className="options special-options no-palette">
+        <div className="options-container" style={optionsContainerStyle}>
+          <div className="options special-options no-palette" style={optionsStyle}>
             {styleOptions
               .filter((option) => {
                 return option.value !== selectedOption.value;
