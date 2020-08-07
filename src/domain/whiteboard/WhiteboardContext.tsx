@@ -1105,7 +1105,7 @@ export const WhiteboardProvider = ({
 
     if (objects && objects.length) {
       objects.forEach((obj: any) => {
-        if (isLocalObject(obj.id, canvasId)) {
+        if (obj.id && isLocalObject(obj.id, canvasId)) {
           const type = obj.get('type');
           const target = (type: string) => {
             return type === 'textbox'
@@ -1141,7 +1141,7 @@ export const WhiteboardProvider = ({
 
     if (objects && objects.length) {
       objects.forEach((obj: any) => {
-        if (isLocalObject(obj.id, canvasId)) {
+        if (obj.id && isLocalObject(obj.id, canvasId)) {
           const type = obj.get('type');
 
           if (type === 'textbox') {
