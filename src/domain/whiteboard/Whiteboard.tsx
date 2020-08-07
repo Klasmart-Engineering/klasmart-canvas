@@ -33,10 +33,12 @@ function Whiteboard() {
             <WhiteboardCanvas
               instanceId="canvas1"
               userId="teacher"
-              style={canvasStyle}
+              initialStyle={canvasStyle}
               pointerEvents={true}
-              width={740}
-              height={460}
+              width={1024}
+              height={1024}
+              cssWidth={"740px"}
+              cssHeight={"460px"}
             >
               <button>Teacher</button>
             </WhiteboardCanvas>
@@ -61,10 +63,12 @@ function Whiteboard() {
             <WhiteboardCanvas
               instanceId="canvas2"
               userId="student"
-              style={canvasStyle}
+              initialStyle={canvasStyle}
               pointerEvents={true}
-              width={740}
-              height={460}
+              width={1024}
+              height={1024}
+              cssWidth={"740px"}
+              cssHeight={"460px"}
             >
               <button>Student</button>
             </WhiteboardCanvas>

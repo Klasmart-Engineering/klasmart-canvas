@@ -24,7 +24,9 @@ import { useCanvasActions } from './canvas-actions/useCanvasActions';
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
  * @field userId: The user's ID, events originating from this canvas will contain this ID.
- * @field style: How the canvas should be styled.
+ * @field wrapperStyle: How the canvas wrapper should be styled.
+ * @field lowerCanvasStyle: How the lower canvas should be styled.
+ * @field upperCanvasStyle: How the upper canvas should be styled.
  * @field pointerEvents: Enable or disable pointer interaction.
  * @field width: The width of this canvas.
  * @field height: The height of this canvas.
@@ -34,10 +36,12 @@ export type Props = {
   children?: ReactChild | ReactChildren | null | any;
   instanceId: string;
   userId: string;
-  style: CSSProperties;
+  initialStyle?: CSSProperties;
   pointerEvents: boolean;
   width?: string | number;
   height: string | number;
+  cssWidth?: string | number;
+  cssHeight?: string | number;
   filterUsers?: string[];
 };
 
@@ -45,13 +49,19 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   children,
   instanceId,
   userId,
-  style,
+  initialStyle,
   pointerEvents,
   width,
   height,
+  cssWidth,
+  cssHeight,
   filterUsers,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
+
+  const [wrapper, setWrapper] = useState<HTMLElement>();
+  const [lowerCanvas, setLowerCanvas] = useState<HTMLCanvasElement>();
+  const [upperCanvas, setUpperCanvas] = useState<HTMLCanvasElement>();
 
   // Event serialization for synchronizing whiteboard state.
   const {
@@ -91,6 +101,58 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     setCanvas(canvasInstance);
   }, [instanceId]);
+
+
+  /**
+   * Retrieve references to elements created by fabricjs. We'll need these to
+   * tweak the style after canvas have been initialized.
+   */
+  useEffect(() => {
+    if (!canvas) return;
+
+    const lowerCanvas = document.getElementById(instanceId);
+    const wrapper = lowerCanvas?.parentElement;
+    const upperCanvas = wrapper?.getElementsByClassName("upper-canvas")[0];
+
+    if (wrapper) setWrapper(wrapper);
+    if (lowerCanvas) setLowerCanvas(lowerCanvas as HTMLCanvasElement);
+    if (upperCanvas) setUpperCanvas(upperCanvas as HTMLCanvasElement);
+
+  }, [canvas, instanceId])
+
+  /**
+   * Update the CSS Width/Height
+   */
+  useEffect(() => {
+    if (wrapper && lowerCanvas && upperCanvas) {
+      
+      if (cssWidth) {
+        wrapper.style.width = String(cssWidth);
+        lowerCanvas.style.width = String(cssWidth);
+        upperCanvas.style.width = String(cssWidth);
+      }
+
+      if (cssHeight) {
+        wrapper.style.height = String(cssHeight);
+        lowerCanvas.style.height = String(cssHeight);
+        upperCanvas.style.height = String(cssHeight);
+      }
+
+    }
+  }, [wrapper, lowerCanvas, upperCanvas, cssWidth, cssHeight])
+
+  /** 
+   * Update the pointer events to make canvas click through.
+   */
+  useEffect(() => {
+    if (wrapper && lowerCanvas && upperCanvas) {
+      const pointerEventsStyle = pointerEvents ? "auto" : "none";
+
+      wrapper.style.pointerEvents = pointerEventsStyle;
+      lowerCanvas.style.pointerEvents = pointerEventsStyle;
+      upperCanvas.style.pointerEvents = pointerEventsStyle;
+    }
+  }, [lowerCanvas, pointerEvents, upperCanvas, wrapper])
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -905,7 +967,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       width={width}
       height={height}
       id={instanceId}
-      style={style}
+      style={initialStyle}
       onClick={() => {
         actions.addShape();
       }}>
