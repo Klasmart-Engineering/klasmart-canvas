@@ -17,6 +17,7 @@ import IColorPalette from '../../interfaces/toolbar/toolbar-selector/color-palet
 import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elements/basic-special-selector';
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
+import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -284,9 +285,25 @@ function Toolbar() {
     }
   }
 
+  const toolbarContainerStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    width: "120px",
+  }
+
+  const toolbarStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    border: "solid 1px #d0d0d0",
+    marginTop: "16px",
+    backgroundColor: "#fff",
+    borderRadius: "8px",
+  }
+
   return (
-    <div className="toolbar-container">
-      <div className="toolbar">
+    <div className="toolbar-container" style={toolbarContainerStyle}>
+      <div className="toolbar" style={toolbarStyle}>
         <ToolbarSection>
           {tools.elements.map((tool) =>
             determineIfIsToolbarButton(tool)
