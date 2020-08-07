@@ -381,10 +381,15 @@ export const WhiteboardProvider = ({
           if (isLocalObject(activeObject.id, canvasId)) {
             const matrix = activeObject.calcTransformMatrix();
             const options = fabric.util.qrDecompose(matrix);
+
             const target = {
+              angle: options.angle,
               top: options.translateY,
               left: options.translateX,
-              angle: options.angle,
+              scaleX: options.scaleX,
+              scaleY: options.scaleY,
+              flipX: activeObject.flipX,
+              flipY: activeObject.flipY,
             };
 
             const payload = {
@@ -405,9 +410,13 @@ export const WhiteboardProvider = ({
 
       if (isLocalObject(e.target.id, canvasId)) {
         const target = {
+          angle: e.target.angle,
           top: e.target.top,
           left: e.target.left,
-          angle: e.target.angle,
+          scaleX: e.target.scaleX,
+          scaleY: e.target.scaleY,
+          flipX: e.target.flipX,
+          flipY: e.target.flipY,
         };
 
         const payload = {
@@ -423,15 +432,18 @@ export const WhiteboardProvider = ({
     canvas?.on('object:rotated', (e: any) => {
       const type = e.target.get('type');
       if (type === 'activeSelection') {
-        //object is your desired object inside the group.
         e.target._objects.forEach((activeObject: any) => {
           if (isLocalObject(activeObject.id, canvasId)) {
             const matrix = activeObject.calcTransformMatrix();
             const options = fabric.util.qrDecompose(matrix);
             const target = {
+              angle: options.angle,
               top: options.translateY,
               left: options.translateX,
-              angle: options.angle,
+              scaleX: options.scaleX,
+              scaleY: options.scaleY,
+              flipX: activeObject.flipX,
+              flipY: activeObject.flipY,
             };
 
             const payload = {
@@ -452,9 +464,13 @@ export const WhiteboardProvider = ({
 
       const id = e.target.id;
       const target = {
-        angle: e.target.angle,
         top: e.target.top,
         left: e.target.left,
+        angle: e.target.angle,
+        scaleX: e.target.scaleX,
+        scaleY: e.target.scaleY,
+        flipX: e.target.flipX,
+        flipY: e.target.flipY,
       };
       const payload = {
         type,
@@ -466,16 +482,43 @@ export const WhiteboardProvider = ({
     });
 
     canvas?.on('object:scaled', (e: any) => {
+      const type = e.target.get('type');
+      if (type === 'activeSelection') {
+        e.target._objects.forEach((activeObject: any) => {
+          if (isLocalObject(activeObject.id, canvasId)) {
+            const matrix = activeObject.calcTransformMatrix();
+            const options = fabric.util.qrDecompose(matrix);
+            const target = {
+              angle: options.angle,
+              top: options.translateY,
+              left: options.translateX,
+              scaleX: options.scaleX,
+              scaleY: options.scaleY,
+              flipX: activeObject.flipX,
+              flipY: activeObject.flipY,
+            };
+
+            const payload = {
+              type,
+              target,
+              id: activeObject.id,
+            };
+
+            eventSerializer?.push('scaled', payload);
+          }
+        });
+        return;
+      }
+
       if (!e.target.id) {
         return;
       }
 
       if (isLocalObject(e.target.id, canvasId)) {
-        const type = e.target.get('type');
         const target = {
+          angle: e.target.angle,
           top: e.target.top,
           left: e.target.left,
-          angle: e.target.angle,
           scaleX: e.target.scaleX,
           scaleY: e.target.scaleY,
           flipX: e.target.flipX,
@@ -586,7 +629,6 @@ export const WhiteboardProvider = ({
           return;
         }
 
-        // No queremos agregar nuestros propios eventos
         if (isLocalObject(id, canvasId)) return;
 
         if (objectType === 'textbox') {
@@ -642,6 +684,10 @@ export const WhiteboardProvider = ({
                 angle: target.angle,
                 top: target.top,
                 left: target.left,
+                scaleX: target.scaleX,
+                scaleY: target.scaleY,
+                flipX: target.flipX,
+                flipY: target.flipY,
                 originX: 'center',
                 originY: 'center',
               });
@@ -650,6 +696,10 @@ export const WhiteboardProvider = ({
                 angle: target.angle,
                 top: target.top,
                 left: target.left,
+                scaleX: target.scaleX,
+                scaleY: target.scaleY,
+                flipX: target.flipX,
+                flipY: target.flipY,
                 originX: 'left',
                 originY: 'top',
               });
@@ -672,6 +722,10 @@ export const WhiteboardProvider = ({
                 angle: target.angle,
                 top: target.top,
                 left: target.left,
+                scaleX: target.scaleX,
+                scaleY: target.scaleY,
+                flipX: target.flipX,
+                flipY: target.flipY,
                 originX: 'center',
                 originY: 'center',
               });
@@ -680,6 +734,10 @@ export const WhiteboardProvider = ({
                 angle: target.angle,
                 top: target.top,
                 left: target.left,
+                scaleX: target.scaleX,
+                scaleY: target.scaleY,
+                flipX: target.flipX,
+                flipY: target.flipY,
                 originX: 'left',
                 originY: 'top',
               });
@@ -690,25 +748,45 @@ export const WhiteboardProvider = ({
       }
     );
 
-    remotePainter?.on('scaled', (id: string, target: any) => {
-      //if (eventSerializer?.didSerializeEvent(id)) return;
-      if (isLocalObject(id, canvasId)) return;
+    remotePainter?.on(
+      'scaled',
+      (id: string, objectType: string, target: any) => {
+        //if (eventSerializer?.didSerializeEvent(id)) return;
+        if (isLocalObject(id, canvasId)) return;
 
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          obj.set({
-            angle: target.angle,
-            top: target.top,
-            left: target.left,
-            scaleX: target.scaleX,
-            scaleY: target.scaleY,
-            flipX: target.flipX,
-            flipY: target.flipY,
-          });
-        }
-      });
-      canvas?.renderAll();
-    });
+        canvas?.forEachObject(function (obj: any) {
+          if (obj.id && obj.id === id) {
+            if (objectType === 'activeSelection') {
+              obj.set({
+                angle: target.angle,
+                top: target.top,
+                left: target.left,
+                scaleX: target.scaleX,
+                scaleY: target.scaleY,
+                flipX: target.flipX,
+                flipY: target.flipY,
+                originX: 'center',
+                originY: 'center',
+              });
+            } else {
+              obj.set({
+                angle: target.angle,
+                top: target.top,
+                left: target.left,
+                scaleX: target.scaleX,
+                scaleY: target.scaleY,
+                flipX: target.flipX,
+                flipY: target.flipY,
+                originX: 'left',
+                originY: 'top',
+              });
+            }
+          }
+        });
+
+        canvas?.renderAll();
+      }
+    );
 
     remotePainter?.on('skewed', (id: string, target: any) => {
       //if (eventSerializer?.didSerializeEvent(id)) return;
