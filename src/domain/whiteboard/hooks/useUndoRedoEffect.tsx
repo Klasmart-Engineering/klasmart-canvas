@@ -74,6 +74,7 @@ export const UndoRedo = (canvas: any, eventSerializer: any, canvasId: string) =>
         const reconstructedEvent = objectReconstructor(id, state.events, futureEvents.length);
 
         if (reconstructedEvent.type !== 'added') {
+          console.log(reconstructedEvent);
           eventSerializer?.push('reconstruct', reconstructedEvent.event);
         } else {
           eventSerializer?.push('removed', payload);

@@ -247,12 +247,15 @@ const reducer = (
 
     // Steps forward to more recent state.
     case REDO: {
-
       // If no future states, return current state.
       if (
         state.activeStateIndex !== null &&
         state.activeStateIndex + 1 === state.states.length
       ) {
+        return state;
+      }
+
+      if (!state.events.length) {
         return state;
       }
 

@@ -31,7 +31,7 @@ import { useFloodFill } from './hooks/useFloodFill';
 import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 import { TypedShape } from '../../interfaces/shapes/shapes';
 import { UndoRedo } from './hooks/useUndoRedoEffect';
-import { SET, SET_OTHER } from './reducers/undo-redo';
+import { SET, SET_OTHER, UNDO, REDO } from './reducers/undo-redo';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { PainterEvent } from './event-serializer/PainterEvent';
 import { EventPainterController } from './event-serializer/EventPainterController';
@@ -316,7 +316,20 @@ export const WhiteboardProvider = ({
    * 'Escape' event for deselect active objects
    * */
   const keyDownHandler = useCallback(
-    (e: { key: any }) => {
+    (e: { key: any, which?: number, ctrlKey?: boolean, shiftKey?: boolean }) => {
+
+      // The following two blocks, used for undo and redo, can not
+      // be integrated while there are two boards in the canvas.
+      // if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
+      //   dispatch({ type: UNDO, canvasId });
+      //   return;
+      // }
+
+      // if (e.which === 90 && e.ctrlKey && e.shiftKey) {
+      //   dispatch({ type: REDO, canvasId });
+      //   return;
+      // }
+
       if (e.key === 'Backspace' && canvas) {
         const objects = canvas.getActiveObjects();
 
@@ -336,6 +349,20 @@ export const WhiteboardProvider = ({
     },
     [canvas]
   );
+
+  // Temporary code to get undo / redo working while there are two boards
+  // on the view.
+  const tempKeyDown = (e: any) => {
+      if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
+        dispatch({ type: UNDO, canvasId });
+        return;
+      }
+
+      if (e.which === 90 && e.ctrlKey && e.shiftKey) {
+        dispatch({ type: REDO, canvasId });
+        return;
+      }
+  }
 
   /**
    * Loads selected font. Default is Arial
@@ -365,6 +392,10 @@ export const WhiteboardProvider = ({
   useEffect(() => {
     document.addEventListener('keydown', keyDownHandler, false);
     fontFamilyLoader(fontFamily);
+    
+    return(() => {
+      document.removeEventListener('keydown', keyDownHandler);
+    });
   }, [fontFamily, keyDownHandler, fontFamilyLoader]);
 
   /**
@@ -1039,12 +1070,27 @@ export const WhiteboardProvider = ({
           switch(target.objectType) {
 
             case 'path': {
+              // let nObject = { ...oObject, ...JSON.parse(target.param) };
               fabric.Path.fromObject(nObject, (path: any) => {
                 canvas.add(path);
               });
               break;
             }
             case 'textbox': {
+              // let nObject = { ...JSON.parse(target.param), id: oObject.id, strokeUniform: oObject.strokeUniform };
+              if (!JSON.parse(target.param).fill) {
+                // nObject = { ...nObject, fill: nObject.stroke };
+                console.log(nObject);
+                debugger;
+                delete nObject.stroke;
+              }
+
+              if (!JSON.parse(target.param).stroke) {
+                // nObject = { ...nObject, fill: nObject.stroke };
+                
+                debugger;
+              }
+              
               fabric.Textbox.fromObject(nObject, (path: any) => {
                 canvas.add(path);
               });
@@ -1828,6 +1874,8 @@ export const WhiteboardProvider = ({
       <div className="whiteboard">
         {toolbar}
         <div
+          onKeyDown={tempKeyDown}
+          tabIndex={0}
           style={{
             border: '1px solid black',
             width: canvasWidth + 'px',
