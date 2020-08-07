@@ -1,6 +1,7 @@
 import React from 'react';
 import IToolbarButton from '../../../interfaces/toolbar/toolbar-button/toolbar-button';
 import '../../../assets/style/toolbar-button.css';
+import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
 /**
  * Render each button that will be included in the toolbar
@@ -16,10 +17,21 @@ import '../../../assets/style/toolbar-button.css';
 function ToolbarButton(props: IToolbarButton) {
   const { id, title, iconSrc, iconName, active, onClick } = props;
 
+
+  const toolbarButtonStyle: CSSProperties = {
+    border: "none",
+    width: "36px",
+    marginLeft: "2px",
+    backgroundColor: active ? "#d9d9d9" : "#fff",
+    borderRadius: "4px",
+    outline: 0,
+  }
+
   return (
     <button
       key={id}
       title={title}
+      style={toolbarButtonStyle}
       className={[
         'toolbar-button original',
         active ? 'selected-button' : '',

@@ -5,6 +5,7 @@ import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import ColorPalette from '../color-palette/ColorPalette';
 import ToolbarButton from '../toolbar-button/ToolbarButton';
 import IToolbarSelectorOption from '../../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
+import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
 /**
  * Render a ToolbarSelector
@@ -122,11 +123,58 @@ function ToolbarSelector(props: IToolbarSelector) {
     setShowOptions(false);
   }
 
+  const selectorContainerStyle: CSSProperties = {
+    display: "flex",
+    flexDirection: "row",
+  }
+
+  const toolbarSelectorStyle: CSSProperties = {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+    height: "32px",
+    border: "none",
+    marginLeft: "4px",
+    paddingRight: 0,
+    backgroundColor: active ? "#d9d9d9" : "#fff",
+    borderRadius: "4px",
+    outline: 0,
+  };
+
+  const iconStyle: CSSProperties = {
+    width: "24px",
+    height: "24px",
+  }
+
+  const arrowStyle: CSSProperties = {
+    width: "8px",
+    height: "8px",
+  }
+
+  const optionsContainerStyle: CSSProperties = {
+    position: "absolute",
+    margin: "0 0 8px 56px",
+    padding: "2px",
+    border: "none",
+    backgroundColor: "#fff",
+    borderRadius: "4px",
+    zIndex: 2,
+  }
+
+  const optionsStyle: CSSProperties = {
+    display: "grid",
+    rowGap: "2px",
+    padding: "2px 2px 4px 0",
+    gridAutoColumns: colorPalette ? "repeat(auto-fit, minmax(0, 36px))" : "repeat(6, auto)",
+  }
+
   return (
-    <div className="selector-container">
+    <div className="selector-container" style={selectorContainerStyle}>
       <button
         title={selectedOption.title}
         ref={buttonRef}
+        style={toolbarSelectorStyle}
         className={[
           'toolbar-selector',
           active ? 'selected' : '',
@@ -135,15 +183,17 @@ function ToolbarSelector(props: IToolbarSelector) {
       >
         <img
           className="icon"
+          style={iconStyle}
           src={selectedOption.iconSrc}
           alt={selectedOption.iconName}
           onClick={handleClick}
         />
-        <ArrowRightIcon className="arrow" onClick={handleArrowClick} />
+        <ArrowRightIcon className="arrow" onClick={handleArrowClick} style={arrowStyle} />
       </button>
       {showOptions && active ? (
-        <div className="options-container">
+        <div className="options-container" style={optionsContainerStyle}>
           <div
+            style={optionsStyle}
             className={[
               'options',
               colorPalette ? 'with-palette' : 'no-palette',
