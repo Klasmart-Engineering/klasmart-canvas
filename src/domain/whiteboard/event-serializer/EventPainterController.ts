@@ -83,6 +83,9 @@ export class EventPainterController extends EventEmitter
       case 'removed':
         this.removed(event.id);
         break;
+      case 'reconstruct':
+        this.reconstruct(event.id, event);
+        break;
       case 'moving':
         console.error('Not implemented yet!');
         break;
@@ -119,6 +122,10 @@ export class EventPainterController extends EventEmitter
 
   private fontFamilyChanged(id: string, target: any) {
     this.emit('fontFamilyChanged', id, target);
+  }
+
+  private reconstruct(id: string, target: any) {
+    this.emit('reconstruct', id, target);
   }
 
   private removed(id: string) {

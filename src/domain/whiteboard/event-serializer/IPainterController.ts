@@ -48,6 +48,7 @@ export interface IPainterController {
     listener: (id: string, target: any) => void
   ): this;
   on(event: 'removed', listener: (id: string) => void): this;
+  on(event: 'reconstruct', listener: (id: string, target: any) => void): this;
 
   removeListener(
     event: 'added',
@@ -82,6 +83,10 @@ export interface IPainterController {
     listener: (id: string, target: any) => void
   ): this;
   removeListener(event: 'removed', listener: (id: string) => void): this;
+  removeListener(
+    event: 'reconstruct',
+    listener: (id: string, target: any) => void
+  ): this;
 
   replayEvents(): Promise<void>;
 }

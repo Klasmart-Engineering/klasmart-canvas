@@ -945,6 +945,26 @@ export const WhiteboardProvider = ({
         canvasId,
       });
     });
+
+    remotePainter?.on('reconstruct', (id: string, target: any) => {
+
+      if (isLocalObject(id, canvasId)) return;
+      
+      canvas?.forEachObject(function (obj: any) {
+        if (obj.id && obj.id === id) {
+          canvas?.remove(obj);
+          canvas.renderAll();
+          const oObject = obj.toJSON(['strokeUniform', 'id']);
+          let nObject = { ...oObject, ...JSON.parse(target.param) };
+
+          fabric['Path'].fromObject(nObject, (path: any) => {
+            canvas.add(path);
+            canvas.renderAll();
+          });
+        }
+      });
+    });
+
   }, [text, canvas, eventSerializer, remotePainter, canvasId, brushIsActive, dispatch]);
 
   /**

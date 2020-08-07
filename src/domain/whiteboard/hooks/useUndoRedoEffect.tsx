@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
 
-
+// This file needs to be refactored. Performance can be improved and size reduced.
+// Lines of code are repeated and can be merged into a single common method.
 
 const objectReconstructor = (id: string, events: any, numToRemove: number) => {
   let filtered = events.filter((event: any) => {
@@ -47,6 +48,50 @@ const objectColorReconstructor = (id: string, events: any, numToRemove: number) 
   return initial;
 }
 
+const getPreviousColor = (id: string, events: any, numToRemove: number) => {
+  let filtered = events.filter((event: any) => {
+    return event.event.id === id;
+  });
+
+  if (numToRemove) {
+    filtered.splice(-numToRemove);
+  }
+
+  let i = filtered.length - 1;
+
+  for (i; i >= 0; i--) {
+    if (filtered[i].event.target.stroke) {
+      return filtered[i].event.target.stroke;
+    }
+  }
+
+  return '#000';
+}
+
+const getPreviousScale = (id: string, events: any, numToRemove: number) => {
+  let filtered = events.filter((event: any) => {
+    return event.event.id === id;
+  });
+
+  if (numToRemove) {
+    filtered.splice(-numToRemove);
+  }
+
+  let i = filtered.length - 1;
+
+  for (i; i >= 0; i--) {
+    if (
+        filtered[i].event.target.scaleX ||
+        filtered[i].event.target.scaleY
+      ) {
+
+      return filtered[i].event.target;
+    }
+  }
+
+  return { scaleX: 1, scaleY: 1 };
+}
+
 
 /**
  * Custom hook to track canvas history.
@@ -84,8 +129,7 @@ export const UndoRedo = (canvas: any, eventSerializer: any, canvasId: string) =>
         let futureEvents = allEvents.splice(state.eventIndex + 1);
         futureEvents = futureEvents.filter((e: any) => (e.event.id === id));
         const reconstructedEvent = objectColorReconstructor(id, state.events, futureEvents.length);
-        eventSerializer?.push('removed', payload);
-        eventSerializer?.push('added', reconstructedEvent.event);
+        eventSerializer?.push('reconstruct', reconstructedEvent.event);
       } else {
         let id = event.event.id;
         let allEvents = [ ...state.events ];
@@ -96,8 +140,20 @@ export const UndoRedo = (canvas: any, eventSerializer: any, canvasId: string) =>
         if (reconstructed.type === 'added') {
           eventSerializer?.push('removed', { id: reconstructed.event.id });
         }
+
+        if (futureEvents[0].type === 'scaled') {
+          let scaledEvent = { ...reconstructed };
+          let previousScale = getPreviousScale(id, state.events, futureEvents.length);
+          reconstructed.event.target = { ...reconstructed.event.target, ...previousScale };
+          eventSerializer?.push('scaled', scaledEvent.event);
+        }
         
         eventSerializer?.push(reconstructed.type, reconstructed.event);
+
+        if (futureEvents[0].type === 'colorChanged') {
+          reconstructed.event.target.stroke = getPreviousColor(id, state.events, futureEvents.length);
+          eventSerializer?.push('colorChanged', reconstructed.event);
+        }
       }
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];

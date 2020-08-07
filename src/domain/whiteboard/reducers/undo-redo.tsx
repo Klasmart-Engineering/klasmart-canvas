@@ -80,7 +80,7 @@ const defaultState: CanvasHistoryState = {
  * and render to canvas.
  * @param payload
  */
-const objectStringifier = (payload: [fabric.Object | TypedShape]) => {
+const objectStringifier = (payload: [fabric.Object | TypedShape]): string => {
   let formatted: (string)[] = [];
 
   if (payload) {
@@ -92,7 +92,7 @@ const objectStringifier = (payload: [fabric.Object | TypedShape]) => {
   return JSON.stringify({ objects: formatted });
 };
 
-const isLocalObject = (id: string, canvasId: string) => {
+const isLocalObject = (id: string, canvasId: string): boolean => {
   const object = id.split(':');
 
   if (!object.length) {
@@ -125,10 +125,6 @@ const reducer = (
       // is meant to prevent identical events from being stored
       // and causing inconsitencies with undo and redo actions.
       // This block should only be removed if that issue with canvas is fixed.
-      // if (
-      //   action.event.type === 'moved' ||
-      //   action.event.type === 'scaled'
-      // ) {
       if (
         action.event.type !== 'added' &&
         action.event.type !== 'removed'
@@ -140,8 +136,6 @@ const reducer = (
           return state;
         }
       }
-
-      console.log(state.events);
 
       // This block removed future states if a new event has
       // been created after an undo.
