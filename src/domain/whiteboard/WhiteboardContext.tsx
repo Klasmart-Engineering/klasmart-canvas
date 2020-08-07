@@ -478,6 +478,17 @@ export const WhiteboardProvider = ({
               id: activeObject.id,
             };
 
+            const event = { event: payload, type: 'activeSelection' };
+
+            dispatch({
+              type: SET,
+              payload: canvas.getObjects() as unknown as TypedShape[],
+              canvasId,
+              event,
+              otherPayload: undefined,
+              activeObjects: e.target._objects
+            });
+    
             eventSerializer?.push('moved', payload);
           }
         });

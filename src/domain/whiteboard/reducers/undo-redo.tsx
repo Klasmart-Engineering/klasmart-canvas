@@ -8,6 +8,9 @@ export const MODIFY = 'CANVAS_MODIFY';
 export const UPDATE_OTHER = 'CANVAS_UPDATE_OTHER';
 export const SET_OTHER = 'CANVAS_SET_OTHER';
 
+// This file is a work in progress. Proper interfaces need to be created, and reducer
+// may need to be refactored.
+
 /**
  * Model for storing the canvas history for undo/redo functionality.
  * States stored as stringified objects, since fabric requires it when
@@ -19,6 +22,9 @@ export interface CanvasHistoryState {
    */
   states: string[];
 
+  /**
+   * Objects created on another canvas.
+   */
   otherObjects: any;
 
   /**
@@ -36,9 +42,20 @@ export interface CanvasHistoryState {
    */
   activeState: string | null;
 
+  /**
+   * List of events
+   */
   events: any[];
 
+  /**
+   * Current event chosen, used for undo and redo events.
+   */
   eventIndex: number;
+
+  /**
+   * Used for group manipulation.
+   */
+  activeObjects: any[];
 }
 
 /**
@@ -55,11 +72,25 @@ export interface CanvasAction {
    */
   payload?: fabric.Object[];
 
+  /**
+   * ID of canvas.
+   */
   canvasId?: string;
-
+  
+  /**
+   * Event to be added to list.
+   */
   event?: any;
 
+  /**
+   * Payload of objects from other canvas.
+   */
   otherPayload?: fabric.Object;
+
+  /**
+   * Active objects on board.
+   */
+  activeObjects?: fabric.Object[];
 }
 
 /**
@@ -73,6 +104,7 @@ const defaultState: CanvasHistoryState = {
   activeState: null,
   events: [],
   eventIndex: -1,
+  activeObjects: [], // This is a work in progress, does not work.
 };
 
 /**
@@ -152,6 +184,9 @@ const reducer = (
       let mappedSelfState = objectStringifier(selfItems);
       states = [...states, mappedSelfState];
 
+      let activeObjects = action.activeObjects && 
+        action.activeObjects.length ? objectStringifier(action.activeObjects as [fabric.Object | TypedShape]) : [];
+
       let stateItems = {
         ...state,
         states,
@@ -159,6 +194,7 @@ const reducer = (
         activeStateIndex: states.length - 1,
         activeState: currentState,
         otherObjects: objectStringifier(otherObjects),
+        activeObjects: activeObjects as any[],
       };
 
       // Removes future events if a new event has been created after an undo.

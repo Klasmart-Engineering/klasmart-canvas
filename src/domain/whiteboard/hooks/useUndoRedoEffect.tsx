@@ -1,8 +1,16 @@
 import { useEffect } from 'react';
 import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
 
+// This file is a work in progress. Multiple events need to be considered,
+// such as group events, that are currently not function (or break functionality).
 
-// Reconstructs an object by events.
+
+/**
+ * Reconstructs an object based on past events.
+ * @param id Object ID.
+ * @param events Array of events
+ * @param numToRemove Number of events to ignore.
+ */
 const objectReconstructor = (id: string, events: any, numToRemove: number) => {
   let filtered = events.filter((event: any) => {
     return event.event.id === id;
@@ -28,25 +36,27 @@ const objectReconstructor = (id: string, events: any, numToRemove: number) => {
 
 /**
  * Custom hook to track canvas history.
- * @param canvas Canvas being manipulated.
+ * @param canvas Canvas being manipulated
+ * @param eventSerializer Event serializer
+ * @param canvasId Canvas ID
  */
 export const UndoRedo = (canvas: any, eventSerializer: any, canvasId: string) => {
   const { state, dispatch } = useUndoRedo();
-  console.log(canvasId);
 
   useEffect(() => {
     if (!state || !canvas) {
       return;
     }
+
+    let nextEvent = state.events[state.eventIndex + 1];
     
     // Rerenders canvas when an undo or redo event has been executed.
-    if (state.actionType === UNDO || state.actionType === REDO) {
+    if ((state.actionType === UNDO && nextEvent.type !== 'activeSelection') || state.actionType === REDO) {
       canvas.clear();
       canvas.loadFromJSON(state.activeState, () => {});
     }
 
     if (state.actionType === UNDO) {
-      let nextEvent = state.events[state.eventIndex + 1];
       let event = state.events[state.eventIndex];
 
       const payload = {
@@ -56,7 +66,7 @@ export const UndoRedo = (canvas: any, eventSerializer: any, canvasId: string) =>
       // Serialize the event for synchronization
       if (nextEvent.type === 'added') {
         eventSerializer?.push('removed', payload);
-      } else {
+      } else if (nextEvent.type !== 'activeSelection') {
         let id = event.event.id;
         let allEvents = [ ...state.events ];
         let futureEvents = allEvents.splice(state.eventIndex + 1);
@@ -69,7 +79,7 @@ export const UndoRedo = (canvas: any, eventSerializer: any, canvasId: string) =>
           eventSerializer?.push('removed', payload);
           eventSerializer?.push('added', reconstructedEvent.event);
         }
-      }
+      } 
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];
 
