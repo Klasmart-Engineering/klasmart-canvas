@@ -84,7 +84,6 @@ export const WhiteboardProvider = ({
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
   const [penLine, updatePenLine] = useState(DEFAULT_VALUES.PEN_LINE);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
-  // const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
 
   // Event serialization for synchronizing whiteboard state.
@@ -110,6 +109,7 @@ export const WhiteboardProvider = ({
 
     return object[0] === canvasId;
   };
+  const [eventedObjects, updateEventedObjects] = useState('true');
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -405,6 +405,7 @@ export const WhiteboardProvider = ({
   /**
    * Deselect the actual selected object
    */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const discardActiveObject = () => {
     canvas?.discardActiveObject().renderAll();
   };
@@ -1464,7 +1465,7 @@ export const WhiteboardProvider = ({
         // fill and type properties just can be resetted if is an filled shape
         if (shape.fill !== 'transparent') {
           shape.set({
-            type: 'filledShape',
+            shapeType: 'filledShape',
             fill: color || shapeColor,
           });
         }
@@ -1554,7 +1555,14 @@ export const WhiteboardProvider = ({
    */
   useEffect(() => {
     if (shape && shapeIsActive) {
+      discardActiveObject();
       mouseDown(shape, shape.startsWith('filled') ? shapeColor : penColor);
+      canvas?.forEachObject((object) => {
+        object.set({
+          evented: false,
+          selectable: false,
+        });
+      });
     }
 
     return () => {
@@ -1562,7 +1570,15 @@ export const WhiteboardProvider = ({
       canvas?.off('mouse:move');
       canvas?.off('mouse:up');
     };
-  }, [canvas, shape, shapeIsActive, mouseDown, penColor, shapeColor]);
+  }, [
+    canvas,
+    shape,
+    shapeIsActive,
+    mouseDown,
+    penColor,
+    shapeColor,
+    discardActiveObject,
+  ]);
 
   /**
    * Add specific color to selected text
@@ -1582,7 +1598,7 @@ export const WhiteboardProvider = ({
   const clearWhiteboard = (): void => {
     if (canvas) {
       canvas.clear();
-      canvas.backgroundColor = 'white';
+      canvas.backgroundColor = '#ffffff';
       canvas.renderAll();
     }
     closeModal();
@@ -1618,14 +1634,6 @@ export const WhiteboardProvider = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const isEmptyShape = (object: TypedShape) => {
     return isShape(object) && object.shapeType === 'shape';
-  };
-
-  /**
-   * Check if the given object is a text object
-   * @param {fabric.Object} object - object to check
-   */
-  const isText = (object: fabric.Object) => {
-    return object.fill && !object.stroke && (object as TextOptions).text;
   };
 
   /**
@@ -1677,135 +1685,165 @@ export const WhiteboardProvider = ({
 
   /**
    * Get the color of the clicked area in the Whiteboard
-   * and returns it in rgba format
+   * and returns it in hexadecimal code
    * @param {IEvent} event - click event
    */
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const getClickedColor = (event: IEvent): string | null => {
+  const getColorInCoord = (x: number, y: number): string | null => {
     if (canvas) {
-      const mousePointer = canvas.getPointer(event.e);
-      return `rgba(${canvas
+      const colorData = canvas
         .getContext()
-        .getImageData(mousePointer.x, mousePointer.y, 1, 1)
-        .data.slice(0, 3)
-        .join(', ')})`;
+        .getImageData(x, y, 1, 1)
+        .data.slice(0, 3);
+      return (
+        '#' +
+        ((1 << 24) + (colorData[0] << 16) + (colorData[1] << 8) + colorData[2])
+          .toString(16)
+          .slice(1)
+      );
     }
 
     return null;
   };
 
   /**
+   * Make a mouse down event below of the clicked shape
+   * @param {IEvent} event - Contains the x, y coords of the clicked point
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const manageShapeOutsideClick = (event: IEvent) => {
+    let foundShape: fabric.Object | null = null;
+
+    canvas?.forEachObject((object: fabric.Object) => {
+      if (
+        event.pointer &&
+        isEmptyShape(object) &&
+        object.containsPoint(event.pointer) &&
+        object !== event.target
+      ) {
+        foundShape = object;
+      }
+    });
+
+    if (event.pointer) {
+      canvas?.trigger('mouse:down', {
+        target: foundShape,
+        pointer: {
+          x: event.pointer.x,
+          y: event.pointer.y,
+        },
+      });
+    }
+  };
+
+  /**
+   * Reorder the current shapes letting the shapes over their container shape
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const reorderShapes = () => {
+    canvas?.forEachObject((actual) => {
+      canvas.forEachObject((compare) => {
+        if (actual.isContainedWithinObject(compare)) {
+          canvas.bringForward(actual);
+        }
+      });
+    });
+  };
+
+  /**
+   * Set the objects like evented if you select pointer or move tool
+   */
+  useEffect(() => {
+    if (eventedObjects) {
+      canvas?.forEachObject((object) => {
+        object.set({
+          evented: true,
+          selectable: true,
+        });
+      });
+
+      setHoverCursorObjects('move');
+    }
+  }, [canvas, eventedObjects, setHoverCursorObjects]);
+
+  /**
    * Manages the logic for Flood-fill Feature
    */
   useEffect(() => {
-    let originalFill = null;
     let originalStroke = null;
-    let clickedColor = null;
-    const differentFill = 'rgba(220, 220, 220)';
-    const differentStroke = 'rgba(200, 200, 200)';
+    let originalFill = null;
+    let clickedColor: string | null = null;
+    const differentFill = '#dcdcdc';
+    const differentStroke = '#c8c8c8';
 
     if (floodFillIsActive) {
       setCanvasSelection(false);
       setHoverCursorObjects('default');
 
+      canvas?.forEachObject((object: TypedShape) => {
+        object.perPixelTargetFind = isEmptyShape(object) ? false : true;
+        object.evented = true;
+      });
+
+      canvas?.renderAll();
+      reorderShapes();
+
       canvas?.on('mouse:down', (event: IEvent) => {
-        // Click out of any shape
+        // Click out of any object
         if (!event.target) {
           canvas.backgroundColor = floodFill;
         }
 
         // Click on object shape
-        if (event.target && isEmptyShape(event.target)) {
-          // Store the current colors to reset it (if is necesary)
-          originalFill = event.target.fill;
+        if (event.target && event.pointer && isEmptyShape(event.target)) {
+          // Store the current stroke and fill colors to reset them
           originalStroke = event.target.stroke;
+          originalFill = event.target.fill;
 
-          /*
-            Change fill and stroke to a provisional colors
-            to difference shape fill, shape stroke and whiteboard
-          */
-          event.target.set('fill', differentFill);
+          // Change stroke to a provisional color to be identified
           event.target.set('stroke', differentStroke);
+          event.target.set('fill', differentFill);
           canvas.renderAll();
 
-          // Getting the color in which user makes click
-          clickedColor = getClickedColor(event);
+          clickedColor = getColorInCoord(event.pointer.x, event.pointer.y);
 
-          // If user click inside of a shape
           if (clickedColor === differentFill) {
+            // If user click inside of the shape
             event.target.set('fill', floodFill);
             event.target.set('stroke', originalStroke);
-            // If user clicks in the border of the shape
           } else if (clickedColor === differentStroke) {
-            event.target.set('fill', originalFill);
+            // If user click in the border of the shape
             event.target.set('stroke', originalStroke);
-          } else {
-            // return to previous color
-            event.target.set('fill', originalFill);
-            event.target.set('stroke', originalStroke);
-            canvas.backgroundColor = floodFill;
-          }
-        }
-
-        // Click on free line drawing
-        if (event.target && isFreeDrawing(event.target)) {
-          // Store the current stroke color to reset it (if is necesary)
-          originalStroke = event.target.stroke;
-
-          /*
-            Change stroke to a provisional color
-            to difference line and whiteboard
-          */
-          event.target.set('stroke', differentStroke);
-          canvas.renderAll();
-
-          // Getting the color in which user makes click
-          clickedColor = getClickedColor(event);
-
-          // If the user clicks over the line
-          if (clickedColor === differentStroke) {
-            event.target.set('stroke', originalStroke);
-          } else {
-            // return to previous color
-            event.target.set('stroke', originalStroke);
-            canvas.backgroundColor = floodFill;
-          }
-        }
-
-        // Click over text object
-        if (event.target && isText(event.target)) {
-          // Store the current fill color to reset it (if is necesary)
-          originalFill = event.target.fill;
-
-          /*
-            Change fill to a provisional color
-            to difference shape and whiteboard
-          */
-          event.target.set('fill', differentFill);
-          canvas.renderAll();
-
-          // Getting the color in which user makes click
-          clickedColor = getClickedColor(event);
-
-          // If the user clicks the text
-          if (clickedColor === differentFill) {
             event.target.set('fill', originalFill);
           } else {
-            // return to previous color
+            // If user click outside of the shape
+            event.target.set('stroke', originalStroke);
             event.target.set('fill', originalFill);
-            canvas.backgroundColor = floodFill;
+
+            if (event.e) {
+              manageShapeOutsideClick(event);
+            }
           }
         }
 
         canvas.renderAll();
+      });
+    } else {
+      setCanvasSelection(true);
+      setHoverCursorObjects('move');
+
+      canvas?.forEachObject((object: TypedShape) => {
+        object.padding = 0;
       });
     }
   }, [
     canvas,
     floodFill,
     floodFillIsActive,
-    getClickedColor,
+    getColorInCoord,
     isEmptyShape,
+    manageShapeOutsideClick,
+    reorderShapes,
     setCanvasSelection,
     setHoverCursorObjects,
   ]);
@@ -1865,6 +1903,8 @@ export const WhiteboardProvider = ({
     updateFloodFill,
     floodFillIsActive,
     updateFloodFillIsActive,
+    eventedObjects,
+    updateEventedObjects,
     // Just for control selectors' value they can be modified in the future
     pointer,
     updatePointer,
@@ -1897,7 +1937,7 @@ export const WhiteboardProvider = ({
             alignItems: 'center',
             justifyContent: 'center',
             position: 'relative',
-            backgroundColor: 'white',
+            backgroundColor: '#ffffff',
           }}
         >
           {children}

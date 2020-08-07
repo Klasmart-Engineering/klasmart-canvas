@@ -5,4 +5,5 @@ import { fabric } from 'fabric';
  */
 export interface TypedShape extends fabric.Object {
   shapeType?: string;
+  mimicBackground?: boolean;
 }

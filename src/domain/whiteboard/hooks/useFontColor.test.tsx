@@ -3,7 +3,7 @@ import { useFontColor } from './useFontColor';
 
 test('should set fontColor from initial value', () => {
   const { result } = renderHook(() => useFontColor());
-  expect(result.current.fontColor).toBe('#000');
+  expect(result.current.fontColor).toBe('#000000');
   expect(typeof result.current.updateFontColor).toBe('function');
   act(() => {
     result.current.updateFontColor('green');

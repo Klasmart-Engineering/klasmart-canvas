@@ -3,7 +3,7 @@ import { useFloodFill } from './useFloodFill';
 
 test('should set floodFill from initial value', () => {
   const { result } = renderHook(() => useFloodFill());
-  expect(result.current.floodFill).toBe('#000');
+  expect(result.current.floodFill).toBe('#000000');
   expect(typeof result.current.updateFloodFill).toBe('function');
   act(() => {
     result.current.updateFloodFill('green');

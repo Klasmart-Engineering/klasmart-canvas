@@ -34,12 +34,13 @@ export const rectangle = (
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
-    padding: 15,
     strokeUniform: true,
+    padding: 15,
   });
 
   return fabric.util.object.extend(shape, {
     shapeType: 'shape',
+    mimicBackground: true,
   });
 };
 
@@ -63,14 +64,15 @@ export const triangle = (
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
-    padding: 15,
     selectable: false,
     evented: false,
+    padding: 15,
     strokeUniform: true,
   });
 
   return fabric.util.object.extend(shape, {
     shapeType: 'shape',
+    mimicBackground: true,
   });
 };
 
@@ -94,14 +96,15 @@ export const circle = (
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
-    padding: 15,
     selectable: false,
     evented: false,
     strokeUniform: true,
+    padding: 15,
   });
 
   return fabric.util.object.extend(shape, {
     shapeType: 'shape',
+    mimicBackground: true,
   });
 };
 
@@ -125,6 +128,7 @@ export const pentagon = (
 
   shape = fabric.util.object.extend(shape, {
     shapeType: 'shape',
+    mimicBackground: true,
   });
 
   return shape.set({
@@ -133,10 +137,10 @@ export const pentagon = (
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
-    padding: 15,
     selectable: false,
     evented: false,
     strokeUniform: true,
+    padding: 15,
   });
 };
 
@@ -161,19 +165,18 @@ export const hexagon = (
 
   shape = fabric.util.object.extend(shape, {
     shapeType: 'shape',
-  });
-
-  return shape.set({
     scaleX: 0.02,
     scaleY: 0.02,
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
-    padding: 15,
     selectable: false,
     evented: false,
     strokeUniform: true,
+    padding: 15,
   });
+
+  return shape;
 };
 
 /**
@@ -198,6 +201,7 @@ export const generic = (
 
   fabric.util.object.extend(shape, {
     shapeType: 'shape',
+    mimicBackground: true,
   });
 
   return shape.set({
@@ -206,10 +210,10 @@ export const generic = (
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
-    padding: 15,
     selectable: false,
     evented: false,
     strokeUniform: true,
+    padding: 15,
   });
 };
 

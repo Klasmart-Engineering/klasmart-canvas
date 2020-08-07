@@ -53,6 +53,7 @@ function Toolbar() {
     floodFill,
     updateFloodFill,
     updateFloodFillIsActive,
+    updateEventedObjects,
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
@@ -103,6 +104,10 @@ function Toolbar() {
       otherwise will be setted in true
     */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
+
+    updateEventedObjects(
+      tool === ELEMENTS.POINTERS_TOOL || tool === ELEMENTS.MOVE_OBJECTS_TOOL
+    );
 
     /*
       If you click on another button different than
