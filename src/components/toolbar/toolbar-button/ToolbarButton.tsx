@@ -17,7 +17,6 @@ import { CSSProperties } from '@material-ui/core/styles/withStyles';
 function ToolbarButton(props: IToolbarButton) {
   const { id, title, iconSrc, iconName, active, onClick } = props;
 
-
   const toolbarButtonStyle: CSSProperties = {
     border: "none",
     width: "36px",

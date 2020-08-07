@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import '../../../assets/style/toolbar-button.css';
 import ISpecialButton from '../../../interfaces/toolbar/toolbar-special-elements/special-button';
 
@@ -22,9 +22,19 @@ function SpecialButton(props: ISpecialButton) {
     onClick(id);
   }
 
+  const toolbarButtonStyle: CSSProperties = {
+    border: "none",
+    width: "36px",
+    marginLeft: "2px",
+    backgroundColor: selected ? "#d9d9d9" : "#fff",
+    borderRadius: "4px",
+    outline: 0,
+  }
+
   return (
     <button
       title={title}
+      style={toolbarButtonStyle}
       className={[
         'toolbar-button',
         selected ? 'selected-button' : '',
