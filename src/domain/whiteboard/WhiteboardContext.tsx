@@ -95,7 +95,11 @@ export const WhiteboardProvider = ({
     EventPainterController | undefined
   >();
 
-  const { dispatch } = UndoRedo(canvas as fabric.Canvas, eventSerializer, canvasId);
+  const { dispatch } = UndoRedo(
+    canvas as fabric.Canvas,
+    eventSerializer,
+    canvasId
+  );
 
   const isLocalObject = (id: string, canvasId: string) => {
     const object = id.split(':');
@@ -316,8 +320,12 @@ export const WhiteboardProvider = ({
    * 'Escape' event for deselect active objects
    * */
   const keyDownHandler = useCallback(
-    (e: { key: any, which?: number, ctrlKey?: boolean, shiftKey?: boolean }) => {
-
+    (e: {
+      key: any;
+      which?: number;
+      ctrlKey?: boolean;
+      shiftKey?: boolean;
+    }) => {
       // The following two blocks, used for undo and redo, can not
       // be integrated while there are two boards in the canvas.
       // if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
@@ -353,16 +361,16 @@ export const WhiteboardProvider = ({
   // Temporary code to get undo / redo working while there are two boards
   // on the view.
   const tempKeyDown = (e: any) => {
-      if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
-        dispatch({ type: UNDO, canvasId });
-        return;
-      }
+    if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
+      dispatch({ type: UNDO, canvasId });
+      return;
+    }
 
-      if (e.which === 89 && e.ctrlKey) {
-        dispatch({ type: REDO, canvasId });
-        return;
-      }
-  }
+    if (e.which === 89 && e.ctrlKey) {
+      dispatch({ type: REDO, canvasId });
+      return;
+    }
+  };
 
   /**
    * Loads selected font. Default is Arial
@@ -392,10 +400,10 @@ export const WhiteboardProvider = ({
   useEffect(() => {
     document.addEventListener('keydown', keyDownHandler, false);
     fontFamilyLoader(fontFamily);
-    
-    return(() => {
+
+    return () => {
       document.removeEventListener('keydown', keyDownHandler);
-    });
+    };
   }, [fontFamily, keyDownHandler, fontFamilyLoader]);
 
   /**
@@ -433,11 +441,14 @@ export const WhiteboardProvider = ({
         PainterEvents.pathCreated(target, e.path.id, canvasId) as ObjectEvent
       );
 
-      const event = { event: PainterEvents.pathCreated(target, e.path.id, canvasId), type: 'added' };
+      const event = {
+        event: PainterEvents.pathCreated(target, e.path.id, canvasId),
+        type: 'added',
+      };
 
       dispatch({
         type: SET,
-        payload: canvas.getObjects() as unknown as TypedShape[],
+        payload: (canvas.getObjects() as unknown) as TypedShape[],
         canvasId,
         event,
       });
@@ -475,7 +486,7 @@ export const WhiteboardProvider = ({
         const event = { event: payload, type: 'added' };
         dispatch({
           type: SET,
-          payload: canvas.getObjects() as unknown as TypedShape[],
+          payload: (canvas.getObjects() as unknown) as TypedShape[],
           canvasId,
           event,
         });
@@ -513,13 +524,13 @@ export const WhiteboardProvider = ({
 
             dispatch({
               type: SET,
-              payload: canvas.getObjects() as unknown as TypedShape[],
+              payload: (canvas.getObjects() as unknown) as TypedShape[],
               canvasId,
               event,
               otherPayload: undefined,
-              activeObjects: e.target._objects
+              activeObjects: e.target._objects,
             });
-    
+
             eventSerializer?.push('moved', payload);
           }
         });
@@ -551,7 +562,7 @@ export const WhiteboardProvider = ({
 
         dispatch({
           type: SET,
-          payload: canvas.getObjects() as unknown as TypedShape[],
+          payload: (canvas.getObjects() as unknown) as TypedShape[],
           canvasId,
           event,
         });
@@ -667,11 +678,11 @@ export const WhiteboardProvider = ({
         // Serialize the event for synchronization
         dispatch({
           type: SET,
-          payload: canvas.getObjects() as unknown as TypedShape[],
+          payload: (canvas.getObjects() as unknown) as TypedShape[],
           canvasId,
           event,
         });
-  
+
         eventSerializer?.push('scaled', payload);
       }
     });
@@ -750,7 +761,7 @@ export const WhiteboardProvider = ({
         const event = { event: payload, type: 'removed' };
         dispatch({
           type: SET,
-          payload: canvas.getObjects() as unknown as TypedShape[],
+          payload: (canvas.getObjects() as unknown) as TypedShape[],
           canvasId,
           event,
         });
@@ -818,7 +829,7 @@ export const WhiteboardProvider = ({
           canvas?.add(res);
           dispatch({
             type: SET_OTHER,
-            payload: canvas?.getObjects() as unknown as TypedShape[],
+            payload: (canvas?.getObjects() as unknown) as TypedShape[],
             canvasId,
           });
         }
@@ -989,7 +1000,7 @@ export const WhiteboardProvider = ({
 
         dispatch({
           type: SET_OTHER,
-          payload: canvas?.getObjects() as unknown as TypedShape[],
+          payload: (canvas?.getObjects() as unknown) as TypedShape[],
           canvasId,
         });
 
@@ -1051,15 +1062,14 @@ export const WhiteboardProvider = ({
 
       dispatch({
         type: SET_OTHER,
-        payload: canvas?.getObjects() as unknown as TypedShape[],
+        payload: (canvas?.getObjects() as unknown) as TypedShape[],
         canvasId,
       });
     });
 
     remotePainter?.on('reconstruct', (id: string, target: any) => {
-
       if (isLocalObject(id, canvasId)) return;
-      
+
       canvas?.forEachObject(function (obj: any) {
         if (obj.id && obj.id === id) {
           canvas?.remove(obj);
@@ -1067,8 +1077,7 @@ export const WhiteboardProvider = ({
           const oObject = obj.toJSON(['strokeUniform', 'id']);
           let nObject = { ...oObject, ...JSON.parse(target.param) };
 
-          switch(target.objectType) {
-
+          switch (target.objectType) {
             case 'path': {
               fabric.Path.fromObject(nObject, (path: any) => {
                 canvas.add(path);
@@ -1082,7 +1091,7 @@ export const WhiteboardProvider = ({
                 nObject = { ...nObject, fill: nObject.stroke };
                 delete nObject.stroke;
               }
-            
+
               fabric.Textbox.fromObject(nObject, (path: any) => {
                 canvas.add(path);
               });
@@ -1094,8 +1103,15 @@ export const WhiteboardProvider = ({
         }
       });
     });
-
-  }, [text, canvas, eventSerializer, remotePainter, canvasId, brushIsActive, dispatch]);
+  }, [
+    text,
+    canvas,
+    eventSerializer,
+    remotePainter,
+    canvasId,
+    brushIsActive,
+    dispatch,
+  ]);
 
   /**
    * Send synchronization event for penColor and fontColor changes.
@@ -1122,7 +1138,7 @@ export const WhiteboardProvider = ({
 
           dispatch({
             type: SET,
-            payload: canvas?.getObjects() as unknown as TypedShape[],
+            payload: (canvas?.getObjects() as unknown) as TypedShape[],
             canvasId,
             event,
           });
@@ -1548,10 +1564,7 @@ export const WhiteboardProvider = ({
    */
   const textColor = (color: string) => {
     updateFontColor(color);
-    if (
-      canvas?.getActiveObject() &&
-      (canvas.getActiveObject() as IText).text
-    ) {
+    if (canvas?.getActiveObject() && (canvas.getActiveObject() as IText).text) {
       canvas.getActiveObject().set('fill', color);
       canvas.renderAll();
     }

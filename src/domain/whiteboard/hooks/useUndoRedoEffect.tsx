@@ -4,7 +4,6 @@ import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
 
-
 /**
  * Reconstructs an object based on past events.
  * @param id Object ID.
@@ -20,7 +19,7 @@ const objectReconstructor = (id: string, events: any, numToRemove: number) => {
     filtered.splice(-numToRemove);
   }
 
-  let mapped = filtered.map((event: any) => {
+  const mapped = filtered.map((event: any) => {
     return event.event;
   });
 
@@ -30,9 +29,11 @@ const objectReconstructor = (id: string, events: any, numToRemove: number) => {
     reconstructedTarget = { ...reconstructedTarget, ...object.target };
   });
 
-  let initial = { ...filtered[filtered.length - 1], event: { ...filtered[0].event, target: reconstructedTarget } };
-  return initial;
-}
+  return {
+    ...filtered[filtered.length - 1],
+    event: { ...filtered[0].event, target: reconstructedTarget },
+  };
+};
 
 /**
  * Custom hook to track canvas history.
@@ -40,7 +41,11 @@ const objectReconstructor = (id: string, events: any, numToRemove: number) => {
  * @param eventSerializer Event serializer
  * @param canvasId Canvas ID
  */
-export const UndoRedo = (canvas: any, eventSerializer: any, canvasId: string) => {
+export const UndoRedo = (
+  canvas: any,
+  eventSerializer: any,
+  canvasId: string
+) => {
   const { state, dispatch } = useUndoRedo();
 
   useEffect(() => {
@@ -49,9 +54,12 @@ export const UndoRedo = (canvas: any, eventSerializer: any, canvasId: string) =>
     }
 
     let nextEvent = state.events[state.eventIndex + 1];
-    
+
     // Rerenders canvas when an undo or redo event has been executed.
-    if ((state.actionType === UNDO && nextEvent.type !== 'activeSelection') || state.actionType === REDO) {
+    if (
+      (state.actionType === UNDO && nextEvent.type !== 'activeSelection') ||
+      state.actionType === REDO
+    ) {
       canvas.clear();
       canvas.loadFromJSON(state.activeState, () => {});
     }
@@ -68,10 +76,14 @@ export const UndoRedo = (canvas: any, eventSerializer: any, canvasId: string) =>
         eventSerializer?.push('removed', payload);
       } else if (nextEvent.type !== 'activeSelection') {
         let id = event.event.id;
-        let allEvents = [ ...state.events ];
+        let allEvents = [...state.events];
         let futureEvents = allEvents.splice(state.eventIndex + 1);
-        futureEvents = futureEvents.filter((e: any) => (e.event.id === id));
-        const reconstructedEvent = objectReconstructor(id, state.events, futureEvents.length);
+        futureEvents = futureEvents.filter((e: any) => e.event.id === id);
+        const reconstructedEvent = objectReconstructor(
+          id,
+          state.events,
+          futureEvents.length
+        );
 
         if (reconstructedEvent.type !== 'added') {
           console.log(reconstructedEvent);
@@ -80,7 +92,7 @@ export const UndoRedo = (canvas: any, eventSerializer: any, canvasId: string) =>
           eventSerializer?.push('removed', payload);
           eventSerializer?.push('added', reconstructedEvent.event);
         }
-      } 
+      }
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];
 
@@ -88,22 +100,25 @@ export const UndoRedo = (canvas: any, eventSerializer: any, canvasId: string) =>
         eventSerializer?.push('added', event.event);
       } else {
         let id = event.event.id;
-        let allEvents = [ ...state.events ];
+        let allEvents = [...state.events];
         let futureEvents = allEvents.splice(state.eventIndex + 1);
-        futureEvents = futureEvents.filter((e: any) => (e.event.id === id));
-        const reconstructed = objectReconstructor(id, state.events, futureEvents.length);
-        
+        futureEvents = futureEvents.filter((e: any) => e.event.id === id);
+        const reconstructed = objectReconstructor(
+          id,
+          state.events,
+          futureEvents.length
+        );
+
         eventSerializer?.push(reconstructed.type, reconstructed.event);
       }
     }
 
-    return(() => {
+    return () => {
       canvas?.off('object:added');
       canvas?.off('object:modified');
       canvas?.off('object:removed');
-    });
-
+    };
   }, [state, canvas, dispatch, eventSerializer]);
 
   return { state, dispatch };
-}
+};
