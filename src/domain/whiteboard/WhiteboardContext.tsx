@@ -246,10 +246,6 @@ export const WhiteboardProvider = ({
             });
           });
         }
-
-        canvas.on('text:changed', () => {
-          // dispatch({ type: SET, payload: canvas.getObjects() });
-        });
       });
     }
 
@@ -484,6 +480,7 @@ export const WhiteboardProvider = ({
         };
 
         const event = { event: payload, type: 'added' };
+
         dispatch({
           type: SET,
           payload: (canvas.getObjects() as unknown) as TypedShape[],

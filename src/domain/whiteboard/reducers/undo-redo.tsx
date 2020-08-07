@@ -125,6 +125,10 @@ const objectStringifier = (payload: [fabric.Object | TypedShape]): string => {
 };
 
 const isLocalObject = (id: string, canvasId: string): boolean => {
+  if (!id) {
+    return false;
+  }
+
   const object = id.split(':');
 
   if (!object.length) {
@@ -146,6 +150,11 @@ const reducer = (
   switch (action.type) {
     // Sets state when new object is created.
     case SET: {
+      // Once all object types are synched, this if statement can be removed.
+      if (!action.event) {
+        return state;
+      }
+
       let states = [...state.states];
       let events = [...state.events];
       const selfItems = action.payload?.filter((object: any) =>
