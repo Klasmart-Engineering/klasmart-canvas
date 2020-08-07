@@ -1676,17 +1676,33 @@ export const WhiteboardProvider = ({
   }, [lineWidth, canvas]);
 
   /**
+   * Get the color of the clicked area in the Whiteboard
+   * and returns it in rgba format
+   * @param {IEvent} event - click event
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const getClickedColor = (event: IEvent): string | null => {
+    if (canvas) {
+      const mousePointer = canvas.getPointer(event.e);
+      return `rgba(${canvas
+        .getContext()
+        .getImageData(mousePointer.x, mousePointer.y, 1, 1)
+        .data.slice(0, 3)
+        .join(', ')})`;
+    }
+
+    return null;
+  };
+
+  /**
    * Manages the logic for Flood-fill Feature
    */
   useEffect(() => {
     let originalFill = null;
     let originalStroke = null;
-    let mousePointer = null;
-    let clickedColorValues = null;
-    const fillValue = 220;
-    const strokeValue = 200;
-    const differentFill = `rgba(${fillValue}, ${fillValue}, ${fillValue})`;
-    const differentStroke = `rgba(${strokeValue}, ${strokeValue}, ${strokeValue})`;
+    let clickedColor = null;
+    const differentFill = 'rgba(220, 220, 220)';
+    const differentStroke = 'rgba(200, 200, 200)';
 
     if (floodFillIsActive) {
       setCanvasSelection(false);
@@ -1713,21 +1729,14 @@ export const WhiteboardProvider = ({
           canvas.renderAll();
 
           // Getting the color in which user makes click
-          mousePointer = canvas.getPointer(event.e);
-          clickedColorValues = canvas
-            .getContext()
-            .getImageData(mousePointer.x, mousePointer.y, 1, 1)
-            .data.slice(0, 3);
+          clickedColor = getClickedColor(event);
 
           // If user click inside of a shape
-          if (!clickedColorValues.find((value) => value !== fillValue)) {
+          if (clickedColor === differentFill) {
             event.target.set('fill', floodFill);
             event.target.set('stroke', originalStroke);
-
             // If user clicks in the border of the shape
-          } else if (
-            !clickedColorValues.find((value) => value !== strokeValue)
-          ) {
+          } else if (clickedColor === differentStroke) {
             event.target.set('fill', originalFill);
             event.target.set('stroke', originalStroke);
           } else {
@@ -1751,14 +1760,10 @@ export const WhiteboardProvider = ({
           canvas.renderAll();
 
           // Getting the color in which user makes click
-          mousePointer = canvas.getPointer(event.e);
-          clickedColorValues = canvas
-            .getContext()
-            .getImageData(mousePointer.x, mousePointer.y, 1, 1)
-            .data.slice(0, 3);
+          clickedColor = getClickedColor(event);
 
           // If the user clicks over the line
-          if (!clickedColorValues.find((value) => value !== strokeValue)) {
+          if (clickedColor === differentStroke) {
             event.target.set('stroke', originalStroke);
           } else {
             // return to previous color
@@ -1780,14 +1785,10 @@ export const WhiteboardProvider = ({
           canvas.renderAll();
 
           // Getting the color in which user makes click
-          mousePointer = canvas.getPointer(event.e);
-          clickedColorValues = canvas
-            .getContext()
-            .getImageData(mousePointer.x, mousePointer.y, 1, 1)
-            .data.slice(0, 3);
+          clickedColor = getClickedColor(event);
 
           // If the user clicks the text
-          if (!clickedColorValues.find((value) => value !== fillValue)) {
+          if (clickedColor === differentFill) {
             event.target.set('fill', originalFill);
           } else {
             // return to previous color
@@ -1803,6 +1804,7 @@ export const WhiteboardProvider = ({
     canvas,
     floodFill,
     floodFillIsActive,
+    getClickedColor,
     isEmptyShape,
     setCanvasSelection,
     setHoverCursorObjects,
