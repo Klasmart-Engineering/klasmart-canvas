@@ -325,7 +325,7 @@ export const WhiteboardProvider = ({
       //   return;
       // }
 
-      // if (e.which === 90 && e.ctrlKey && e.shiftKey) {
+      // if (e.which === 89 && e.ctrlKey) {
       //   dispatch({ type: REDO, canvasId });
       //   return;
       // }
@@ -358,7 +358,7 @@ export const WhiteboardProvider = ({
         return;
       }
 
-      if (e.which === 90 && e.ctrlKey && e.shiftKey) {
+      if (e.which === 89 && e.ctrlKey) {
         dispatch({ type: REDO, canvasId });
         return;
       }
