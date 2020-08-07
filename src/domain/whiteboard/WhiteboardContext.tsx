@@ -620,6 +620,15 @@ export const WhiteboardProvider = ({
         id,
       };
 
+      const event = { event: payload, type: 'moved' };
+
+      dispatch({
+        type: SET,
+        payload: (canvas.getObjects() as unknown) as TypedShape[],
+        canvasId,
+        event,
+      });
+
       eventSerializer?.push('rotated', payload);
     });
 
