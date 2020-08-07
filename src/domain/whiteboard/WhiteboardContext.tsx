@@ -1070,27 +1070,19 @@ export const WhiteboardProvider = ({
           switch(target.objectType) {
 
             case 'path': {
-              // let nObject = { ...oObject, ...JSON.parse(target.param) };
               fabric.Path.fromObject(nObject, (path: any) => {
                 canvas.add(path);
               });
               break;
             }
             case 'textbox': {
-              // let nObject = { ...JSON.parse(target.param), id: oObject.id, strokeUniform: oObject.strokeUniform };
-              if (!JSON.parse(target.param).fill) {
-                // nObject = { ...nObject, fill: nObject.stroke };
-                console.log(nObject);
-                debugger;
+              if (JSON.parse(target.param).fill) {
+                delete nObject.stroke;
+              } else {
+                nObject = { ...nObject, fill: nObject.stroke };
                 delete nObject.stroke;
               }
-
-              if (!JSON.parse(target.param).stroke) {
-                // nObject = { ...nObject, fill: nObject.stroke };
-                
-                debugger;
-              }
-              
+            
               fabric.Textbox.fromObject(nObject, (path: any) => {
                 canvas.add(path);
               });
