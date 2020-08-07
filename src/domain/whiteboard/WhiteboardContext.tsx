@@ -451,13 +451,13 @@ export const WhiteboardProvider = ({
           id: e.target.id,
         };
 
-        // const event = { event: payload, type: 'moved' };
-        // dispatch({
-        //   type: SET,
-        //   payload: canvas.getObjects() as unknown as TypedShape[],
-        //   canvasId,
-        //   event,
-        // });
+        const event = { event: payload, type: 'added' };
+        dispatch({
+          type: SET,
+          payload: canvas.getObjects() as unknown as TypedShape[],
+          canvasId,
+          event,
+        });
 
         // Serialize the event for synchronization
         eventSerializer?.push('added', payload);
@@ -671,7 +671,8 @@ export const WhiteboardProvider = ({
         };
 
         // Dispatch to state.
-        const event = { event: payload, type: 'moved' };
+
+        const event = { event: payload, type: 'removed' };
         dispatch({
           type: SET,
           payload: canvas.getObjects() as unknown as TypedShape[],
@@ -875,6 +876,13 @@ export const WhiteboardProvider = ({
             }
           }
         });
+
+        dispatch({
+          type: SET_OTHER,
+          payload: canvas?.getObjects() as unknown as TypedShape[],
+          canvasId,
+        });
+
         canvas?.renderAll();
       }
     );
@@ -960,11 +968,20 @@ export const WhiteboardProvider = ({
             id: obj.id,
           };
 
+          const event = { event: payload, type: 'colorChanged' };
+
+          dispatch({
+            type: SET,
+            payload: canvas?.getObjects() as unknown as TypedShape[],
+            canvasId,
+            event,
+          });
+
           eventSerializer?.push('colorChanged', payload);
         }
       });
     }
-  }, [canvas, eventSerializer, canvasId, penColor, fontColor]);
+  }, [canvas, eventSerializer, canvasId, penColor, fontColor, dispatch]);
 
   /**
    * Send synchronization event for fontFamily changes.

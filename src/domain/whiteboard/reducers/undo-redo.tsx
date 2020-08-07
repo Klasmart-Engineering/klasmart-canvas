@@ -116,13 +116,22 @@ const reducer = (
     // Sets state when new object is created.
     case SET: {
       let states = [...state.states];
+      let events = [...state.events];
       let selfItems = action.payload?.filter((object: any) => (isLocalObject(object.id, action.canvasId as string))) as [fabric.Object | TypedShape];
       let otherObjects = action.payload?.filter((object: any) => (!isLocalObject(object.id, action.canvasId as string))) as [fabric.Object | TypedShape];
       const currentState = objectStringifier([...selfItems, ...otherObjects] as [fabric.Object | TypedShape]);
 
+      // Canvas emits multiple identical events, this block
+      // is meant to prevent identical events from being stored
+      // and causing inconsitencies with undo and redo actions.
+      // This block should only be removed if that issue with canvas is fixed.
+      // if (
+      //   action.event.type === 'moved' ||
+      //   action.event.type === 'scaled'
+      // ) {
       if (
-        action.event.type === 'moved' ||
-        action.event.type === 'scaled'
+        action.event.type !== 'added' &&
+        action.event.type !== 'removed'
       ) {
         const lastEvent = JSON.stringify(state.events[state.events.length -1].event);
         const currentEvent = JSON.stringify(action.event.event);
@@ -132,15 +141,20 @@ const reducer = (
         }
       }
 
+      console.log(state.events);
+
+      // This block removed future states if a new event has
+      // been created after an undo.
       if (
         (state.activeStateIndex !== null &&
         state.activeStateIndex + 1 < state.states.length)
       ) {
         states.splice(state.activeStateIndex + 1, 9e9);
-      } else if (state.activeState === null) {
+      } else if (state.activeStateIndex === null) {
         states = [];
       }
 
+      // Formats and creates new state.
       let mappedSelfState = objectStringifier(selfItems);
       states = [...states, mappedSelfState];
 
@@ -153,8 +167,15 @@ const reducer = (
         otherObjects: objectStringifier(otherObjects),
       };
 
+      // Removes future events if a new event has been created after an undo.
+      if (state.eventIndex >= 0 && state.eventIndex + 1 < state.events.length) {
+        events.splice(state.eventIndex + 1, 9e9);
+      } else if (state.eventIndex < 0) {
+        events = [];
+      }
+
       if (action.event) {
-        let events = [ ...state.events, action.event ];
+        events = [ ...events, action.event ];
         stateItems = {
           ...stateItems,
           events,
@@ -163,20 +184,6 @@ const reducer = (
       }
 
       return stateItems;
-    }
-
-    // Sets state when an object is modified.
-    case MODIFY: {
-      const currentState = objectStringifier(action.payload as [fabric.Object | TypedShape]);
-      const states = [...state.states, currentState];
-
-      return {
-        ...state,
-        states,
-        actionType: MODIFY,
-        activeStateIndex: states.length - 1,
-        activeState: currentState,
-      };
     }
 
     // Steps back to previous state.
@@ -242,11 +249,7 @@ const reducer = (
       };
     }
 
-    case UPDATE_OTHER: {
-     
-      return state;
-    }
-
+    // Creates a new current state if a new event has been received by serializer from a non local canvas.
     case SET_OTHER: {
       let selfItems = action.payload?.filter((object: any) => (isLocalObject(object.id, action.canvasId as string))) as [fabric.Object | TypedShape];
       let otherObjects = action.payload?.filter((object: any) => (!isLocalObject(object.id, action.canvasId as string))) as [fabric.Object | TypedShape];
