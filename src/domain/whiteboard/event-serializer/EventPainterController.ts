@@ -66,7 +66,7 @@ export class EventPainterController extends EventEmitter
         this.rotated(event.id, event.objectType, target);
         break;
       case 'scaled':
-        this.scaled(event.id, target);
+        this.scaled(event.id, event.objectType, target);
         break;
       case 'skewed':
         this.skewed(event.id, target);
@@ -104,8 +104,8 @@ export class EventPainterController extends EventEmitter
     this.emit('rotated', id, objectType, target);
   }
 
-  private scaled(id: string, target: any) {
-    this.emit('scaled', id, target);
+  private scaled(id: string, objectType: string, target: any) {
+    this.emit('scaled', id, objectType, target);
   }
 
   private skewed(id: string, target: any) {

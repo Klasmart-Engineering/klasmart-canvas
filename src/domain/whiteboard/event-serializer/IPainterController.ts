@@ -36,7 +36,10 @@ export interface IPainterController {
     event: 'rotated',
     listener: (id: string, objectType: string, target: any) => void
   ): this;
-  on(event: 'scaled', listener: (id: string, target: any) => void): this;
+  on(
+    event: 'scaled',
+    listener: (id: string, objectType: string, target: any) => void
+  ): this;
   on(event: 'skewed', listener: (id: string, target: any) => void): this;
   on(
     event: 'colorChanged',
@@ -64,7 +67,7 @@ export interface IPainterController {
   ): this;
   removeListener(
     event: 'scaled',
-    listener: (id: string, target: any) => void
+    listener: (id: string, objectType: string, target: any) => void
   ): this;
   removeListener(
     event: 'skewed',
