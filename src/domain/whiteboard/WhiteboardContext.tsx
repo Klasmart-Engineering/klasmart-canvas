@@ -293,16 +293,6 @@ export const WhiteboardProvider = ({
       });
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
-
-      /*
-        This is for no change the line width
-        in a free drawing object if this is resized
-      */
-      canvas.getObjects().forEach((object: fabric.Object) => {
-        if (isFreeDrawing(object)) {
-          object.strokeUniform = true;
-        }
-      });
     }
 
     return () => {
@@ -1035,10 +1025,23 @@ export const WhiteboardProvider = ({
           const oObject = obj.toJSON(['strokeUniform', 'id']);
           let nObject = { ...oObject, ...JSON.parse(target.param) };
 
-          fabric['Path'].fromObject(nObject, (path: any) => {
-            canvas.add(path);
-            canvas.renderAll();
-          });
+          switch(target.objectType) {
+
+            case 'path': {
+              fabric.Path.fromObject(nObject, (path: any) => {
+                canvas.add(path);
+              });
+              break;
+            }
+            case 'textbox': {
+              fabric.Textbox.fromObject(nObject, (path: any) => {
+                canvas.add(path);
+              });
+              break;
+            }
+          }
+
+          canvas.renderAll();
         }
       });
     });
