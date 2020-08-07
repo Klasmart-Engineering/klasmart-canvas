@@ -216,12 +216,13 @@ export const WhiteboardProvider = ({
    * 'Escape' event for deselect active objects
    * */
   const keyDownHandler = useCallback(
-    (e: { key: any }) => {
+    (e: KeyboardEvent) => {
       if (e.key === 'Backspace' && canvas) {
         const objects = canvas.getActiveObjects();
 
         objects.forEach((object: any) => {
           if (!object?.isEditing) {
+            e.preventDefault();
             canvas.remove(object);
             canvas.discardActiveObject().renderAll();
           }
