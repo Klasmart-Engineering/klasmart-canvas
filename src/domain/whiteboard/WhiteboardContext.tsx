@@ -189,6 +189,14 @@ export const WhiteboardProvider = ({
       canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
       canvas.freeDrawingBrush.width = lineWidth;
       canvas.isDrawingMode = true;
+
+      canvas.on('mouse:up', () => {
+        canvas.setActiveObject(
+          canvas.getObjects()[canvas.getObjects().length - 1]
+        );
+
+        canvas.renderAll();
+      });
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
 
@@ -210,7 +218,6 @@ export const WhiteboardProvider = ({
   useEffect(() => {
     if (!shapeIsActive && canvas) {
       canvas.off('mouse:move');
-      canvas.off('mouse:up');
     }
   }, [shapeIsActive, canvas]);
 
@@ -541,6 +548,9 @@ export const WhiteboardProvider = ({
           shape.setCoords();
           canvas.renderAll();
         }
+
+        canvas.setActiveObject(shape);
+        canvas.renderAll();
       });
     },
     [canvas]
