@@ -527,11 +527,9 @@ export const WhiteboardProvider = ({
           canvas.remove(shape);
         } else {
           shape.setCoords();
+          canvas.setActiveObject(shape);
           canvas.renderAll();
         }
-
-        canvas.setActiveObject(shape);
-        canvas.renderAll();
       });
     },
     [canvas]
