@@ -44,7 +44,7 @@ const objectReconstructor = (id: string, events: any, numToRemove: number) => {
 export const UndoRedo = (
   canvas: any,
   eventSerializer: any,
-  canvasId: string
+  _canvasId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
 

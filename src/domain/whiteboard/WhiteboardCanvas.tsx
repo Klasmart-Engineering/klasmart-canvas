@@ -16,10 +16,25 @@ import { WhiteboardContext } from './WhiteboardContext';
 
 // @ts-ignore
 import FontFaceObserver from 'fontfaceobserver';
-import { PainterEvents } from './event-serializer/PainterEvents';
-import { ObjectEvent } from './event-serializer/PaintEventSerializer';
 
 import { useCanvasActions } from './canvas-actions/useCanvasActions';
+import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
+import useSynchronizedAdded from './synchronization-hooks/useSynchronizedAdded';
+import useSynchronizedMoved from './synchronization-hooks/useSynchronizedMoved';
+import { isEmptyShape, isFreeDrawing, isShape } from './utils/shapes';
+import { TypedShape } from '../../interfaces/shapes/shapes';
+
+import '../../assets/style/whiteboard.css';
+import { UndoRedo } from './hooks/useUndoRedoEffect';
+import useSynchronizedColorChanged from './synchronization-hooks/useSynchronizedColorChanged';
+import useSynchronizedFontFamilyChanged from './synchronization-hooks/useSynchronizedFontFamilyChanged';
+import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
+import useSynchronizedRemoved from './synchronization-hooks/useSynchronizedRemoved';
+import useSynchronizedRotated from './synchronization-hooks/useSynchronizedRotated';
+import useSynchronizedScaled from './synchronization-hooks/useSynchronizedScaled';
+import useSynchronizedSkewed from './synchronization-hooks/useSynchronizedSkewed';
+import useSynchronizedReconstruct from './synchronization-hooks/useSynchronizedReconstruct';
+import { SET } from './reducers/undo-redo';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -34,10 +49,12 @@ export type Props = {
   children?: ReactChild | ReactChildren | null | any;
   instanceId: string;
   userId: string;
-  style: CSSProperties;
+  initialStyle?: CSSProperties;
   pointerEvents: boolean;
   width?: string | number;
   height: string | number;
+  cssWidth?: string | number;
+  cssHeight?: string | number;
   filterUsers?: string[];
 };
 
@@ -45,20 +62,32 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   children,
   instanceId,
   userId,
-  style,
+  initialStyle,
   pointerEvents,
   width,
   height,
-  filterUsers,
+  cssWidth,
+  cssHeight,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
 
+  const [wrapper, setWrapper] = useState<HTMLElement>();
+  const [lowerCanvas, setLowerCanvas] = useState<HTMLCanvasElement>();
+  const [upperCanvas, setUpperCanvas] = useState<HTMLCanvasElement>();
+
   // Event serialization for synchronizing whiteboard state.
   const {
-    state: { eventSerializer, eventController },
+    state: { eventSerializer },
   } = useSharedEventSerializer();
 
+  const { dispatch: undoRedoDispatch } = UndoRedo(
+    canvas as fabric.Canvas,
+    eventSerializer,
+    instanceId
+  );
+
   const {
+    text,
     brushIsActive,
     textIsActive,
     shapeIsActive,
@@ -71,7 +100,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     eraseType,
     shape,
     shapeColor,
+    lineWidth,
     updateCanvasActions,
+    shapesAreSelectable,
+    eventedObjects,
+    floodFillIsActive,
+    updatePenColor,
+    updateLineWidth,
+    updateShape,
+    updateShapeColor,
+    floodFill,
   } = useContext(WhiteboardContext);
 
   const {
@@ -87,10 +125,82 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const canvasInstance = new fabric.Canvas(instanceId, {
       backgroundColor: undefined,
       isDrawingMode: false,
+      selectionBorderColor: 'rgba(100, 100, 255, 1)',
+      selectionLineWidth: 2,
+      selectionColor: 'rgba(100, 100, 255, 0.1)',
+      selectionDashArray: [10],
     });
 
     setCanvas(canvasInstance);
   }, [instanceId]);
+
+    /**
+   * Retrieve references to elements created by fabricjs. We'll need these to
+   * tweak the style after canvas have been initialized.
+   */
+  useEffect(() => {
+    if (!canvas) return;
+
+    const lowerCanvas = document.getElementById(instanceId);
+    const wrapper = lowerCanvas?.parentElement;
+    const upperCanvas = wrapper?.getElementsByClassName("upper-canvas")[0];
+
+    if (wrapper) setWrapper(wrapper);
+    if (lowerCanvas) setLowerCanvas(lowerCanvas as HTMLCanvasElement);
+    if (upperCanvas) setUpperCanvas(upperCanvas as HTMLCanvasElement);
+
+  }, [canvas, instanceId])
+
+  /**
+   * Update the CSS Width/Height
+   */
+  useEffect(() => {
+    if (wrapper && lowerCanvas && upperCanvas) {
+      
+      if (cssWidth) {
+        wrapper.style.width = String(cssWidth);
+        lowerCanvas.style.width = String(cssWidth);
+        upperCanvas.style.width = String(cssWidth);
+      }
+
+      if (cssHeight) {
+        wrapper.style.height = String(cssHeight);
+        lowerCanvas.style.height = String(cssHeight);
+        upperCanvas.style.height = String(cssHeight);
+      }
+
+    }
+  }, [wrapper, lowerCanvas, upperCanvas, cssWidth, cssHeight])
+
+  /** 
+   * Update the pointer events to make canvas click through.
+   */
+  useEffect(() => {
+    if (wrapper && lowerCanvas && upperCanvas) {
+      const pointerEventsStyle = pointerEvents ? "auto" : "none";
+
+      wrapper.style.pointerEvents = pointerEventsStyle;
+      lowerCanvas.style.pointerEvents = pointerEventsStyle;
+      upperCanvas.style.pointerEvents = pointerEventsStyle;
+    }
+  }, [lowerCanvas, pointerEvents, upperCanvas, wrapper])
+
+  /** Update objects selectable/evented state. */
+  useEffect(() => {
+    if (!canvas) {
+      return;
+    }
+
+    canvas.getObjects().forEach((object: any) => {
+      object.set({
+        selectable: shapesAreSelectable,
+        evented: shapesAreSelectable,
+      });
+    });
+
+    canvas.selection = shapesAreSelectable;
+    canvas.renderAll();
+  }, [canvas, shapesAreSelectable]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -183,13 +293,27 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     if (brushIsActive && canvas) {
+      canvas.freeDrawingBrush = new fabric.PencilBrush();
+
+      //@ts-ignore
+      canvas.freeDrawingBrush.canvas = canvas;
+      canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
+      canvas.freeDrawingBrush.width = lineWidth;
       canvas.isDrawingMode = true;
-      canvas.freeDrawingBrush.color = penColor || '#000';
-      canvas.freeDrawingBrush.width = 10;
+
+      canvas.on('path:created', (e: any) => {
+        e.path.selectable = false;
+        e.path.evented = false;
+        canvas.renderAll();
+      });
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
     }
-  }, [brushIsActive, canvas, penColor]);
+
+    return () => {
+      canvas?.off('path:created');
+    }
+  }, [brushIsActive, canvas, lineWidth, penColor]);
 
   /**
    * Disables shape canvas mouse events.
@@ -198,9 +322,30 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (!shapeIsActive && canvas) {
       canvas.off('mouse:move');
       canvas.off('mouse:up');
-      canvas.off('mouse:down');
     }
   }, [shapeIsActive, canvas]);
+
+  /**
+   * Activates the mouseDown event if shape exists and shapeIsActive is true
+   */
+  useEffect(() => {
+    if (shape && shapeIsActive) {
+      actions.discardActiveObject();
+      mouseDown(shape, shape.startsWith('filled') ? shapeColor : penColor);
+      canvas?.forEachObject((object) => {
+        object.set({
+          evented: false,
+          selectable: false,
+        });
+      });
+    }
+
+    return () => {
+      canvas?.off('mouse:down');
+      canvas?.off('mouse:move');
+      canvas?.off('mouse:up');
+    };
+  }, [canvas, shape, shapeIsActive, mouseDown, penColor, shapeColor, actions]);
 
   /**
    * General handler for keyboard events
@@ -208,7 +353,20 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * 'Escape' event for deselect active objects
    * */
   const keyDownHandler = useCallback(
-    (e: { key: any }) => {
+    (e: { key: any, which?: number, ctrlKey?: boolean, shiftKey?: boolean }) => {
+
+      // The following two blocks, used for undo and redo, can not
+      // be integrated while there are two boards in the canvas.
+      // if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
+      //   dispatch({ type: UNDO, canvasId });
+      //   return;
+      // }
+
+      // if (e.which === 89 && e.ctrlKey) {
+      //   dispatch({ type: REDO, canvasId });
+      //   return;
+      // }
+
       if (e.key === 'Backspace' && canvas) {
         const objects = canvas.getActiveObjects();
 
@@ -251,540 +409,261 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   );
 
   /**
+   * Get the color of the clicked area in the Whiteboard
+   * and returns it in hexadecimal code
+   * @param {IEvent} event - click event
+   */
+  const getColorInCoord = useCallback((x: number, y: number): string | null => {
+    if (canvas) {
+      const colorData = canvas
+        .getContext()
+        .getImageData(x, y, 1, 1)
+        .data.slice(0, 3);
+      return (
+        '#' +
+        ((1 << 24) + (colorData[0] << 16) + (colorData[1] << 8) + colorData[2])
+          .toString(16)
+          .slice(1)
+      );
+    }
+
+    return null;
+  }, [canvas]);
+
+  /**
+   * Reorder the current shapes letting the shapes over their container shape
+   */
+  const reorderShapes = useCallback(() => {
+    canvas?.forEachObject((actual) => {
+      canvas.forEachObject((compare) => {
+        if (actual.isContainedWithinObject(compare)) {
+          canvas.bringForward(actual);
+        }
+      });
+    });
+  }, [canvas]);
+
+  /**
+   * Trigger the changes in the required variables
+   * when a certain object is selected
+   * @param {IEvent} event - event that contains the selected object
+   */
+  const manageChanges = useCallback((event: fabric.IEvent) => {
+    // Free Drawing Line Selected
+    if (
+      (event.target && isFreeDrawing(event.target)) ||
+      (event.target && isEmptyShape(event.target))
+    ) {
+      updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
+      updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
+    }
+
+    // Shape Selected
+    if (event.target && isShape(event.target)) {
+      updateShape(event.target.name || DEFAULT_VALUES.SHAPE);
+
+      if ((event.target as TypedShape).shapeType === 'shape') {
+        updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
+        updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
+      } else if (event.target.fill) {
+        updateShapeColor(
+          event.target.fill.toString() || DEFAULT_VALUES.SHAPE_COLOR
+        );
+      }
+    }
+  }, [updateLineWidth, updatePenColor, updateShape, updateShapeColor]);
+
+  /** Set up mangeChanges callback. */
+  useEffect(() => {
+    if (!canvas) return;
+
+    canvas.on('selection:created', manageChanges);
+    canvas.on('selection:updated', manageChanges);
+
+    return () => {
+      canvas.off('selection:created', manageChanges);
+      canvas.off('selection:updated', manageChanges);
+    }
+  }, [canvas, manageChanges]);
+
+  /**
+   * Make a mouse down event below of the clicked shape
+   * @param {IEvent} event - Contains the x, y coords of the clicked point
+   */
+  const manageShapeOutsideClick = useCallback((event: fabric.IEvent) => {
+    let foundShape: fabric.Object | null = null;
+
+    canvas?.forEachObject((object: fabric.Object) => {
+      if (
+        event.pointer &&
+        isEmptyShape(object) &&
+        object.containsPoint(event.pointer) &&
+        object !== event.target
+      ) {
+        foundShape = object;
+      }
+    });
+
+    if (event.pointer) {
+      canvas?.trigger('mouse:down', {
+        target: foundShape,
+        pointer: {
+          x: event.pointer.x,
+          y: event.pointer.y,
+        },
+      });
+    }
+  }, [canvas]);
+
+  /**
+   * Set the objects like evented if you select pointer or move tool
+   */
+  useEffect(() => {
+    if (eventedObjects) {
+      canvas?.forEachObject((object) => {
+        object.set({
+          evented: true,
+          selectable: true,
+        });
+      });
+
+      actions.setHoverCursorObjects('move');
+    }
+  }, [actions, canvas, eventedObjects]);
+
+  /**
+   * Manages the logic for Flood-fill Feature
+   */
+  useEffect(() => {
+    let originalStroke = null;
+    let originalFill = null;
+    let clickedColor: string | null = null;
+    const differentFill = '#dcdcdc';
+    const differentStroke = '#c8c8c8';
+
+    if (floodFillIsActive) {
+      actions.setCanvasSelection(false);
+      actions.setHoverCursorObjects('default');
+
+      canvas?.forEachObject((object: TypedShape) => {
+        object.perPixelTargetFind = isEmptyShape(object) ? false : true;
+        object.evented = true;
+      });
+
+      canvas?.renderAll();
+      reorderShapes();
+
+      canvas?.on('mouse:down', (event: fabric.IEvent) => {
+        // Click out of any object
+        if (!event.target) {
+          canvas.backgroundColor = floodFill;
+        }
+
+        // Click on object shape
+        if (event.target && event.pointer && isEmptyShape(event.target)) {
+          // Store the current stroke and fill colors to reset them
+          originalStroke = event.target.stroke;
+          originalFill = event.target.fill;
+
+          // Change stroke to a provisional color to be identified
+          event.target.set('stroke', differentStroke);
+          event.target.set('fill', differentFill);
+          canvas.renderAll();
+
+          clickedColor = getColorInCoord(event.pointer.x, event.pointer.y);
+
+          if (clickedColor === differentFill) {
+            // If user click inside of the shape
+            event.target.set('fill', floodFill);
+            event.target.set('stroke', originalStroke);
+          } else if (clickedColor === differentStroke) {
+            // If user click in the border of the shape
+            event.target.set('stroke', originalStroke);
+            event.target.set('fill', originalFill);
+          } else {
+            // If user click outside of the shape
+            event.target.set('stroke', originalStroke);
+            event.target.set('fill', originalFill);
+
+            if (event.e) {
+              manageShapeOutsideClick(event);
+            }
+          }
+        }
+
+        canvas.renderAll();
+      });
+    } else {
+      actions.setCanvasSelection(true);
+      actions.setHoverCursorObjects('move');
+
+      canvas?.forEachObject((object: TypedShape) => {
+        object.padding = 0;
+      });
+    }
+  }, [actions, canvas, floodFill, floodFillIsActive, getColorInCoord, manageShapeOutsideClick, reorderShapes]);
+
+  /**
+   * If the input field (text) has length
+   * will unselect whiteboard active objects
+   * */
+  useEffect(() => {
+    if (text.length) {
+      actions.discardActiveObject();
+    }
+  }, [actions, text]);
+
+  /**
    * Add keyboard keydown event listener. It listen keyDownHandler function
    * Invokes fontFamilyLoader to set default and selected font family
    * */
   useEffect(() => {
     document.addEventListener('keydown', keyDownHandler, false);
     fontFamilyLoader(fontFamily);
+
+    return () => {
+      document.removeEventListener('keydown', keyDownHandler);
+    }
   }, [fontFamily, keyDownHandler, fontFamilyLoader]);
 
-  /**
-   * Handles events emitted from the event controller (remote).
-   */
+  const filterOutgoingEvents = useCallback((id: string): boolean => {
+    if (!id) return false;
 
-  useEffect(() => {
-    const added = (id: string, objectType: string, target: any) => {
-      // TODO: We'll want to filter events based on the user ID. This can
-      // be done like this. Example of extracting user id from object ID:
-      // let { user } = new ShapeID(id);
-      // Help!
-      // if (eventSerializer?.didSerializeEvent(id)) return;
-
-      // TODO: We'll have to replace this with the user based filtering. Because
-      // we want to allow bi-directional events (Teacher <-> Student) as opposed
-      // to (Teacher --> Student).
-
-      // Events come from another user
-      // Pass as props to user context
-      // Ids of shapes + userId  uuid()
-
-      if (!id) {
-        return;
-      }
-
-      // No queremos agregar nuestros propios eventos
-      if (isLocalObject(id, userId)) return;
-
-      console.log(`remote path created: ${id}`)
-
-      if (objectType === 'textbox') {
-        let text = new fabric.Textbox(target.text, {
-          fontSize: 30,
-          fontWeight: 400,
-          fontStyle: 'normal',
-          fontFamily: target.fontFamily,
-          fill: target.stroke,
-          top: target.top,
-          left: target.left,
-          width: target.width,
-          selectable: false,
-        });
-
-        // @ts-ignore
-        text.id = id;
-
-        canvas?.add(text);
-        return;
-      }
-
-      if (objectType === 'path') {
-        const pencil = new fabric.PencilBrush();
-        pencil.color = target.stroke || '#000';
-        pencil.width = target.strokeWidth;
-
-        // Convert Points to SVG Path
-        const res = pencil.createPath(target.path);
-        // @ts-ignore
-        res.id = id;
-        res.selectable = false;
-        res.evented = false;
-
-        canvas?.add(res);
-      }
-    };
-
-    const moved = (id: string, objectType: string, target: any) => {
-      if (!id) {
-        return;
-      }
-
-      if (isLocalObject(id, userId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          if (objectType === 'activeSelection') {
-            obj.set({
-              angle: target.angle,
-              top: target.top,
-              left: target.left,
-              originX: 'center',
-              originY: 'center',
-            });
-          } else {
-            obj.set({
-              angle: target.angle,
-              top: target.top,
-              left: target.left,
-              originX: 'left',
-              originY: 'top',
-            });
-          }
-        }
-      });
-      canvas?.renderAll();
-    };
-
-    const rotated = (id: string, objectType: string, target: any) => {
-      if (isLocalObject(id, userId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          if (objectType === 'activeSelection') {
-            obj.set({
-              angle: target.angle,
-              top: target.top,
-              left: target.left,
-              originX: 'center',
-              originY: 'center',
-            });
-          } else {
-            obj.set({
-              angle: target.angle,
-              top: target.top,
-              left: target.left,
-              originX: 'left',
-              originY: 'top',
-            });
-          }
-        }
-      });
-      canvas?.renderAll();
-    };
-
-    const scaled = (id: string, target: any) => {
-      //if (eventSerializer?.didSerializeEvent(id)) return;
-      if (isLocalObject(id, userId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          obj.set({
-            angle: target.angle,
-            top: target.top,
-            left: target.left,
-            scaleX: target.scaleX,
-            scaleY: target.scaleY,
-            flipX: target.flipX,
-            flipY: target.flipY,
-          });
-        }
-      });
-      canvas?.renderAll();
-    };
-
-    const skewed = (id: string, target: any) => {
-      //if (eventSerializer?.didSerializeEvent(id)) return;
-      if (isLocalObject(id, userId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          obj.set({
-            angle: target.angle,
-            top: target.top,
-            left: target.left,
-            scaleX: target.scaleX,
-            scaleY: target.scaleY,
-            flipX: target.flipX,
-            flipY: target.flipY,
-            skewX: target.skewX,
-            skewY: target.skewY,
-          });
-        }
-      });
-      canvas?.renderAll();
+    const apply = isLocalObject(id, userId);
+    if (apply) {
+      console.log(`send local event ${id} to remote`);
     }
+    return apply;
+  }, [isLocalObject, userId]);
 
-    const colorChanged = (id: string, objectType: string, target: any) => {
-      //if (eventSerializer?.didSerializeEvent(id)) return;
-      if (isLocalObject(id, userId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          if (objectType === 'textbox') {
-            obj.set({
-              fill: target.fill,
-            });
-          } else {
-            obj.set({
-              stroke: target.stroke,
-            });
-          }
-        }
-      });
-      canvas?.renderAll();
-    };
-
-    const modified = (id: string, objectType: string, target: any) => {
-      // if (eventSerializer?.didSerializeEvent(id)) return;
-
-      if (isLocalObject(id, userId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          if (objectType === 'textbox') {
-            obj.set({
-              text: target.text,
-              fontFamily: target.fontFamily,
-              stroke: target.fill,
-              top: target.top,
-              left: target.left,
-              width: target.width,
-            });
-          }
-        }
-      });
-      canvas?.renderAll();
-    };
-
-    const fontFamilyChanged = (id: string, target: any) => {
-      // if (eventSerializer?.didSerializeEvent(id)) return;
-
-      if (isLocalObject(id, userId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          obj.set({
-            fontFamily: target.fontFamily,
-          });
-        }
-      });
-      canvas?.renderAll();
-    };
-
-    const removed = (id: string) => {
-      // if (eventSerializer?.didSerializeEvent(id)) return;
-
-      if (isLocalObject(id, userId)) return;
-
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id && obj.id === id) {
-          canvas?.remove(obj);
-        }
-      });
-      canvas?.renderAll();
-    };
-
-    // TODO: Use the filterUsers property to ignore events coming from
-    // users not in that array (if the array is defined).
-
-    eventController?.on('added', added);
-    eventController?.on('moved', moved);
-    eventController?.on('rotated', rotated);
-    eventController?.on('scaled', scaled);
-    eventController?.on('skewed', skewed);
-    eventController?.on('colorChanged', colorChanged);
-    eventController?.on('modified', modified);
-    eventController?.on('fontFamilyChanged', fontFamilyChanged);
-    eventController?.on('removed', removed);
-
-    return () => {
-      eventController?.removeListener('added', added);
-      eventController?.removeListener('moved', moved);
-      eventController?.removeListener('rotated', rotated);
-      eventController?.removeListener('scaled', scaled);
-      eventController?.removeListener('skewed', skewed);
-      eventController?.removeListener('colorChanged', colorChanged);
-      eventController?.removeListener('modified', modified);
-      eventController?.removeListener('fontFamilyChanged', fontFamilyChanged);
-      eventController?.removeListener('removed', removed);
+  const filterIncomingEvents = useCallback((id: string): boolean => {
+    if (!id) return false;
+    
+    // TODO: isLocalObject will not work in case we're reloading
+    // the page and server resends all our events. They would be
+    // discarded when they shouldn't be discarded. Another solution
+    // could be to keep track of all 'local' objects we've created
+    // this session and only filter those.
+    // TODO: Filter based on the filterUsers list. We should only
+    // display events coming from users in that list if the list
+    // isn't undefined.
+    const apply = !isLocalObject(id, userId);
+    if (apply) {
+      console.log(`apply remote event ${id} locally.`);
     }
-  }, [canvas, eventController, isLocalObject, userId]);
+    return apply;
+  }, [isLocalObject, userId]);
 
-  /**
-   * Handles events emitted from the canvas.
-   * */
-  useEffect(() => {
-    const pathCreated = (e: any) => {
-      e.path.id = PainterEvents.createId(userId); // fabric.Object.__uid++;
-
-      console.log(`local path created: ${e.path.id}`)
-
-      const target = {
-        stroke: e.path.stroke,
-        strokeWidth: e.path.strokeWidth,
-        path: e.path.path,
-      };
-
-      eventSerializer?.push(
-        'added',
-        PainterEvents.pathCreated(target, e.path.id, userId) as ObjectEvent
-      );
-    };
-
-    const objectAdded = (e: any) => {
-      if (!e.target.id) {
-        return;
-      }
-
-      if (isLocalObject(e.target.id, userId)) {
-        const type = e.target.get('type');
-
-        if (type === 'path') {
-          return;
-        }
-
-        const target = {
-          ...(type === 'textbox' && {
-            text: e.target.text,
-            fontFamily: e.target.fontFamily,
-            stroke: e.target.fill,
-            top: e.target.top,
-            left: e.target.left,
-            width: e.target.width,
-          }),
-        };
-
-        const payload = {
-          type,
-          target,
-          id: e.target.id,
-        };
-
-        eventSerializer?.push('added', payload);
-      }
-    };
-
-    const objectMoved = (e: any) => {
-      const type = e.target.get('type');
-      if (type === 'activeSelection') {
-        e.target._objects.forEach((activeObject: any) => {
-          if (isLocalObject(activeObject.id, userId)) {
-            const matrix = activeObject.calcTransformMatrix();
-            const options = fabric.util.qrDecompose(matrix);
-            const target = {
-              top: options.translateY,
-              left: options.translateX,
-              angle: options.angle,
-            };
-
-            const payload = {
-              type,
-              target,
-              id: activeObject.id,
-            };
-
-            eventSerializer?.push('moved', payload);
-          }
-        });
-        return;
-      }
-
-      if (!e.target.id) {
-        return;
-      }
-
-      if (isLocalObject(e.target.id, userId)) {
-        const target = {
-          top: e.target.top,
-          left: e.target.left,
-          angle: e.target.angle,
-        };
-
-        const payload = {
-          type,
-          target,
-          id: e.target.id,
-        };
-
-        eventSerializer?.push('moved', payload);
-      }
-    };
-
-    const objectRotated = (e: any) => {
-      const type = e.target.get('type');
-      if (type === 'activeSelection') {
-        //object is your desired object inside the group.
-        e.target._objects.forEach((activeObject: any) => {
-          if (isLocalObject(activeObject.id, userId)) {
-            const matrix = activeObject.calcTransformMatrix();
-            const options = fabric.util.qrDecompose(matrix);
-            const target = {
-              top: options.translateY,
-              left: options.translateX,
-              angle: options.angle,
-            };
-
-            const payload = {
-              type,
-              target,
-              id: activeObject.id,
-            };
-
-            eventSerializer?.push('rotated', payload);
-          }
-        });
-        return;
-      }
-
-      if (!e.target.id) {
-        return;
-      }
-
-      const id = e.target.id;
-      const target = {
-        angle: e.target.angle,
-        top: e.target.top,
-        left: e.target.left,
-      };
-      const payload = {
-        type,
-        target,
-        id,
-      };
-
-      eventSerializer?.push('rotated', payload);
-    }
-
-    const objectScaled = (e: any) => {
-      if (!e.target.id) {
-        return;
-      }
-
-      if (isLocalObject(e.target.id, userId)) {
-        const type = e.target.get('type');
-        const target = {
-          top: e.target.top,
-          left: e.target.left,
-          angle: e.target.angle,
-          scaleX: e.target.scaleX,
-          scaleY: e.target.scaleY,
-          flipX: e.target.flipX,
-          flipY: e.target.flipY,
-        };
-
-        const payload = {
-          type,
-          target,
-          id: e.target.id,
-        };
-
-        eventSerializer?.push('scaled', payload);
-      }
-    };
-
-    const objectSkewed = (e: any) => {
-      if (!e.target.id) {
-        return;
-      }
-
-      if (isLocalObject(e.target.id, userId)) {
-        const type = e.target.get('type');
-        const target = {
-          top: e.target.top,
-          left: e.target.left,
-          angle: e.target.angle,
-          scaleX: e.target.scaleX,
-          scaleY: e.target.scaleY,
-          skewX: e.target.skewX,
-          skewY: e.target.skewY,
-        };
-
-        const payload = {
-          type,
-          target,
-          id: e.target.id,
-        };
-
-        eventSerializer?.push('skewed', payload);
-      }
-    };
-
-    const objectModified = (e: any) => {
-      if (!e.target.id) {
-        return;
-      }
-
-      if (isLocalObject(e.target.id, userId)) {
-        const type = e.target.get('type');
-
-        // If text has been modified
-        if (type === 'textbox') {
-          const target = {
-            ...(type === 'textbox' && {
-              text: e.target.text,
-              fontFamily: e.target.fontFamily,
-              stroke: e.target.fill,
-              top: e.target.top,
-              left: e.target.left,
-              width: e.target.width,
-            }),
-          };
-
-          const payload = {
-            type,
-            target,
-            id: e.target.id,
-          };
-
-          eventSerializer?.push('modified', payload);
-        }
-      }
-    };
-
-    const objectRemoved = (e: any) => {
-      if (!e.target.id) {
-        return;
-      }
-
-      if (isLocalObject(e.target.id, userId)) {
-        const payload = {
-          id: e.target.id,
-        };
-
-        eventSerializer?.push('removed', payload as ObjectEvent);
-      }
-    }
-
-    canvas?.on('path:created', pathCreated);
-    canvas?.on('object:added', objectAdded);
-    canvas?.on('object:moved', objectMoved);
-    canvas?.on('object:rotated', objectRotated);
-    canvas?.on('object:scaled', objectScaled);
-    canvas?.on('object:skewed', objectSkewed);
-    canvas?.on('object:modified', objectModified);
-    canvas?.on('object:removed', objectRemoved);
-
-    return () => {
-      canvas?.off('path:created', pathCreated);
-      canvas?.off('object:added', objectAdded);
-      canvas?.off('object:moved', objectMoved);
-      canvas?.off('object:rotated', objectRotated);
-      canvas?.off('object:scaled', objectScaled);
-      canvas?.off('object:skewed', objectSkewed);
-      canvas?.off('object:modified', objectModified);
-      canvas?.off('object:removed', objectRemoved);
-    }
-  }, [isLocalObject, canvas, eventSerializer, eventController, userId]);
+  useSynchronizedAdded(canvas, userId, filterOutgoingEvents, filterIncomingEvents, undoRedoDispatch);
+  useSynchronizedMoved(canvas, userId, filterOutgoingEvents, filterIncomingEvents, undoRedoDispatch);
+  useSynchronizedModified(canvas, filterOutgoingEvents, filterIncomingEvents);
+  useSynchronizedRemoved(canvas, userId, filterOutgoingEvents, filterIncomingEvents, undoRedoDispatch);
+  useSynchronizedRotated(canvas, userId, filterOutgoingEvents, filterIncomingEvents, undoRedoDispatch);
+  useSynchronizedScaled(canvas, userId, filterOutgoingEvents, filterIncomingEvents, undoRedoDispatch);
+  useSynchronizedSkewed(canvas, filterOutgoingEvents, filterIncomingEvents);
+  useSynchronizedReconstruct(canvas, filterIncomingEvents);
+  useSynchronizedColorChanged(canvas, userId, filterIncomingEvents, undoRedoDispatch);
+  useSynchronizedFontFamilyChanged(canvas, filterIncomingEvents);
 
   /**
    * Send synchronization event for penColor and fontColor changes.
@@ -807,11 +686,20 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             id: obj.id,
           };
 
+          const event = { event: payload, type: 'colorChanged' };
+
+          undoRedoDispatch({
+            type: SET,
+            payload: (canvas?.getObjects() as unknown) as TypedShape[],
+            canvasId: userId,
+            event,
+          });
+
           eventSerializer?.push('colorChanged', payload);
         }
       });
     }
-  }, [isLocalObject, canvas, eventSerializer, userId, penColor, fontColor]);
+  }, [isLocalObject, canvas, eventSerializer, userId, penColor, fontColor, undoRedoDispatch]);
 
   /**
    * Send synchronization event for fontFamily changes.
@@ -886,6 +774,22 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
   }, [canvas, shape, shapeIsActive, mouseDown, shapeColor]);
 
+  /**
+   * If lineWidth variable changes and a free line drawing is selected
+   * that drawing line width will changes to the selected width on Toolbar
+   */
+  useEffect(() => {
+    if (canvas?.getActiveObjects()) {
+      canvas.getActiveObjects().forEach((object) => {
+        if (isEmptyShape(object) || isFreeDrawing(object)) {
+          object.set('strokeWidth', lineWidth);
+        }
+      });
+
+      canvas.renderAll();
+    }
+  }, [lineWidth, canvas]);
+
   // NOTE: Register canvas actions with context.
   useEffect(() => {
     updateCanvasActions(actions);
@@ -905,7 +809,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       width={width}
       height={height}
       id={instanceId}
-      style={style}
+      style={initialStyle}
       onClick={() => {
         actions.addShape();
       }}>
