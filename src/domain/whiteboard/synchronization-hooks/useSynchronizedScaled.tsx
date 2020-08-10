@@ -65,8 +65,18 @@ const useSynchronizedScaled = (
           if (!shouldSerializeEvent(activeObject.id)) return;
           const matrix = activeObject.calcTransformMatrix();
           const options = fabric.util.qrDecompose(matrix);
+
+          const x = (x: boolean, y: boolean) => {
+            if (x) {
+              return options.angle - 180;
+            }
+
+            return options.angle;
+          };
+
           const target = {
-            angle: options.angle,
+            // angle: options.angle,
+            angle: x(activeObject.flipX, activeObject.flipY),
             top: options.translateY,
             left: options.translateX,
             scaleX: options.scaleX,
