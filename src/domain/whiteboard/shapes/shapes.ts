@@ -32,6 +32,7 @@ export const rectangle = (
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
+    padding: 15,
   });
 };
 
@@ -55,6 +56,7 @@ export const triangle = (
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
+    padding: 15,
   });
 };
 
@@ -78,6 +80,7 @@ export const circle = (
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
+    padding: 15,
   });
 };
 
@@ -105,6 +108,7 @@ export const pentagon = (
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
+    padding: 15,
   });
 };
 
@@ -133,6 +137,7 @@ export const hexagon = (
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
+    padding: 15,
   });
 };
 
@@ -161,6 +166,7 @@ export const generic = (
     stroke: filled ? filledShape.stroke : color,
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
+    padding: 15,
   });
 };
 

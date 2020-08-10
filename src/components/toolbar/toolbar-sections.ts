@@ -25,14 +25,6 @@ import pentagonShape from '../../assets/icons/toolbar/pentagon-shape.svg';
 import hexagonShape from '../../assets/icons/toolbar/hexagon-shape.svg';
 import starShape from '../../assets/icons/toolbar/star-shape.svg';
 import chatBubbleShape from '../../assets/icons/toolbar/chat-bubble-shape.svg';
-import filledRectangleShape from '../../assets/icons/toolbar/filled-rectangle-shape.svg';
-import filledCircleShape from '../../assets/icons/toolbar/filled-circle-shape.svg';
-import filledTriangleShape from '../../assets/icons/toolbar/filled-triangle-shape.svg';
-import filledPentagonShape from '../../assets/icons/toolbar/filled-pentagon-shape.svg';
-import filledHexagonShape from '../../assets/icons/toolbar/filled-hexagon-shape.svg';
-import filledArrowShape from '../../assets/icons/toolbar/filled-arrow-shape.svg';
-import filledStarShape from '../../assets/icons/toolbar/filled-star-shape.svg';
-import filledChatBubbleShape from '../../assets/icons/toolbar/filled-chat-bubble-shape.svg';
 import move from '../../assets/icons/toolbar/move.svg';
 import star from '../../assets/icons/toolbar/star.svg';
 import emojiSmile from '../../assets/icons/toolbar/emoji-smile.svg';
@@ -56,9 +48,11 @@ import IStyleOption from '../../interfaces/toolbar/toolbar-special-elements/styl
 const colorPaletteOptions: IStyleOption[] = [
   {
     id: 'transparent',
-    value: '',
+    value: 'transparent',
     title: 'Transparent',
-    style: {},
+    style: {
+      color: 'rgba(125, 125, 125, 0.1)',
+    },
   },
   {
     id: 'white_color',
@@ -66,6 +60,8 @@ const colorPaletteOptions: IStyleOption[] = [
     title: 'White',
     style: {
       color: '#fff',
+      backgroundColor: 'rgba(80, 80, 80, 0.1)',
+      borderRadius: '4px',
     },
   },
   {
@@ -511,64 +507,7 @@ const toolsSection: IBasicToolbarSection = {
           iconSrc: chatBubbleShape,
           iconName: 'Chat Bubble',
         },
-        {
-          id: 'filled_rectangle_shape',
-          value: 'filledRectangle',
-          title: 'Filled Rectangle',
-          iconSrc: filledRectangleShape,
-          iconName: 'Filled Rectangle',
-        },
-        {
-          id: 'filled_circle_shape',
-          value: 'filledCircle',
-          title: 'Filled Circle',
-          iconSrc: filledCircleShape,
-          iconName: 'Filled Circle',
-        },
-        {
-          id: 'filled_triangle_shape',
-          value: 'filledTriangle',
-          title: 'Filled Triangle',
-          iconSrc: filledTriangleShape,
-          iconName: 'Filled Triangle',
-        },
-        {
-          id: 'filled_pentagon_shape',
-          value: 'filledPentagon',
-          title: 'Filled Pentagon',
-          iconSrc: filledPentagonShape,
-          iconName: 'Filled Pentagon',
-        },
-        {
-          id: 'filled_hexagon_shape',
-          value: 'filledHexagon',
-          title: 'Filled Hexagon',
-          iconSrc: filledHexagonShape,
-          iconName: 'Filled Hexagon',
-        },
-        {
-          id: 'filled_arrow_shape',
-          value: 'filledArrow',
-          title: 'Filled Arrow',
-          iconSrc: filledArrowShape,
-          iconName: 'Filled Arrow',
-        },
-        {
-          id: 'filled_star_shape',
-          value: 'filledStar',
-          title: 'Filled Star',
-          iconSrc: filledStarShape,
-          iconName: 'Filled Star',
-        },
-        {
-          id: 'filled_chat_bubble_shape',
-          value: 'filledChatBubble',
-          title: 'Filled Chat Bubble',
-          iconSrc: filledChatBubbleShape,
-          iconName: 'Filled Chat Bubble',
-        },
       ],
-      colorPaletteIcon: FiberManualRecordRoundedIcon,
     },
     // Stamps - ToolbarSelector
     {

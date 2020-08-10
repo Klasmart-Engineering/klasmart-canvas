@@ -26,6 +26,8 @@ import { useEraseType } from './hooks/useEraseType';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 import { useLineWidth } from './hooks/useLineWidth';
 import { Canvas, IEvent, TextOptions } from 'fabric/fabric-impl';
+import { useFloodFill } from './hooks/useFloodFill';
+import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 
 // @ts-ignore
 export const WhiteboardContext = createContext();
@@ -50,6 +52,7 @@ export const WhiteboardProvider = ({
   const { shape, updateShape } = useShape();
   const { eraseType, updateEraseType } = useEraseType();
   const { lineWidth, updateLineWidth } = useLineWidth();
+  const { floodFill, updateFloodFill } = useFloodFill();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const [canvas, setCanvas] = useState<Canvas>();
 
@@ -62,12 +65,13 @@ export const WhiteboardProvider = ({
   const { textIsActive, updateTextIsActive } = useTextIsActive();
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
+  const { floodFillIsActive, updateFloodFillIsActive } = useFloodFillIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
   const [penLine, updatePenLine] = useState(DEFAULT_VALUES.PEN_LINE);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
-  const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
+  // const [floodFill, updateFloodFill] = useState(DEFAULT_VALUES.FLOOD_FILL);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
 
   /**
@@ -223,12 +227,13 @@ export const WhiteboardProvider = ({
    * 'Escape' event for deselect active objects
    * */
   const keyDownHandler = useCallback(
-    (e: { key: any }) => {
+    (e: KeyboardEvent) => {
       if (e.key === 'Backspace' && canvas) {
         const objects = canvas.getActiveObjects();
 
         objects.forEach((object: any) => {
           if (!object?.isEditing) {
+            e.preventDefault();
             canvas.remove(object);
             canvas.discardActiveObject().renderAll();
           }
@@ -312,6 +317,7 @@ export const WhiteboardProvider = ({
 
     // Deactivate selection
     setCanvasSelection(false);
+    setHoverCursorObjects('pointer');
 
     // When mouse down eraser is able to remove objects
     canvas?.on('mouse:down', (e: any) => {
@@ -368,7 +374,21 @@ export const WhiteboardProvider = ({
       canvas.selection = selection;
       canvas.forEachObject((object: fabric.Object) => {
         object.selectable = selection;
-        object.hoverCursor = selection ? 'move' : 'pointer';
+      });
+
+      canvas.renderAll();
+    }
+  };
+
+  /**
+   * Set the cursor to be showed when a object hover happens
+   * @param {string} cursor - Cursor name to show
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const setHoverCursorObjects = (cursor: string): void => {
+    if (canvas) {
+      canvas.forEachObject((object: fabric.Object) => {
+        object.hoverCursor = cursor;
       });
 
       canvas.renderAll();
@@ -719,6 +739,14 @@ export const WhiteboardProvider = ({
   };
 
   /**
+   * Check if the given object is a text object
+   * @param {fabric.Object} object - object to check
+   */
+  const isText = (object: fabric.Object) => {
+    return object.fill && !object.stroke && (object as TextOptions).text;
+  };
+
+  /**
    * Trigger the changes in the required variables
    * when a certain object is selected
    * @param {IEvent} event - event that contains the selected object
@@ -764,6 +792,141 @@ export const WhiteboardProvider = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lineWidth, canvas]);
+
+  /**
+   * Get the color of the clicked area in the Whiteboard
+   * and returns it in rgba format
+   * @param {IEvent} event - click event
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const getClickedColor = (event: IEvent): string | null => {
+    if (canvas) {
+      const mousePointer = canvas.getPointer(event.e);
+      return `rgba(${canvas
+        .getContext()
+        .getImageData(mousePointer.x, mousePointer.y, 1, 1)
+        .data.slice(0, 3)
+        .join(', ')})`;
+    }
+
+    return null;
+  };
+
+  /**
+   * Manages the logic for Flood-fill Feature
+   */
+  useEffect(() => {
+    let originalFill = null;
+    let originalStroke = null;
+    let clickedColor = null;
+    const differentFill = 'rgba(220, 220, 220)';
+    const differentStroke = 'rgba(200, 200, 200)';
+
+    if (floodFillIsActive) {
+      setCanvasSelection(false);
+      setHoverCursorObjects('default');
+
+      canvas?.on('mouse:down', (event: IEvent) => {
+        // Click out of any shape
+        if (!event.target) {
+          canvas.backgroundColor = floodFill;
+        }
+
+        // Click on object shape
+        if (event.target && isEmptyShape(event.target)) {
+          // Store the current colors to reset it (if is necesary)
+          originalFill = event.target.fill;
+          originalStroke = event.target.stroke;
+
+          /*
+            Change fill and stroke to a provisional colors
+            to difference shape fill, shape stroke and whiteboard
+          */
+          event.target.set('fill', differentFill);
+          event.target.set('stroke', differentStroke);
+          canvas.renderAll();
+
+          // Getting the color in which user makes click
+          clickedColor = getClickedColor(event);
+
+          // If user click inside of a shape
+          if (clickedColor === differentFill) {
+            event.target.set('fill', floodFill);
+            event.target.set('stroke', originalStroke);
+            // If user clicks in the border of the shape
+          } else if (clickedColor === differentStroke) {
+            event.target.set('fill', originalFill);
+            event.target.set('stroke', originalStroke);
+          } else {
+            // return to previous color
+            event.target.set('fill', originalFill);
+            event.target.set('stroke', originalStroke);
+            canvas.backgroundColor = floodFill;
+          }
+        }
+
+        // Click on free line drawing
+        if (event.target && isFreeDrawing(event.target)) {
+          // Store the current stroke color to reset it (if is necesary)
+          originalStroke = event.target.stroke;
+
+          /*
+            Change stroke to a provisional color
+            to difference line and whiteboard
+          */
+          event.target.set('stroke', differentStroke);
+          canvas.renderAll();
+
+          // Getting the color in which user makes click
+          clickedColor = getClickedColor(event);
+
+          // If the user clicks over the line
+          if (clickedColor === differentStroke) {
+            event.target.set('stroke', originalStroke);
+          } else {
+            // return to previous color
+            event.target.set('stroke', originalStroke);
+            canvas.backgroundColor = floodFill;
+          }
+        }
+
+        // Click over text object
+        if (event.target && isText(event.target)) {
+          // Store the current fill color to reset it (if is necesary)
+          originalFill = event.target.fill;
+
+          /*
+            Change fill to a provisional color
+            to difference shape and whiteboard
+          */
+          event.target.set('fill', differentFill);
+          canvas.renderAll();
+
+          // Getting the color in which user makes click
+          clickedColor = getClickedColor(event);
+
+          // If the user clicks the text
+          if (clickedColor === differentFill) {
+            event.target.set('fill', originalFill);
+          } else {
+            // return to previous color
+            event.target.set('fill', originalFill);
+            canvas.backgroundColor = floodFill;
+          }
+        }
+
+        canvas.renderAll();
+      });
+    }
+  }, [
+    canvas,
+    floodFill,
+    floodFillIsActive,
+    getClickedColor,
+    isEmptyShape,
+    setCanvasSelection,
+    setHoverCursorObjects,
+  ]);
 
   /**
    * If an object selection is made it, the changeLineWidth function
@@ -817,6 +980,10 @@ export const WhiteboardProvider = ({
     updateFontColor,
     lineWidth,
     updateLineWidth,
+    floodFill,
+    updateFloodFill,
+    floodFillIsActive,
+    updateFloodFillIsActive,
     // Just for control selectors' value they can be modified in the future
     pointer,
     updatePointer,
@@ -824,8 +991,6 @@ export const WhiteboardProvider = ({
     updatePenLine,
     penColor,
     updatePenColor,
-    floodFill,
-    updateFloodFill,
     stamp,
     updateStamp,
     setPointerEvents,

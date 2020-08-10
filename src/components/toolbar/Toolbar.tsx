@@ -48,6 +48,9 @@ function Toolbar() {
     discardActiveObject,
     lineWidth,
     updateLineWidth,
+    floodFill,
+    updateFloodFill,
+    updateFloodFillIsActive,
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
@@ -55,8 +58,6 @@ function Toolbar() {
     updatePenLine,
     penColor,
     changeStrokeColor,
-    floodFill,
-    updateFloodFill,
     stamp,
     updateStamp,
   }: any = useContext(WhiteboardContext);
@@ -86,6 +87,11 @@ function Toolbar() {
      * Indicates if brush / pencil / pen tool is active.
      */
     updateBrushIsActive(tool === ELEMENTS.LINE_TYPE_TOOL);
+
+    /**
+     * Indicates if flood-fill/paint bucket is active.
+     */
+    updateFloodFillIsActive(tool === ELEMENTS.FLOOD_FILL_TOOL);
 
     /*
       It is setted to false when you select Pointer Tool,
