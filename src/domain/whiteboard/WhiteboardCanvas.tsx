@@ -296,6 +296,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Activates or deactivates drawing mode.
    */
   useEffect(() => {
+    const pathCreated = (e: any) => {
+        e.path.selectable = false;
+        e.path.evented = false;
+        canvas?.renderAll();
+    };
+
     if (brushIsActive && canvas) {
       canvas.freeDrawingBrush = new fabric.PencilBrush();
 
@@ -305,17 +311,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.freeDrawingBrush.width = lineWidth;
       canvas.isDrawingMode = true;
 
-      canvas.on('path:created', (e: any) => {
-        e.path.selectable = false;
-        e.path.evented = false;
-        canvas.renderAll();
-      });
+      canvas.on('path:created', pathCreated);
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
     }
 
     return () => {
-      canvas?.off('path:created');
+      // TODO: Will this cause any issues if the 'else if' path is used, where
+      // this event hasn't been registered?
+      canvas?.off('path:created', pathCreated);
     }
   }, [brushIsActive, canvas, lineWidth, penColor]);
 
