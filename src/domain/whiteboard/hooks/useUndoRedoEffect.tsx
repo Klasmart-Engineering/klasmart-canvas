@@ -112,12 +112,6 @@ export const UndoRedo = (
         eventSerializer?.push(reconstructed.type, reconstructed.event);
       }
     }
-
-    return () => {
-      canvas?.off('object:added');
-      canvas?.off('object:modified');
-      canvas?.off('object:removed');
-    };
   }, [state, canvas, dispatch, eventSerializer]);
 
   return { state, dispatch };
