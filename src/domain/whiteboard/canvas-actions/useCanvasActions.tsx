@@ -11,7 +11,7 @@ export interface ICanvasActionsState {
   mouseDown: (specific: string, color?: string) => void;
 }
 
-export const useCanvasActions = (canvas?: fabric.Canvas) => {
+export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
   const {
     shapeIsActive,
     updateFontColor,
@@ -26,6 +26,7 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
     penColor,
     lineWidth,
     shapeToAdd,
+    isLocalObject,
   } = useContext(WhiteboardContext);
 
   /**
@@ -334,14 +335,17 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
     (selection: boolean) => {
       if (canvas) {
         canvas.selection = selection;
-        canvas.forEachObject((object: fabric.Object) => {
-          object.selectable = selection;
+        canvas.forEachObject((object: any) => {
+          if (!object.id) return;
+          if (isLocalObject(object.id, canvasId)) {
+            object.selectable = selection;
+          }
         });
 
         canvas.renderAll();
       }
     },
-    [canvas]
+    [canvas, isLocalObject, canvasId]
   );
 
   /**

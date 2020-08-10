@@ -115,7 +115,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   const {
     actions,
     mouseDown,
-  } = useCanvasActions(canvas);
+  } = useCanvasActions(userId, canvas);
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -192,15 +192,19 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     canvas.getObjects().forEach((object: any) => {
-      object.set({
-        selectable: shapesAreSelectable,
-        evented: shapesAreSelectable,
-      });
+      if (!object.id) return;
+
+      if (isLocalObject(object.id, userId)) {
+        object.set({
+          selectable: shapesAreSelectable,
+          evented: shapesAreSelectable,
+        });
+      }
     });
 
     canvas.selection = shapesAreSelectable;
     canvas.renderAll();
-  }, [canvas, shapesAreSelectable]);
+  }, [canvas, isLocalObject, shapesAreSelectable, userId]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -755,12 +759,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      canvas?.off('mouse:down');
+      if (!textIsActive) {
+        canvas?.off('mouse:down');
+      }
+
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eraseType, canvas]);
+  }, [eraseType, canvas, actions, textIsActive]);
 
   useEffect(() => {
     if (shape && shapeIsActive) {
@@ -768,11 +774,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      canvas?.off('mouse:down');
+      if (!textIsActive) {
+        canvas?.off('mouse:down');
+      }
       canvas?.off('mouse:move');
       canvas?.off('mouse:up');
     };
-  }, [canvas, shape, shapeIsActive, mouseDown, shapeColor]);
+  }, [canvas, shape, shapeIsActive, mouseDown, shapeColor, textIsActive]);
 
   /**
    * If lineWidth variable changes and a free line drawing is selected
