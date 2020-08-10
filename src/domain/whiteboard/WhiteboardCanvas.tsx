@@ -524,16 +524,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     if (eventedObjects) {
-      canvas?.forEachObject((object) => {
-        object.set({
-          evented: true,
-          selectable: true,
-        });
+      canvas?.forEachObject((object: any) => {
+        if (isLocalObject(object.id, userId)) {
+          object.set({
+            evented: true,
+            selectable: true,
+          });
+        }
       });
 
       actions.setHoverCursorObjects('move');
     }
-  }, [actions, canvas, eventedObjects]);
+  }, [actions, canvas, eventedObjects, isLocalObject, userId]);
 
   /**
    * Manages the logic for Flood-fill Feature
