@@ -22,5 +22,6 @@ export declare class EventPainterController extends EventEmitter implements IPai
     private colorChanged;
     private modified;
     private fontFamilyChanged;
+    private reconstruct;
     private removed;
 }

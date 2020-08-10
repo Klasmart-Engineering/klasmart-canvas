@@ -10,5 +10,6 @@ export interface ICanvasActions {
     addShape: (specific?: string) => void;
     eraseObject: () => void;
     setCanvasSelection: (selection: boolean) => void;
+    setHoverCursorObjects: (cursor: string) => void;
 }
 export default ICanvasActions;

@@ -1,4 +1,5 @@
 import { CSSProperties, FunctionComponent, ReactChild, ReactChildren } from 'react';
+import '../../assets/style/whiteboard.css';
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
  * @field userId: The user's ID, events originating from this canvas will contain this ID.
@@ -12,10 +13,12 @@ export declare type Props = {
     children?: ReactChild | ReactChildren | null | any;
     instanceId: string;
     userId: string;
-    style: CSSProperties;
+    initialStyle?: CSSProperties;
     pointerEvents: boolean;
     width?: string | number;
     height: string | number;
+    cssWidth?: string | number;
+    cssHeight?: string | number;
     filterUsers?: string[];
 };
 export declare const WhiteboardCanvas: FunctionComponent<Props>;

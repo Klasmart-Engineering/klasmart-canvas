@@ -9,7 +9,7 @@ export declare const ELEMENTS: {
     MOVE_OBJECTS_TOOL: string;
     ERASE_TYPE_TOOL: string;
     LINE_TYPE_TOOL: string;
-    THICKNESS_SIZE_TOOL: string;
+    LINE_WIDTH_TOOL: string;
     FLOOD_FILL_TOOL: string;
     ADD_TEXT_TOOL: string;
     ADD_SHAPE_TOOL: string;
