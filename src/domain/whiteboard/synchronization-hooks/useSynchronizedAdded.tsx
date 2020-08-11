@@ -21,7 +21,7 @@ const useSynchronizedAdded = (
   useEffect(() => {
     const pathCreated = (e: any) => {
       e.path.id = PainterEvents.createId(userId);
-      if (!shouldSerializeEvent(e.path.id)) return;
+      // if (!shouldSerializeEvent(e.path.id)) return;
 
       const target = {
         stroke: e.path.stroke,
@@ -59,7 +59,6 @@ const useSynchronizedAdded = (
   /** Register and handle object:added event. */
   useEffect(() => {
     const objectAdded = (e: any) => {
-      console.log('object:added')
       if (!e.target.id) return;
       if (!shouldSerializeEvent(e.target.id)) return;
 
@@ -161,10 +160,10 @@ const useSynchronizedAdded = (
         canvas?.add(res);
 
         undoRedoDispatch({
-            type: SET_OTHER,
-            payload: (canvas?.getObjects() as unknown) as TypedShape[],
-            canvasId: userId,
-          });
+          type: SET_OTHER,
+          payload: (canvas?.getObjects() as unknown) as TypedShape[],
+          canvasId: userId,
+        });
       }
     };
 
@@ -173,7 +172,13 @@ const useSynchronizedAdded = (
     return () => {
       eventController?.removeListener('added', added);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent, undoRedoDispatch, userId]);
+  }, [
+    canvas,
+    eventController,
+    shouldHandleRemoteEvent,
+    undoRedoDispatch,
+    userId,
+  ]);
 };
 
 export default useSynchronizedAdded;

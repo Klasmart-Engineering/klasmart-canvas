@@ -186,15 +186,17 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     canvas.getObjects().forEach((object: any) => {
-      object.set({
-        selectable: shapesAreSelectable,
-        evented: shapesAreSelectable,
-      });
+      if (isLocalObject(object.id, userId)) {
+        object.set({
+          selectable: shapesAreSelectable,
+          evented: shapesAreSelectable,
+        });
+      }
     });
 
     canvas.selection = shapesAreSelectable;
     canvas.renderAll();
-  }, [canvas, shapesAreSelectable]);
+  }, [canvas, shapesAreSelectable, isLocalObject, userId]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -327,10 +329,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       actions.discardActiveObject();
       mouseDown(shape, shape.startsWith('filled') ? shapeColor : penColor);
       canvas?.forEachObject((object) => {
-        object.set({
-          evented: false,
-          selectable: false,
-        });
+        // @ts-ignore
+        if (isLocalObject(object.id, userId)) {
+          console.log(object);
+          object.set({
+            evented: false,
+            selectable: false,
+          });
+        }
       });
     }
 
@@ -351,6 +357,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     shapeColor,
     actions,
     textIsActive,
+    isLocalObject,
+    userId,
   ]);
 
   /**
@@ -547,15 +555,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (eventedObjects) {
       canvas?.forEachObject((object) => {
-        object.set({
-          evented: true,
-          selectable: true,
-        });
+        // @ts-ignore
+        if (isLocalObject(object.id, userId)) {
+          object.set({
+            evented: true,
+            selectable: true,
+          });
+        }
       });
 
       actions.setHoverCursorObjects('move');
     }
-  }, [actions, canvas, eventedObjects]);
+  }, [actions, canvas, eventedObjects, isLocalObject, userId]);
 
   /**
    * Manages the logic for Flood-fill Feature
@@ -666,7 +677,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       const apply = isLocalObject(id, userId);
       if (apply) {
-        console.log(`send local event ${id} to remote`);
+        //console.log(`send local event ${id} to remote`);
       }
       return apply;
     },
@@ -687,7 +698,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       // isn't undefined.
       const apply = !isLocalObject(id, userId);
       if (apply) {
-        console.log(`apply remote event ${id} locally.`);
+        //console.log(`apply remote event ${id} locally.`);
       }
       return apply;
     },
@@ -834,7 +845,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         canvas.discardActiveObject().renderAll();
       }
     } else if (canvas) {
-      actions.setCanvasSelection(true);
+      // actions.setCanvasSelection(true);
     }
 
     return () => {

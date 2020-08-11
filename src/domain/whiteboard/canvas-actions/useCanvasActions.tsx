@@ -10,6 +10,15 @@ export interface ICanvasActionsState {
   actions: ICanvasActions;
   mouseDown: (specific: string, color?: string) => void;
 }
+const isLocalObject = (id: string, canvasId: string) => {
+  const object = id.split(':');
+
+  if (!object.length) {
+    throw new Error('Invalid ID');
+  }
+
+  return object[0] === canvasId;
+};
 
 export const useCanvasActions = (canvas?: fabric.Canvas) => {
   const {
@@ -335,7 +344,13 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
       if (canvas) {
         canvas.selection = selection;
         canvas.forEachObject((object: fabric.Object) => {
-          object.selectable = selection;
+
+          // @ts-ignore
+          // if (isLocalObject(object.id, userId)) {
+          //   object.set({
+          //     selectable: selection,
+          //   });
+          // }
         });
 
         canvas.renderAll();
