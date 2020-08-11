@@ -59,6 +59,7 @@ const useSynchronizedAdded = (
   /** Register and handle object:added event. */
   useEffect(() => {
     const objectAdded = (e: any) => {
+      console.log('object:added')
       if (!e.target.id) return;
       if (!shouldSerializeEvent(e.target.id)) return;
 

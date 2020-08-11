@@ -112,10 +112,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     floodFill,
   } = useContext(WhiteboardContext);
 
-  const {
-    actions,
-    mouseDown,
-  } = useCanvasActions(canvas);
+  const { actions, mouseDown } = useCanvasActions(canvas);
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -134,7 +131,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setCanvas(canvasInstance);
   }, [instanceId]);
 
-    /**
+  /**
    * Retrieve references to elements created by fabricjs. We'll need these to
    * tweak the style after canvas have been initialized.
    */
@@ -143,20 +140,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     const lowerCanvas = document.getElementById(instanceId);
     const wrapper = lowerCanvas?.parentElement;
-    const upperCanvas = wrapper?.getElementsByClassName("upper-canvas")[0];
+    const upperCanvas = wrapper?.getElementsByClassName('upper-canvas')[0];
 
     if (wrapper) setWrapper(wrapper);
     if (lowerCanvas) setLowerCanvas(lowerCanvas as HTMLCanvasElement);
     if (upperCanvas) setUpperCanvas(upperCanvas as HTMLCanvasElement);
-
-  }, [canvas, instanceId])
+  }, [canvas, instanceId]);
 
   /**
    * Update the CSS Width/Height
    */
   useEffect(() => {
     if (wrapper && lowerCanvas && upperCanvas) {
-      
       if (cssWidth) {
         wrapper.style.width = String(cssWidth);
         lowerCanvas.style.width = String(cssWidth);
@@ -168,22 +163,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         lowerCanvas.style.height = String(cssHeight);
         upperCanvas.style.height = String(cssHeight);
       }
-
     }
-  }, [wrapper, lowerCanvas, upperCanvas, cssWidth, cssHeight])
+  }, [wrapper, lowerCanvas, upperCanvas, cssWidth, cssHeight]);
 
-  /** 
+  /**
    * Update the pointer events to make canvas click through.
    */
   useEffect(() => {
     if (wrapper && lowerCanvas && upperCanvas) {
-      const pointerEventsStyle = pointerEvents ? "auto" : "none";
+      const pointerEventsStyle = pointerEvents ? 'auto' : 'none';
 
       wrapper.style.pointerEvents = pointerEventsStyle;
       lowerCanvas.style.pointerEvents = pointerEventsStyle;
       upperCanvas.style.pointerEvents = pointerEventsStyle;
     }
-  }, [lowerCanvas, pointerEvents, upperCanvas, wrapper])
+  }, [lowerCanvas, pointerEvents, upperCanvas, wrapper]);
 
   /** Update objects selectable/evented state. */
   useEffect(() => {
@@ -312,7 +306,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     return () => {
       canvas?.off('path:created');
-    }
+    };
   }, [brushIsActive, canvas, lineWidth, penColor]);
 
   /**
@@ -341,11 +335,23 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      canvas?.off('mouse:down');
+      if (!textIsActive) {
+        canvas?.off('mouse:down');
+      }
+
       canvas?.off('mouse:move');
       canvas?.off('mouse:up');
     };
-  }, [canvas, shape, shapeIsActive, mouseDown, penColor, shapeColor, actions]);
+  }, [
+    canvas,
+    shape,
+    shapeIsActive,
+    mouseDown,
+    penColor,
+    shapeColor,
+    actions,
+    textIsActive,
+  ]);
 
   /**
    * General handler for keyboard events
@@ -353,8 +359,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * 'Escape' event for deselect active objects
    * */
   const keyDownHandler = useCallback(
-    (e: { key: any, which?: number, ctrlKey?: boolean, shiftKey?: boolean }) => {
-
+    (e: {
+      key: any;
+      which?: number;
+      ctrlKey?: boolean;
+      shiftKey?: boolean;
+    }) => {
       // The following two blocks, used for undo and redo, can not
       // be integrated while there are two boards in the canvas.
       // if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
@@ -413,22 +423,30 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * and returns it in hexadecimal code
    * @param {IEvent} event - click event
    */
-  const getColorInCoord = useCallback((x: number, y: number): string | null => {
-    if (canvas) {
-      const colorData = canvas
-        .getContext()
-        .getImageData(x, y, 1, 1)
-        .data.slice(0, 3);
-      return (
-        '#' +
-        ((1 << 24) + (colorData[0] << 16) + (colorData[1] << 8) + colorData[2])
-          .toString(16)
-          .slice(1)
-      );
-    }
+  const getColorInCoord = useCallback(
+    (x: number, y: number): string | null => {
+      if (canvas) {
+        const colorData = canvas
+          .getContext()
+          .getImageData(x, y, 1, 1)
+          .data.slice(0, 3);
+        return (
+          '#' +
+          (
+            (1 << 24) +
+            (colorData[0] << 16) +
+            (colorData[1] << 8) +
+            colorData[2]
+          )
+            .toString(16)
+            .slice(1)
+        );
+      }
 
-    return null;
-  }, [canvas]);
+      return null;
+    },
+    [canvas]
+  );
 
   /**
    * Reorder the current shapes letting the shapes over their container shape
@@ -448,30 +466,35 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * when a certain object is selected
    * @param {IEvent} event - event that contains the selected object
    */
-  const manageChanges = useCallback((event: fabric.IEvent) => {
-    // Free Drawing Line Selected
-    if (
-      (event.target && isFreeDrawing(event.target)) ||
-      (event.target && isEmptyShape(event.target))
-    ) {
-      updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
-      updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
-    }
-
-    // Shape Selected
-    if (event.target && isShape(event.target)) {
-      updateShape(event.target.name || DEFAULT_VALUES.SHAPE);
-
-      if ((event.target as TypedShape).shapeType === 'shape') {
+  const manageChanges = useCallback(
+    (event: fabric.IEvent) => {
+      // Free Drawing Line Selected
+      if (
+        (event.target && isFreeDrawing(event.target)) ||
+        (event.target && isEmptyShape(event.target))
+      ) {
         updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
         updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
-      } else if (event.target.fill) {
-        updateShapeColor(
-          event.target.fill.toString() || DEFAULT_VALUES.SHAPE_COLOR
-        );
       }
-    }
-  }, [updateLineWidth, updatePenColor, updateShape, updateShapeColor]);
+
+      // Shape Selected
+      if (event.target && isShape(event.target)) {
+        updateShape(event.target.name || DEFAULT_VALUES.SHAPE);
+
+        if ((event.target as TypedShape).shapeType === 'shape') {
+          updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
+          updateLineWidth(
+            event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH
+          );
+        } else if (event.target.fill) {
+          updateShapeColor(
+            event.target.fill.toString() || DEFAULT_VALUES.SHAPE_COLOR
+          );
+        }
+      }
+    },
+    [updateLineWidth, updatePenColor, updateShape, updateShapeColor]
+  );
 
   /** Set up mangeChanges callback. */
   useEffect(() => {
@@ -483,37 +506,40 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     return () => {
       canvas.off('selection:created', manageChanges);
       canvas.off('selection:updated', manageChanges);
-    }
+    };
   }, [canvas, manageChanges]);
 
   /**
    * Make a mouse down event below of the clicked shape
    * @param {IEvent} event - Contains the x, y coords of the clicked point
    */
-  const manageShapeOutsideClick = useCallback((event: fabric.IEvent) => {
-    let foundShape: fabric.Object | null = null;
+  const manageShapeOutsideClick = useCallback(
+    (event: fabric.IEvent) => {
+      let foundShape: fabric.Object | null = null;
 
-    canvas?.forEachObject((object: fabric.Object) => {
-      if (
-        event.pointer &&
-        isEmptyShape(object) &&
-        object.containsPoint(event.pointer) &&
-        object !== event.target
-      ) {
-        foundShape = object;
-      }
-    });
-
-    if (event.pointer) {
-      canvas?.trigger('mouse:down', {
-        target: foundShape,
-        pointer: {
-          x: event.pointer.x,
-          y: event.pointer.y,
-        },
+      canvas?.forEachObject((object: fabric.Object) => {
+        if (
+          event.pointer &&
+          isEmptyShape(object) &&
+          object.containsPoint(event.pointer) &&
+          object !== event.target
+        ) {
+          foundShape = object;
+        }
       });
-    }
-  }, [canvas]);
+
+      if (event.pointer) {
+        canvas?.trigger('mouse:down', {
+          target: foundShape,
+          pointer: {
+            x: event.pointer.x,
+            y: event.pointer.y,
+          },
+        });
+      }
+    },
+    [canvas]
+  );
 
   /**
    * Set the objects like evented if you select pointer or move tool
@@ -601,7 +627,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         object.padding = 0;
       });
     }
-  }, [actions, canvas, floodFill, floodFillIsActive, getColorInCoord, manageShapeOutsideClick, reorderShapes]);
+  }, [
+    actions,
+    canvas,
+    floodFill,
+    floodFillIsActive,
+    getColorInCoord,
+    manageShapeOutsideClick,
+    reorderShapes,
+  ]);
 
   /**
    * If the input field (text) has length
@@ -623,46 +657,87 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     return () => {
       document.removeEventListener('keydown', keyDownHandler);
-    }
+    };
   }, [fontFamily, keyDownHandler, fontFamilyLoader]);
 
-  const filterOutgoingEvents = useCallback((id: string): boolean => {
-    if (!id) return false;
+  const filterOutgoingEvents = useCallback(
+    (id: string): boolean => {
+      if (!id) return false;
 
-    const apply = isLocalObject(id, userId);
-    if (apply) {
-      console.log(`send local event ${id} to remote`);
-    }
-    return apply;
-  }, [isLocalObject, userId]);
+      const apply = isLocalObject(id, userId);
+      if (apply) {
+        console.log(`send local event ${id} to remote`);
+      }
+      return apply;
+    },
+    [isLocalObject, userId]
+  );
 
-  const filterIncomingEvents = useCallback((id: string): boolean => {
-    if (!id) return false;
-    
-    // TODO: isLocalObject will not work in case we're reloading
-    // the page and server resends all our events. They would be
-    // discarded when they shouldn't be discarded. Another solution
-    // could be to keep track of all 'local' objects we've created
-    // this session and only filter those.
-    // TODO: Filter based on the filterUsers list. We should only
-    // display events coming from users in that list if the list
-    // isn't undefined.
-    const apply = !isLocalObject(id, userId);
-    if (apply) {
-      console.log(`apply remote event ${id} locally.`);
-    }
-    return apply;
-  }, [isLocalObject, userId]);
+  const filterIncomingEvents = useCallback(
+    (id: string): boolean => {
+      if (!id) return false;
 
-  useSynchronizedAdded(canvas, userId, filterOutgoingEvents, filterIncomingEvents, undoRedoDispatch);
-  useSynchronizedMoved(canvas, userId, filterOutgoingEvents, filterIncomingEvents, undoRedoDispatch);
+      // TODO: isLocalObject will not work in case we're reloading
+      // the page and server resends all our events. They would be
+      // discarded when they shouldn't be discarded. Another solution
+      // could be to keep track of all 'local' objects we've created
+      // this session and only filter those.
+      // TODO: Filter based on the filterUsers list. We should only
+      // display events coming from users in that list if the list
+      // isn't undefined.
+      const apply = !isLocalObject(id, userId);
+      if (apply) {
+        console.log(`apply remote event ${id} locally.`);
+      }
+      return apply;
+    },
+    [isLocalObject, userId]
+  );
+
+  useSynchronizedAdded(
+    canvas,
+    userId,
+    filterOutgoingEvents,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
+  useSynchronizedMoved(
+    canvas,
+    userId,
+    filterOutgoingEvents,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
   useSynchronizedModified(canvas, filterOutgoingEvents, filterIncomingEvents);
-  useSynchronizedRemoved(canvas, userId, filterOutgoingEvents, filterIncomingEvents, undoRedoDispatch);
-  useSynchronizedRotated(canvas, userId, filterOutgoingEvents, filterIncomingEvents, undoRedoDispatch);
-  useSynchronizedScaled(canvas, userId, filterOutgoingEvents, filterIncomingEvents, undoRedoDispatch);
+  useSynchronizedRemoved(
+    canvas,
+    userId,
+    filterOutgoingEvents,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
+  useSynchronizedRotated(
+    canvas,
+    userId,
+    filterOutgoingEvents,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
+  useSynchronizedScaled(
+    canvas,
+    userId,
+    filterOutgoingEvents,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
   useSynchronizedSkewed(canvas, filterOutgoingEvents, filterIncomingEvents);
   useSynchronizedReconstruct(canvas, filterIncomingEvents);
-  useSynchronizedColorChanged(canvas, userId, filterIncomingEvents, undoRedoDispatch);
+  useSynchronizedColorChanged(
+    canvas,
+    userId,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
   useSynchronizedFontFamilyChanged(canvas, filterIncomingEvents);
 
   /**
@@ -699,7 +774,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         }
       });
     }
-  }, [isLocalObject, canvas, eventSerializer, userId, penColor, fontColor, undoRedoDispatch]);
+  }, [
+    isLocalObject,
+    canvas,
+    eventSerializer,
+    userId,
+    penColor,
+    fontColor,
+    undoRedoDispatch,
+  ]);
 
   /**
    * Send synchronization event for fontFamily changes.
@@ -755,12 +838,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      canvas?.off('mouse:down');
+      if (!textIsActive) {
+        canvas?.off('mouse:down');
+      }
+
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eraseType, canvas]);
+  }, [eraseType, canvas, textIsActive]);
 
   useEffect(() => {
     if (shape && shapeIsActive) {
@@ -768,11 +854,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      canvas?.off('mouse:down');
+      if (!textIsActive) {
+        canvas?.off('mouse:down');
+      }
       canvas?.off('mouse:move');
       canvas?.off('mouse:up');
     };
-  }, [canvas, shape, shapeIsActive, mouseDown, shapeColor]);
+  }, [canvas, shape, shapeIsActive, mouseDown, shapeColor, textIsActive]);
 
   /**
    * If lineWidth variable changes and a free line drawing is selected
@@ -796,13 +884,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [actions, updateCanvasActions]);
 
   // TODO: Possible to have dynamically sized canvas? With raw canvas it's
-  // possible to set the "pixel (background)" size separately from the 
+  // possible to set the "pixel (background)" size separately from the
   // style size. So we can have a fixed resolution draw buffer and it will
   // be scaled based on the style size. This might be important to make
   // the canvas size adopt to the content behind it. The content behind
-  // canvas doesn't have a fixed size and could vary between different 
-  // activities etc. For now the user will have to pass in the exact 
-  // width and height they want to have the canvas in. 
+  // canvas doesn't have a fixed size and could vary between different
+  // activities etc. For now the user will have to pass in the exact
+  // width and height they want to have the canvas in.
 
   return (
     <canvas
@@ -812,7 +900,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       style={initialStyle}
       onClick={() => {
         actions.addShape();
-      }}>
+      }}
+    >
       {children}
     </canvas>
   );

@@ -114,7 +114,6 @@ export const UndoRedo = (
     }
 
     return () => {
-      canvas?.off('object:added');
       canvas?.off('object:modified');
       canvas?.off('object:removed');
     };
