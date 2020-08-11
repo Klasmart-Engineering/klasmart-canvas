@@ -17,34 +17,38 @@ const useSynchronizedScaled = (
 
   /** Register and handle remote event. */
   useEffect(() => {
-    const scaled = (id: string, target: any) => {
+    const scaled = (id: string, objectType: string, target: any) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
       canvas?.forEachObject(function (obj: any) {
         if (obj.id && obj.id === id) {
-          obj.set({
-            angle: target.angle,
-            top: target.top,
-            left: target.left,
-            scaleX: target.scaleX,
-            scaleY: target.scaleY,
-            flipX: target.flipX,
-            flipY: target.flipY,
-            originX: 'center',
-            originY: 'center',
-          });
-        } else {
-          obj.set({
-            angle: target.angle,
-            top: target.top,
-            left: target.left,
-            scaleX: target.scaleX,
-            scaleY: target.scaleY,
-            flipX: target.flipX,
-            flipY: target.flipY,
-            originX: 'left',
-            originY: 'top',
-          });
+          if (objectType === 'activeSelection') {
+            obj.set({
+              angle: target.angle,
+              top: target.top,
+              left: target.left,
+              scaleX: target.scaleX,
+              scaleY: target.scaleY,
+              flipX: target.flipX,
+              flipY: target.flipY,
+              originX: 'center',
+              originY: 'center',
+            });
+            obj.setCoords();
+          } else {
+            obj.set({
+              angle: target.angle,
+              top: target.top,
+              left: target.left,
+              scaleX: target.scaleX,
+              scaleY: target.scaleY,
+              flipX: target.flipX,
+              flipY: target.flipY,
+              originX: 'left',
+              originY: 'top',
+            });
+            obj.setCoords();
+          }
         }
       });
       canvas?.renderAll();
@@ -106,6 +110,8 @@ const useSynchronizedScaled = (
           target,
           id: e.target.id,
         };
+
+        console.log({ payload });
 
         if (canvas) {
           const event = { event: payload, type: 'scaled' };
