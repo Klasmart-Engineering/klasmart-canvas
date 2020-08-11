@@ -86,7 +86,6 @@ export const UndoRedo = (
         );
 
         if (reconstructedEvent.type !== 'added') {
-          console.log(reconstructedEvent);
           eventSerializer?.push('reconstruct', reconstructedEvent.event);
         } else {
           eventSerializer?.push('removed', payload);
@@ -114,8 +113,8 @@ export const UndoRedo = (
     }
 
     return () => {
-      canvas?.off('object:modified');
-      canvas?.off('object:removed');
+      // canvas?.off('object:modified');
+      // canvas?.off('object:removed');
     };
   }, [state, canvas, dispatch, eventSerializer]);
 

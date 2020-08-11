@@ -50,7 +50,7 @@ const useSynchronizedRemoved = (
   /** Register and handle local event. */
   useEffect(() => {
     const objectRemoved = (e: any) => {
-      if (shouldSerializeEvent(e.target.id)) return;
+      if (!shouldSerializeEvent(e.target.id)) return;
 
       const payload = {
         id: e.target.id,

@@ -111,8 +111,6 @@ const useSynchronizedScaled = (
           id: e.target.id,
         };
 
-        console.log({ payload });
-
         if (canvas) {
           const event = { event: payload, type: 'scaled' };
 

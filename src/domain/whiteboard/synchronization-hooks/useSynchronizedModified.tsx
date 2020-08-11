@@ -72,7 +72,7 @@ const useSynchronizedModified = (
     canvas?.on('object:modified', objectModified);
 
     return () => {
-        canvas?.off('object:modified', objectModified);
+      canvas?.off('object:modified', objectModified);
     };
   }, [canvas, eventSerializer, shouldSerializeEvent]);
 };
