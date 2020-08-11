@@ -64,7 +64,7 @@ export const WhiteboardProvider = ({
   // apply action to.
   const [canvasActions, updateCanvasActions] = useState<ICanvasActions>();
 
-  const isLocalObject = (id: string, canvasId: string) => {
+  const isLocalObject = useCallback((id: string, canvasId: string) => {
     const object = id.split(':');
 
     if (!object.length) {
@@ -72,7 +72,7 @@ export const WhiteboardProvider = ({
     }
 
     return object[0] === canvasId;
-  };
+  }, []);
   const [eventedObjects, updateEventedObjects] = useState('true');
 
   // Temporary code to get undo / redo working while there are two boards
