@@ -84,8 +84,6 @@ const useSynchronizedMoved = (
             payload: (canvas.getObjects() as unknown) as TypedShape[],
             canvasId: userId,
             event,
-            otherPayload: undefined,
-            activeObjects: e.target._objects,
           });
         }
 

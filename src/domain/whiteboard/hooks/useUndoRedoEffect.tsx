@@ -35,6 +35,33 @@ const objectReconstructor = (id: string, events: any, numToRemove: number) => {
   };
 };
 
+// const getPrevIndex = (eventId: string, events: any) => {
+
+// }
+
+const undoHandler = (event: any, state: any, eventSerializer: any) => {
+  let id = event.event.id;
+  let allEvents = [...state.events];
+  let futureEvents = allEvents.splice(state.eventIndex + 1);
+  futureEvents = futureEvents.filter((e: any) => e.event.id === id);
+  const reconstructedEvent = objectReconstructor(
+    id,
+    state.events,
+    futureEvents.length
+  );
+
+  eventSerializer?.push('removed', reconstructedEvent.event);
+  eventSerializer?.push('added', reconstructedEvent.event);
+
+  // if (reconstructedEvent.type !== 'added') {
+  //   console.log(reconstructedEvent);
+  //   eventSerializer?.push('reconstruct', reconstructedEvent.event);
+  // } else {
+  //   eventSerializer?.push('removed', payload);
+  //   eventSerializer?.push('added', reconstructedEvent.event);
+  // }
+}
+
 /**
  * Custom hook to track canvas history.
  * @param canvas Canvas being manipulated
@@ -44,7 +71,7 @@ const objectReconstructor = (id: string, events: any, numToRemove: number) => {
 export const UndoRedo = (
   canvas: any,
   eventSerializer: any,
-  _canvasId: string
+  canvasId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
 
@@ -86,12 +113,16 @@ export const UndoRedo = (
         );
 
         if (reconstructedEvent.type !== 'added') {
-          console.log(reconstructedEvent);
           eventSerializer?.push('reconstruct', reconstructedEvent.event);
         } else {
           eventSerializer?.push('removed', payload);
           eventSerializer?.push('added', reconstructedEvent.event);
         }
+      } else {
+        let groupedEvents = state.events.filter((event: any) => (event.eventId === nextEvent.eventId));
+        groupedEvents.forEach((singleEvent: any) => {
+          undoHandler(singleEvent, state, eventSerializer);
+        });
       }
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];
@@ -112,11 +143,6 @@ export const UndoRedo = (
         eventSerializer?.push(reconstructed.type, reconstructed.event);
       }
     }
-
-    return () => {
-      canvas?.off('object:modified');
-      canvas?.off('object:removed');
-    };
   }, [state, canvas, dispatch, eventSerializer]);
 
   return { state, dispatch };
