@@ -124,50 +124,52 @@ function ToolbarSelector(props: IToolbarSelector) {
   }
 
   const selectorContainerStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "row",
-  }
+    display: 'flex',
+    flexDirection: 'row',
+  };
 
   const toolbarSelectorStyle: CSSProperties = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-    height: "32px",
-    border: "none",
-    marginLeft: "4px",
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    height: '32px',
+    border: 'none',
+    marginLeft: '4px',
     paddingRight: 0,
-    backgroundColor: active ? "#d9d9d9" : "#fff",
-    borderRadius: "4px",
+    backgroundColor: active ? '#d9d9d9' : '#fff',
+    borderRadius: '4px',
     outline: 0,
   };
 
   const iconStyle: CSSProperties = {
-    width: "24px",
-    height: "24px",
-  }
+    width: '24px',
+    height: '24px',
+  };
 
   const arrowStyle: CSSProperties = {
-    width: "8px",
-    height: "8px",
-  }
+    width: '20px',
+    height: '20px',
+  };
 
   const optionsContainerStyle: CSSProperties = {
-    position: "absolute",
-    margin: "0 0 8px 56px",
-    padding: "2px",
-    border: "none",
-    backgroundColor: "#fff",
-    borderRadius: "4px",
+    position: 'absolute',
+    margin: '0 0 8px 56px',
+    padding: '2px',
+    border: 'none',
+    backgroundColor: '#fff',
+    borderRadius: '4px',
     zIndex: 2,
-  }
+  };
 
   const optionsStyle: CSSProperties = {
-    display: "grid",
-    rowGap: "2px",
-    padding: "2px 2px 4px 0",
-    gridAutoColumns: colorPalette ? "repeat(auto-fit, minmax(0, 36px))" : "repeat(6, auto)",
-  }
+    display: 'grid',
+    rowGap: '2px',
+    padding: '2px 2px 4px 0',
+    gridAutoColumns: colorPalette
+      ? 'repeat(auto-fit, minmax(0, 36px))'
+      : 'repeat(6, auto)',
+  };
 
   return (
     <div className="selector-container" style={selectorContainerStyle}>
@@ -188,7 +190,11 @@ function ToolbarSelector(props: IToolbarSelector) {
           alt={selectedOption.iconName}
           onClick={handleClick}
         />
-        <ArrowRightIcon className="arrow" onClick={handleArrowClick} style={arrowStyle} />
+        <ArrowRightIcon
+          className="arrow"
+          onClick={handleArrowClick}
+          style={arrowStyle}
+        />
       </button>
       {showOptions && active ? (
         <div className="options-container" style={optionsContainerStyle}>

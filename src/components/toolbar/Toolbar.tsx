@@ -66,6 +66,7 @@ function Toolbar() {
     updateStamp,
     dispatch,
     updateShapesAreSelectable,
+    updateShapesAreEvented,
     canvasId,
   }: any = useContext(WhiteboardContext);
 
@@ -133,6 +134,10 @@ function Toolbar() {
     } else {
       updateShapesAreSelectable(false);
     }
+
+    updateShapesAreEvented(
+      tool === ELEMENTS.FLOOD_FILL_TOOL || tool === ELEMENTS.ERASE_TYPE_TOOL
+    );
 
     // set the clicked tool like active style in Toolbar
     setTools({
@@ -315,24 +320,22 @@ function Toolbar() {
   }
 
   const toolbarContainerStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    width: "120px",
-  }
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: '120px',
+  };
 
   const toolbarStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    border: "solid 1px #d0d0d0",
-    marginTop: "16px",
-    backgroundColor: "#fff",
-    borderRadius: "8px",
-  }
+    display: 'flex',
+    flexDirection: 'column',
+    marginTop: '16px',
+    borderRadius: '8px',
+  };
 
   return (
-    <div className="toolbar-container" style={toolbarContainerStyle}>
-      <div className="toolbar" style={toolbarStyle}>
+    <div style={toolbarContainerStyle}>
+      <div style={toolbarStyle}>
         <ToolbarSection>
           {tools.elements.map((tool) =>
             determineIfIsToolbarButton(tool)

@@ -11,6 +11,7 @@ import { useShapeIsActive } from './hooks/useShapeIsActive';
 import { useBrushIsActive } from './hooks/useBrushIsActive';
 import { useEraseType } from './hooks/useEraseType';
 import { useShapesAreSelectable } from './hooks/useShapesAreSelectable';
+import { useShapesAreEvented } from './hooks/useShapesAreEvented';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 import { useLineWidth } from './hooks/useLineWidth';
 import { useFloodFill } from './hooks/useFloodFill';
@@ -48,6 +49,7 @@ export const WhiteboardProvider = ({
     shapesAreSelectable,
     updateShapesAreSelectable,
   } = useShapesAreSelectable();
+  const { shapesAreEvented, updateShapesAreEvented } = useShapesAreEvented();
   const { floodFillIsActive, updateFloodFillIsActive } = useFloodFillIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
@@ -126,7 +128,7 @@ export const WhiteboardProvider = ({
   }, [canvasActions]);
 
   const addShapeAction = useCallback(
-    (specific?: string) => {
+    (specific: string) => {
       canvasActions?.addShape(specific);
     },
     [canvasActions]
@@ -135,13 +137,6 @@ export const WhiteboardProvider = ({
   const eraseObjectAction = useCallback(() => {
     canvasActions?.eraseObject();
   }, [canvasActions]);
-
-  const setCanvasSelectionAction = useCallback(
-    (selection: boolean) => {
-      canvasActions?.setCanvasSelection(selection);
-    },
-    [canvasActions]
-  );
 
   /**
    * List of available colors in toolbar
@@ -196,9 +191,11 @@ export const WhiteboardProvider = ({
     updateStamp,
     setPointerEvents,
     updateShapesAreSelectable,
+    updateShapesAreEvented,
     closeModal,
     updateShapeColor,
     shapesAreSelectable,
+    shapesAreEvented,
     updateCanvasActions,
     isLocalObject,
 
@@ -210,7 +207,6 @@ export const WhiteboardProvider = ({
     clearWhiteboard: clearWhiteboardAction,
     eraseObject: eraseObjectAction,
     changeStrokeColor: changeStrokeColorAction,
-    setCanvasSelection: setCanvasSelectionAction,
   };
 
   return (

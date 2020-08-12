@@ -5,22 +5,15 @@ import ICanvasActions from './ICanvasActions';
 import * as shapes from '../shapes/shapes';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { isFreeDrawing, isShape } from '../utils/shapes';
+import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
+import { IEvent } from 'fabric/fabric-impl';
 
 export interface ICanvasActionsState {
   actions: ICanvasActions;
   mouseDown: (specific: string, color?: string) => void;
 }
-const isLocalObject = (id: string, canvasId: string) => {
-  const object = id.split(':');
 
-  if (!object.length) {
-    throw new Error('Invalid ID');
-  }
-
-  return object[0] === canvasId;
-};
-
-export const useCanvasActions = (canvas?: fabric.Canvas) => {
+export const useCanvasActions = (canvas?: fabric.Canvas, userId?: string) => {
   const {
     shapeIsActive,
     updateFontColor,
@@ -29,12 +22,9 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
     updatePenColor,
     updateShapeColor,
     closeModal,
-    setCircleSize,
-    setSize,
-    setPathSize,
     penColor,
     lineWidth,
-    shapeToAdd,
+    isLocalObject,
   } = useContext(WhiteboardContext);
 
   /**
@@ -125,11 +115,19 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
         canvas.renderAll();
       });
     },
-    [setCircleSize, setPathSize, setSize, canvas]
+    [canvas]
   );
 
   const clearOnMouseEvent = useCallback((): void => {
     canvas?.off('mouse:down');
+  }, [canvas]);
+
+  /**
+   * Clears all mouse event listeners from canvas.
+   */
+  const clearMouseEvents = useCallback((): void => {
+    canvas?.off('mouse:move');
+    canvas?.off('mouse:up');
   }, [canvas]);
 
   /**
@@ -162,22 +160,13 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
         } else {
           shape.setCoords();
           canvas.renderAll();
-
           // TODO: Handle Undo/Redo dispatch.
           // dispatch({ type: SET, payload: canvas.getObjects() });
         }
       });
     },
-    [setCircleSize, setPathSize, setSize, canvas]
+    [canvas]
   );
-
-  /**
-   * Clears all mouse event listeners from canvas.
-   */
-  const clearMouseEvents = useCallback((): void => {
-    canvas?.off('mouse:move');
-    canvas?.off('mouse:up');
-  }, [canvas]);
 
   /**
    * Mouse down event listener for canvas.
@@ -223,29 +212,96 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
    * Add specific shape to whiteboard
    * */
   const addShape = useCallback(
-    (_specific?: string) => {
+    (shapeToAdd: string) => {
       // Required to prevent multiple shapes add at once
       // if user clicked more than one shape during selection.
       if (!shapeIsActive) {
         return;
       }
 
-      clearOnMouseEvent();
-      clearMouseEvents();
-      mouseDown(
-        shapeToAdd,
-        shapeToAdd.startsWith('filled') ? shapeColor : penColor
-      );
+      let resize: boolean = false;
+      let startPoint: fabric.Point | null = null;
+      let shape: TypedShape | null = null;
+
+      /**
+       * Set the new size of a recently created shape
+       * @param {TypedShape} shape - Shape to change its size
+       * @param {IEvent} e - Current event, necessary to know
+       * where is the pointer
+       */
+      const setShapeSize = (shape: TypedShape, e: IEvent) => {
+        if (shapeToAdd === 'circle') {
+          return setCircleSize(shape as fabric.Ellipse, startPoint, e.pointer);
+        } else if (shapeToAdd === 'rectangle' || shapeToAdd === 'triangle') {
+          return setSize(shape, startPoint, e.pointer);
+        } else {
+          return setPathSize(shape, startPoint, e.pointer);
+        }
+      };
+
+      canvas?.on('mouse:down', (e: IEvent) => {
+        if (e.target || resize) {
+          return;
+        }
+
+        shape = shapeSelector(shapeToAdd);
+
+        if (e.pointer) {
+          shape.set({
+            top: e.pointer.y,
+            left: e.pointer.x,
+            shapeType: 'shape',
+            name: shapeToAdd,
+            strokeUniform: true,
+          });
+
+          startPoint = e.pointer;
+        }
+
+        canvas.add(shape);
+        resize = true;
+      });
+
+      canvas?.on('mouse:move', (e: IEvent) => {
+        if (!shapeToAdd || !shape || !resize) {
+          return;
+        }
+
+        canvas.selection = false;
+        setShapeSize(shape, e);
+        let anchor = { ...startPoint, originX: 'left', originY: 'top' };
+
+        if (startPoint && e.pointer && startPoint.x > e.pointer.x) {
+          anchor = { ...anchor, originX: 'right' };
+        }
+
+        if (startPoint && e.pointer && startPoint.y > e.pointer.y) {
+          anchor = { ...anchor, originY: 'bottom' };
+        }
+
+        shape.set(anchor);
+        canvas.renderAll();
+      });
+
+      canvas?.on('mouse:up', (e: IEvent) => {
+        if (!shape || !resize) {
+          return;
+        }
+
+        const size = setShapeSize(shape, e);
+        resize = false;
+
+        if (size.width <= 2 && size.height <= 2) {
+          canvas.remove(shape);
+        } else {
+          shape.setCoords();
+          canvas.renderAll();
+          // TODO: Handle Undo/Redo dispatch.
+          // dispatch({ type: SET, payload: canvas.getObjects() });
+        }
+      });
     },
-    [
-      clearMouseEvents,
-      clearOnMouseEvent,
-      mouseDown,
-      penColor,
-      shapeColor,
-      shapeIsActive,
-      shapeToAdd,
-    ]
+    [canvas, shapeIsActive, shapeSelector]
   );
 
   /**
@@ -336,30 +392,6 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
   }, [canvas, closeModal]);
 
   /**
-   * Set Canvas Whiteboard selection ability
-   * @param {boolean} selection - value to set in canvas and objects selection
-   */
-  const setCanvasSelection = useCallback(
-    (selection: boolean) => {
-      if (canvas) {
-        canvas.selection = selection;
-        canvas.forEachObject((object: fabric.Object) => {
-
-          // @ts-ignore
-          // if (isLocalObject(object.id, userId)) {
-          //   object.set({
-          //     selectable: selection,
-          //   });
-          // }
-        });
-
-        canvas.renderAll();
-      }
-    },
-    [canvas]
-  );
-
-  /**
    * Set the cursor to be showed when a object hover happens
    * @param {string} cursor - Cursor name to show
    */
@@ -382,27 +414,46 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
    */
   const eraseObject = useCallback(() => {
     let eraser: boolean = false;
-    let activeObjects: any = null;
+    let activeObjects = canvas?.getActiveObjects();
 
-    // Deactivate selection
-    setCanvasSelection(false);
-    setHoverCursorObjects('pointer');
+    canvas?.getObjects().forEach((object: any) => {
+      if ((object.id && isLocalObject(object.id, userId)) || !object.id) {
+        object.set({
+          selectable: true,
+          evented: true,
+          hoverCursor: 'pointer',
+        });
+      } else if (object.id) {
+        object.set({
+          hoverCursor: 'default',
+        });
+      }
+    });
+
+    if (activeObjects?.length) {
+      canvas?.getActiveObject().set({
+        hoverCursor: 'pointer',
+      });
+    }
 
     // When mouse down eraser is able to remove objects
     canvas?.on('mouse:down', (e: any) => {
+      console.log('mouse down');
       if (eraser) {
         return false;
       }
 
       // if the click is made over an object
-      if (e.target) {
-        activeObjects = canvas.getActiveObjects();
+      if (
+        (e.target && e.target.id && isLocalObject(e.target.id, userId)) ||
+        (e.target && !e.target.id)
+      ) {
         canvas.remove(e.target);
         canvas.renderAll();
       }
 
       // if the click is made over an object group
-      if (e.target && activeObjects.length) {
+      if (e.target && activeObjects?.length) {
         activeObjects.forEach(function (object: any) {
           canvas.remove(object);
         });
@@ -415,23 +466,32 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
 
     // When mouse is over an object
     canvas?.on('mouse:over', (e: any) => {
+      console.log('mouse over');
       if (!eraser) {
         return false;
       }
 
-      canvas.remove(e.target);
-      canvas.renderAll();
+      if (
+        (e.target && e.target.id && isLocalObject(e.target.id, userId)) ||
+        (e.target && !e.target.id)
+      ) {
+        canvas.remove(e.target);
+        canvas.renderAll();
+      }
     });
 
     // When mouse up eraser is unable to remove objects
     canvas?.on('mouse:up', () => {
+      console.log('mouse up');
       if (!eraser) {
         return false;
       }
 
       eraser = false;
     });
-  }, [canvas, setCanvasSelection, setHoverCursorObjects]);
+    // If isLocalObject is added in dependencies an infinity loop happens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvas, userId]);
 
   /**
    * Deselect the actual selected object
@@ -449,7 +509,6 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
       discardActiveObject,
       addShape,
       eraseObject,
-      setCanvasSelection,
       setHoverCursorObjects,
     };
 
@@ -462,7 +521,6 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
     eraseObject,
     fillColor,
     mouseDown,
-    setCanvasSelection,
     setHoverCursorObjects,
     textColor,
   ]);
