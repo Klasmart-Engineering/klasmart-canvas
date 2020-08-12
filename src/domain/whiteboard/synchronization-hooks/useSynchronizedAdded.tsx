@@ -156,6 +156,7 @@ const useSynchronizedAdded = (
         res.id = id;
         res.selectable = false;
         res.evented = false;
+        res.strokeUniform = true;
 
         canvas?.add(res);
 

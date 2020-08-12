@@ -291,6 +291,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const pathCreated = (e: any) => {
       e.path.selectable = false;
       e.path.evented = false;
+      e.path.strokeUniform = true;
       canvas?.renderAll();
     };
 
