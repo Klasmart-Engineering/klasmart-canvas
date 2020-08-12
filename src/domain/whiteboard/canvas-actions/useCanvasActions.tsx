@@ -10,17 +10,9 @@ export interface ICanvasActionsState {
   actions: ICanvasActions;
   mouseDown: (specific: string, color?: string) => void;
 }
-const isLocalObject = (id: string, canvasId: string) => {
-  const object = id.split(':');
 
-  if (!object.length) {
-    throw new Error('Invalid ID');
-  }
-
-  return object[0] === canvasId;
-};
-
-export const useCanvasActions = (canvas?: fabric.Canvas) => {
+export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
+  console.log(canvasId)
   const {
     shapeIsActive,
     updateFontColor,
@@ -343,15 +335,15 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
     (selection: boolean) => {
       if (canvas) {
         canvas.selection = selection;
-        canvas.forEachObject((object: fabric.Object) => {
-
-          // @ts-ignore
-          // if (isLocalObject(object.id, userId)) {
-          //   object.set({
-          //     selectable: selection,
-          //   });
-          // }
-        });
+        // canvas.forEachObject((object: fabric.Object) => {
+        //
+        //   // @ts-ignore
+        //   if (isLocalObject(object.id, userId)) {
+        //     object.set({
+        //       selectable: selection,
+        //     });
+        //   }
+        // });
 
         canvas.renderAll();
       }
