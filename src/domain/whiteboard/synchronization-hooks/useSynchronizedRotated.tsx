@@ -9,7 +9,7 @@ const useSynchronizedRotated = (
   userId: string,
   shouldSerializeEvent: (id: string) => boolean,
   shouldHandleRemoteEvent: (id: string) => boolean,
-  undoRedoDispatch: React.Dispatch<CanvasAction>,
+  undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
   const {
     state: { eventSerializer, eventController },
@@ -26,7 +26,7 @@ const useSynchronizedRotated = (
             obj.set({
               angle: target.angle,
               top: target.top,
-              left: target.left,
+              left: target.left + 1,
               scaleX: target.scaleX,
               scaleY: target.scaleY,
               flipX: target.flipX,
@@ -34,6 +34,8 @@ const useSynchronizedRotated = (
               originX: 'center',
               originY: 'center',
             });
+            obj.set({ left: obj.left - 1 });
+            obj.setCoords();
           } else {
             obj.set({
               angle: target.angle,
@@ -46,6 +48,7 @@ const useSynchronizedRotated = (
               originX: 'left',
               originY: 'top',
             });
+            obj.setCoords();
           }
         }
       });
@@ -68,15 +71,38 @@ const useSynchronizedRotated = (
           if (!shouldSerializeEvent(activeObject.id)) return;
           const matrix = activeObject.calcTransformMatrix();
           const options = fabric.util.qrDecompose(matrix);
+          const flipX = () => {
+            if (activeObject.flipX && e.target.flipX) {
+              return false;
+            }
+
+            return activeObject.flipX || e.target.flipX;
+          };
+
+          const flipY = () => {
+            if (activeObject.flipY && e.target.flipY) {
+              return false;
+            }
+
+            return activeObject.flipY || e.target.flipY;
+          };
+
+          const angle = () => {
+            if (e.target.angle !== 0) {
+              return e.target.angle;
+            }
+
+            return activeObject.angle;
+          };
 
           const target = {
-            angle: options.angle,
+            angle: angle(),
             top: options.translateY,
             left: options.translateX,
             scaleX: options.scaleX,
             scaleY: options.scaleY,
-            flipX: activeObject.flipX,
-            flipY: activeObject.flipY,
+            flipX: flipX(),
+            flipY: flipY(),
           };
 
           const payload = {

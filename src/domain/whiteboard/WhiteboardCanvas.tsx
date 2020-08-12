@@ -244,7 +244,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
             text.on('selected', () => {
               if (text.fontFamily) {
-                //@ts-ignore
                 updateFontColor(text.fill);
                 updateFontFamily(text.fontFamily);
               }

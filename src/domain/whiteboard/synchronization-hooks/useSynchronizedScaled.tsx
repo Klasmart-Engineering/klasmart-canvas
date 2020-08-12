@@ -19,14 +19,13 @@ const useSynchronizedScaled = (
   useEffect(() => {
     const scaled = (id: string, objectType: string, target: any) => {
       if (!shouldHandleRemoteEvent(id)) return;
-
       canvas?.forEachObject(function (obj: any) {
         if (obj.id && obj.id === id) {
           if (objectType === 'activeSelection') {
             obj.set({
               angle: target.angle,
               top: target.top,
-              left: target.left,
+              left: target.left + 1,
               scaleX: target.scaleX,
               scaleY: target.scaleY,
               flipX: target.flipX,
@@ -34,6 +33,7 @@ const useSynchronizedScaled = (
               originX: 'center',
               originY: 'center',
             });
+            obj.set({ left: obj.left - 1 });
             obj.setCoords();
           } else {
             obj.set({
@@ -64,19 +64,43 @@ const useSynchronizedScaled = (
   useEffect(() => {
     const objectScaled = (e: any) => {
       const type = e.target.get('type');
+
       if (type === 'activeSelection') {
         e.target._objects.forEach((activeObject: any) => {
           if (!shouldSerializeEvent(activeObject.id)) return;
           const matrix = activeObject.calcTransformMatrix();
           const options = fabric.util.qrDecompose(matrix);
+          const flipX = () => {
+            if (activeObject.flipX && e.target.flipX) {
+              return false;
+            }
+
+            return activeObject.flipX || e.target.flipX;
+          };
+          const flipY = () => {
+            if (activeObject.flipY && e.target.flipY) {
+              return false;
+            }
+
+            return activeObject.flipY || e.target.flipY;
+          };
+
+          const angle = () => {
+            if (e.target.angle !== 0) {
+              return e.target.angle;
+            }
+
+            return activeObject.angle;
+          };
+
           const target = {
-            angle: options.angle,
+            angle: angle(),
             top: options.translateY,
             left: options.translateX,
             scaleX: options.scaleX,
             scaleY: options.scaleY,
-            flipX: activeObject.flipX,
-            flipY: activeObject.flipY,
+            flipX: flipX(),
+            flipY: flipY(),
           };
 
           const payload = {
@@ -114,7 +138,6 @@ const useSynchronizedScaled = (
         if (canvas) {
           const event = { event: payload, type: 'scaled' };
 
-          // Serialize the event for synchronization
           undoRedoDispatch({
             type: SET,
             payload: (canvas.getObjects() as unknown) as TypedShape[],
