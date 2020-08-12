@@ -112,7 +112,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     floodFill,
   } = useContext(WhiteboardContext);
 
-  const { actions, mouseDown } = useCanvasActions(canvas);
+  const { actions, mouseDown } = useCanvasActions(
+    canvas,
+    undoRedoDispatch,
+    instanceId
+  );
 
   /**
    * Creates Canvas/Whiteboard instance

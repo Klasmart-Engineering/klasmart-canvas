@@ -17,8 +17,6 @@ import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
-import { UNDO, REDO } from '../../domain/whiteboard/reducers/undo-redo';
-
 // Toolbar Element Available Types
 type ToolbarElementTypes =
   | IBasicToolbarButton
@@ -64,9 +62,9 @@ function Toolbar() {
     changeStrokeColor,
     stamp,
     updateStamp,
-    dispatch,
     updateShapesAreSelectable,
-    canvasId,
+    undo,
+    redo,
   }: any = useContext(WhiteboardContext);
 
   /**
@@ -155,11 +153,11 @@ function Toolbar() {
         break;
 
       case ELEMENTS.UNDO_ACTION:
-        dispatch({ type: UNDO, canvasId });
+        undo();
         break;
 
       case ELEMENTS.REDO_ACTION:
-        dispatch({ type: REDO, canvasId });
+        redo();
     }
   }
 
@@ -315,20 +313,20 @@ function Toolbar() {
   }
 
   const toolbarContainerStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    width: "120px",
-  }
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: '120px',
+  };
 
   const toolbarStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    border: "solid 1px #d0d0d0",
-    marginTop: "16px",
-    backgroundColor: "#fff",
-    borderRadius: "8px",
-  }
+    display: 'flex',
+    flexDirection: 'column',
+    border: 'solid 1px #d0d0d0',
+    marginTop: '16px',
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+  };
 
   return (
     <div className="toolbar-container" style={toolbarContainerStyle}>

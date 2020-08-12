@@ -5,6 +5,7 @@ import ICanvasActions from './ICanvasActions';
 import * as shapes from '../shapes/shapes';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { isFreeDrawing, isShape } from '../utils/shapes';
+import { UNDO, REDO, SET } from '../reducers/undo-redo';
 
 export interface ICanvasActionsState {
   actions: ICanvasActions;
@@ -20,7 +21,11 @@ const isLocalObject = (id: string, canvasId: string) => {
   return object[0] === canvasId;
 };
 
-export const useCanvasActions = (canvas?: fabric.Canvas) => {
+export const useCanvasActions = (
+  canvas?: fabric.Canvas,
+  dispatch?: any,
+  canvasId?: string
+) => {
   const {
     shapeIsActive,
     updateFontColor,
@@ -164,11 +169,12 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
           canvas.renderAll();
 
           // TODO: Handle Undo/Redo dispatch.
-          // dispatch({ type: SET, payload: canvas.getObjects() });
+          console.log(dispatch);
+          dispatch({ type: 'CANVAS_SET', payload: canvas.getObjects() });
         }
       });
     },
-    [setCircleSize, setPathSize, setSize, canvas]
+    [setCircleSize, setPathSize, setSize, canvas, dispatch]
   );
 
   /**
@@ -292,7 +298,7 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
         canvas.renderAll();
 
         // TODO: Handle Undo/Redo dispatch.
-        // dispatch({ type: SET, payload: canvas.getObjects() });
+        dispatch({ type: SET, payload: canvas.getObjects() });
       }
     },
     [
@@ -302,6 +308,7 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
       mouseDown,
       shape,
       updateShapeColor,
+      dispatch,
     ]
   );
 
@@ -344,7 +351,6 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
       if (canvas) {
         canvas.selection = selection;
         canvas.forEachObject((object: fabric.Object) => {
-
           // @ts-ignore
           // if (isLocalObject(object.id, userId)) {
           //   object.set({
@@ -440,6 +446,14 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
     canvas?.discardActiveObject().renderAll();
   }, [canvas]);
 
+  const undo = useCallback(() => {
+    dispatch({ type: UNDO, canvasId: canvasId });
+  }, [dispatch, canvasId]);
+
+  const redo = useCallback(() => {
+    dispatch({ type: REDO, canvasId: canvasId });
+  }, [dispatch, canvasId]);
+
   const state = useMemo(() => {
     const actions: ICanvasActions = {
       fillColor,
@@ -451,6 +465,8 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
       eraseObject,
       setCanvasSelection,
       setHoverCursorObjects,
+      undo,
+      redo,
     };
 
     return { actions, mouseDown };
@@ -465,6 +481,8 @@ export const useCanvasActions = (canvas?: fabric.Canvas) => {
     setCanvasSelection,
     setHoverCursorObjects,
     textColor,
+    undo,
+    redo,
   ]);
 
   return state;
