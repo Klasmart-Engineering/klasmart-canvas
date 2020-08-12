@@ -56,18 +56,40 @@ const useSynchronizedMoved = (
     (type: any, e: any) => {
       e.target._objects.forEach((activeObject: any) => {
         if (!shouldSerializeEvent(activeObject.id)) return;
-
         const matrix = activeObject.calcTransformMatrix();
         const options = fabric.util.qrDecompose(matrix);
+        const flipX = () => {
+          if (activeObject.flipX && e.target.flipX) {
+            return false;
+          }
+
+          return activeObject.flipX || e.target.flipX;
+        };
+
+        const flipY = () => {
+          if (activeObject.flipY && e.target.flipY) {
+            return false;
+          }
+
+          return activeObject.flipY || e.target.flipY;
+        };
+
+        const angle = () => {
+          if (e.target.angle !== 0) {
+            return e.target.angle;
+          }
+
+          return activeObject.angle;
+        };
 
         const target = {
-          angle: options.angle,
+          angle: angle(),
           top: options.translateY,
           left: options.translateX,
           scaleX: options.scaleX,
           scaleY: options.scaleY,
-          flipX: activeObject.flipX,
-          flipY: activeObject.flipY,
+          flipX: flipX(),
+          flipY: flipY(),
         };
 
         const payload: ObjectEvent = {
@@ -122,7 +144,7 @@ const useSynchronizedMoved = (
             obj.set({
               angle: target.angle,
               top: target.top,
-              left: target.left,
+              left: target.left + 1,
               scaleX: target.scaleX,
               scaleY: target.scaleY,
               flipX: target.flipX,
@@ -130,6 +152,8 @@ const useSynchronizedMoved = (
               originX: 'center',
               originY: 'center',
             });
+            obj.set({ left: obj.left - 1 });
+            obj.setCoords();
           } else {
             obj.set({
               angle: target.angle,
@@ -142,6 +166,7 @@ const useSynchronizedMoved = (
               originX: 'left',
               originY: 'top',
             });
+            obj.setCoords();
           }
         }
       });

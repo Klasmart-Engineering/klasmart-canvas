@@ -23,9 +23,11 @@ const useSynchronizedModified = (
               fontFamily: target.fontFamily,
               stroke: target.fill,
               top: target.top,
-              left: target.left,
+              left: target.left + 1,
               width: target.width,
             });
+            obj.set({ left: obj.left - 1 });
+            obj.setCoords();
           }
         }
       });
@@ -72,7 +74,7 @@ const useSynchronizedModified = (
     canvas?.on('object:modified', objectModified);
 
     return () => {
-        canvas?.off('object:modified', objectModified);
+      canvas?.off('object:modified', objectModified);
     };
   }, [canvas, eventSerializer, shouldSerializeEvent]);
 };

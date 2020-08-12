@@ -65,6 +65,8 @@ export const WhiteboardProvider = ({
   const [canvasActions, updateCanvasActions] = useState<ICanvasActions>();
 
   const isLocalObject = (id: string, canvasId: string) => {
+    if (!id) return;
+
     const object = id.split(':');
 
     if (!object.length) {

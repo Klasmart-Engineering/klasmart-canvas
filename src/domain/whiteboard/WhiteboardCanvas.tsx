@@ -248,7 +248,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
             text.on('selected', () => {
               if (text.fontFamily) {
-                //@ts-ignore
                 updateFontColor(text.fill);
                 updateFontFamily(text.fontFamily);
               }
@@ -335,7 +334,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas?.forEachObject((object) => {
         // @ts-ignore
         if (isLocalObject(object.id, userId)) {
-          console.log(object);
           object.set({
             evented: false,
             selectable: false,
@@ -702,7 +700,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       // isn't undefined.
       const apply = !isLocalObject(id, userId);
       if (apply) {
-        //console.log(`apply remote event ${id} locally.`);
+        // console.log(`apply remote event ${id} locally.`);
       }
       return apply;
     },
