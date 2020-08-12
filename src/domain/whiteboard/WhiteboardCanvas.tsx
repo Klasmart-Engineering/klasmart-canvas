@@ -762,8 +762,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           const target = (type: string) => {
             return type === 'textbox'
               ? { fill: obj.fill }
-              : { stroke: obj.stroke };
+              : { stroke: obj.stroke, strokeWidth: obj.strokeWidth };
           };
+
           const payload = {
             type,
             target: target(type),
