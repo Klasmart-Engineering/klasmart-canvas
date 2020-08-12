@@ -103,6 +103,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     lineWidth,
     updateCanvasActions,
     shapesAreSelectable,
+    shapesAreEvented,
     eventedObjects,
     floodFillIsActive,
     updatePenColor,
@@ -112,10 +113,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     floodFill,
   } = useContext(WhiteboardContext);
 
-  const {
-    actions,
-    mouseDown,
-  } = useCanvasActions(userId, canvas);
+  const { actions, mouseDown } = useCanvasActions(userId, canvas);
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -189,17 +187,17 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     canvas.getObjects().forEach((object: any) => {
-      if (isLocalObject(object.id, userId)) {
+      if ((object.id && isLocalObject(object.id, userId)) || !object.id) {
         object.set({
           selectable: shapesAreSelectable,
-          evented: shapesAreSelectable,
+          evented: shapesAreSelectable || shapesAreEvented,
         });
       }
     });
 
     canvas.selection = shapesAreSelectable;
     canvas.renderAll();
-  }, [canvas, isLocalObject, shapesAreSelectable, userId]);
+  }, [canvas, isLocalObject, shapesAreEvented, shapesAreSelectable, userId]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -291,9 +289,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     const pathCreated = (e: any) => {
-        e.path.selectable = false;
-        e.path.evented = false;
-        canvas?.renderAll();
+      e.path.selectable = false;
+      e.path.evented = false;
+      e.path.strokeUniform = true;
+      canvas?.renderAll();
     };
 
     if (brushIsActive && canvas) {
@@ -331,25 +330,29 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (shape && shapeIsActive) {
       actions.discardActiveObject();
-      mouseDown(shape, shape.startsWith('filled') ? shapeColor : penColor);
       canvas?.forEachObject((object) => {
         // @ts-ignore
-        if (isLocalObject(object.id, userId)) {
+        if (object.id && isLocalObject(object.id, userId)) {
           object.set({
             evented: false,
             selectable: false,
           });
         }
       });
+
+      actions.addShape(shape);
     }
 
     return () => {
-      if (!textIsActive) {
+      if (!textIsActive && !floodFillIsActive && !shapesAreEvented) {
         canvas?.off('mouse:down');
       }
 
+      if (eraseType !== 'object') {
+        canvas?.off('mouse:up');
+      }
+
       canvas?.off('mouse:move');
-      canvas?.off('mouse:up');
     };
   }, [
     canvas,
@@ -362,6 +365,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     textIsActive,
     isLocalObject,
     userId,
+    floodFillIsActive,
+    shapesAreSelectable,
+    eraseType,
+    shapesAreEvented,
   ]);
 
   /**
@@ -558,7 +565,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (eventedObjects) {
       canvas?.forEachObject((object: any) => {
-        if (isLocalObject(object.id, userId)) {
+        if (object.id && isLocalObject(object.id, userId)) {
           object.set({
             evented: true,
             selectable: true,
@@ -581,16 +588,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const differentStroke = '#c8c8c8';
 
     if (floodFillIsActive) {
-      actions.setCanvasSelection(false);
-      actions.setHoverCursorObjects('default');
-
       canvas?.forEachObject((object: TypedShape) => {
-        object.perPixelTargetFind = isEmptyShape(object) ? false : true;
-        object.evented = true;
+        object.set({
+          perPixelTargetFind: isEmptyShape(object) ? false : true,
+          hoverCursor: 'auto',
+        });
       });
 
-      canvas?.renderAll();
       reorderShapes();
+      canvas?.renderAll();
 
       canvas?.on('mouse:down', (event: fabric.IEvent) => {
         // Click out of any object
@@ -605,24 +611,32 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           originalFill = event.target.fill;
 
           // Change stroke to a provisional color to be identified
-          event.target.set('stroke', differentStroke);
-          event.target.set('fill', differentFill);
+          event.target.set({
+            stroke: differentStroke,
+            fill: differentFill,
+          });
           canvas.renderAll();
 
           clickedColor = getColorInCoord(event.pointer.x, event.pointer.y);
 
           if (clickedColor === differentFill) {
             // If user click inside of the shape
-            event.target.set('fill', floodFill);
-            event.target.set('stroke', originalStroke);
+            event.target.set({
+              fill: floodFill,
+              stroke: originalStroke,
+            });
           } else if (clickedColor === differentStroke) {
             // If user click in the border of the shape
-            event.target.set('stroke', originalStroke);
-            event.target.set('fill', originalFill);
+            event.target.set({
+              stroke: originalStroke,
+              fill: originalFill,
+            });
           } else {
             // If user click outside of the shape
-            event.target.set('stroke', originalStroke);
-            event.target.set('fill', originalFill);
+            event.target.set({
+              stroke: originalStroke,
+              fill: originalFill,
+            });
 
             if (event.e) {
               manageShapeOutsideClick(event);
@@ -631,13 +645,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         }
 
         canvas.renderAll();
-      });
-    } else {
-      actions.setCanvasSelection(true);
-      actions.setHoverCursorObjects('move');
-
-      canvas?.forEachObject((object: TypedShape) => {
-        object.padding = 0;
       });
     }
   }, [
@@ -761,7 +768,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     if (objects && objects.length) {
       objects.forEach((obj: any) => {
-        if (isLocalObject(obj.id, userId)) {
+        if (obj.id && isLocalObject(obj.id, userId)) {
           const type = obj.get('type');
           const target = (type: string) => {
             return type === 'textbox'
@@ -806,7 +813,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     if (objects && objects.length) {
       objects.forEach((obj: any) => {
-        if (isLocalObject(obj.id, userId)) {
+        if (obj.id && isLocalObject(obj.id, userId)) {
           const type = obj.get('type');
 
           if (type === 'textbox') {
@@ -847,8 +854,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (canvas.getActiveObjects().length === 1) {
         canvas.discardActiveObject().renderAll();
       }
-    } else if (canvas) {
-      // actions.setCanvasSelection(true);
     }
 
     return () => {
@@ -912,7 +917,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       id={instanceId}
       style={initialStyle}
       onClick={() => {
-        actions.addShape();
+        actions.addShape(shape);
       }}
     >
       {children}
