@@ -4,6 +4,7 @@ import { fabric } from 'fabric';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET } from '../reducers/undo-redo';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { v4 as uuid } from 'uuid';
 
 const useSynchronizedMoved = (
   canvas: fabric.Canvas | undefined,
@@ -54,6 +55,8 @@ const useSynchronizedMoved = (
 
   const moveSelectedGroup = useCallback(
     (type: any, e: any) => {
+
+      const eventId = uuid();
       e.target._objects.forEach((activeObject: any) => {
         if (!shouldSerializeEvent(activeObject.id)) return;
 
@@ -77,15 +80,13 @@ const useSynchronizedMoved = (
         };
 
         if (canvas) {
-          const event = { event: payload, type: 'activeSelection' };
+          const event = { event: payload, type: 'activeSelection', eventId };
 
           undoRedoDispatch({
             type: SET,
             payload: (canvas.getObjects() as unknown) as TypedShape[],
             canvasId: userId,
             event,
-            otherPayload: undefined,
-            activeObjects: e.target._objects,
           });
         }
 
