@@ -158,13 +158,15 @@ const useSynchronizedAdded = (
         res.evented = false;
 
         canvas?.add(res);
-
-        undoRedoDispatch({
-          type: SET_OTHER,
-          payload: (canvas?.getObjects() as unknown) as TypedShape[],
-          canvasId: userId,
-        });
+        console.log('SHOULD RENDER', res, canvas?.getObjects());
+        canvas?.renderAll();
       }
+
+      undoRedoDispatch({
+        type: SET_OTHER,
+        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        canvasId: userId,
+      });
     };
 
     eventController?.on('added', added);

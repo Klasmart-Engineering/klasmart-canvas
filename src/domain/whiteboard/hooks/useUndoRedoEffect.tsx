@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
+import { v4 as uuidv4 } from 'uuid';
 
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
@@ -92,7 +93,6 @@ export const UndoRedo = (
     }
 
     if (state.actionType === UNDO) {
-      let event = state.events[state.eventIndex];
 
       const payload = {
         id: nextEvent.event.id,
@@ -100,9 +100,10 @@ export const UndoRedo = (
 
       // Serialize the event for synchronization
       if (nextEvent.type === 'added') {
+        // If undoing the creation of an object, remove.
         eventSerializer?.push('removed', payload);
       } else if (nextEvent.type !== 'activeSelection') {
-        let id = event.event.id;
+        let id = nextEvent.event.id;
         let allEvents = [...state.events];
         let futureEvents = allEvents.splice(state.eventIndex + 1);
         futureEvents = futureEvents.filter((e: any) => e.event.id === id);
@@ -112,6 +113,8 @@ export const UndoRedo = (
           futureEvents.length
         );
 
+        // Check if the event was the creation of an object. If not, reconstruct,
+        // if so, remove and add reconstructed object.
         if (reconstructedEvent.type !== 'added') {
           eventSerializer?.push('reconstruct', reconstructedEvent.event);
         } else {

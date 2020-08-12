@@ -2,7 +2,7 @@ import { useCallback, useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
-import { CanvasAction, SET } from '../reducers/undo-redo';
+import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 
 const useSynchronizedMoved = (
@@ -166,7 +166,14 @@ const useSynchronizedMoved = (
               originX: 'left',
               originY: 'top',
             });
-            obj.setCoords();
+            obj.setCoords();          
+        
+  
+            undoRedoDispatch({
+              type: SET_OTHER,
+              payload: (canvas?.getObjects() as unknown) as TypedShape[],
+              canvasId: userId,
+            });
           }
         }
       });
@@ -178,7 +185,7 @@ const useSynchronizedMoved = (
     return () => {
       eventController?.removeListener('moved', moved);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent]);
+  }, [canvas, eventController, shouldHandleRemoteEvent, undoRedoDispatch, userId]);
 };
 
 export default useSynchronizedMoved;
