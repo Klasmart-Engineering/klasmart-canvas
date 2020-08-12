@@ -4,6 +4,7 @@ import { fabric } from 'fabric';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET } from '../reducers/undo-redo';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { v4 as uuid } from 'uuid';
 
 const useSynchronizedMoved = (
   canvas: fabric.Canvas | undefined,
@@ -54,20 +55,44 @@ const useSynchronizedMoved = (
 
   const moveSelectedGroup = useCallback(
     (type: any, e: any) => {
+
+      const eventId = uuid();
       e.target._objects.forEach((activeObject: any) => {
         if (!shouldSerializeEvent(activeObject.id)) return;
-
         const matrix = activeObject.calcTransformMatrix();
         const options = fabric.util.qrDecompose(matrix);
+        const flipX = () => {
+          if (activeObject.flipX && e.target.flipX) {
+            return false;
+          }
+
+          return activeObject.flipX || e.target.flipX;
+        };
+
+        const flipY = () => {
+          if (activeObject.flipY && e.target.flipY) {
+            return false;
+          }
+
+          return activeObject.flipY || e.target.flipY;
+        };
+
+        const angle = () => {
+          if (e.target.angle !== 0) {
+            return e.target.angle;
+          }
+
+          return activeObject.angle;
+        };
 
         const target = {
-          angle: options.angle,
+          angle: angle(),
           top: options.translateY,
           left: options.translateX,
           scaleX: options.scaleX,
           scaleY: options.scaleY,
-          flipX: activeObject.flipX,
-          flipY: activeObject.flipY,
+          flipX: flipX(),
+          flipY: flipY(),
         };
 
         const payload: ObjectEvent = {
@@ -77,15 +102,13 @@ const useSynchronizedMoved = (
         };
 
         if (canvas) {
-          const event = { event: payload, type: 'activeSelection' };
+          const event = { event: payload, type: 'activeSelection', eventId };
 
           undoRedoDispatch({
             type: SET,
             payload: (canvas.getObjects() as unknown) as TypedShape[],
             canvasId: userId,
             event,
-            otherPayload: undefined,
-            activeObjects: e.target._objects,
           });
         }
 
@@ -124,7 +147,7 @@ const useSynchronizedMoved = (
             obj.set({
               angle: target.angle,
               top: target.top,
-              left: target.left,
+              left: target.left + 1,
               scaleX: target.scaleX,
               scaleY: target.scaleY,
               flipX: target.flipX,
@@ -132,6 +155,8 @@ const useSynchronizedMoved = (
               originX: 'center',
               originY: 'center',
             });
+            obj.set({ left: obj.left - 1 });
+            obj.setCoords();
           } else {
             obj.set({
               angle: target.angle,
@@ -144,6 +169,7 @@ const useSynchronizedMoved = (
               originX: 'left',
               originY: 'top',
             });
+            obj.setCoords();
           }
         }
       });

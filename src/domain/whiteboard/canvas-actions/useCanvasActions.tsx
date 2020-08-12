@@ -13,7 +13,8 @@ export interface ICanvasActionsState {
   mouseDown: (specific: string, color?: string) => void;
 }
 
-export const useCanvasActions = (canvas?: fabric.Canvas, userId?: string) => {
+export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
+  console.log(canvasId);
   const {
     shapeIsActive,
     updateFontColor,
@@ -417,7 +418,7 @@ export const useCanvasActions = (canvas?: fabric.Canvas, userId?: string) => {
     let activeObjects = canvas?.getActiveObjects();
 
     canvas?.getObjects().forEach((object: any) => {
-      if ((object.id && isLocalObject(object.id, userId)) || !object.id) {
+      if ((object.id && isLocalObject(object.id, canvasId)) || !object.id) {
         object.set({
           selectable: true,
           evented: true,
@@ -445,7 +446,7 @@ export const useCanvasActions = (canvas?: fabric.Canvas, userId?: string) => {
 
       // if the click is made over an object
       if (
-        (e.target && e.target.id && isLocalObject(e.target.id, userId)) ||
+        (e.target && e.target.id && isLocalObject(e.target.id, canvasId)) ||
         (e.target && !e.target.id)
       ) {
         canvas.remove(e.target);
@@ -472,7 +473,7 @@ export const useCanvasActions = (canvas?: fabric.Canvas, userId?: string) => {
       }
 
       if (
-        (e.target && e.target.id && isLocalObject(e.target.id, userId)) ||
+        (e.target && e.target.id && isLocalObject(e.target.id, canvasId)) ||
         (e.target && !e.target.id)
       ) {
         canvas.remove(e.target);
@@ -491,7 +492,7 @@ export const useCanvasActions = (canvas?: fabric.Canvas, userId?: string) => {
     });
     // If isLocalObject is added in dependencies an infinity loop happens
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, userId]);
+  }, [canvas, canvasId]);
 
   /**
    * Deselect the actual selected object

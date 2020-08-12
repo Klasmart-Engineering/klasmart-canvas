@@ -113,7 +113,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     floodFill,
   } = useContext(WhiteboardContext);
 
-  const { actions, mouseDown } = useCanvasActions(canvas, userId);
+  const { actions, mouseDown } = useCanvasActions(userId, canvas);
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -245,7 +245,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
             text.on('selected', () => {
               if (text.fontFamily) {
-                //@ts-ignore
                 updateFontColor(text.fill);
                 updateFontFamily(text.fontFamily);
               }
@@ -289,6 +288,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Activates or deactivates drawing mode.
    */
   useEffect(() => {
+    const pathCreated = (e: any) => {
+      e.path.selectable = false;
+      e.path.evented = false;
+      canvas?.renderAll();
+    };
+
     if (brushIsActive && canvas) {
       canvas.freeDrawingBrush = new fabric.PencilBrush();
 
@@ -298,11 +303,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.freeDrawingBrush.width = lineWidth;
       canvas.isDrawingMode = true;
 
-      canvas.on('path:created', (e: any) => {
-        e.path.selectable = false;
-        e.path.evented = false;
-        canvas.renderAll();
-      });
+      canvas.on('path:created', pathCreated);
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
     }
@@ -562,8 +563,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     if (eventedObjects) {
-      canvas?.forEachObject((object) => {
-        // @ts-ignore
+      canvas?.forEachObject((object: any) => {
         if (object.id && isLocalObject(object.id, userId)) {
           object.set({
             evented: true,
@@ -772,8 +772,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           const target = (type: string) => {
             return type === 'textbox'
               ? { fill: obj.fill }
-              : { stroke: obj.stroke };
+              : { stroke: obj.stroke, strokeWidth: obj.strokeWidth };
           };
+
           const payload = {
             type,
             target: target(type),
@@ -862,8 +863,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eraseType, canvas, textIsActive]);
+  }, [eraseType, canvas, actions, textIsActive]);
 
   useEffect(() => {
     if (shape && shapeIsActive) {
