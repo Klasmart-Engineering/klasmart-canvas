@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
-import { CanvasAction, SET } from '../reducers/undo-redo';
+import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { v4 as uuidv4 } from 'uuid';
 
 const useSynchronizedRotated = (
   canvas: fabric.Canvas | undefined,
@@ -66,6 +67,9 @@ const useSynchronizedRotated = (
   useEffect(() => {
     const objectRotated = (e: any) => {
       const type = e.target.get('type');
+      const eventId: string = uuidv4();
+      const events: any[] = [];
+
       if (type === 'activeSelection') {
         e.target._objects.forEach((activeObject: any) => {
           if (!shouldSerializeEvent(activeObject.id)) return;
@@ -111,8 +115,47 @@ const useSynchronizedRotated = (
             id: activeObject.id,
           };
 
+          const event = { event: payload, type: 'activeSelection', eventId };
+          events.push(event);
+
           eventSerializer?.push('rotated', payload);
         });
+
+        let mappedObjects = canvas?.getObjects().map((object: any) => {
+          
+          if (!object.group) {
+            return object.toJSON(['strokeUniform', 'id']);
+          }
+          const matrix = object.calcTransformMatrix();
+          const options = fabric.util.qrDecompose(matrix);
+          const transformed = object.toJSON(['strokeUniform', 'id']);
+          let top = !options.angle ? (object.group.height / 2 + object.top) + object.group.top : options.translateY;
+          let left = !options.angle ? (object.group.width / 2 + object.left) + object.group.left : options.translateX;
+  
+          events.forEach((event: any) => {
+            if (event.event.id === object.id) {
+              event.event.target.top = top;
+              event.event.target.left = left;
+            }
+          });
+  
+          return {
+            ...transformed,
+            angle: options.angle,
+            top,
+            left,
+            scaleX: options.scaleX,
+            scaleY: options.scaleY,
+          }
+        });
+
+        undoRedoDispatch({
+          type: SET_GROUP,
+          payload: mappedObjects as unknown as fabric.Object[],
+          canvasId: userId,
+          event: events,
+        });
+
       } else {
         if (!e.target.id) {
           return;

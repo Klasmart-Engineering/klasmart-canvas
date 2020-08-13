@@ -13,19 +13,26 @@ const useSynchronizedReconstruct = (
   useEffect(() => {
 
     const reconstruct = (id: string, target: any) => {
-        if (!shouldHandleRemoteEvent(id)) return;
+      if (!shouldHandleRemoteEvent(id)) return;
 
       canvas?.forEachObject(function (obj: any) {
         if (obj.id !== id) return;
-        
           canvas?.remove(obj);
           canvas.renderAll();
           const oObject = obj.toJSON(['strokeUniform', 'id']);
-          let nObject = { ...oObject, ...JSON.parse(target.param) };
+          const targetParam = JSON.parse(target.param);
+          let nObject = { ...oObject, ...targetParam };
 
           switch (target.objectType) {
             case 'path': {
+              if (!targetParam.angle) {
+                console.log(targetParam, nObject);
+                nObject = { ...nObject, angle: 0 };
+              }
+              
               fabric.Path.fromObject(nObject, (path: any) => {
+                path.originX = 'left';
+                path.originY = 'top';
                 canvas.add(path);
               });
               break;
@@ -39,6 +46,8 @@ const useSynchronizedReconstruct = (
               }
 
               fabric.Textbox.fromObject(nObject, (path: any) => {
+                path.originX = 'left';
+                path.originY = 'top';
                 canvas.add(path);
               });
               break;

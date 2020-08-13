@@ -761,8 +761,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     if (objects && objects.length) {
       objects.forEach((obj: any) => {
+        const type = obj.get('type');
+
+        if (
+          (type === 'path' && obj.stroke === penColor) ||
+          (type === 'textbox' && obj.fill === fontColor)
+        ) {
+          return;
+        }
+
         if (isLocalObject(obj.id, userId)) {
-          const type = obj.get('type');
           const target = (type: string) => {
             return type === 'textbox'
               ? { fill: obj.fill }

@@ -168,8 +168,6 @@ export const useCanvasActions = (
           shape.setCoords();
           canvas.renderAll();
 
-          // TODO: Handle Undo/Redo dispatch.
-          console.log(dispatch);
           dispatch({ type: 'CANVAS_SET', payload: canvas.getObjects() });
         }
       });

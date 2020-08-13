@@ -30,15 +30,13 @@ const objectReconstructor = (id: string, events: any, numToRemove: number) => {
     reconstructedTarget = { ...reconstructedTarget, ...object.target };
   });
 
+  console.log(reconstructedTarget);
+
   return {
     ...filtered[filtered.length - 1],
     event: { ...filtered[0].event, target: reconstructedTarget },
   };
 };
-
-// const getPrevIndex = (eventId: string, events: any) => {
-
-// }
 
 const undoHandler = (event: any, state: any, eventSerializer: any) => {
   let id = event.event.id;
@@ -51,16 +49,27 @@ const undoHandler = (event: any, state: any, eventSerializer: any) => {
     futureEvents.length
   );
 
-  eventSerializer?.push('removed', reconstructedEvent.event);
-  eventSerializer?.push('added', reconstructedEvent.event);
+  if (reconstructedEvent.type !== 'added') {
+    eventSerializer?.push('reconstruct', reconstructedEvent.event);
+  } else {
+    eventSerializer?.push('removed', { id: reconstructedEvent.event.id });
+    eventSerializer?.push('added', reconstructedEvent.event);
+  }
+}
 
-  // if (reconstructedEvent.type !== 'added') {
-  //   console.log(reconstructedEvent);
-  //   eventSerializer?.push('reconstruct', reconstructedEvent.event);
-  // } else {
-  //   eventSerializer?.push('removed', payload);
-  //   eventSerializer?.push('added', reconstructedEvent.event);
-  // }
+const redoHandler = (event: any, state: any, eventSerializer: any) => {
+  let id = event.event.id;
+  let allEvents = [...state.events];
+  let futureEvents = allEvents.splice(state.eventIndex + 1);
+  futureEvents = futureEvents.filter((e: any) => e.event.id === id);
+  const reconstructedEvent = objectReconstructor(
+    id,
+    state.events,
+    futureEvents.length
+  );
+
+
+  eventSerializer?.push('reconstruct', reconstructedEvent.event);
 }
 
 /**
@@ -85,15 +94,18 @@ export const UndoRedo = (
 
     // Rerenders canvas when an undo or redo event has been executed.
     if (
-      (state.actionType === UNDO && nextEvent.type !== 'activeSelection') ||
+      (state.actionType === UNDO) ||
       state.actionType === REDO
     ) {
       canvas.clear();
-      canvas.loadFromJSON(state.activeState, () => {});
+      console.log(JSON.parse(state.activeState as string));
+      const mapped = JSON.parse(state.activeState as string).objects.map((object: any) => {
+        return { ...object, fromJSON: true };
+      });
+      canvas.loadFromJSON(JSON.stringify({ objects: mapped }), (o: any, object: any) => {});
     }
 
     if (state.actionType === UNDO) {
-
       const payload = {
         id: nextEvent.event.id,
       };
@@ -113,14 +125,7 @@ export const UndoRedo = (
           futureEvents.length
         );
 
-        // Check if the event was the creation of an object. If not, reconstruct,
-        // if so, remove and add reconstructed object.
-        if (reconstructedEvent.type !== 'added') {
-          eventSerializer?.push('reconstruct', reconstructedEvent.event);
-        } else {
-          eventSerializer?.push('removed', payload);
-          eventSerializer?.push('added', reconstructedEvent.event);
-        }
+        eventSerializer?.push('reconstruct', reconstructedEvent.event);
       } else {
         let groupedEvents = state.events.filter((event: any) => (event.eventId === nextEvent.eventId));
         groupedEvents.forEach((singleEvent: any) => {
@@ -132,7 +137,7 @@ export const UndoRedo = (
 
       if (event.type === 'added') {
         eventSerializer?.push('added', event.event);
-      } else {
+      } else if (event.type !== 'activeSelection') {
         let id = event.event.id;
         let allEvents = [...state.events];
         let futureEvents = allEvents.splice(state.eventIndex + 1);
@@ -144,6 +149,14 @@ export const UndoRedo = (
         );
 
         eventSerializer?.push(reconstructed.type, reconstructed.event);
+      } else {
+        let groupedEvents = state.events.filter((e: any) => (e.eventId === event.eventId));
+        groupedEvents.forEach((singleEvent: any, i: number) => {
+          if (i === 0) {
+            console.log(singleEvent);
+          }
+          redoHandler(singleEvent, state, eventSerializer);
+        });
       }
     }
   }, [state, canvas, dispatch, eventSerializer]);

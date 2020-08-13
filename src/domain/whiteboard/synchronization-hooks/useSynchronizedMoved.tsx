@@ -2,8 +2,9 @@ import { useCallback, useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
-import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
+import { CanvasAction, SET, SET_OTHER, SET_GROUP } from '../reducers/undo-redo';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { v4 as uuidv4 } from 'uuid';
 
 const useSynchronizedMoved = (
   canvas: fabric.Canvas | undefined,
@@ -54,10 +55,14 @@ const useSynchronizedMoved = (
 
   const moveSelectedGroup = useCallback(
     (type: any, e: any) => {
+      const eventId: string = uuidv4();
+      const events: any[] = [];
+
       e.target._objects.forEach((activeObject: any) => {
         if (!shouldSerializeEvent(activeObject.id)) return;
         const matrix = activeObject.calcTransformMatrix();
         const options = fabric.util.qrDecompose(matrix);
+
         const flipX = () => {
           if (activeObject.flipX && e.target.flipX) {
             return false;
@@ -98,18 +103,43 @@ const useSynchronizedMoved = (
           id: activeObject.id,
         };
 
-        if (canvas) {
-          const event = { event: payload, type: 'activeSelection' };
-
-          undoRedoDispatch({
-            type: SET,
-            payload: (canvas.getObjects() as unknown) as TypedShape[],
-            canvasId: userId,
-            event,
-          });
-        }
+        const event = { event: payload, type: 'activeSelection', eventId };
+        events.push(event);
 
         eventSerializer?.push('moved', payload);
+      });
+      
+      let mappedObjects = canvas?.getObjects().map((object: any) => {
+        if (!object.group) {
+          return object.toJSON(['strokeUniform', 'id']);
+        }
+        const matrix = object.calcTransformMatrix();
+        const options = fabric.util.qrDecompose(matrix);
+        const transformed = object.toJSON(['strokeUniform', 'id']);
+        let top = (object.group.height / 2 + object.top) + object.group.top;
+        let left = (object.group.width / 2 + object.left) + object.group.left;
+
+        events.forEach((event: any) => {
+          if (event.event.id === object.id) {
+            event.event.target.top = top;
+            event.event.target.left = left;
+          }
+        });
+
+        return {
+          ...transformed,
+          top,
+          left,
+          scaleX: options.scaleX,
+          scaleY: options.scaleY,
+        }
+      });
+
+      undoRedoDispatch({
+        type: SET_GROUP,
+        payload: mappedObjects as unknown as fabric.Object[],
+        canvasId: userId,
+        event: events,
       });
     },
     [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]
@@ -140,6 +170,7 @@ const useSynchronizedMoved = (
 
       canvas?.forEachObject(function (obj: any) {
         if (obj.id && obj.id === id) {
+
           if (objectType === 'activeSelection') {
             obj.set({
               angle: target.angle,
@@ -156,23 +187,22 @@ const useSynchronizedMoved = (
             obj.setCoords();
           } else {
             obj.set({
-              angle: target.angle,
+              angle: target.angle || 0,
               top: target.top,
               left: target.left,
-              scaleX: target.scaleX,
-              scaleY: target.scaleY,
-              flipX: target.flipX,
-              flipY: target.flipY,
+              scaleX: target.scaleX || 1,
+              scaleY: target.scaleY || 1,
+              flipX: target.flipX || false,
+              flipY: target.flipY || false,
               originX: 'left',
               originY: 'top',
             });
-            obj.setCoords();          
-        
+            obj.setCoords();   
   
             undoRedoDispatch({
               type: SET_OTHER,
               payload: (canvas?.getObjects() as unknown) as TypedShape[],
-              canvasId: userId,
+              canvasId: userId
             });
           }
         }

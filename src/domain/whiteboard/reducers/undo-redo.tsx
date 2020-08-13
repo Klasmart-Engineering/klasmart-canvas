@@ -4,6 +4,7 @@ import { TypedShape } from '../../../interfaces/shapes/shapes';
 export const UNDO = 'CANVAS_UNDO';
 export const REDO = 'CANVAS_REDO';
 export const SET = 'CANVAS_SET';
+export const SET_GROUP = 'CANVAS_SET_GROUP';
 export const MODIFY = 'CANVAS_MODIFY';
 export const UPDATE_OTHER = 'CANVAS_UPDATE_OTHER';
 export const SET_OTHER = 'CANVAS_SET_OTHER';
@@ -142,13 +143,24 @@ const determineNewIndex = (newIndex: number, eventId: string, events: any) => {
   let i = newIndex;
 
   for (i; i >= 0; i--) {
-    console.log(events[i], eventId);
     if (events[i].eventId !== eventId) {
       return i;
     }
   }
 
   return -1;
+}
+
+const determineNewRedoIndex = (newIndex: number, eventId: string, events: any) => {
+  let i = newIndex;
+
+  for (i; i < events.length; i++) {
+    if (events[i].eventId !== eventId) {
+      return i - 1;
+    }
+  }
+
+  return events.length - 1;
 }
 
 /**
@@ -167,12 +179,6 @@ const reducer = (
       if (!action.event) {
         return state;
       }
-
-      console.log('action: ', action);
-
-      // if (!isLocalObject(action.event.event.id, action.canvasId as string)) {
-      //   debugger;
-      // }
 
       let states = [...state.states];
       let events = [...state.events];
@@ -217,14 +223,78 @@ const reducer = (
       } else if (state.eventIndex < 0) {
         events = [];
       }
-
-      if (action.event) {
+      
+      if (action.event && !Array.isArray(action.event)) {
         events = [...events, action.event];
         stateItems = {
           ...stateItems,
           events,
           eventIndex: events.length - 1,
         };
+      } else if (action.event && Array.isArray(action.event)) {
+        events = [...events, ...action.event];
+        stateItems = {
+         ...stateItems,
+         events,
+         eventIndex: events.length - 1,
+        }
+      }
+
+      return stateItems;
+    }
+
+    case SET_GROUP: {
+      let states = [...state.states];
+      let events = [...state.events];
+      const selfItems = action.payload?.filter((object: any) =>
+        isLocalObject(object.id, action.canvasId as string)
+      ) as [fabric.Object | TypedShape];
+      const otherObjects = action.payload?.filter(
+        (object: any) => !isLocalObject(object.id, action.canvasId as string)
+      ) as [fabric.Object | TypedShape];
+      const currentState = JSON.stringify({
+          objects: [
+          ...selfItems,
+          ...otherObjects,
+        ] as [fabric.Object | TypedShape]
+      });
+
+      // This block removed future states if a new event has
+      // been created after an undo.
+      if (
+        state.activeStateIndex !== null &&
+        state.activeStateIndex + 1 < state.states.length
+      ) {
+        states.splice(state.activeStateIndex + 1, 9e9);
+      } else if (state.activeStateIndex === null) {
+        states = [];
+      }
+
+      // Formats and creates new state.
+      const mappedSelfState = JSON.stringify({ objects: selfItems });
+      states = [...states, mappedSelfState];
+
+      let stateItems = {
+        ...state,
+        states,
+        actionType: SET,
+        activeStateIndex: states.length - 1,
+        activeState: currentState,
+        otherObjects: JSON.stringify({ objects: otherObjects }),
+      };
+
+      // Removes future events if a new event has been created after an undo.
+      if (state.eventIndex >= 0 && state.eventIndex + 1 < state.events.length) {
+        events.splice(state.eventIndex + 1, 9e9);
+      } else if (state.eventIndex < 0) {
+        events = [];
+      }
+
+      events = [...events, ...action.event];
+      stateItems = {
+        ...stateItems,
+        events,
+        eventIndex: events.length - 1,
       }
 
       return stateItems;
@@ -236,10 +306,11 @@ const reducer = (
         return state;
       }
 
+      let eventIndex = state.eventIndex - 1;
       if (state.events[state.eventIndex - 1] && state.events[state.eventIndex - 1].eventId) {
         // This is a grouped event action, determine previous
         // event index prior to grouped event.
-        determineNewIndex(state.eventIndex - 1, state.events[state.eventIndex - 1].eventId, state.events);
+        eventIndex = determineNewIndex(state.eventIndex - 1, state.events[state.eventIndex - 1].eventId, state.events);
       }
 
       const activeStateIndex =
@@ -263,10 +334,9 @@ const reducer = (
         actionType: UNDO,
         activeStateIndex,
         activeState,
-        eventIndex: state.eventIndex - 1,
+        eventIndex,
       };
 
-      console.log('state: ', newState);
       return newState;
     }
 
@@ -282,6 +352,13 @@ const reducer = (
 
       if (!state.events.length) {
         return state;
+      }
+
+      let eventIndex = state.eventIndex + 1;
+      if (state.events[state.eventIndex + 1] && state.events[state.eventIndex + 1].eventId) {
+        // This is a grouped event action, determine previous
+        // event index prior to grouped event.
+        eventIndex = determineNewRedoIndex(state.eventIndex + 1, state.events[state.eventIndex + 1].eventId, state.events);
       }
 
       const activeStateIndex =
@@ -305,7 +382,7 @@ const reducer = (
         actionType: REDO,
         activeStateIndex,
         activeState,
-        eventIndex: state.eventIndex + 1,
+        eventIndex,
       };
     }
 

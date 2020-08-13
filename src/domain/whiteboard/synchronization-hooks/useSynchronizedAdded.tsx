@@ -34,9 +34,15 @@ const useSynchronizedAdded = (
         PainterEvents.pathCreated(target, e.path.id, userId) as ObjectEvent
       );
 
+      const stateTarget = { ...target, top: e.path.top, left: e.path.left };
+
       if (canvas) {
         const event = {
-          event: PainterEvents.pathCreated(target, e.path.id, userId),
+          event: {
+            id: e.path.id,
+            target: stateTarget,
+            type: 'path',
+          },
           type: 'added',
         };
 
@@ -60,6 +66,7 @@ const useSynchronizedAdded = (
   useEffect(() => {
     const objectAdded = (e: any) => {
       if (!e.target.id) return;
+      if (e.target.fromJSON) return;
       if (!shouldSerializeEvent(e.target.id)) return;
 
       const type = e.target.get('type');
@@ -81,7 +88,7 @@ const useSynchronizedAdded = (
 
       const payload = {
         type,
-        target,
+        target : { ...target, top: e.target.top, left: e.target.left },
         id: e.target.id,
       };
 
@@ -90,7 +97,7 @@ const useSynchronizedAdded = (
 
         undoRedoDispatch({
           type: SET,
-          payload: (canvas.getObjects() as unknown) as TypedShape[],
+          payload: (canvas?.getObjects() as unknown) as TypedShape[],
           canvasId: userId,
           event,
         });
