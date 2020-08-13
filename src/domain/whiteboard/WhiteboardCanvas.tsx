@@ -13,10 +13,7 @@ import React, {
 } from 'react';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { WhiteboardContext } from './WhiteboardContext';
-
-// @ts-ignore
 import FontFaceObserver from 'fontfaceobserver';
-
 import { useCanvasActions } from './canvas-actions/useCanvasActions';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 import useSynchronizedAdded from './synchronization-hooks/useSynchronizedAdded';
@@ -35,6 +32,8 @@ import useSynchronizedScaled from './synchronization-hooks/useSynchronizedScaled
 import useSynchronizedSkewed from './synchronization-hooks/useSynchronizedSkewed';
 import useSynchronizedReconstruct from './synchronization-hooks/useSynchronizedReconstruct';
 import { SET } from './reducers/undo-redo';
+import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
+import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -119,7 +118,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Creates Canvas/Whiteboard instance
    */
   useEffect(() => {
-    // @ts-ignore
     const canvasInstance = new fabric.Canvas(instanceId, {
       backgroundColor: undefined,
       isDrawingMode: false,
@@ -298,8 +296,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (brushIsActive && canvas) {
       canvas.freeDrawingBrush = new fabric.PencilBrush();
 
-      //@ts-ignore
-      canvas.freeDrawingBrush.canvas = canvas;
+      (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
       canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
       canvas.freeDrawingBrush.width = lineWidth;
       canvas.isDrawingMode = true;
@@ -330,8 +327,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (shape && shapeIsActive) {
       actions.discardActiveObject();
-      canvas?.forEachObject((object) => {
-        // @ts-ignore
+      canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
           object.set({
             evented: false,

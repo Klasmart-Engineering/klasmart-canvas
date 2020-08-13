@@ -5,6 +5,7 @@ import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
 import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -138,9 +139,7 @@ const useSynchronizedAdded = (
           selectable: false,
         });
 
-        // @ts-ignore
-        text.id = id;
-
+        (text as ICanvasObject).id = id;
         canvas?.add(text);
         return;
       }
@@ -152,8 +151,7 @@ const useSynchronizedAdded = (
 
         // Convert Points to SVG Path
         const res = pencil.createPath(target.path);
-        // @ts-ignore
-        res.id = id;
+        (res as ICanvasObject).id = id;
         res.selectable = false;
         res.evented = false;
         res.strokeUniform = true;
