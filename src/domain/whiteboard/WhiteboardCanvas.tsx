@@ -34,6 +34,9 @@ import useSynchronizedReconstruct from './synchronization-hooks/useSynchronizedR
 import { SET } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
+import { IEvent, ITextOptions } from 'fabric/fabric-impl';
+import { PainterEvent } from './event-serializer/PainterEvent';
+import { Key } from 'readline';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -45,7 +48,7 @@ import { ICanvasObject } from '../../interfaces/objects/canvas-object';
  * @field filterUsers: Only render remote events originating from userId's in this list.
  */
 export type Props = {
-  children?: ReactChild | ReactChildren | null | any;
+  children?: ReactChild | ReactChildren | null;
   instanceId: string;
   userId: string;
   initialStyle?: CSSProperties;
@@ -184,7 +187,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       return;
     }
 
-    canvas.getObjects().forEach((object: any) => {
+    canvas.getObjects().forEach((object: ICanvasObject) => {
       if ((object.id && isLocalObject(object.id, userId)) || !object.id) {
         object.set({
           selectable: shapesAreSelectable,
@@ -242,8 +245,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             }
 
             text.on('selected', () => {
-              if (text.fontFamily) {
-                updateFontColor(text.fill);
+              if (text.fill && text.fontFamily) {
+                updateFontColor(text.fill.toString());
                 updateFontFamily(text.fontFamily);
               }
             });
@@ -286,7 +289,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Activates or deactivates drawing mode.
    */
   useEffect(() => {
-    const pathCreated = (e: any) => {
+    const pathCreated = (e: IEvent) => {
       e.path.selectable = false;
       e.path.evented = false;
       e.path.strokeUniform = true;
@@ -374,7 +377,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
   const keyDownHandler = useCallback(
     (e: {
-      key: any;
+      key: string;
       which?: number;
       ctrlKey?: boolean;
       shiftKey?: boolean;
@@ -394,8 +397,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (e.key === 'Backspace' && canvas) {
         const objects = canvas.getActiveObjects();
 
-        objects.forEach((object: any) => {
-          if (!object?.isEditing) {
+        objects.forEach((object: fabric.Object) => {
+          if (!(object as ITextOptions)?.isEditing) {
             canvas.remove(object);
             canvas.discardActiveObject().renderAll();
           }
@@ -425,7 +428,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             canvas.requestRenderAll();
           }
         })
-        .catch((e: any) => {
+        .catch((e: IEvent) => {
           console.log(e);
         });
     },
@@ -560,7 +563,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     if (eventedObjects) {
-      canvas?.forEachObject((object: any) => {
+      canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
           object.set({
             evented: true,
@@ -683,8 +686,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       const apply = isLocalObject(id, userId);
       if (apply) {
         //console.log(`send local event ${id} to remote`);
+        return apply;
       }
-      return apply;
+
+      return false;
     },
     [isLocalObject, userId]
   );
@@ -763,7 +768,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const objects = canvas?.getActiveObjects();
 
     if (objects && objects.length) {
-      objects.forEach((obj: any) => {
+      objects.forEach((obj: ICanvasObject) => {
         if (obj.id && isLocalObject(obj.id, userId)) {
           const type = obj.get('type');
           const target = (type: string) => {

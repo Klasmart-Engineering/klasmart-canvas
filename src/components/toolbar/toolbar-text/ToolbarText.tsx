@@ -6,7 +6,7 @@ interface IToolbarText {
   showInput: boolean;
   text: string;
   updateText: (value: string) => void;
-  writeText: (e: any) => void;
+  writeText: (e: React.ChangeEvent | React.KeyboardEvent) => void;
 }
 
 /**

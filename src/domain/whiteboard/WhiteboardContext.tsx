@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useState } from 'react';
+import React, { createContext, useCallback, useState, Context } from 'react';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
@@ -17,8 +17,9 @@ import { useLineWidth } from './hooks/useLineWidth';
 import { useFloodFill } from './hooks/useFloodFill';
 import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 import ICanvasActions from './canvas-actions/ICanvasActions';
+import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 
-export const WhiteboardContext = createContext<any>(null);
+export let WhiteboardContext: Context<IWhiteboardContext>;
 
 export const WhiteboardProvider = ({
   children,
@@ -76,7 +77,7 @@ export const WhiteboardProvider = ({
 
     return object[0] === canvasId;
   };
-  const [eventedObjects, updateEventedObjects] = useState('true');
+  const [eventedObjects, updateEventedObjects] = useState(true);
 
   // Temporary code to get undo / redo working while there are two boards
   // on the view.
@@ -209,6 +210,8 @@ export const WhiteboardProvider = ({
     eraseObject: eraseObjectAction,
     changeStrokeColor: changeStrokeColorAction,
   };
+
+  WhiteboardContext = createContext<IWhiteboardContext>(value);
 
   return (
     <WhiteboardContext.Provider value={value}>

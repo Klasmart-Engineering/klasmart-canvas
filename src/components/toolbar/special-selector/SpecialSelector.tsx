@@ -72,8 +72,8 @@ function SpecialSelector(props: ISpecialSelector) {
    * Is executed when the selector changes its value
    * @param {string} value - new value to set in selector
    */
-  function handleSelect(option: any) {
-    onChange(id, option.value);
+  function handleSelect(option: IStyleOption) {
+    onChange(id, option.value.toString());
     setShowOptions(false);
   }
 

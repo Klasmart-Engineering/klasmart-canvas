@@ -17,8 +17,8 @@ import { PaintEventSerializer } from './event-serializer/PaintEventSerializer';
 export const NormalizeCoordinates = 1000;
 
 type Props = {
-  children?: ReactChild | ReactChildren | null | Element[] | any;
-  simulateNetworkSynchronization?: boolean
+  children?: ReactChild | ReactChildren | null | Element[];
+  simulateNetworkSynchronization?: boolean;
 };
 
 interface IEventSerializerState {
@@ -38,7 +38,8 @@ const Context = createContext<IEventSerializerContext>({
 
 // NOTE: This class was added to allow demonstrating synchronizing whiteboard events without any network or server.
 export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
-  children, simulateNetworkSynchronization
+  children,
+  simulateNetworkSynchronization,
 }: Props): JSX.Element => {
   const [eventSerializer] = useState<PaintEventSerializer>(
     new PaintEventSerializer(NormalizeCoordinates)

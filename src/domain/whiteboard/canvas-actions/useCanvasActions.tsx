@@ -14,7 +14,7 @@ export interface ICanvasActionsState {
 }
 
 export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
-  console.log(canvasId);
+  console.log('que jais', canvasId);
   const {
     shapeIsActive,
     updateFontColor,
@@ -221,8 +221,8 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
       }
 
       let resize: boolean = false;
-      let startPoint: fabric.Point | null = null;
-      let shape: TypedShape | null = null;
+      let startPoint: fabric.Point;
+      let shape: TypedShape;
 
       /**
        * Set the new size of a recently created shape
@@ -389,6 +389,7 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
       canvas.backgroundColor = '#ffffff';
       canvas.renderAll();
     }
+
     closeModal();
   }, [canvas, closeModal]);
 
@@ -439,7 +440,6 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
 
     // When mouse down eraser is able to remove objects
     canvas?.on('mouse:down', (e: any) => {
-      console.log('mouse down');
       if (eraser) {
         return false;
       }
@@ -467,7 +467,6 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
 
     // When mouse is over an object
     canvas?.on('mouse:over', (e: any) => {
-      console.log('mouse over');
       if (!eraser) {
         return false;
       }
@@ -483,7 +482,6 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
 
     // When mouse up eraser is unable to remove objects
     canvas?.on('mouse:up', () => {
-      console.log('mouse up');
       if (!eraser) {
         return false;
       }

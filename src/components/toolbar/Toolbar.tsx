@@ -16,8 +16,7 @@ import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elem
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
-
-import { UNDO, REDO } from '../../domain/whiteboard/reducers/undo-redo';
+// import { UNDO, REDO } from '../../domain/whiteboard/reducers/undo-redo';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -64,11 +63,11 @@ function Toolbar() {
     changeStrokeColor,
     stamp,
     updateStamp,
-    dispatch,
+    // dispatch,
     updateShapesAreSelectable,
     updateShapesAreEvented,
-    canvasId,
-  }: any = useContext(WhiteboardContext);
+    // canvasId,
+  } = useContext(WhiteboardContext);
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -160,11 +159,11 @@ function Toolbar() {
         break;
 
       case ELEMENTS.UNDO_ACTION:
-        dispatch({ type: UNDO, canvasId });
+        // dispatch({ type: UNDO, canvasId });
         break;
 
       case ELEMENTS.REDO_ACTION:
-        dispatch({ type: REDO, canvasId });
+      // dispatch({ type: REDO, canvasId });
     }
   }
 
@@ -184,7 +183,7 @@ function Toolbar() {
         break;
 
       case ELEMENTS.LINE_WIDTH_TOOL:
-        updateLineWidth(option);
+        updateLineWidth(Number(option));
         break;
 
       case ELEMENTS.FLOOD_FILL_TOOL:
@@ -210,7 +209,7 @@ function Toolbar() {
    * @param {number} index - index that the element has in the ToolbarSection
    * @param {string} specific (optional) - specific value/option to use
    */
-  function handleToolsElementAction(tool: string, specific?: string) {
+  function handleToolsElementAction(tool: string, specific: string) {
     updateEraseType(null);
 
     switch (tool) {
@@ -294,13 +293,13 @@ function Toolbar() {
         return pointer;
 
       case ELEMENTS.ERASE_TYPE_TOOL:
-        return eraseType;
+        return eraseType || 'object';
 
       case ELEMENTS.LINE_TYPE_TOOL:
         return penLine;
 
       case ELEMENTS.LINE_WIDTH_TOOL:
-        return lineWidth;
+        return lineWidth.toString();
 
       case ELEMENTS.FLOOD_FILL_TOOL:
         return floodFill;
@@ -442,7 +441,7 @@ function createToolbarSelector(
   active: boolean,
   onClick: (tool: string) => void,
   onChange: (tool: string, value: string) => void,
-  onAction: (tool: string) => void,
+  onAction: (tool: string, value: string) => void,
   selectedValue: string,
   colorPalette?: IColorPalette
 ): JSX.Element {
