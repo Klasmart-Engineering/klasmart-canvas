@@ -7,7 +7,7 @@ const useSynchronizedColorChanged = (
   canvas: fabric.Canvas | undefined,
   userId: string,
   shouldHandleRemoteEvent: (id: string) => boolean,
-  undoRedoDispatch: React.Dispatch<CanvasAction>,
+  undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
   const {
     state: { eventController },
@@ -26,16 +26,17 @@ const useSynchronizedColorChanged = (
           } else {
             obj.set({
               stroke: target.stroke,
+              strokeWidth: target.strokeWidth,
             });
           }
         }
       });
 
       undoRedoDispatch({
-          type: SET_OTHER,
-          payload: (canvas?.getObjects() as unknown) as TypedShape[],
-          canvasId: userId,
-        });
+        type: SET_OTHER,
+        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        canvasId: userId,
+      });
 
       canvas?.renderAll();
     };
@@ -45,7 +46,13 @@ const useSynchronizedColorChanged = (
     return () => {
       eventController?.removeListener('colorChanged', colorChanged);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent, undoRedoDispatch, userId]);
+  }, [
+    canvas,
+    eventController,
+    shouldHandleRemoteEvent,
+    undoRedoDispatch,
+    userId,
+  ]);
 };
 
 export default useSynchronizedColorChanged;

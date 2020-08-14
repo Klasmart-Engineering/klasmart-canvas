@@ -3,7 +3,6 @@ import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
 import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
-import { v4 as uuidv4 } from 'uuid';
 
 const useSynchronizedRotated = (
   canvas: fabric.Canvas | undefined,

@@ -6,17 +6,19 @@ import React from 'react';
  * @param children - content that the TollbarSection will have inside
  */
 function ToolbarSection({ children }: any) {
-
   const toolbarSectionStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    border: "solid 1px #d0d0d0",
-    marginTop: "16px",
-    backgroundColor: "#fff",
-    borderRadius: "8px",
-  }
+    display: 'flex',
+    flexDirection: 'column',
+    border: 'solid 1px #d0d0d0',
+    backgroundColor: '#fff',
+    borderRadius: '8px',
+  };
 
-  return <div className="toolbar-section" style={toolbarSectionStyle}>{children}</div>;
+  return (
+    <div className="toolbar-section" style={toolbarSectionStyle}>
+      {children}
+    </div>
+  );
 }
 
 export default ToolbarSection;

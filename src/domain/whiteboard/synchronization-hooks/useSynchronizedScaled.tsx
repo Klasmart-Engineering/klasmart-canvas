@@ -70,6 +70,7 @@ const useSynchronizedScaled = (
           if (!shouldSerializeEvent(activeObject.id)) return;
           const matrix = activeObject.calcTransformMatrix();
           const options = fabric.util.qrDecompose(matrix);
+
           const flipX = () => {
             if (activeObject.flipX && e.target.flipX) {
               return false;

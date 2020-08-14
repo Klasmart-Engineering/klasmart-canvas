@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
-import { v4 as uuidv4 } from 'uuid';
 
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
@@ -85,7 +84,6 @@ const redoHandler = (event: any, state: any, eventSerializer: any) => {
 export const UndoRedo = (
   canvas: any,
   eventSerializer: any,
-  canvasId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
 
