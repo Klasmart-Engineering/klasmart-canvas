@@ -773,13 +773,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       objects.forEach((obj: any) => {
         const type = obj.get('type');
 
-        if (
-          (type === 'path' && obj.stroke === penColor) ||
-          (type === 'textbox' && obj.fill === fontColor)
-        ) {
-          return;
-        }
-
         if (obj.id && isLocalObject(obj.id, userId)) {
           const target = (type: string) => {
             return type === 'textbox'
@@ -792,15 +785,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             target: target(type),
             id: obj.id,
           };
-
-          const event = { event: payload, type: 'colorChanged' };
-
-          undoRedoDispatch({
-            type: SET,
-            payload: (canvas?.getObjects() as unknown) as TypedShape[],
-            canvasId: userId,
-            event,
-          });
 
           eventSerializer?.push('colorChanged', payload);
         }
@@ -815,6 +799,79 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     fontColor,
     undoRedoDispatch,
   ]);
+
+  useEffect(() => {
+    if (fontColor && canvas) {
+      const obj = canvas.getActiveObject() as any;
+      const type = obj?.get('type');
+
+      if (type !== 'textbox') return;
+      
+      const payload = {
+        type,
+        target: { fill: obj?.fill },
+        id: obj?.id,
+      };
+      
+      const event = { event: payload, type: 'colorChanged' };
+
+      undoRedoDispatch({
+        type: SET,
+        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        canvasId: userId,
+        event,
+      });
+    }
+  }, [fontColor, canvas, undoRedoDispatch, userId]);
+
+
+  useEffect(() => {
+    if (penColor && canvas) {
+      const obj = canvas.getActiveObject() as any;
+      const type = obj?.get('type');
+
+      if (type === 'textbox') return;
+      
+      const payload = {
+        type,
+        target: { stroke: obj?.stroke },
+        id: obj?.id,
+      };
+      
+      const event = { event: payload, type: 'colorChanged' };
+
+      undoRedoDispatch({
+        type: SET,
+        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        canvasId: userId,
+        event,
+      });
+    }
+  }, [penColor, canvas, undoRedoDispatch, userId]);
+
+  useEffect(() => {
+    if (lineWidth && canvas) {
+      const obj = canvas.getActiveObject() as any;
+      const type = obj?.get('type');
+
+      if (type === 'textbox') return;
+      
+      const payload = {
+        type,
+        target: { strokeWidth: obj?.strokeWidth },
+        id: obj?.id,
+      };
+      
+      const event = { event: payload, type: 'colorChanged' };
+
+      undoRedoDispatch({
+        type: SET,
+        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        canvasId: userId,
+        event,
+      });
+    }
+  }, [lineWidth, canvas, undoRedoDispatch, userId]);
 
   /**
    * Send synchronization event for fontFamily changes.
