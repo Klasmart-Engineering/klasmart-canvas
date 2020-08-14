@@ -67,8 +67,9 @@ const useSynchronizedRotated = (
   useEffect(() => {
     const objectRotated = (e: any) => {
       const type = e.target.get('type');
-      const eventId: string = uuidv4();
-      const events: any[] = [];
+      const activeIds: string[] = [];
+      // const eventId: string = uuidv4();
+      // const events: any[] = [];
 
       if (type === 'activeSelection') {
         e.target._objects.forEach((activeObject: any) => {
@@ -107,6 +108,8 @@ const useSynchronizedRotated = (
             scaleY: options.scaleY,
             flipX: flipX(),
             flipY: flipY(),
+            originX: 'center',
+            originY: 'center',
           };
 
           const payload = {
@@ -115,45 +118,34 @@ const useSynchronizedRotated = (
             id: activeObject.id,
           };
 
-          const event = { event: payload, type: 'activeSelection', eventId };
-          events.push(event);
+          activeIds.push(activeObject.id);
 
           eventSerializer?.push('rotated', payload);
         });
 
-        let mappedObjects = canvas?.getObjects().map((object: any) => {
-          
-          if (!object.group) {
-            return object.toJSON(['strokeUniform', 'id']);
-          }
-          const matrix = object.calcTransformMatrix();
-          const options = fabric.util.qrDecompose(matrix);
-          const transformed = object.toJSON(['strokeUniform', 'id']);
-          let top = !options.angle ? (object.group.height / 2 + object.top) + object.group.top : options.translateY;
-          let left = !options.angle ? (object.group.width / 2 + object.left) + object.group.left : options.translateX;
-  
-          events.forEach((event: any) => {
-            if (event.event.id === object.id) {
-              event.event.target.top = top;
-              event.event.target.left = left;
-            }
-          });
-  
-          return {
-            ...transformed,
-            angle: options.angle,
-            top,
-            left,
-            scaleX: options.scaleX,
-            scaleY: options.scaleY,
-          }
+        let svg = canvas?.getActiveObject().toSVG();
+
+        const payload = {
+          type,
+          svg: true,
+          target: { svg },
+          id: `${userId}:svg`,
+        };
+
+        const event = { event: payload, type: 'activeSelection', activeIds };
+
+        let filtered = canvas?.getObjects().filter((o: any) => {
+          return !o.group;
         });
+
+        let active = canvas?.getActiveObject();
 
         undoRedoDispatch({
           type: SET_GROUP,
-          payload: mappedObjects as unknown as fabric.Object[],
+          // payload: canvas?.getObjects(),
+          payload: [ ...filtered as any[], active ],
           canvasId: userId,
-          event: events,
+          event,
         });
 
       } else {
@@ -180,7 +172,7 @@ const useSynchronizedRotated = (
         };
 
         if (canvas) {
-          const event = { event: payload, type: 'moved' };
+          const event = { event: payload, type: 'rotated' };
 
           undoRedoDispatch({
             type: SET,

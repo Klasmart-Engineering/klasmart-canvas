@@ -5,6 +5,7 @@ export const UNDO = 'CANVAS_UNDO';
 export const REDO = 'CANVAS_REDO';
 export const SET = 'CANVAS_SET';
 export const SET_GROUP = 'CANVAS_SET_GROUP';
+export const SET_GROUP_SVG = 'CANVAS_SET_GROUP_SVG';
 export const MODIFY = 'CANVAS_MODIFY';
 export const UPDATE_OTHER = 'CANVAS_UPDATE_OTHER';
 export const SET_OTHER = 'CANVAS_SET_OTHER';
@@ -92,6 +93,8 @@ export interface CanvasAction {
    * Event ID. Used to determine if an event is grouped.
    */
   eventId?: string | undefined;
+
+  svg?: any;
 }
 
 /**
@@ -182,12 +185,15 @@ const reducer = (
 
       let states = [...state.states];
       let events = [...state.events];
+
       const selfItems = action.payload?.filter((object: any) =>
         isLocalObject(object.id, action.canvasId as string)
       ) as [fabric.Object | TypedShape];
+
       const otherObjects = action.payload?.filter(
         (object: any) => !isLocalObject(object.id, action.canvasId as string)
       ) as [fabric.Object | TypedShape];
+
       const currentState = objectStringifier([
         ...selfItems,
         ...otherObjects,
@@ -246,12 +252,22 @@ const reducer = (
     case SET_GROUP: {
       let states = [...state.states];
       let events = [...state.events];
-      const selfItems = action.payload?.filter((object: any) =>
-        isLocalObject(object.id, action.canvasId as string)
-      ) as [fabric.Object | TypedShape];
+
+      const selfItems = action.payload?.filter((object: any) => {
+
+        if (object._objects) {
+          return object;
+        }
+
+        return isLocalObject(object.id, action.canvasId as string)
+      }) as [fabric.Object | TypedShape];
+      
       const otherObjects = action.payload?.filter(
-        (object: any) => !isLocalObject(object.id, action.canvasId as string)
+        (object: any) => {
+          return !isLocalObject(object.id, action.canvasId as string) && !object._objects;
+        }
       ) as [fabric.Object | TypedShape];
+
       const currentState = JSON.stringify({
           objects: [
           ...selfItems,
@@ -290,7 +306,12 @@ const reducer = (
         events = [];
       }
 
-      events = [...events, ...action.event];
+      if (Array.isArray(action.event)) {
+        events = [...events, ...action.event];
+      } else {
+        events = [...events, action.event];
+      }
+      
       stateItems = {
         ...stateItems,
         events,

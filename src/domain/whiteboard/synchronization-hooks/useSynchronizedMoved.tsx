@@ -138,6 +138,7 @@ const useSynchronizedMoved = (
       undoRedoDispatch({
         type: SET_GROUP,
         payload: mappedObjects as unknown as fabric.Object[],
+        // payload: canvas?.getObjects(),
         canvasId: userId,
         event: events,
       });

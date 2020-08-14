@@ -14,17 +14,33 @@ const useSynchronizedReconstruct = (
 
     const reconstruct = (id: string, target: any) => {
       if (!shouldHandleRemoteEvent(id)) return;
+      const targetParam = JSON.parse(target.param);
+
+      if (targetParam.svg) {
+        fabric.loadSVGFromString(targetParam.svg, (objects: any) => {
+          objects.forEach((object: any) => {
+            canvas?.forEachObject(function (obj: any) {
+              if (object.id !== obj.id) return;
+                obj.originX = 'left';
+                obj.originY = 'top';
+                canvas?.remove(obj);
+                canvas?.add(object);
+            });
+          });
+        });
+        return;
+      }
 
       canvas?.forEachObject(function (obj: any) {
         if (obj.id !== id) return;
           canvas?.remove(obj);
           canvas.renderAll();
           const oObject = obj.toJSON(['strokeUniform', 'id']);
-          const targetParam = JSON.parse(target.param);
           let nObject = { ...oObject, ...targetParam };
 
           switch (target.objectType) {
             case 'path': {
+
               if (!targetParam.angle) {
                 console.log(targetParam, nObject);
                 nObject = { ...nObject, angle: 0 };

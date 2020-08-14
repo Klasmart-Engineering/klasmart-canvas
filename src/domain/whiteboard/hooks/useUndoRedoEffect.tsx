@@ -30,11 +30,15 @@ const objectReconstructor = (id: string, events: any, numToRemove: number) => {
     reconstructedTarget = { ...reconstructedTarget, ...object.target };
   });
 
-  console.log(reconstructedTarget);
+  let event = { ...filtered[0].event, target: reconstructedTarget };
+
+  if (filtered[filtered.length - 1].event.svg) {
+    event = { ...event, target: { ...event.target, svg: filtered[filtered.length - 1].event.svg }};
+  }
 
   return {
     ...filtered[filtered.length - 1],
-    event: { ...filtered[0].event, target: reconstructedTarget },
+    event,
   };
 };
 
@@ -43,6 +47,7 @@ const undoHandler = (event: any, state: any, eventSerializer: any) => {
   let allEvents = [...state.events];
   let futureEvents = allEvents.splice(state.eventIndex + 1);
   futureEvents = futureEvents.filter((e: any) => e.event.id === id);
+
   const reconstructedEvent = objectReconstructor(
     id,
     state.events,
@@ -68,7 +73,6 @@ const redoHandler = (event: any, state: any, eventSerializer: any) => {
     futureEvents.length
   );
 
-
   eventSerializer?.push('reconstruct', reconstructedEvent.event);
 }
 
@@ -92,17 +96,16 @@ export const UndoRedo = (
 
     let nextEvent = state.events[state.eventIndex + 1];
 
-    // Rerenders canvas when an undo or redo event has been executed.
+    // Rerenders local canvas when an undo or redo event has been executed.
     if (
       (state.actionType === UNDO) ||
       state.actionType === REDO
     ) {
       canvas.clear();
-      console.log(JSON.parse(state.activeState as string));
       const mapped = JSON.parse(state.activeState as string).objects.map((object: any) => {
         return { ...object, fromJSON: true };
       });
-      canvas.loadFromJSON(JSON.stringify({ objects: mapped }), (o: any, object: any) => {});
+      canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {});
     }
 
     if (state.actionType === UNDO) {
@@ -127,10 +130,27 @@ export const UndoRedo = (
 
         eventSerializer?.push('reconstruct', reconstructedEvent.event);
       } else {
-        let groupedEvents = state.events.filter((event: any) => (event.eventId === nextEvent.eventId));
-        groupedEvents.forEach((singleEvent: any) => {
-          undoHandler(singleEvent, state, eventSerializer);
-        });
+        
+        if (!state.events[state.eventIndex].event.svg && !nextEvent.activeIds) {
+          let groupedEvents = state.events.filter((event: any) => {
+            return (event.eventId && nextEvent.eventId && event.eventId === nextEvent.eventId)
+          });
+
+          groupedEvents.forEach((singleEvent: any) => {
+            undoHandler(singleEvent, state, eventSerializer);
+          });
+        } else if (!state.events[state.eventIndex].event.svg && nextEvent.activeIds) {
+          // let allEvents = [...state.events];
+          // let futureEvents = allEvents.splice(state.eventIndex + 1);
+          // let events = nextEvent.activeIds.map((id: string) => {
+          //   return objectReconstructor(id, state.events, futureEvents.length)
+          // });
+
+        } else {
+          // Handle rerender in external board with svgs.
+          
+          eventSerializer?.push('reconstruct', state.events[state.eventIndex].event);
+        }
       }
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];
