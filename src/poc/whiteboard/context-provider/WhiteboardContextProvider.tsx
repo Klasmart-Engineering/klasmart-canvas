@@ -26,6 +26,7 @@ import {
 } from './SharedEventSerializerProvider';
 import { PainterEvent } from '../types/PainterEvent';
 import { ShapeID } from '../composition/ShapeID';
+import ICanvasActions from '../../../domain/whiteboard/canvas-actions/ICanvasActions';
 
 interface IWhiteboardState {
   display: boolean;
@@ -38,7 +39,7 @@ interface IWhiteboardState {
 
 interface IWhiteboardContext {
   state: IWhiteboardState;
-  actions: any;
+  actions: ICanvasActions | {};
 }
 
 const Context = createContext<IWhiteboardContext>({
@@ -51,7 +52,7 @@ const Context = createContext<IWhiteboardContext>({
 });
 
 type Props = {
-  children?: ReactChild | ReactChildren | null | any;
+  children?: ReactChild | ReactChildren | null;
   userId: string;
   whiteboardId: string;
 };

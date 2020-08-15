@@ -1,5 +1,11 @@
 import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
+import {
+  ObjectEvent,
+  ObjectType,
+} from '../event-serializer/PaintEventSerializer';
 
 const useSynchronizedSkewed = (
   canvas: fabric.Canvas | undefined,
@@ -12,10 +18,10 @@ const useSynchronizedSkewed = (
 
   /** Register and handle remote events. */
   useEffect(() => {
-    const skewed = (id: string, target: any) => {
+    const skewed = (id: string, target: ICanvasObject) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
-      canvas?.forEachObject(function (obj: any) {
+      canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
           obj.set({
             angle: target.angle,
@@ -42,38 +48,38 @@ const useSynchronizedSkewed = (
 
   /** Register and handle local events. */
   useEffect(() => {
-    const objectSkewed = (e: any) => {
-      if (!e.target.id) {
+    const objectSkewed = (e: CanvasEvent) => {
+      if (!e.target?.id) {
         return;
       }
 
       if (!shouldSerializeEvent(e.target.id)) return;
 
-        const type = e.target.get('type');
-        const target = {
-          top: e.target.top,
-          left: e.target.left,
-          angle: e.target.angle,
-          scaleX: e.target.scaleX,
-          scaleY: e.target.scaleY,
-          skewX: e.target.skewX,
-          skewY: e.target.skewY,
-        };
+      const type: ObjectType = e.target.get('type') as ObjectType;
+      const target = {
+        top: e.target.top,
+        left: e.target.left,
+        angle: e.target.angle,
+        scaleX: e.target.scaleX,
+        scaleY: e.target.scaleY,
+        skewX: e.target.skewX,
+        skewY: e.target.skewY,
+      };
 
-        const payload = {
-          type,
-          target,
-          id: e.target.id,
-        };
+      const payload: ObjectEvent = {
+        type,
+        target,
+        id: e.target.id,
+      };
 
-        eventSerializer?.push('skewed', payload);
+      eventSerializer?.push('skewed', payload);
     };
 
     canvas?.on('object:skewed', objectSkewed);
 
     return () => {
-        canvas?.off('object:skewed', objectSkewed);
-    }
+      canvas?.off('object:skewed', objectSkewed);
+    };
   }, [canvas, eventSerializer, shouldSerializeEvent]);
 };
 

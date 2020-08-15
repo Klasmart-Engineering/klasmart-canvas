@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
-
+import { Canvas } from 'fabric/fabric-impl';
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
+// type IEventSerializer = { id: string } | string;
 
 /**
  * Reconstructs an object based on past events.
@@ -10,9 +11,13 @@ import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
  * @param events Array of events
  * @param numToRemove Number of events to ignore.
  */
-const objectReconstructor = (id: string, events: any, numToRemove: number) => {
+const objectReconstructor = (
+  id: string,
+  events: any[],
+  numToRemove: number
+) => {
   let filtered = events.filter((event: any) => {
-    return event.event.id === id;
+    return event.event?.id === id;
   });
 
   if (numToRemove) {
@@ -42,7 +47,7 @@ const objectReconstructor = (id: string, events: any, numToRemove: number) => {
  * @param canvasId Canvas ID
  */
 export const UndoRedo = (
-  canvas: any,
+  canvas: Canvas,
   eventSerializer: any,
   _canvasId: string
 ) => {
@@ -68,47 +73,54 @@ export const UndoRedo = (
       let event = state.events[state.eventIndex];
 
       const payload = {
-        id: nextEvent.event.id,
+        id: nextEvent.event?.id || '',
       };
 
       // Serialize the event for synchronization
       if (nextEvent.type === 'added') {
         eventSerializer?.push('removed', payload);
-      } else if (nextEvent.type !== 'activeSelection') {
+      } else if (nextEvent.type !== 'activeSelection' && event.event?.id) {
         let id = event.event.id;
         let allEvents = [...state.events];
         let futureEvents = allEvents.splice(state.eventIndex + 1);
-        futureEvents = futureEvents.filter((e: any) => e.event.id === id);
+        futureEvents = futureEvents.filter((e: any) => e.event?.id === id);
         const reconstructedEvent = objectReconstructor(
           id,
           state.events,
           futureEvents.length
         );
 
-        if (reconstructedEvent.type !== 'added') {
-          eventSerializer?.push('reconstruct', reconstructedEvent.event);
-        } else {
+        if (
+          reconstructedEvent.type !== 'added' &&
+          reconstructedEvent.event.id
+        ) {
+          eventSerializer?.push('reconstruct', {
+            id: reconstructedEvent.event.id,
+          });
+        } else if (reconstructedEvent.event.id) {
           eventSerializer?.push('removed', payload);
-          eventSerializer?.push('added', reconstructedEvent.event);
+          eventSerializer?.push('added', { id: reconstructedEvent.event.id });
         }
       }
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];
 
-      if (event.type === 'added') {
-        eventSerializer?.push('added', event.event);
+      if (event.type === 'added' && event.event.id) {
+        eventSerializer?.push('added', { id: event.event.id });
       } else {
-        let id = event.event.id;
+        let id = event.event?.id;
         let allEvents = [...state.events];
         let futureEvents = allEvents.splice(state.eventIndex + 1);
-        futureEvents = futureEvents.filter((e: any) => e.event.id === id);
+        futureEvents = futureEvents.filter((e: any) => e.event?.id === id);
         const reconstructed = objectReconstructor(
-          id,
+          id || '',
           state.events,
           futureEvents.length
         );
 
-        eventSerializer?.push(reconstructed.type, reconstructed.event);
+        eventSerializer?.push(reconstructed.type, {
+          id: reconstructed.event.id || '',
+        });
       }
     }
 

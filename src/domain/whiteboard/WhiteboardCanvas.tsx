@@ -35,8 +35,11 @@ import { SET } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import { IEvent, ITextOptions } from 'fabric/fabric-impl';
-import { PainterEvent } from './event-serializer/PainterEvent';
-import { Key } from 'readline';
+import {
+  ObjectEvent,
+  ObjectType,
+} from './event-serializer/PaintEventSerializer';
+import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -289,11 +292,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Activates or deactivates drawing mode.
    */
   useEffect(() => {
-    const pathCreated = (e: IEvent) => {
-      e.path.selectable = false;
-      e.path.evented = false;
-      e.path.strokeUniform = true;
-      canvas?.renderAll();
+    const pathCreated = (e: ICanvasDrawingEvent) => {
+      if (e.path) {
+        e.path.selectable = false;
+        e.path.evented = false;
+        e.path.strokeUniform = true;
+        canvas?.renderAll();
+      }
     };
 
     if (brushIsActive && canvas) {
@@ -362,12 +367,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     shapeColor,
     actions,
     textIsActive,
-    isLocalObject,
     userId,
     floodFillIsActive,
     shapesAreSelectable,
     eraseType,
     shapesAreEvented,
+    isLocalObject,
   ]);
 
   /**
@@ -770,14 +775,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (objects && objects.length) {
       objects.forEach((obj: ICanvasObject) => {
         if (obj.id && isLocalObject(obj.id, userId)) {
-          const type = obj.get('type');
+          const type: ObjectType = obj.get('type') as ObjectType;
           const target = (type: string) => {
             return type === 'textbox'
               ? { fill: obj.fill }
               : { stroke: obj.stroke, strokeWidth: obj.strokeWidth };
           };
 
-          const payload = {
+          const payload: ObjectEvent = {
             type,
             target: target(type),
             id: obj.id,
@@ -787,7 +792,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
           undoRedoDispatch({
             type: SET,
-            payload: (canvas?.getObjects() as unknown) as TypedShape[],
+            payload: canvas?.getObjects(),
             canvasId: userId,
             event,
           });
@@ -797,13 +802,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       });
     }
   }, [
-    isLocalObject,
     canvas,
     eventSerializer,
     userId,
     penColor,
     fontColor,
     undoRedoDispatch,
+    isLocalObject,
   ]);
 
   /**
@@ -813,7 +818,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const objects = canvas?.getActiveObjects();
 
     if (objects && objects.length) {
-      objects.forEach((obj: any) => {
+      objects.forEach((obj: ICanvasObject) => {
         if (obj.id && isLocalObject(obj.id, userId)) {
           const type = obj.get('type');
 
@@ -821,7 +826,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             const target = {
               fontFamily,
             };
-            const payload = {
+            const payload: ObjectEvent = {
               type,
               target,
               id: obj.id,
@@ -832,7 +837,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         }
       });
     }
-  }, [isLocalObject, canvas, eventSerializer, userId, fontFamily]);
+  }, [canvas, eventSerializer, userId, fontFamily, isLocalObject]);
 
   /**
    * If pointerEvents changes to false, all the selected objects

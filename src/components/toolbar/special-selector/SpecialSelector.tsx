@@ -31,7 +31,7 @@ function SpecialSelector(props: ISpecialSelector) {
     findOptionDefinedByParent()
   );
   const [showOptions, setShowOptions] = useState(false);
-  const buttonRef = useRef(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   /**
    * When selectedValue changes the value is found in all the available options
@@ -97,11 +97,7 @@ function SpecialSelector(props: ISpecialSelector) {
    * @param {MouseEvent} e - Mouse click event
    */
   function handleOutsideClick(e: MouseEvent) {
-    if (
-      !((buttonRef.current as unknown) as HTMLElement).contains(
-        e.target as Node
-      )
-    ) {
+    if (!buttonRef.current?.contains(e.target as Node)) {
       if (!showOptions) {
         setShowOptions(false);
       }

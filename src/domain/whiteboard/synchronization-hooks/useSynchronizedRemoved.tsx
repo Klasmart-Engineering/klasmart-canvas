@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
-import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 
 const useSynchronizedRemoved = (
   canvas: fabric.Canvas | undefined,
@@ -20,7 +21,7 @@ const useSynchronizedRemoved = (
     const removed = (id: string) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
-      canvas?.forEachObject(function (obj: any) {
+      canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
           canvas?.remove(obj);
         }
@@ -29,7 +30,7 @@ const useSynchronizedRemoved = (
 
       undoRedoDispatch({
         type: SET_OTHER,
-        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        payload: canvas?.getObjects(),
         canvasId: userId,
       });
     };
@@ -49,8 +50,12 @@ const useSynchronizedRemoved = (
 
   /** Register and handle local event. */
   useEffect(() => {
-    const objectRemoved = (e: any) => {
-      if (!shouldSerializeEvent(e.target.id)) return;
+    const objectRemoved = (e: CanvasEvent) => {
+      if (
+        !e.target ||
+        (e.target && e.target.id && !shouldSerializeEvent(e.target.id))
+      )
+        return;
 
       const payload = {
         id: e.target.id,
@@ -60,7 +65,7 @@ const useSynchronizedRemoved = (
         const event = { event: payload, type: 'removed' };
         undoRedoDispatch({
           type: SET,
-          payload: (canvas.getObjects() as unknown) as TypedShape[],
+          payload: canvas.getObjects(),
           canvasId: userId,
           event,
         });

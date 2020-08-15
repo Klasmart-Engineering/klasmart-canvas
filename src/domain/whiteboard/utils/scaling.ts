@@ -1,4 +1,5 @@
 import { fabric } from 'fabric';
+import { Point } from 'fabric/fabric-impl';
 
 /**
  * Dimensions model. Indicates an object with
@@ -24,8 +25,8 @@ export const getLength = (x1: number, x2: number): number => Math.abs(x1 - x2);
  */
 export const setSize = (
   shape: fabric.Rect | fabric.Triangle,
-  start: any,
-  end: any
+  start: Point,
+  end: Point
 ): Dimensions => {
   const width = getLength(end.x, start.x);
   const height = getLength(end.y, start.y);
@@ -42,8 +43,8 @@ export const setSize = (
  */
 export const setCircleSize = (
   shape: fabric.Ellipse,
-  start: any,
-  end: any
+  start: Point,
+  end: Point
 ): Dimensions => {
   const rx = getLength(end.x, start.x) / 2;
   const ry = getLength(end.y, start.y) / 2;
@@ -60,13 +61,13 @@ export const setCircleSize = (
  */
 export const setPathSize = (
   shape: fabric.Object,
-  start: any,
-  end: any
+  start: Point,
+  end: Point
 ): Dimensions => {
   const width = getLength(end.x, start.x) / 2;
   const height = getLength(end.y, start.y) / 2;
-  const scaleX = 2 / (((shape.width as unknown) as number) / width);
-  const scaleY = 2 / (((shape.height as unknown) as number) / height);
+  const scaleX = 2 / Number(shape.width) / width;
+  const scaleY = 2 / Number(shape.height) / height;
 
   shape.set({ scaleX, scaleY });
   return { width, height };

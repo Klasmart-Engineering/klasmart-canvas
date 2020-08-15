@@ -10,6 +10,7 @@ import React, {
 import { EventPainterController } from './event-serializer/EventPainterController';
 import { PainterEvent } from './event-serializer/PainterEvent';
 import { PaintEventSerializer } from './event-serializer/PaintEventSerializer';
+import ICanvasActions from './canvas-actions/ICanvasActions';
 
 // NOTE: This is used to scale up the coordinates sent in events
 // to save bytes in the text representation of numbers. E.g. 33
@@ -28,7 +29,7 @@ interface IEventSerializerState {
 
 interface IEventSerializerContext {
   state: IEventSerializerState;
-  actions: any;
+  actions: ICanvasActions | {};
 }
 
 const Context = createContext<IEventSerializerContext>({

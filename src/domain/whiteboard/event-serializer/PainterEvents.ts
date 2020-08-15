@@ -1,10 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 import { ObjectEvent } from './PaintEventSerializer';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 interface IPathTarget {
   stroke: string;
   strokeWidth: number;
-  path: any[];
+  path: ICanvasObject;
 }
 
 export class PainterEvents {
@@ -49,5 +50,4 @@ export class PainterEvents {
       };
     }
   }
-
 }

@@ -10,7 +10,6 @@ interface IToolbarSectionComponent {
  * @param children - content that the TollbarSection will have inside
  */
 function ToolbarSection({ children }: IToolbarSectionComponent) {
-  console.log(children);
   const toolbarSectionStyle: CSSProperties = {
     display: 'flex',
     flexDirection: 'column',

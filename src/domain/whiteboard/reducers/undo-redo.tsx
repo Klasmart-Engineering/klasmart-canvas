@@ -1,5 +1,6 @@
 import { useReducer } from 'react';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 export const UNDO = 'CANVAS_UNDO';
 export const REDO = 'CANVAS_REDO';
@@ -25,7 +26,7 @@ export interface CanvasHistoryState {
   /**
    * Objects created on another canvas.
    */
-  otherObjects: any;
+  otherObjects: string[] | string;
 
   /**
    * Indicates action being taken, such as undo or redo.
@@ -55,7 +56,7 @@ export interface CanvasHistoryState {
   /**
    * Used for group manipulation.
    */
-  activeObjects: any[];
+  activeObjects: ICanvasObject[];
 }
 
 /**
@@ -112,7 +113,7 @@ const defaultState: CanvasHistoryState = {
  * and render to canvas.
  * @param payload
  */
-const objectStringifier = (payload: [fabric.Object | TypedShape]): string => {
+const objectStringifier = (payload: (fabric.Object | TypedShape)[]): string => {
   let formatted: string[] = [];
 
   if (payload) {
@@ -157,16 +158,15 @@ const reducer = (
 
       let states = [...state.states];
       let events = [...state.events];
-      const selfItems = action.payload?.filter((object: any) =>
-        isLocalObject(object.id, action.canvasId as string)
+      const selfItems = action.payload?.filter(
+        (object: ICanvasObject) =>
+          object.id && isLocalObject(object.id, action.canvasId as string)
       ) as [fabric.Object | TypedShape];
       const otherObjects = action.payload?.filter(
-        (object: any) => !isLocalObject(object.id, action.canvasId as string)
+        (object: ICanvasObject) =>
+          object.id && !isLocalObject(object.id, action.canvasId as string)
       ) as [fabric.Object | TypedShape];
-      const currentState = objectStringifier([
-        ...selfItems,
-        ...otherObjects,
-      ] as [fabric.Object | TypedShape]);
+      const currentState = objectStringifier([...selfItems, ...otherObjects]);
 
       // Canvas emits multiple identical events, this block
       // is meant to prevent identical events from being stored
@@ -212,7 +212,7 @@ const reducer = (
         activeStateIndex: states.length - 1,
         activeState: currentState,
         otherObjects: objectStringifier(otherObjects),
-        activeObjects: activeObjects as any[],
+        activeObjects: activeObjects as fabric.Object[],
       };
 
       // Removes future events if a new event has been created after an undo.
@@ -251,7 +251,8 @@ const reducer = (
           : JSON.stringify({ objects: [] });
 
       const activeSelfStateObjects = JSON.parse(activeSelfState).objects;
-      const otherStateObjects = JSON.parse(state.otherObjects).objects;
+      const otherStateObjects = JSON.parse(state.otherObjects as string)
+        .objects;
       const activeState = JSON.stringify({
         objects: [...activeSelfStateObjects, ...otherStateObjects],
       });
@@ -290,7 +291,8 @@ const reducer = (
           : JSON.stringify({ objects: [] });
 
       const activeSelfStateObjects = JSON.parse(activeSelfState).objects;
-      const otherStateObjects = JSON.parse(state.otherObjects).objects;
+      const otherStateObjects = JSON.parse(state.otherObjects as string)
+        .objects;
       const activeState = JSON.stringify({
         objects: [...activeSelfStateObjects, ...otherStateObjects],
       });
@@ -306,16 +308,15 @@ const reducer = (
 
     // Creates a new current state if a new event has been received by serializer from a non local canvas.
     case SET_OTHER: {
-      const selfItems = action.payload?.filter((object: any) =>
-        isLocalObject(object.id, action.canvasId as string)
+      const selfItems = action.payload?.filter(
+        (object: ICanvasObject) =>
+          object.id && isLocalObject(object.id, action.canvasId as string)
       ) as [fabric.Object | TypedShape];
       const otherObjects = action.payload?.filter(
-        (object: any) => !isLocalObject(object.id, action.canvasId as string)
+        (object: ICanvasObject) =>
+          object.id && !isLocalObject(object.id, action.canvasId as string)
       ) as [fabric.Object | TypedShape];
-      const currentState = objectStringifier([
-        ...selfItems,
-        ...otherObjects,
-      ] as [fabric.Object | TypedShape]);
+      const currentState = objectStringifier([...selfItems, ...otherObjects]);
 
       return {
         ...state,

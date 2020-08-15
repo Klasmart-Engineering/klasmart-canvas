@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 const useSynchronizedFontFamilyChanged = (
   canvas: fabric.Canvas | undefined,
@@ -10,10 +11,10 @@ const useSynchronizedFontFamilyChanged = (
   } = useSharedEventSerializer();
 
   useEffect(() => {
-    const fontFamilyChanged = (id: string, target: any) => {
+    const fontFamilyChanged = (id: string, target: ICanvasObject) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
-      canvas?.forEachObject(function (obj: any) {
+      canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
           obj.set({
             fontFamily: target.fontFamily,
