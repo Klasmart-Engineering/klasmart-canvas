@@ -2,12 +2,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { ObjectEvent } from './PaintEventSerializer';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
-// interface IPathTarget {
-//   stroke: string;
-//   strokeWidth: number;
-//   path: ICanvasObject;
-// }
-
 export class PainterEvents {
   public static createId(canvasId: string): string {
     return `${canvasId}:${uuidv4()}`;

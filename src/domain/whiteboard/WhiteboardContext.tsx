@@ -19,7 +19,6 @@ import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 import ICanvasActions from './canvas-actions/ICanvasActions';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 
-// let WhiteboardContext: Context<IWhiteboardContext>;
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
 export const WhiteboardProvider = ({

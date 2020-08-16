@@ -3,15 +3,14 @@ import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
 import { Canvas } from 'fabric/fabric-impl';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
-// import { IUndoRedoPayload } from '../../../interfaces/canvas-events/undo-redo-payload';
 import {
   PaintEventSerializer,
   ObjectEvent,
 } from '../event-serializer/PaintEventSerializer';
 import { PainterEventType } from '../event-serializer/PainterEvent';
+
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
-// type IEventSerializer = { id: string } | string;
 
 /**
  * Reconstructs an object based on past events.

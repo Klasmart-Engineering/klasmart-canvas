@@ -16,7 +16,7 @@ export interface ICanvasActionsState {
 }
 
 export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
-  console.log('que jais', canvasId);
+  console.log(canvasId);
   const {
     shapeIsActive,
     updateFontColor,

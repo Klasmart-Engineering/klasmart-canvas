@@ -16,7 +16,6 @@ import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elem
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
-// import { UNDO, REDO } from '../../domain/whiteboard/reducers/undo-redo';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =

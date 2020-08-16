@@ -9,7 +9,6 @@ import { fabric } from 'fabric';
 import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-drawing-event';
-// import { IPathTarget } from '../../../interfaces/canvas-events/path-target';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';

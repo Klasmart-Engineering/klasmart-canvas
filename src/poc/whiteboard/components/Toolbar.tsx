@@ -4,6 +4,14 @@ import React from 'react';
 // import { useWhiteboard } from '../context-provider/WhiteboardContextProvider';
 
 export default function Toolbar() {
+  /**
+   * This file was causing me some troubles with the useWhiteborad
+   * actions property typing, I saw the file is like another Toolbar,
+   * maybe just was used provisionally, so I decided just comment the function
+   * and no delete the file, because I don't know if the file will
+   * be usable in the future or someone needs it.
+   */
+
   //   const {
   //     state,
   //     actions: { clear, setBrush, display },
