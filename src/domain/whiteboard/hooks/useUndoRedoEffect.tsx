@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
 import { Canvas } from 'fabric/fabric-impl';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
+import { IUndoRedoPayload } from '../../../interfaces/canvas-events/undo-redo-payload';
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
 // type IEventSerializer = { id: string } | string;
@@ -13,10 +16,10 @@ import { Canvas } from 'fabric/fabric-impl';
  */
 const objectReconstructor = (
   id: string,
-  events: any[],
+  events: IUndoRedoEvent[],
   numToRemove: number
 ) => {
-  let filtered = events.filter((event: any) => {
+  let filtered = events.filter((event: IUndoRedoEvent) => {
     return event.event?.id === id;
   });
 
@@ -24,13 +27,13 @@ const objectReconstructor = (
     filtered.splice(-numToRemove);
   }
 
-  const mapped = filtered.map((event: any) => {
+  const mapped = filtered.map((event: IUndoRedoEvent) => {
     return event.event;
   });
 
   let reconstructedTarget = {};
 
-  mapped.forEach((object: any) => {
+  mapped.forEach((object: IUndoRedoSingleEvent) => {
     reconstructedTarget = { ...reconstructedTarget, ...object.target };
   });
 
@@ -48,7 +51,7 @@ const objectReconstructor = (
  */
 export const UndoRedo = (
   canvas: Canvas,
-  eventSerializer: any,
+  eventSerializer: (string | IUndoRedoPayload)[],
   _canvasId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
@@ -83,7 +86,9 @@ export const UndoRedo = (
         let id = event.event.id;
         let allEvents = [...state.events];
         let futureEvents = allEvents.splice(state.eventIndex + 1);
-        futureEvents = futureEvents.filter((e: any) => e.event?.id === id);
+        futureEvents = futureEvents.filter(
+          (e: IUndoRedoEvent) => e.event?.id === id
+        );
         const reconstructedEvent = objectReconstructor(
           id,
           state.events,
@@ -111,7 +116,9 @@ export const UndoRedo = (
         let id = event.event?.id;
         let allEvents = [...state.events];
         let futureEvents = allEvents.splice(state.eventIndex + 1);
-        futureEvents = futureEvents.filter((e: any) => e.event?.id === id);
+        futureEvents = futureEvents.filter(
+          (e: IUndoRedoEvent) => e.event?.id === id
+        );
         const reconstructed = objectReconstructor(
           id || '',
           state.events,

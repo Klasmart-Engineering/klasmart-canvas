@@ -287,19 +287,19 @@ function Toolbar() {
    * Set the parent's definedOptionName in the given tool
    * @param {string} tool - Tool to set the definedOption
    */
-  function setSelectedOptionSelector(tool: string): string {
+  function setSelectedOptionSelector(tool: string): string | number | null {
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
         return pointer;
 
       case ELEMENTS.ERASE_TYPE_TOOL:
-        return eraseType || 'object';
+        return eraseType;
 
       case ELEMENTS.LINE_TYPE_TOOL:
         return penLine;
 
       case ELEMENTS.LINE_WIDTH_TOOL:
-        return lineWidth.toString();
+        return lineWidth;
 
       case ELEMENTS.FLOOD_FILL_TOOL:
         return floodFill;
@@ -442,7 +442,7 @@ function createToolbarSelector(
   onClick: (tool: string) => void,
   onChange: (tool: string, value: string) => void,
   onAction: (tool: string, value: string) => void,
-  selectedValue: string,
+  selectedValue: string | number | null,
   colorPalette?: IColorPalette
 ): JSX.Element {
   return (
@@ -476,7 +476,7 @@ function createSpecialSelector(
   id: string,
   Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>,
   active: boolean,
-  selectedValue: string,
+  selectedValue: string | number | null,
   styleOptions: IStyleOptions[],
   onClick: (tool: string) => void,
   onChange: (tool: string, value: string) => void

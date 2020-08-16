@@ -1,6 +1,7 @@
 import { useReducer } from 'react';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 
 export const UNDO = 'CANVAS_UNDO';
 export const REDO = 'CANVAS_REDO';
@@ -46,7 +47,7 @@ export interface CanvasHistoryState {
   /**
    * List of events
    */
-  events: any[];
+  events: IUndoRedoEvent[];
 
   /**
    * Current event chosen, used for undo and redo events.
@@ -81,7 +82,7 @@ export interface CanvasAction {
   /**
    * Event to be added to list.
    */
-  event?: any;
+  event?: IUndoRedoEvent;
 
   /**
    * Payload of objects from other canvas.
