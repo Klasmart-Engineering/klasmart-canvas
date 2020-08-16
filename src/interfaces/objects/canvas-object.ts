@@ -3,7 +3,7 @@ import { ObjectType } from '../../domain/whiteboard/event-serializer/PaintEventS
 export interface ICanvasObject extends fabric.Object {
   _objects?: ICanvasObject[];
   id?: string;
-  path?: string;
+  path?: string | ICanvasObject;
   text?: string;
   fontFamily?: string;
   objectType?: ObjectType;

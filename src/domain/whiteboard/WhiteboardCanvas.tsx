@@ -784,7 +784,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
           const payload: ObjectEvent = {
             type,
-            target: target(type),
+            target: target(type) as ICanvasObject,
             id: obj.id,
           };
 
@@ -825,7 +825,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           if (type === 'textbox') {
             const target = {
               fontFamily,
-            };
+            } as ICanvasObject;
+
             const payload: ObjectEvent = {
               type,
               target,

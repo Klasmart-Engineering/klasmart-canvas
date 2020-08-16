@@ -11,7 +11,7 @@ import {
 
 test('should set state history from initial value', () => {
   const { result } = renderHook<
-    any,
+    {},
     { state: CanvasHistoryState; dispatch: React.Dispatch<CanvasAction> }
   >(() => useUndoRedo());
   expect(result.current.state.states.length).toEqual(0);
@@ -19,12 +19,15 @@ test('should set state history from initial value', () => {
 
 test('should set state history to activeStateIndex 0.', () => {
   const { result } = renderHook<
-    any,
+    {},
     { state: CanvasHistoryState; dispatch: React.Dispatch<CanvasAction> }
   >(() => useUndoRedo());
 
   act(() => {
-    result.current.dispatch({ type: SET, payload: [{ padding: 12 }] as fabric.Object[] });
+    result.current.dispatch({
+      type: SET,
+      payload: [{ padding: 12 }] as fabric.Object[],
+    });
   });
 
   expect(result.current.state.states.length).toEqual(1);
@@ -33,7 +36,7 @@ test('should set state history to activeStateIndex 0.', () => {
 
 test('should set state history to activeStateIndex 1.', () => {
   const { result } = renderHook<
-    any,
+    {},
     { state: CanvasHistoryState; dispatch: React.Dispatch<CanvasAction> }
   >(() => useUndoRedo());
 
@@ -54,7 +57,7 @@ test('should set state history to activeStateIndex 1.', () => {
 
 test('should set state history to activeStateIndex 0 when undone.', () => {
   const { result } = renderHook<
-    any,
+    {},
     { state: CanvasHistoryState; dispatch: React.Dispatch<CanvasAction> }
   >(() => useUndoRedo());
 
@@ -82,7 +85,7 @@ test('should set state history to activeStateIndex 0 when undone.', () => {
 
 test('should set state history to activeStateIndex 1 when redone.', () => {
   const { result } = renderHook<
-    any,
+    {},
     { state: CanvasHistoryState; dispatch: React.Dispatch<CanvasAction> }
   >(() => useUndoRedo());
 

@@ -9,9 +9,10 @@ import { fabric } from 'fabric';
 import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-drawing-event';
-import { IPathTarget } from '../../../interfaces/canvas-events/path-target';
+// import { IPathTarget } from '../../../interfaces/canvas-events/path-target';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -34,11 +35,11 @@ const useSynchronizedAdded = (
       e.path.id = PainterEvents.createId(userId);
       // if (!shouldSerializeEvent(e.path.id)) return;
 
-      const target: IPathTarget = {
+      const target = {
         stroke: e.path.stroke,
         strokeWidth: e.path.strokeWidth,
         path: e.path.path,
-      };
+      } as ICanvasObject;
 
       eventSerializer?.push(
         'added',
@@ -49,7 +50,7 @@ const useSynchronizedAdded = (
         const event = {
           event: PainterEvents.pathCreated(target, e.path.id, userId),
           type: 'added',
-        };
+        } as IUndoRedoEvent;
 
         undoRedoDispatch({
           type: SET,
@@ -88,7 +89,7 @@ const useSynchronizedAdded = (
           left: e.target.left,
           width: e.target.width,
         }),
-      };
+      } as ICanvasObject;
 
       const payload: ObjectEvent = {
         type,
@@ -160,7 +161,7 @@ const useSynchronizedAdded = (
         pencil.width = target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH;
 
         // Convert Points to SVG Path
-        const res = pencil.createPath(target.path || '');
+        const res = pencil.createPath((target.path as string) || '');
         (res as ICanvasObject).id = id;
         res.selectable = false;
         res.evented = false;

@@ -39,7 +39,7 @@ const useSynchronizedMoved = (
         scaleY: e.target.scaleY,
         flipX: e.target.flipX,
         flipY: e.target.flipY,
-      };
+      } as ICanvasObject;
 
       const payload: ObjectEvent = {
         type,
@@ -105,7 +105,7 @@ const useSynchronizedMoved = (
           scaleY: options.scaleY,
           flipX: flipX(),
           flipY: flipY(),
-        };
+        } as ICanvasObject;
 
         const payload: ObjectEvent = {
           type,

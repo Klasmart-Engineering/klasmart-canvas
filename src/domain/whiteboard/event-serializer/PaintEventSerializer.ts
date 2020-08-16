@@ -20,7 +20,7 @@ export declare interface PaintEventSerializer {
 export interface ObjectEvent {
   id: string;
   type: ObjectType;
-  target: ICanvasObject | {};
+  target: ICanvasObject;
 }
 
 export type ObjectType = 'path' | 'textbox' | 'activeSelection';

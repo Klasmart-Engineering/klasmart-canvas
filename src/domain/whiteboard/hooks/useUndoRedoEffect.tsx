@@ -3,7 +3,12 @@ import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
 import { Canvas } from 'fabric/fabric-impl';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
-import { IUndoRedoPayload } from '../../../interfaces/canvas-events/undo-redo-payload';
+// import { IUndoRedoPayload } from '../../../interfaces/canvas-events/undo-redo-payload';
+import {
+  PaintEventSerializer,
+  ObjectEvent,
+} from '../event-serializer/PaintEventSerializer';
+import { PainterEventType } from '../event-serializer/PainterEvent';
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
 // type IEventSerializer = { id: string } | string;
@@ -51,7 +56,7 @@ const objectReconstructor = (
  */
 export const UndoRedo = (
   canvas: Canvas,
-  eventSerializer: (string | IUndoRedoPayload)[],
+  eventSerializer: PaintEventSerializer,
   _canvasId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
@@ -77,7 +82,7 @@ export const UndoRedo = (
 
       const payload = {
         id: nextEvent.event?.id || '',
-      };
+      } as ObjectEvent;
 
       // Serialize the event for synchronization
       if (nextEvent.type === 'added') {
@@ -101,17 +106,19 @@ export const UndoRedo = (
         ) {
           eventSerializer?.push('reconstruct', {
             id: reconstructedEvent.event.id,
-          });
+          } as ObjectEvent);
         } else if (reconstructedEvent.event.id) {
           eventSerializer?.push('removed', payload);
-          eventSerializer?.push('added', { id: reconstructedEvent.event.id });
+          eventSerializer?.push('added', {
+            id: reconstructedEvent.event.id,
+          } as ObjectEvent);
         }
       }
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];
 
       if (event.type === 'added' && event.event.id) {
-        eventSerializer?.push('added', { id: event.event.id });
+        eventSerializer?.push('added', { id: event.event.id } as ObjectEvent);
       } else {
         let id = event.event?.id;
         let allEvents = [...state.events];
@@ -125,9 +132,12 @@ export const UndoRedo = (
           futureEvents.length
         );
 
-        eventSerializer?.push(reconstructed.type, {
-          id: reconstructed.event.id || '',
-        });
+        eventSerializer?.push(
+          reconstructed.type as PainterEventType,
+          {
+            id: reconstructed.event.id || '',
+          } as ObjectEvent
+        );
       }
     }
 

@@ -70,7 +70,7 @@ const useSynchronizedModified = (
             left: e.target.left,
             width: e.target.width,
           }),
-        };
+        } as ICanvasObject;
 
         const payload: ObjectEvent = {
           type,

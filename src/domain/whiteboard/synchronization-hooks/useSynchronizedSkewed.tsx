@@ -64,7 +64,7 @@ const useSynchronizedSkewed = (
         scaleY: e.target.scaleY,
         skewX: e.target.skewX,
         skewY: e.target.skewY,
-      };
+      } as ICanvasObject;
 
       const payload: ObjectEvent = {
         type,

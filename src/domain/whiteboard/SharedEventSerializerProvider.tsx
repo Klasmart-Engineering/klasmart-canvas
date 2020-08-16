@@ -23,18 +23,18 @@ type Props = {
 };
 
 interface IEventSerializerState {
-  eventSerializer?: PaintEventSerializer;
-  eventController?: EventPainterController;
+  eventSerializer: PaintEventSerializer;
+  eventController: EventPainterController;
 }
 
 interface IEventSerializerContext {
   state: IEventSerializerState;
-  actions: ICanvasActions | {};
+  actions: ICanvasActions;
 }
 
 const Context = createContext<IEventSerializerContext>({
-  state: {},
-  actions: {},
+  state: {} as IEventSerializerState,
+  actions: {} as ICanvasActions,
 });
 
 // NOTE: This class was added to allow demonstrating synchronizing whiteboard events without any network or server.
@@ -91,7 +91,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
           eventSerializer: eventSerializer,
           eventController: eventController,
         },
-        actions: {},
+        actions: {} as ICanvasActions,
       }}
     >
       {children}

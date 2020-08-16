@@ -111,7 +111,7 @@ const useSynchronizedRotated = (
             scaleY: options.scaleY,
             flipX: flipX(),
             flipY: flipY(),
-          };
+          } as ICanvasObject;
 
           const payload: ObjectEvent = {
             type,
@@ -136,7 +136,7 @@ const useSynchronizedRotated = (
           scaleY: e.target.scaleY,
           flipX: e.target.flipX,
           flipY: e.target.flipY,
-        };
+        } as ICanvasObject;
 
         const payload: ObjectEvent = {
           type: type as ObjectType,

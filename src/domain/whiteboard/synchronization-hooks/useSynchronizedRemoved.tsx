@@ -4,6 +4,7 @@ import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 
 const useSynchronizedRemoved = (
   canvas: fabric.Canvas | undefined,
@@ -62,7 +63,7 @@ const useSynchronizedRemoved = (
       };
 
       if (canvas) {
-        const event = { event: payload, type: 'removed' };
+        const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
         undoRedoDispatch({
           type: SET,
           payload: canvas.getObjects(),
