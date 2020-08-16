@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useState, Context } from 'react';
+import React, { createContext, useCallback, useState } from 'react';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
@@ -19,7 +19,8 @@ import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 import ICanvasActions from './canvas-actions/ICanvasActions';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 
-export let WhiteboardContext: Context<IWhiteboardContext>;
+// let WhiteboardContext: Context<IWhiteboardContext>;
+export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
 export const WhiteboardProvider = ({
   children,
@@ -210,8 +211,6 @@ export const WhiteboardProvider = ({
     eraseObject: eraseObjectAction,
     changeStrokeColor: changeStrokeColorAction,
   };
-
-  WhiteboardContext = createContext<IWhiteboardContext>(value);
 
   return (
     <WhiteboardContext.Provider value={value}>
