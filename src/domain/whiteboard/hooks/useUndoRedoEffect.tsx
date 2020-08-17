@@ -89,11 +89,12 @@ export const UndoRedo = (
           
           eventSerializer?.push('reconstruct', payload);
         } else {
+          let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
 
           let payload = {
             id: nextEvent.event.id,
             svg: true,
-            target: state.states[state.activeStateIndex as number],
+            target: { objects },
             type: 'reconstruct'
           }
           eventSerializer?.push('reconstruct', payload);
