@@ -261,7 +261,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      canvas?.off('mouse:down');
+      if (!eraseType) {
+        canvas?.off('mouse:down');
+      }
     };
   }, [
     canvas,
@@ -271,6 +273,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateFontFamily,
     updateFontColor,
     userId,
+    eraseType,
   ]);
 
   /**
@@ -345,6 +348,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     return () => {
       if (!textIsActive && !floodFillIsActive && !shapesAreEvented) {
+        console.log('shape');
         canvas?.off('mouse:down');
       }
 
@@ -650,6 +654,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     return () => {
       if (!textIsActive) {
+        console.log('flood-fill');
         canvas?.off('mouse:down');
       }
     };
@@ -865,6 +870,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     return () => {
       if (!textIsActive) {
+        console.log('erase type');
         canvas?.off('mouse:down');
       }
 
@@ -880,6 +886,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     return () => {
       if (!textIsActive) {
+        console.log('shape 2');
         canvas?.off('mouse:down');
       }
       canvas?.off('mouse:move');

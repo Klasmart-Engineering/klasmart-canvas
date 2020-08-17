@@ -439,7 +439,6 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
 
     // When mouse down eraser is able to remove objects
     canvas?.on('mouse:down', (e: any) => {
-      console.log('mouse down');
       if (eraser) {
         return false;
       }
@@ -467,7 +466,6 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
 
     // When mouse is over an object
     canvas?.on('mouse:over', (e: any) => {
-      console.log('mouse over');
       if (!eraser) {
         return false;
       }
@@ -483,7 +481,6 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
 
     // When mouse up eraser is unable to remove objects
     canvas?.on('mouse:up', () => {
-      console.log('mouse up');
       if (!eraser) {
         return false;
       }
