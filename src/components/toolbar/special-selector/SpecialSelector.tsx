@@ -156,8 +156,9 @@ function SpecialSelector(props: ISpecialSelector) {
           active ? 'selected' : '',
           !active ? 'unselected' : '',
         ].join(' ')}
+        onClick={handleClick}
       >
-        <Icon style={selectedOption.style} onClick={handleClick} />
+        <Icon style={selectedOption.style} />
         <ArrowRightIcon onClick={handleArrowClick} style={arrowStyle} />
       </button>
       {showOptions && active ? (
