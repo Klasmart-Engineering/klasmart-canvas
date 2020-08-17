@@ -41,6 +41,7 @@ function Toolbar() {
     updateFontFamily,
     openClearWhiteboardModal,
     setPointerEvents,
+    textIsActive,
     updateTextIsActive,
     updateShapeIsActive,
     updateBrushIsActive,
@@ -80,6 +81,23 @@ function Toolbar() {
     updateEraseType(null);
 
     /*
+      If you click on another button different than
+      the mentioned below the selected object will be deselected;
+      the cases mentioned below will be handled in WhiteboardContext.
+      The textIsActive validation was added here to fix
+      a text synchronization issue
+    */
+    if (
+      (tool !== ELEMENTS.ERASE_TYPE_TOOL &&
+        tool !== ELEMENTS.ADD_TEXT_TOOL &&
+        tool !== ELEMENTS.LINE_TYPE_TOOL &&
+        tool !== ELEMENTS.LINE_WIDTH_TOOL) ||
+      textIsActive
+    ) {
+      discardActiveObject();
+    }
+
+    /*
       It is setted to true when you select Add Text Tool,
       otherwise will be setted in false
     */
@@ -110,21 +128,6 @@ function Toolbar() {
     updateEventedObjects(
       tool === ELEMENTS.POINTERS_TOOL || tool === ELEMENTS.MOVE_OBJECTS_TOOL
     );
-
-    /*
-      If you click on another button different than
-      the mentioned below the selected object will be deselected;
-      the cases mentioned below will be handled in WhiteboardContext
-    */
-    if (
-      tool !== ELEMENTS.ERASE_TYPE_TOOL &&
-      tool !== ELEMENTS.ADD_TEXT_TOOL &&
-      tool !== ELEMENTS.ADD_SHAPE_TOOL &&
-      tool !== ELEMENTS.LINE_TYPE_TOOL &&
-      tool !== ELEMENTS.LINE_WIDTH_TOOL
-    ) {
-      discardActiveObject();
-    }
 
     if (
       tool === ELEMENTS.POINTERS_TOOL ||

@@ -182,13 +182,13 @@ function ToolbarSelector(props: IToolbarSelector) {
           active ? 'selected' : '',
           !active ? 'unselected' : '',
         ].join(' ')}
+        onClick={handleClick}
       >
         <img
           className="icon"
           style={iconStyle}
           src={selectedOption.iconSrc}
           alt={selectedOption.iconName}
-          onClick={handleClick}
         />
         <ArrowRightIcon
           className="arrow"
