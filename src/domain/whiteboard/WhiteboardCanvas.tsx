@@ -34,7 +34,7 @@ import useSynchronizedRotated from './synchronization-hooks/useSynchronizedRotat
 import useSynchronizedScaled from './synchronization-hooks/useSynchronizedScaled';
 import useSynchronizedSkewed from './synchronization-hooks/useSynchronizedSkewed';
 import useSynchronizedReconstruct from './synchronization-hooks/useSynchronizedReconstruct';
-import { SET, SET_GROUP } from './reducers/undo-redo';
+import { SET, SET_GROUP, UNDO, REDO } from './reducers/undo-redo';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -1059,6 +1059,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateCanvasActions(actions);
   }, [actions, updateCanvasActions]);
 
+  // Temporary code to get undo / redo working while there are two boards
+  // on the view.
+  const tempKeyDown = (e: any) => {
+    debugger;
+    if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
+      undoRedoDispatch({ type: UNDO, canvasId: instanceId });
+      return;
+    }
+
+    if (e.which === 89 && e.ctrlKey) {
+      undoRedoDispatch({ type: REDO, canvasId: instanceId });
+      return;
+    }
+  }
+
   // TODO: Possible to have dynamically sized canvas? With raw canvas it's
   // possible to set the "pixel (background)" size separately from the
   // style size. So we can have a fixed resolution draw buffer and it will
@@ -1077,6 +1092,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       onClick={() => {
         actions.addShape(shape);
       }}
+      onKeyDown={tempKeyDown}
     >
       {children}
     </canvas>

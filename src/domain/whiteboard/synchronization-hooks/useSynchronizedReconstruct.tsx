@@ -22,7 +22,7 @@ const useSynchronizedReconstruct = (
       const objects = JSON.parse(target.param).objects;
       // const objects = JSON.parse(targetParam).objects;
       objects.forEach((object: TypedShape) => {
-        if (object.type === 'path') {
+        if (object && object.type === 'path') {
           const group: TypedGroup | undefined = canvas?.getObjects().filter((o: any) => o._objects)[0] as TypedGroup;
           if (group && group.id) {
             canvas?.remove(group);
@@ -36,14 +36,14 @@ const useSynchronizedReconstruct = (
           });
 
           canvas?.renderAll();
-        } else if (object.type === 'textbox') {
+        } else if (object && object.type === 'textbox') {
           fabric.Textbox.fromObject(object, (path: TypedShape) => {
             const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
             path.set({ selectable: false, evented: false });
             canvas?.remove(old as fabric.Object);
             canvas?.add(path);
           });
-        } else {
+        } else if (object) {
           fabric.Group.fromObject(object, (group: fabric.Group) => {
             const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
             if (group._objects) {
