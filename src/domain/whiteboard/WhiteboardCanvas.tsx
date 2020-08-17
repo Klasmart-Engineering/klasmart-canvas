@@ -647,6 +647,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         canvas.renderAll();
       });
     }
+
+    return () => {
+      if (!textIsActive) {
+        canvas?.off('mouse:down');
+      }
+    };
   }, [
     actions,
     canvas,
@@ -655,6 +661,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     getColorInCoord,
     manageShapeOutsideClick,
     reorderShapes,
+    textIsActive,
   ]);
 
   /**
