@@ -8,3 +8,12 @@ export interface TypedShape extends fabric.Object {
   mimicBackground?: boolean;
   id?: string;
 }
+
+/**
+ * Extends fabric's Polygon to include shapeType, which can be modified.
+ */
+export interface TypedPolygon extends fabric.Polygon {
+  shapeType?: string;
+  mimicBackground?: boolean;
+  id?: string;
+}

@@ -4,7 +4,8 @@ import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
 import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
-import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { TypedShape, TypedPolygon } from '../../../interfaces/shapes/shapes';
+import { chat, star, arrow, hexagon, pentagon } from '../shapes/shapes';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -113,6 +114,56 @@ const useSynchronizedAdded = (
     };
   }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
 
+  /**
+   * Generates a new shape based on shape name.
+   * @param target Object data.
+   */
+  const generateGenericShape = (target: { [key: string]: number | string | boolean}): TypedShape | TypedPolygon => {
+    switch(target.name) {
+      case 'chatBubble': {
+        return chat(
+          target.width as number,
+          target.height as number,
+          target.stroke as string,
+          target.filled as boolean,
+          target.strokeWidth as number
+        );
+      }
+      case 'star': {
+        return star(
+          target.width as number,
+          target.height as number,
+          target.stroke as string,
+          target.filled as boolean,
+          target.strokeWidth as number
+        );
+      }
+      case 'hexagon': {
+        return hexagon(
+          target.stroke as string,
+          target.filled as boolean,
+          target.strokeWidth as number
+        );
+      }
+      case 'pentagon': {
+        return pentagon(
+          target.stroke as string,
+          target.filled as boolean,
+          target.strokeWidth as number
+        );
+      }
+      default: {
+        return arrow(
+          target.width as number,
+          target.height as number,
+          target.stroke as string,
+          target.filled as boolean,
+          target.strokeWidth as number
+        );
+      }
+    }
+  }
+
   /** Register and handle remote added event. */
   useEffect(() => {
     const added = (id: string, objectType: string, target: any) => {
@@ -152,7 +203,9 @@ const useSynchronizedAdded = (
         return;
       }
 
-      if (objectType === 'path') {
+      let shape = null;
+
+      if (objectType === 'path' && !target.name) {
         const pencil = new fabric.PencilBrush();
         pencil.color = target.stroke || '#000';
         pencil.width = target.strokeWidth;
@@ -166,7 +219,26 @@ const useSynchronizedAdded = (
         res.strokeUniform = true;
 
         canvas?.add(res);
-        console.log('SHOULD RENDER', res, canvas?.getObjects());
+        canvas?.renderAll();
+      } else if ((objectType === 'path' || objectType === 'polygon') && target.name) {
+        shape = generateGenericShape(target);
+      }
+
+      if (objectType === 'rect') {
+        shape = new fabric.Rect();
+      }
+
+      if (objectType === 'triangle') {
+        shape = new fabric.Triangle();
+      }
+
+      if (objectType === 'ellipse') {
+        shape = new fabric.Ellipse();
+      }
+
+      if (shape) {
+        shape.set(target);
+        canvas?.add(shape);
         canvas?.renderAll();
       }
 

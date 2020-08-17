@@ -67,8 +67,6 @@ const useSynchronizedRotated = (
     const objectRotated = (e: any) => {
       const type = e.target.get('type');
       const activeIds: string[] = [];
-      // const eventId: string = uuidv4();
-      // const events: any[] = [];
 
       if (type === 'activeSelection') {
         e.target._objects.forEach((activeObject: any) => {

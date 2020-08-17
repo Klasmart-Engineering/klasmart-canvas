@@ -115,7 +115,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   const { actions, mouseDown } = useCanvasActions(
     canvas,
     undoRedoDispatch,
-    instanceId
+    instanceId,
+    eventSerializer,
+    userId
   );
 
   /**

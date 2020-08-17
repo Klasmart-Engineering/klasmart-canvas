@@ -7,6 +7,7 @@ import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { isFreeDrawing, isShape } from '../utils/shapes';
 import { UNDO, REDO, SET } from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
+import { v4 as uuidv4 } from 'uuid';
 import { IEvent } from 'fabric/fabric-impl';
 
 export interface ICanvasActionsState {
@@ -17,9 +18,10 @@ export interface ICanvasActionsState {
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
   dispatch?: any,
-  canvasId?: string
+  canvasId?: string,
+  eventSerializer?: any,
+  userId?: string
 ) => {
-  console.log(canvasId);
   const {
     shapeIsActive,
     updateFontColor,
@@ -295,19 +297,89 @@ export const useCanvasActions = (
         }
 
         const size = setShapeSize(shape, e);
+        const id = `${userId}:${uuidv4()}`;
         resize = false;
 
         if (size.width <= 2 && size.height <= 2) {
           canvas.remove(shape);
         } else {
+          shape.set({ id });
           shape.setCoords();
           canvas.renderAll();
-          // TODO: Handle Undo/Redo dispatch.
-          // dispatch({ type: SET, payload: canvas.getObjects() });
+          let type = shape.type;
+          let payload = {};
+          let target = {
+            type,
+            id
+          };
+
+          const requiredProps = [
+            'id',
+            'height',
+            'width',
+            'left',
+            'top',
+            'strokeWidth',
+            'stroke',
+            'fill',
+            'name',
+            'scaleX',
+            'scaleY',
+            'strokeUniform'
+          ];
+
+          const requiredEllipseProps = [
+            'id',
+            'ry',
+            'rx',
+            'left',
+            'top',
+            'strokeWidth',
+            'stroke',
+            'fill',
+            'strokeUniform'
+          ];
+
+          if (type !== 'ellipse') {
+            requiredProps.forEach((prop: string) => {
+              if (shape && (shape as any)[prop]) {
+                target = { ...target, [prop]: (shape as any)[prop]};
+              }
+            });
+
+            payload = {
+              type,
+              target,
+              id,
+            };
+          } else {
+            requiredEllipseProps.forEach((prop: string) => {
+              if (shape && (shape as any)[prop]) {
+                target = { ...target, [prop]: (shape as any)[prop]};
+              }
+            });
+
+            payload = {
+              type,
+              target,
+              id,
+            };
+          }
+
+          eventSerializer?.push('added', payload);
+
+          const event = { event: payload, type: 'added' };
+
+          dispatch({
+            type: SET,
+            payload: (canvas?.getObjects() as unknown) as TypedShape[],
+            userId,
+            event,
+          });
         }
       });
     },
-    [canvas, shapeIsActive, shapeSelector]
+    [canvas, shapeIsActive, shapeSelector, eventSerializer, userId, dispatch]
   );
 
   /**
