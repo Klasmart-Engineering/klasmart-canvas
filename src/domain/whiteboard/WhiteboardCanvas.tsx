@@ -754,7 +754,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     undoRedoDispatch
   );
   useSynchronizedSkewed(canvas, filterOutgoingEvents, filterIncomingEvents);
-  useSynchronizedReconstruct(canvas, filterIncomingEvents);
+  useSynchronizedReconstruct(canvas, filterIncomingEvents, userId, undoRedoDispatch);
   useSynchronizedColorChanged(
     canvas,
     userId,

@@ -122,7 +122,7 @@ const objectStringifier = (payload: [fabric.Object | TypedShape]): string => {
 
   if (payload) {
     formatted = payload.map((object: fabric.Object | TypedShape) =>
-      object.toJSON(['strokeUniform', 'id'])
+      object.toJSON(['strokeUniform', 'id', 'selectable', 'evented'])
     );
   }
 
@@ -280,14 +280,18 @@ const reducer = (
         return isLocalObject(object.id as string, action.canvasId as string)
       }) as [fabric.Object | TypedShape];
       
-      const otherObjects = action.payload?.filter(
+      let otherObjects = action.payload?.filter(
         (object: TypedShape | TypedGroup) => {
           return !isLocalObject(object.id as string, action.canvasId as string) && !(object as TypedGroup)._objects;
         }
       ) as [fabric.Object | TypedShape];
 
       selfItems = selfItems.map((o: TypedShape | TypedGroup) => {
-        return o.toObject(['id']);
+        return o.toObject(['id', 'selectable']);
+      }) as [TypedShape | TypedGroup];
+
+      otherObjects = otherObjects.map((o: TypedShape | TypedGroup) => {
+        return o.toObject(['id', 'selectable']);
       }) as [TypedShape | TypedGroup];
 
       const currentState = JSON.stringify({

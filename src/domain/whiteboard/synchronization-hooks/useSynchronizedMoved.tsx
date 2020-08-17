@@ -5,6 +5,7 @@ import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET, SET_OTHER, SET_GROUP } from '../reducers/undo-redo';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { v4 as uuidv4 } from 'uuid';
+import { TypedGroup } from '../../../interfaces/shapes/group';
 
 const useSynchronizedMoved = (
   canvas: fabric.Canvas | undefined,
@@ -120,7 +121,8 @@ const useSynchronizedMoved = (
         return !o.group;
       });
 
-      let active = canvas?.getActiveObject();
+      let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
+      active?.set({ id: `${userId}:group` });
 
       undoRedoDispatch({
         type: SET_GROUP,
