@@ -1,5 +1,6 @@
 import { useReducer } from 'react';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { TypedGroup } from '../../../interfaces/shapes/group';
 
 export const UNDO = 'CANVAS_UNDO';
 export const REDO = 'CANVAS_REDO';
@@ -27,7 +28,7 @@ export interface CanvasHistoryState {
   /**
    * Objects created on another canvas.
    */
-  otherObjects: any;
+  otherObjects: string;
 
   /**
    * Indicates action being taken, such as undo or redo.
@@ -102,7 +103,7 @@ export interface CanvasAction {
  */
 const defaultState: CanvasHistoryState = {
   states: [],
-  otherObjects: [],
+  otherObjects: '',
   actionType: null,
   activeStateIndex: null,
   activeState: null,
@@ -128,6 +129,11 @@ const objectStringifier = (payload: [fabric.Object | TypedShape]): string => {
   return JSON.stringify({ objects: formatted });
 };
 
+/**
+ * Determine if an object belongs to local canvas.
+ * @param id Object ID
+ * @param canvasId Canvas ID
+ */
 const isLocalObject = (id: string, canvasId: string): boolean => {
   if (!id) {
     return false;
@@ -142,6 +148,12 @@ const isLocalObject = (id: string, canvasId: string): boolean => {
   return object[0] === canvasId;
 };
 
+/**
+ * Determines new event index on undo.
+ * @param newIndex New umodified event index.
+ * @param eventId Event ID
+ * @param events List of events
+ */
 const determineNewIndex = (newIndex: number, eventId: string, events: any) => {
   let i = newIndex;
 
@@ -154,6 +166,12 @@ const determineNewIndex = (newIndex: number, eventId: string, events: any) => {
   return -1;
 }
 
+/**
+ * Determines new event index on redo.
+ * @param newIndex New umodified event index.
+ * @param eventId Event ID
+ * @param events List of events
+ */
 const determineNewRedoIndex = (newIndex: number, eventId: string, events: any) => {
   let i = newIndex;
 
@@ -253,20 +271,24 @@ const reducer = (
       let states = [...state.states];
       let events = [...state.events];
 
-      const selfItems = action.payload?.filter((object: any) => {
+      let selfItems = action.payload?.filter((object: TypedShape | TypedGroup) => {
 
-        if (object._objects) {
+        if ((object as TypedGroup)._objects) {
           return object;
         }
 
-        return isLocalObject(object.id, action.canvasId as string)
+        return isLocalObject(object.id as string, action.canvasId as string)
       }) as [fabric.Object | TypedShape];
       
       const otherObjects = action.payload?.filter(
-        (object: any) => {
-          return !isLocalObject(object.id, action.canvasId as string) && !object._objects;
+        (object: TypedShape | TypedGroup) => {
+          return !isLocalObject(object.id as string, action.canvasId as string) && !(object as TypedGroup)._objects;
         }
       ) as [fabric.Object | TypedShape];
+
+      selfItems = selfItems.map((o: TypedShape | TypedGroup) => {
+        return o.toObject(['id']);
+      }) as [TypedShape | TypedGroup];
 
       const currentState = JSON.stringify({
           objects: [
@@ -290,6 +312,8 @@ const reducer = (
       const mappedSelfState = JSON.stringify({ objects: selfItems });
       states = [...states, mappedSelfState];
 
+      let newEvent = { ...action.event, selfState: mappedSelfState };
+
       let stateItems = {
         ...state,
         states,
@@ -309,7 +333,7 @@ const reducer = (
       if (Array.isArray(action.event)) {
         events = [...events, ...action.event];
       } else {
-        events = [...events, action.event];
+        events = [...events, newEvent];
       }
       
       stateItems = {
@@ -323,12 +347,14 @@ const reducer = (
 
     // Steps back to previous state.
     case UNDO: {
+      
       if (state.activeStateIndex === null) {
         return state;
       }
 
       let eventIndex = state.eventIndex - 1;
-      if (state.events[state.eventIndex - 1] && state.events[state.eventIndex - 1].eventId) {
+      
+      if (state.events[state.eventIndex] && state.events[state.eventIndex].eventId) {
         // This is a grouped event action, determine previous
         // event index prior to grouped event.
         eventIndex = determineNewIndex(state.eventIndex - 1, state.events[state.eventIndex - 1].eventId, state.events);
@@ -413,7 +439,7 @@ const reducer = (
         isLocalObject(object.id, action.canvasId as string)
       ) as [fabric.Object | TypedShape];
       const otherObjects = action.payload?.filter(
-        (object: any) => !isLocalObject(object.id, action.canvasId as string)
+        (object: TypedShape | TypedGroup) => !isLocalObject(object.id as string, action.canvasId as string)
       ) as [fabric.Object | TypedShape];
       const currentState = objectStringifier([
         ...selfItems,

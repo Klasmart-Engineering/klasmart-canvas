@@ -34,7 +34,7 @@ import useSynchronizedRotated from './synchronization-hooks/useSynchronizedRotat
 import useSynchronizedScaled from './synchronization-hooks/useSynchronizedScaled';
 import useSynchronizedSkewed from './synchronization-hooks/useSynchronizedSkewed';
 import useSynchronizedReconstruct from './synchronization-hooks/useSynchronizedReconstruct';
-import { SET } from './reducers/undo-redo';
+import { SET, SET_GROUP } from './reducers/undo-redo';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -785,7 +785,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             target: target(type),
             id: obj.id,
           };
-
+        
           eventSerializer?.push('colorChanged', payload);
         }
       });
@@ -803,6 +803,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (fontColor && canvas) {
       const obj = canvas.getActiveObject() as any;
+   
+      if (!obj) return;
+  
       const type = obj?.get('type');
 
       if (type !== 'textbox') return;
@@ -812,7 +815,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         target: { fill: obj?.fill },
         id: obj?.id,
       };
-      
+
       const event = { event: payload, type: 'colorChanged' };
 
       undoRedoDispatch({
@@ -828,6 +831,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (penColor && canvas) {
       const obj = canvas.getActiveObject() as any;
+
+      if (!obj) return;
+
       const type = obj?.get('type');
 
       if (type === 'textbox') return;
@@ -837,7 +843,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         target: { stroke: obj?.stroke },
         id: obj?.id,
       };
-      
+
       const event = { event: payload, type: 'colorChanged' };
 
       undoRedoDispatch({
@@ -852,6 +858,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (lineWidth && canvas) {
       const obj = canvas.getActiveObject() as any;
+
+      if (!obj) return;
+
       const type = obj?.get('type');
 
       if (type === 'textbox') return;
@@ -900,6 +909,87 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       });
     }
   }, [isLocalObject, canvas, eventSerializer, userId, fontFamily]);
+
+
+  useEffect(() => {
+    if (canvas && fontFamily) {  
+      const obj = canvas?.getActiveObject() as any;
+      const type = obj?.get('type');
+
+      if (type === 'textbox' && obj) {
+
+        const target = {
+          fontFamily,
+        };
+
+        const payload = {
+          type,
+          target,
+          id: obj?.id,
+        };
+        
+        const event = { event: payload, type: 'fontFamilyChanged' };
+
+        obj.set({ fontFamily });
+
+        undoRedoDispatch({
+          type: SET,
+          payload: (canvas?.getObjects() as unknown) as TypedShape[],
+          canvasId: userId,
+          event,
+        });
+      } else if (obj?.type === 'activeSelection') {
+        let events: any[] = [];
+        const eventId: string = uuidv4();
+
+        obj._objects.forEach((object: any) => {
+          const payload = {
+            type,
+            target: { fontFamily },
+            id: object.id,
+          };
+  
+          const event = { event: payload, type: 'activeSelection', eventId };
+          events.push(event);
+          object.set({ fontFamily });
+        });
+
+        let mappedObjects = canvas?.getObjects().map((object: any) => {
+          if (!object.group) {
+            return object.toJSON(['strokeUniform', 'id']);
+          }
+          const matrix = object.calcTransformMatrix();
+          const options = fabric.util.qrDecompose(matrix);
+          const transformed = object.toJSON(['strokeUniform', 'id']);
+          let top = (object.group.height / 2 + object.top) + object.group.top;
+          let left = (object.group.width / 2 + object.left) + object.group.left;
+  
+          events.forEach((event: any) => {
+            if (event.event.id === object.id) {
+              event.event.target.top = top;
+              event.event.target.left = left;
+            }
+          });
+  
+          return {
+            ...transformed,
+            top,
+            left,
+            scaleX: options.scaleX,
+            scaleY: options.scaleY,
+          }
+        });
+
+        undoRedoDispatch({
+          type: SET_GROUP,
+          payload: mappedObjects as TypedShape[],
+          canvasId: userId,
+          event: events,
+        });
+      }
+    }
+
+  }, [canvas, fontFamily, undoRedoDispatch, userId]);
 
   /**
    * If pointerEvents changes to false, all the selected objects

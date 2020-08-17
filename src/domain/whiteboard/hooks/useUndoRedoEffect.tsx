@@ -1,79 +1,10 @@
 import { useEffect } from 'react';
 import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
+import { TypedGroup } from '../../../interfaces/shapes/group';
+import { TypedShape } from '../../../interfaces/shapes/shapes';
 
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
-
-/**
- * Reconstructs an object based on past events.
- * @param id Object ID.
- * @param events Array of events
- * @param numToRemove Number of events to ignore.
- */
-const objectReconstructor = (id: string, events: any, numToRemove: number) => {
-  let filtered = events.filter((event: any) => {
-    return event.event.id === id;
-  });
-
-  if (numToRemove) {
-    filtered.splice(-numToRemove);
-  }
-
-  const mapped = filtered.map((event: any) => {
-    return event.event;
-  });
-
-  let reconstructedTarget = {};
-
-  mapped.forEach((object: any) => {
-    reconstructedTarget = { ...reconstructedTarget, ...object.target };
-  });
-
-  let event = { ...filtered[0].event, target: reconstructedTarget };
-
-  if (filtered[filtered.length - 1].event.svg) {
-    event = { ...event, target: { ...event.target, svg: filtered[filtered.length - 1].event.svg }};
-  }
-
-  return {
-    ...filtered[filtered.length - 1],
-    event,
-  };
-};
-
-const undoHandler = (event: any, state: any, eventSerializer: any) => {
-  let id = event.event.id;
-  let allEvents = [...state.events];
-  let futureEvents = allEvents.splice(state.eventIndex + 1);
-  futureEvents = futureEvents.filter((e: any) => e.event.id === id);
-
-  const reconstructedEvent = objectReconstructor(
-    id,
-    state.events,
-    futureEvents.length
-  );
-
-  if (reconstructedEvent.type !== 'added') {
-    eventSerializer?.push('reconstruct', reconstructedEvent.event);
-  } else {
-    eventSerializer?.push('removed', { id: reconstructedEvent.event.id });
-    eventSerializer?.push('added', reconstructedEvent.event);
-  }
-}
-
-const redoHandler = (event: any, state: any, eventSerializer: any) => {
-  let id = event.event.id;
-  let allEvents = [...state.events];
-  let futureEvents = allEvents.splice(state.eventIndex + 1);
-  futureEvents = futureEvents.filter((e: any) => e.event.id === id);
-  const reconstructedEvent = objectReconstructor(
-    id,
-    state.events,
-    futureEvents.length
-  );
-
-  eventSerializer?.push('reconstruct', reconstructedEvent.event);
-}
 
 /**
  * Custom hook to track canvas history.
@@ -82,7 +13,7 @@ const redoHandler = (event: any, state: any, eventSerializer: any) => {
  * @param canvasId Canvas ID
  */
 export const UndoRedo = (
-  canvas: any,
+  canvas: fabric.Canvas,
   eventSerializer: any,
 ) => {
   const { state, dispatch } = useUndoRedo();
@@ -100,7 +31,7 @@ export const UndoRedo = (
       state.actionType === REDO
     ) {
       canvas.clear();
-      const mapped = JSON.parse(state.activeState as string).objects.map((object: any) => {
+      const mapped = JSON.parse(state.activeState as string).objects.map((object: TypedShape | TypedGroup) => {
         return { ...object, fromJSON: true };
       });
       canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {});
@@ -116,65 +47,86 @@ export const UndoRedo = (
         // If undoing the creation of an object, remove.
         eventSerializer?.push('removed', payload);
       } else if (nextEvent.type !== 'activeSelection') {
-        let id = nextEvent.event.id;
-        let allEvents = [...state.events];
-        let futureEvents = allEvents.splice(state.eventIndex + 1);
-        futureEvents = futureEvents.filter((e: any) => e.event.id === id);
-        const reconstructedEvent = objectReconstructor(
-          id,
-          state.events,
-          futureEvents.length
-        );
+        let currentEvent = state.events[state.eventIndex];
 
-        eventSerializer?.push('reconstruct', reconstructedEvent.event);
-      } else {
-        
-        if (!state.events[state.eventIndex].event.svg && !nextEvent.activeIds) {
-          let groupedEvents = state.events.filter((event: any) => {
-            return (event.eventId && nextEvent.eventId && event.eventId === nextEvent.eventId)
-          });
+        if (currentEvent.type !== 'activeSelection') {
+          let id = nextEvent.event.id;
+          let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+          let object = objects.filter((o: any) => (o.id === id))[0];
+          let payload = {
+            id,
+            svg: true,
+            target: { objects: [object]},
+            type: 'reconstruct'
+          }
 
-          groupedEvents.forEach((singleEvent: any) => {
-            undoHandler(singleEvent, state, eventSerializer);
-          });
-        } else if (!state.events[state.eventIndex].event.svg && nextEvent.activeIds) {
-          // let allEvents = [...state.events];
-          // let futureEvents = allEvents.splice(state.eventIndex + 1);
-          // let events = nextEvent.activeIds.map((id: string) => {
-          //   return objectReconstructor(id, state.events, futureEvents.length)
-          // });
-
+          eventSerializer?.push('reconstruct', payload);
         } else {
-          // Handle rerender in external board with svgs.
+          let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+          let payload = {
+            id: nextEvent.event.id,
+            svg: true,
+            target: { objects },
+            type: 'reconstruct'
+          }
+          eventSerializer?.push('reconstruct', payload);
+        }
+      } else {
+        if (
+          (state.events[state.eventIndex].type === 'activeSelection' &&
+          state.events[state.eventIndex + 1] &&
+          state.events[state.eventIndex + 1].type === 'activeSelection') ||
+          state.events[state.eventIndex].type === 'added'
+        ) {
+          let id = state.events[state.eventIndex].event.id;
+          let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+          let payload = {
+            id,
+            svg: true,
+            target: { objects },
+            type: 'reconstruct'
+          }
           
-          eventSerializer?.push('reconstruct', state.events[state.eventIndex].event);
+          eventSerializer?.push('reconstruct', payload);
+        } else {
+
+          let payload = {
+            id: nextEvent.event.id,
+            svg: true,
+            target: state.states[state.activeStateIndex as number],
+            type: 'reconstruct'
+          }
+          eventSerializer?.push('reconstruct', payload);
         }
       }
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];
-
       if (event.type === 'added') {
         eventSerializer?.push('added', event.event);
-      } else if (event.type !== 'activeSelection') {
+      } else if (event && event.type !== 'activeSelection') {
         let id = event.event.id;
-        let allEvents = [...state.events];
-        let futureEvents = allEvents.splice(state.eventIndex + 1);
-        futureEvents = futureEvents.filter((e: any) => e.event.id === id);
-        const reconstructed = objectReconstructor(
-          id,
-          state.events,
-          futureEvents.length
-        );
+        let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+        let object = objects.filter((o: TypedShape | TypedGroup) => (o.id === id))[0];
 
-        eventSerializer?.push(reconstructed.type, reconstructed.event);
+        let payload = {
+          id,
+          svg: true,
+          target: { objects: [object]},
+          type: 'reconstruct'
+        }
+
+        eventSerializer?.push('reconstruct', payload);
       } else {
-        let groupedEvents = state.events.filter((e: any) => (e.eventId === event.eventId));
-        groupedEvents.forEach((singleEvent: any, i: number) => {
-          if (i === 0) {
-            console.log(singleEvent);
-          }
-          redoHandler(singleEvent, state, eventSerializer);
-        });
+        let id = state.events[state.eventIndex].event.id;
+        let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+        let payload = {
+          id,
+          svg: true,
+          target: { objects },
+          type: 'reconstruct'
+        }
+        
+        eventSerializer?.push('reconstruct', payload);
       }
     }
   }, [state, canvas, dispatch, eventSerializer]);

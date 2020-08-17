@@ -55,8 +55,7 @@ const useSynchronizedMoved = (
 
   const moveSelectedGroup = useCallback(
     (type: any, e: any) => {
-      const eventId: string = uuidv4();
-      const events: any[] = [];
+      const activeIds: string[] = [];
 
       e.target._objects.forEach((activeObject: any) => {
         if (!shouldSerializeEvent(activeObject.id)) return;
@@ -103,44 +102,32 @@ const useSynchronizedMoved = (
           id: activeObject.id,
         };
 
-        const event = { event: payload, type: 'activeSelection', eventId };
-        events.push(event);
+        activeIds.push(activeObject.id);
 
         eventSerializer?.push('moved', payload);
       });
+
+      const payload = {
+        type,
+        svg: true,
+        target: null,
+        id: `${userId}:group`,
+      };
+
+      const event = { event: payload, type: 'activeSelection', activeIds };
       
-      let mappedObjects = canvas?.getObjects().map((object: any) => {
-        if (!object.group) {
-          return object.toJSON(['strokeUniform', 'id']);
-        }
-        const matrix = object.calcTransformMatrix();
-        const options = fabric.util.qrDecompose(matrix);
-        const transformed = object.toJSON(['strokeUniform', 'id']);
-        let top = (object.group.height / 2 + object.top) + object.group.top;
-        let left = (object.group.width / 2 + object.left) + object.group.left;
-
-        events.forEach((event: any) => {
-          if (event.event.id === object.id) {
-            event.event.target.top = top;
-            event.event.target.left = left;
-          }
-        });
-
-        return {
-          ...transformed,
-          top,
-          left,
-          scaleX: options.scaleX,
-          scaleY: options.scaleY,
-        }
+      let filtered = canvas?.getObjects().filter((o: any) => {
+        return !o.group;
       });
+
+      let active = canvas?.getActiveObject();
 
       undoRedoDispatch({
         type: SET_GROUP,
-        payload: mappedObjects as unknown as fabric.Object[],
         // payload: canvas?.getObjects(),
+        payload: [ ...filtered as any[], active ],
         canvasId: userId,
-        event: events,
+        event,
       });
     },
     [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]

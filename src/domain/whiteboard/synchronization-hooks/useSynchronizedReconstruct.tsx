@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
+import { TypedShape } from '../../../interfaces/shapes/shapes'
 import { fabric } from 'fabric';
 
 const useSynchronizedReconstruct = (
@@ -14,64 +15,42 @@ const useSynchronizedReconstruct = (
 
     const reconstruct = (id: string, target: any) => {
       if (!shouldHandleRemoteEvent(id)) return;
-      const targetParam = JSON.parse(target.param);
+      const objects = JSON.parse(target.param).objects;
+      // const objects = JSON.parse(targetParam).objects;
+      objects.forEach((object: TypedShape) => {
+        if (object.type === 'path') {
+          const group = canvas?.getObjects().filter((o: any) => o._objects)[0];
+          if (group) {
+            canvas?.remove(group);
+          }
 
-      if (targetParam.svg) {
-        fabric.loadSVGFromString(targetParam.svg, (objects: any) => {
-          objects.forEach((object: any) => {
-            canvas?.forEachObject(function (obj: any) {
-              if (object.id !== obj.id) return;
-                obj.originX = 'left';
-                obj.originY = 'top';
-                canvas?.remove(obj);
-                canvas?.add(object);
-            });
+          fabric.Path.fromObject(object, (path: TypedShape) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(path);
           });
-        });
-        return;
-      }
 
-      canvas?.forEachObject(function (obj: any) {
-        if (obj.id !== id) return;
-          canvas?.remove(obj);
-          canvas.renderAll();
-          const oObject = obj.toJSON(['strokeUniform', 'id']);
-          let nObject = { ...oObject, ...targetParam };
-
-          switch (target.objectType) {
-            case 'path': {
-
-              if (!targetParam.angle) {
-                console.log(targetParam, nObject);
-                nObject = { ...nObject, angle: 0 };
-              }
-              
-              fabric.Path.fromObject(nObject, (path: any) => {
-                path.originX = 'left';
-                path.originY = 'top';
-                canvas.add(path);
+          canvas?.renderAll();
+        } else if (object.type === 'textbox') {
+          fabric.Textbox.fromObject(object, (path: TypedShape) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(path);
+          });
+        } else {
+          fabric.Group.fromObject(object, (group: fabric.Group) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            if (group._objects) {
+              group._objects.forEach((o: TypedShape) => {
+                const oldO = canvas?.getObjects().filter((oldObject: TypedShape) => oldObject.id === o.id)[0];
+                canvas?.remove(oldO as fabric.Object);
               });
-              break;
             }
-            case 'textbox': {
-              if (JSON.parse(target.param).fill) {
-                delete nObject.stroke;
-              } else {
-                nObject = { ...nObject, fill: nObject.stroke };
-                delete nObject.stroke;
-              }
-
-              fabric.Textbox.fromObject(nObject, (path: any) => {
-                path.originX = 'left';
-                path.originY = 'top';
-                canvas.add(path);
-              });
-              break;
-            }
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(group);
+          });
         }
       });
-
-      canvas?.renderAll();
     }
 
     eventController?.on('reconstruct', reconstruct);

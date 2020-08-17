@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
-import { CanvasAction, SET } from '../reducers/undo-redo';
+import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 
 const useSynchronizedScaled = (
@@ -64,6 +64,7 @@ const useSynchronizedScaled = (
   useEffect(() => {
     const objectScaled = (e: any) => {
       const type = e.target.get('type');
+      const activeIds: string[] = [];
 
       if (type === 'activeSelection') {
         e.target._objects.forEach((activeObject: any) => {
@@ -110,8 +111,32 @@ const useSynchronizedScaled = (
             id: activeObject.id,
           };
 
+          activeIds.push(activeObject.id);
+
           eventSerializer?.push('scaled', payload);
         });
+
+        const payload = {
+          type,
+          svg: true,
+          target: null,
+          id: `${userId}:group`,
+        };
+
+        const event = { event: payload, type: 'activeSelection', activeIds };
+        const filtered = canvas?.getObjects().filter((o: any) => {
+          return !o.group;
+        });
+
+        let active = canvas?.getActiveObject();
+
+        undoRedoDispatch({
+          type: SET_GROUP,
+          payload: [ ...filtered as any[], active ],
+          canvasId: userId,
+          event,
+        });
+      
       } else {
         if (!e.target.id) {
           return;
