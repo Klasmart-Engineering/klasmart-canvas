@@ -126,7 +126,6 @@ const useSynchronizedMoved = (
 
       undoRedoDispatch({
         type: SET_GROUP,
-        // payload: canvas?.getObjects(),
         payload: [ ...filtered as any[], active ],
         canvasId: userId,
         event,

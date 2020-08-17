@@ -237,6 +237,12 @@ const useSynchronizedAdded = (
       }
 
       if (shape) {
+        target = {
+          ...target,
+          selectable: false,
+          evented: false
+        };
+
         shape.set(target);
         canvas?.add(shape);
         canvas?.renderAll();

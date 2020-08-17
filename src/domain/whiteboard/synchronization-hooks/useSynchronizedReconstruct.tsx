@@ -36,12 +36,39 @@ const useSynchronizedReconstruct = (
           });
 
           canvas?.renderAll();
+        } else if (object && object.type === 'polygon') {
+          // Ignore is required, typing is wrong in definition file.
+          //@ts-ignore
+          fabric.Polygon.fromObject(object, (o: TypedShape) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            o.set({ selectable: false, evented: false });
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(o);
+          });
         } else if (object && object.type === 'textbox') {
           fabric.Textbox.fromObject(object, (path: TypedShape) => {
             const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
             path.set({ selectable: false, evented: false });
             canvas?.remove(old as fabric.Object);
             canvas?.add(path);
+          });
+        } else if (object && object.type === 'rect') {
+          // Ignore is required, typing is wrong in definition file.
+          //@ts-ignore
+          fabric.Rect.fromObject(object, (o: TypedShape) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            o.set({ selectable: false, evented: false });
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(o);
+          });
+        } else if (object && object.type === 'ellipse') {
+          // Ignore is required, typing is wrong in definition file.
+          //@ts-ignore
+          fabric.Ellipse.fromObject(object, (o: TypedShape) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            o.set({ selectable: false, evented: false });
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(o);
           });
         } else if (object) {
           fabric.Group.fromObject(object, (group: fabric.Group) => {

@@ -34,6 +34,7 @@ export const UndoRedo = (
       const mapped = JSON.parse(state.activeState as string).objects.map((object: TypedShape | TypedGroup) => {
         return { ...object, fromJSON: true };
       });
+
       canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {});
     }
 

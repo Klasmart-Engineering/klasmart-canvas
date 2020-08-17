@@ -325,7 +325,9 @@ export const useCanvasActions = (
             'name',
             'scaleX',
             'scaleY',
-            'strokeUniform'
+            'strokeUniform',
+            'originX',
+            'originY'
           ];
 
           const requiredEllipseProps = [
@@ -337,7 +339,9 @@ export const useCanvasActions = (
             'strokeWidth',
             'stroke',
             'fill',
-            'strokeUniform'
+            'strokeUniform',
+            'originY',
+            'originX'
           ];
 
           if (type !== 'ellipse') {
@@ -373,7 +377,7 @@ export const useCanvasActions = (
           dispatch({
             type: SET,
             payload: (canvas?.getObjects() as unknown) as TypedShape[],
-            userId,
+            canvasId: userId,
             event,
           });
         }
