@@ -1059,10 +1059,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateCanvasActions(actions);
   }, [actions, updateCanvasActions]);
 
-  // Temporary code to get undo / redo working while there are two boards
-  // on the view.
-  const tempKeyDown = (e: any) => {
-    debugger;
+
+  // Will be modified once only one board is visible.
+  const keyDown = (e: any) => {
     if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
       undoRedoDispatch({ type: UNDO, canvasId: instanceId });
       return;
@@ -1082,19 +1081,27 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   // canvas doesn't have a fixed size and could vary between different
   // activities etc. For now the user will have to pass in the exact
   // width and height they want to have the canvas in.
+  // Note: Added div wrapper to execute onKeyDown. Once canvas final form
+  // takes place, this may or may not be modified.
 
   return (
-    <canvas
-      width={width}
-      height={height}
-      id={instanceId}
-      style={initialStyle}
-      onClick={() => {
-        actions.addShape(shape);
-      }}
-      onKeyDown={tempKeyDown}
+    <div
+      tabIndex={0}
+      onKeyDown={keyDown}
+      style={{ backgroundColor: 'transparent '}}
     >
-      {children}
-    </canvas>
+      <canvas
+        width={width}
+        height={height}
+        id={instanceId}
+        style={initialStyle}
+        tabIndex={0}
+        onClick={() => {
+          actions.addShape(shape);
+        }}
+      >
+        {children}
+      </canvas>
+    </div>
   );
 };
