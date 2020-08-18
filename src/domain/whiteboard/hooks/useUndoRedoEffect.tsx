@@ -2,6 +2,11 @@ import { useEffect } from 'react';
 import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { TypedShape, TypedPolygon } from '../../../interfaces/shapes/shapes';
+import { Canvas } from 'fabric/fabric-impl';
+import {
+  PaintEventSerializer,
+  ObjectEvent,
+} from '../event-serializer/PaintEventSerializer';
 
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
@@ -32,8 +37,8 @@ const isLocalObject = (id: string, canvasId: string): boolean => {
  * @param canvasId Canvas ID
  */
 export const UndoRedo = (
-  canvas: fabric.Canvas,
-  eventSerializer: any,
+  canvas: Canvas,
+  eventSerializer: PaintEventSerializer,
   instanceId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
@@ -71,8 +76,8 @@ export const UndoRedo = (
 
     if (state.actionType === UNDO) {
       const payload = {
-        id: nextEvent.event.id,
-      };
+        id: nextEvent.event?.id || '',
+      } as ObjectEvent;
 
       // Serialize the event for synchronization
       if (nextEvent.type === 'added') {
@@ -84,10 +89,9 @@ export const UndoRedo = (
         if (currentEvent.type !== 'activeSelection') {
           let id = nextEvent.event.id;
           let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
-          let object = objects.filter((o: any) => (o.id === id))[0];
-          let payload = {
+          let object = objects.filter((o: ObjectEvent) => (o.id === id))[0];
+          let payload: ObjectEvent = {
             id,
-            svg: true,
             target: { objects: [object]},
             type: 'reconstruct'
           }
@@ -95,9 +99,8 @@ export const UndoRedo = (
           eventSerializer?.push('reconstruct', payload);
         } else {
           let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
-          let payload = {
+          let payload: ObjectEvent = {
             id: nextEvent.event.id,
-            svg: true,
             target: { objects },
             type: 'reconstruct'
           }
@@ -112,9 +115,8 @@ export const UndoRedo = (
         ) {
           let id = state.events[state.eventIndex].event.id;
           let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
-          let payload = {
+          let payload: ObjectEvent = {
             id,
-            svg: true,
             target: { objects },
             type: 'reconstruct'
           }
@@ -130,9 +132,8 @@ export const UndoRedo = (
         } else {
           let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
 
-          let payload = {
+          let payload: ObjectEvent = {
             id: nextEvent.event.id,
-            svg: true,
             target: { objects },
             type: 'reconstruct'
           }
@@ -148,9 +149,8 @@ export const UndoRedo = (
         let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
         let object = objects.filter((o: TypedShape | TypedGroup) => (o.id === id))[0];
 
-        let payload = {
+        let payload: ObjectEvent = {
           id,
-          svg: true,
           target: { objects: [object]},
           type: 'reconstruct'
         }
@@ -159,9 +159,8 @@ export const UndoRedo = (
       } else {
         let id = state.events[state.eventIndex].event.id;
         let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
-        let payload = {
+        let payload: ObjectEvent = {
           id,
-          svg: true,
           target: { objects },
           type: 'reconstruct'
         }
@@ -169,7 +168,7 @@ export const UndoRedo = (
         eventSerializer?.push('reconstruct', payload);
       }
     }
-  }, [state, canvas, dispatch, eventSerializer]);
+  }, [state, canvas, dispatch, eventSerializer, instanceId]);
 
   return { state, dispatch };
 };

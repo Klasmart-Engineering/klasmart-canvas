@@ -1,8 +1,13 @@
 import { ObjectEvent } from './PaintEventSerializer';
+
 interface IPathTarget {
+    id?: string;
     stroke: string;
     strokeWidth: number;
-    path: any[];
+    path: any;
+    selectable?: boolean;
+    evented?: boolean;
+    strokeUniform?: boolean;
 }
 export declare class PainterEvents {
     static createId(canvasId: string): string;

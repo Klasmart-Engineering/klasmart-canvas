@@ -1,11 +1,18 @@
 import { useEffect } from 'react';
 import { PainterEvents } from '../event-serializer/PainterEvents';
-import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
+import {
+  ObjectEvent,
+  ObjectType,
+} from '../event-serializer/PaintEventSerializer';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
 import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
 import { TypedShape, TypedPolygon } from '../../../interfaces/shapes/shapes';
 import { chat, star, arrow, hexagon, pentagon } from '../shapes/shapes';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-drawing-event';
+import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -20,7 +27,11 @@ const useSynchronizedAdded = (
 
   /** Register and handle path:created event. */
   useEffect(() => {
-    const pathCreated = (e: any) => {
+    const pathCreated = (e: ICanvasDrawingEvent) => {
+      if (!e.path) {
+        return;
+      }
+
       e.path.id = PainterEvents.createId(userId);
       // if (!shouldSerializeEvent(e.path.id)) return;
 
@@ -28,7 +39,7 @@ const useSynchronizedAdded = (
         stroke: e.path.stroke,
         strokeWidth: e.path.strokeWidth,
         path: e.path.path,
-      };
+      } as ICanvasObject;
 
       eventSerializer?.push(
         'added',
@@ -45,11 +56,11 @@ const useSynchronizedAdded = (
             type: 'path',
           },
           type: 'added',
-        };
+        } as unknown as IUndoRedoEvent;
 
         undoRedoDispatch({
           type: SET,
-          payload: (canvas.getObjects() as unknown) as TypedShape[],
+          payload: canvas.getObjects(),
           canvasId: userId,
           event,
         });
@@ -66,11 +77,11 @@ const useSynchronizedAdded = (
   /** Register and handle object:added event. */
   useEffect(() => {
     const objectAdded = (e: any) => {
-      if (!e.target.id) return;
+      if (!e.target?.id) return;
       if (e.target.fromJSON) return;
       if (!shouldSerializeEvent(e.target.id)) return;
 
-      const type = e.target.get('type');
+      const type: ObjectType = (e.target.get('type') || 'path') as ObjectType;
 
       if (type === 'path') {
         return;
@@ -85,16 +96,16 @@ const useSynchronizedAdded = (
           left: e.target.left,
           width: e.target.width,
         }),
-      };
+      } as ICanvasObject;
 
-      const payload = {
+      const payload: ObjectEvent = {
         type,
-        target : { ...target, top: e.target.top, left: e.target.left },
+        target : { ...target, top: e.target.top, left: e.target.left } as ICanvasObject,
         id: e.target.id,
       };
 
       if (canvas) {
-        const event = { event: payload, type: 'added' };
+        const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
         undoRedoDispatch({
           type: SET,
@@ -166,7 +177,7 @@ const useSynchronizedAdded = (
 
   /** Register and handle remote added event. */
   useEffect(() => {
-    const added = (id: string, objectType: string, target: any) => {
+    const added = (id: string, objectType: string, target: ICanvasObject) => {
       // TODO: We'll want to filter events based on the user ID. This can
       // be done like this. Example of extracting user id from object ID:
       // let { user } = new ShapeID(id);
@@ -184,7 +195,7 @@ const useSynchronizedAdded = (
       if (!shouldHandleRemoteEvent(id)) return;
 
       if (objectType === 'textbox') {
-        let text = new fabric.Textbox(target.text, {
+        let text = new fabric.Textbox(target.text || '', {
           fontSize: 30,
           fontWeight: 400,
           fontStyle: 'normal',
@@ -196,9 +207,7 @@ const useSynchronizedAdded = (
           selectable: false,
         });
 
-        // @ts-ignore
-        text.id = id;
-
+        (text as ICanvasObject).id = id;
         canvas?.add(text);
         return;
       }
@@ -208,12 +217,11 @@ const useSynchronizedAdded = (
       if (objectType === 'path' && !target.name) {
         const pencil = new fabric.PencilBrush();
         pencil.color = target.stroke || '#000';
-        pencil.width = target.strokeWidth;
+        pencil.width = target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH;
 
         // Convert Points to SVG Path
-        const res = pencil.createPath(target.path);
-        // @ts-ignore
-        res.id = id;
+        const res = pencil.createPath((target.path as string) || '');
+        (res as ICanvasObject).id = id;
         res.selectable = false;
         res.evented = false;
         res.strokeUniform = true;
@@ -221,7 +229,7 @@ const useSynchronizedAdded = (
         canvas?.add(res);
         canvas?.renderAll();
       } else if ((objectType === 'path' || objectType === 'polygon') && target.name) {
-        shape = generateGenericShape(target);
+        shape = generateGenericShape(target as unknown as { [key: string]: string | number | boolean; });
       }
 
       if (objectType === 'rect') {
@@ -241,9 +249,9 @@ const useSynchronizedAdded = (
           ...target,
           selectable: false,
           evented: false
-        };
+        } as ICanvasObject;
 
-        shape.set(target);
+        shape.set(target as Partial<fabric.Ellipse>);
         canvas?.add(shape);
         canvas?.renderAll();
       }

@@ -36,7 +36,7 @@ function ToolbarSelector(props: IToolbarSelector) {
     findOptionDefinedbyParent()
   );
   const [showOptions, setShowOptions] = useState(false);
-  const buttonRef = useRef(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   /**
    * When selectedValue changes the value is found in all the available options
@@ -101,12 +101,7 @@ function ToolbarSelector(props: IToolbarSelector) {
    * @param {MouseEvent} e - Mouse click event
    */
   function handleOutsideClick(e: Event) {
-    if (
-      !((buttonRef.current as unknown) as HTMLElement).contains(
-        e.target as Node
-      ) &&
-      !showOptions
-    ) {
+    if (!buttonRef.current?.contains(e.target as Node) && !showOptions) {
       setShowOptions(false);
     }
   }
@@ -182,13 +177,13 @@ function ToolbarSelector(props: IToolbarSelector) {
           active ? 'selected' : '',
           !active ? 'unselected' : '',
         ].join(' ')}
+        onClick={handleClick}
       >
         <img
           className="icon"
           style={iconStyle}
           src={selectedOption.iconSrc}
           alt={selectedOption.iconName}
-          onClick={handleClick}
         />
         <ArrowRightIcon
           className="arrow"

@@ -4,6 +4,7 @@ import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { fabric } from 'fabric';
 import { TypedGroup } from '../../../interfaces/shapes/group';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 const useSynchronizedReconstruct = (
   canvas: fabric.Canvas | undefined,
@@ -17,9 +18,9 @@ const useSynchronizedReconstruct = (
 
   useEffect(() => {
 
-    const reconstruct = (id: string, target: any) => {
+  const reconstruct = (id: string, target: ICanvasObject) => {
       if (!shouldHandleRemoteEvent(id)) return;
-      const objects = JSON.parse(target.param).objects;
+      const objects = JSON.parse(target.param as string).objects;
 
       objects.forEach((object: TypedShape) => {
         if (object && object.type === 'path') {
@@ -105,7 +106,7 @@ const useSynchronizedReconstruct = (
     eventController?.on('reconstruct', reconstruct);
 
     return () => {
-        eventController?.removeListener('reconstruct', reconstruct);
+      eventController?.removeListener('reconstruct', reconstruct);
     };
   }, [canvas, eventController, shouldHandleRemoteEvent, undoRedoDispatch, userId]);
 };

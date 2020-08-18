@@ -1,11 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { ObjectEvent } from './PaintEventSerializer';
-
-interface IPathTarget {
-  stroke: string;
-  strokeWidth: number;
-  path: any[];
-}
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 export class PainterEvents {
   public static createId(canvasId: string): string {
@@ -23,7 +18,7 @@ export class PainterEvents {
   }
 
   public static pathCreated(
-    target: IPathTarget,
+    target: ICanvasObject,
     id: string,
     canvasId: string
   ): ObjectEvent | undefined {
@@ -37,7 +32,7 @@ export class PainterEvents {
   }
 
   public static objectAdded(
-    target: IPathTarget,
+    target: ICanvasObject,
     id: string,
     canvasId: string
   ): ObjectEvent | undefined {
@@ -49,5 +44,4 @@ export class PainterEvents {
       };
     }
   }
-
 }

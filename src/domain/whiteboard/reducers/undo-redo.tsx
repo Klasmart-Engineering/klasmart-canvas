@@ -1,6 +1,8 @@
 import { useReducer } from 'react';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { TypedGroup } from '../../../interfaces/shapes/group';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 
 export const UNDO = 'CANVAS_UNDO';
 export const REDO = 'CANVAS_REDO';
@@ -48,7 +50,7 @@ export interface CanvasHistoryState {
   /**
    * List of events
    */
-  events: any[];
+  events: IUndoRedoEvent[];
 
   /**
    * Current event chosen, used for undo and redo events.
@@ -58,7 +60,7 @@ export interface CanvasHistoryState {
   /**
    * Used for group manipulation.
    */
-  activeObjects: any[];
+  activeObjects: ICanvasObject[];
 }
 
 /**
@@ -83,7 +85,7 @@ export interface CanvasAction {
   /**
    * Event to be added to list.
    */
-  event?: any;
+  event?: IUndoRedoEvent;
 
   /**
    * Payload of objects from other canvas.
@@ -117,7 +119,7 @@ const defaultState: CanvasHistoryState = {
  * and render to canvas.
  * @param payload
  */
-const objectStringifier = (payload: [fabric.Object | TypedShape]): string => {
+const objectStringifier = (payload: (fabric.Object | TypedShape)[]): string => {
   let formatted: string[] = [];
 
   if (payload) {
@@ -203,13 +205,14 @@ const reducer = (
 
       let states = [...state.states];
       let events = [...state.events];
-
-      const selfItems = action.payload?.filter((object: any) =>
-        isLocalObject(object.id, action.canvasId as string)
+      const selfItems = action.payload?.filter(
+        (object: ICanvasObject) =>
+          object.id && isLocalObject(object.id, action.canvasId as string)
       ) as [fabric.Object | TypedShape];
 
       const otherObjects = action.payload?.filter(
-        (object: any) => !isLocalObject(object.id, action.canvasId as string)
+        (object: ICanvasObject) =>
+          object.id && !isLocalObject(object.id, action.canvasId as string)
       ) as [fabric.Object | TypedShape];
 
       const currentState = objectStringifier([
@@ -337,7 +340,7 @@ const reducer = (
       if (Array.isArray(action.event)) {
         events = [...events, ...action.event];
       } else {
-        events = [...events, newEvent];
+        events = [...events, newEvent] as IUndoRedoEvent[];
       }
       
       stateItems = {
@@ -361,7 +364,7 @@ const reducer = (
       if (state.events[state.eventIndex] && state.events[state.eventIndex].eventId) {
         // This is a grouped event action, determine previous
         // event index prior to grouped event.
-        eventIndex = determineNewIndex(state.eventIndex - 1, state.events[state.eventIndex - 1].eventId, state.events);
+        eventIndex = determineNewIndex(state.eventIndex - 1, state.events[state.eventIndex - 1].eventId as string, state.events);
       }
 
       const activeStateIndex =
@@ -375,7 +378,8 @@ const reducer = (
           : JSON.stringify({ objects: [] });
 
       const activeSelfStateObjects = JSON.parse(activeSelfState).objects;
-      const otherStateObjects = JSON.parse(state.otherObjects).objects;
+      const otherStateObjects = JSON.parse(state.otherObjects as string)
+        .objects;
       const activeState = JSON.stringify({
         objects: [...activeSelfStateObjects, ...otherStateObjects],
       });
@@ -409,7 +413,7 @@ const reducer = (
       if (state.events[state.eventIndex + 1] && state.events[state.eventIndex + 1].eventId) {
         // This is a grouped event action, determine previous
         // event index prior to grouped event.
-        eventIndex = determineNewRedoIndex(state.eventIndex + 1, state.events[state.eventIndex + 1].eventId, state.events);
+        eventIndex = determineNewRedoIndex(state.eventIndex + 1, state.events[state.eventIndex + 1].eventId as string, state.events);
       }
 
       const activeStateIndex =
@@ -423,7 +427,8 @@ const reducer = (
           : JSON.stringify({ objects: [] });
 
       const activeSelfStateObjects = JSON.parse(activeSelfState).objects;
-      const otherStateObjects = JSON.parse(state.otherObjects).objects;
+      const otherStateObjects = JSON.parse(state.otherObjects as string)
+        .objects;
       const activeState = JSON.stringify({
         objects: [...activeSelfStateObjects, ...otherStateObjects],
       });
@@ -439,16 +444,15 @@ const reducer = (
 
     // Creates a new current state if a new event has been received by serializer from a non local canvas.
     case SET_OTHER: {
-      const selfItems = action.payload?.filter((object: any) =>
-        isLocalObject(object.id, action.canvasId as string)
+      const selfItems = action.payload?.filter(
+        (object: ICanvasObject) =>
+          object.id && isLocalObject(object.id, action.canvasId as string)
       ) as [fabric.Object | TypedShape];
       const otherObjects = action.payload?.filter(
-        (object: TypedShape | TypedGroup) => !isLocalObject(object.id as string, action.canvasId as string)
+        (object: ICanvasObject) =>
+          object.id && !isLocalObject(object.id, action.canvasId as string)
       ) as [fabric.Object | TypedShape];
-      const currentState = objectStringifier([
-        ...selfItems,
-        ...otherObjects,
-      ] as [fabric.Object | TypedShape]);
+      const currentState = objectStringifier([...selfItems, ...otherObjects]);
 
       return {
         ...state,

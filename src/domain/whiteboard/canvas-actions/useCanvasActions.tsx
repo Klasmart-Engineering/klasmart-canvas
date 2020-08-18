@@ -8,7 +8,9 @@ import { isFreeDrawing, isShape } from '../utils/shapes';
 import { UNDO, REDO, SET } from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
-import { IEvent } from 'fabric/fabric-impl';
+import { IEvent, Point } from 'fabric/fabric-impl';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { ICanvasMouseEvent } from '../../../interfaces/canvas-events/canvas-mouse-event';
 
 export interface ICanvasActionsState {
   actions: ICanvasActions;
@@ -90,10 +92,12 @@ export const useCanvasActions = (
   const mouseMove = useCallback(
     (
       shape: fabric.Object | fabric.Rect | fabric.Ellipse,
-      coordsStart: any,
+      coordsStart: Point,
       specific?: string
     ): void => {
       canvas?.on('mouse:move', (e: fabric.IEvent): void => {
+        if (!e.pointer) return;
+
         canvas.selection = false;
 
         if (specific === 'filledCircle' || specific === 'circle') {
@@ -144,10 +148,12 @@ export const useCanvasActions = (
   const mouseUp = useCallback(
     (
       shape: fabric.Object | fabric.Rect | fabric.Ellipse,
-      coordsStart: any,
+      coordsStart: Point,
       specific: string
     ): void => {
       canvas?.on('mouse:up', (e: fabric.IEvent): void => {
+        if (!e.pointer) return;
+
         let size;
 
         if (specific === 'filledCircle' || specific === 'circle') {
@@ -184,7 +190,7 @@ export const useCanvasActions = (
   const mouseDown = useCallback(
     (specific: string, color?: string): void => {
       canvas?.on('mouse:down', (e: fabric.IEvent): void => {
-        if (e.target) {
+        if (e.target || !e.pointer) {
           return;
         }
 
@@ -228,8 +234,8 @@ export const useCanvasActions = (
       }
 
       let resize: boolean = false;
-      let startPoint: fabric.Point | null = null;
-      let shape: TypedShape | null = null;
+      let startPoint: fabric.Point;
+      let shape: TypedShape;
 
       /**
        * Set the new size of a recently created shape
@@ -238,6 +244,8 @@ export const useCanvasActions = (
        * where is the pointer
        */
       const setShapeSize = (shape: TypedShape, e: IEvent) => {
+        if (!e.pointer) return;
+
         if (shapeToAdd === 'circle') {
           return setCircleSize(shape as fabric.Ellipse, startPoint, e.pointer);
         } else if (shapeToAdd === 'rectangle' || shapeToAdd === 'triangle') {
@@ -300,7 +308,7 @@ export const useCanvasActions = (
         const id = `${userId}:${uuidv4()}`;
         resize = false;
 
-        if (size.width <= 2 && size.height <= 2) {
+        if (size && size.width <= 2 && size.height <= 2) {
           canvas.remove(shape);
         } else {
           shape.set({ id });
@@ -471,6 +479,7 @@ export const useCanvasActions = (
       canvas.backgroundColor = '#ffffff';
       canvas.renderAll();
     }
+
     closeModal();
   }, [canvas, closeModal]);
 
@@ -522,8 +531,8 @@ export const useCanvasActions = (
     let eraser: boolean = false;
     let activeObjects = canvas?.getActiveObjects();
 
-    canvas?.getObjects().forEach((object: any) => {
-      if ((object.id && isLocalObject(object.id, canvasId)) || !object.id) {
+    canvas?.getObjects().forEach((object: ICanvasObject) => {
+      if ((object.id && isLocalObject(object.id, canvasId as string)) || !object.id) {
         object.set({
           selectable: true,
           evented: true,
@@ -543,16 +552,15 @@ export const useCanvasActions = (
     }
 
     // When mouse down eraser is able to remove objects
-    canvas?.on('mouse:down', (e: any) => {
-      console.log('mouse down');
-      if (eraser) {
+    canvas?.on('mouse:down', (e: ICanvasMouseEvent) => {
+      if (eraser || !e.target) {
         return false;
       }
 
       // if the click is made over an object
       if (
-        (e.target && e.target.id && isLocalObject(e.target.id, canvasId)) ||
-        (e.target && !e.target.id)
+        (e.target.id && isLocalObject(e.target.id, canvasId as string)) ||
+        !e.target.id
       ) {
         canvas.remove(e.target);
         canvas.renderAll();
@@ -560,7 +568,7 @@ export const useCanvasActions = (
 
       // if the click is made over an object group
       if (e.target && activeObjects?.length) {
-        activeObjects.forEach(function (object: any) {
+        activeObjects.forEach(function (object: fabric.Object) {
           canvas.remove(object);
         });
 
@@ -571,14 +579,13 @@ export const useCanvasActions = (
     });
 
     // When mouse is over an object
-    canvas?.on('mouse:over', (e: any) => {
-      console.log('mouse over');
+    canvas?.on('mouse:over', (e: ICanvasMouseEvent) => {
       if (!eraser) {
         return false;
       }
 
       if (
-        (e.target && e.target.id && isLocalObject(e.target.id, canvasId)) ||
+        (e.target && e.target.id && isLocalObject(e.target.id, canvasId as string)) ||
         (e.target && !e.target.id)
       ) {
         canvas.remove(e.target);
@@ -588,7 +595,6 @@ export const useCanvasActions = (
 
     // When mouse up eraser is unable to remove objects
     canvas?.on('mouse:up', () => {
-      console.log('mouse up');
       if (!eraser) {
         return false;
       }
@@ -615,7 +621,7 @@ export const useCanvasActions = (
   }, [dispatch, canvasId]);
 
   const state = useMemo(() => {
-    const actions: ICanvasActions = {
+    const actions = {
       fillColor,
       changeStrokeColor,
       textColor,

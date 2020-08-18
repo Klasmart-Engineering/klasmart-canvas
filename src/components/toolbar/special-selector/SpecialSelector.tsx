@@ -31,7 +31,7 @@ function SpecialSelector(props: ISpecialSelector) {
     findOptionDefinedByParent()
   );
   const [showOptions, setShowOptions] = useState(false);
-  const buttonRef = useRef(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   /**
    * When selectedValue changes the value is found in all the available options
@@ -72,8 +72,8 @@ function SpecialSelector(props: ISpecialSelector) {
    * Is executed when the selector changes its value
    * @param {string} value - new value to set in selector
    */
-  function handleSelect(option: any) {
-    onChange(id, option.value);
+  function handleSelect(option: IStyleOption) {
+    onChange(id, option.value.toString());
     setShowOptions(false);
   }
 
@@ -97,11 +97,7 @@ function SpecialSelector(props: ISpecialSelector) {
    * @param {MouseEvent} e - Mouse click event
    */
   function handleOutsideClick(e: MouseEvent) {
-    if (
-      !((buttonRef.current as unknown) as HTMLElement).contains(
-        e.target as Node
-      )
-    ) {
+    if (!buttonRef.current?.contains(e.target as Node)) {
       if (!showOptions) {
         setShowOptions(false);
       }
@@ -160,8 +156,9 @@ function SpecialSelector(props: ISpecialSelector) {
           active ? 'selected' : '',
           !active ? 'unselected' : '',
         ].join(' ')}
+        onClick={handleClick}
       >
-        <Icon style={selectedOption.style} onClick={handleClick} />
+        <Icon style={selectedOption.style} />
         <ArrowRightIcon onClick={handleArrowClick} style={arrowStyle} />
       </button>
       {showOptions && active ? (
