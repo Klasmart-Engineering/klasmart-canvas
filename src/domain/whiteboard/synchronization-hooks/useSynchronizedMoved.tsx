@@ -4,7 +4,6 @@ import { fabric } from 'fabric';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET, SET_OTHER, SET_GROUP } from '../reducers/undo-redo';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
-import { v4 as uuidv4 } from 'uuid';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 
 const useSynchronizedMoved = (

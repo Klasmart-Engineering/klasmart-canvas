@@ -1,10 +1,29 @@
 import { useEffect } from 'react';
 import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
 import { TypedGroup } from '../../../interfaces/shapes/group';
-import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { TypedShape, TypedPolygon } from '../../../interfaces/shapes/shapes';
 
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
+
+/**
+ * Determine if an object belongs to local canvas.
+ * @param id Object ID
+ * @param canvasId Canvas ID
+ */
+const isLocalObject = (id: string, canvasId: string): boolean => {
+  if (!id) {
+    return false;
+  }
+
+  const object = id.split(':');
+
+  if (!object.length) {
+    throw new Error('Invalid ID');
+  }
+
+  return object[0] === canvasId;
+};
 
 /**
  * Custom hook to track canvas history.
@@ -15,6 +34,7 @@ import { TypedShape } from '../../../interfaces/shapes/shapes';
 export const UndoRedo = (
   canvas: fabric.Canvas,
   eventSerializer: any,
+  instanceId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
 
@@ -35,7 +55,18 @@ export const UndoRedo = (
         return { ...object, fromJSON: true };
       });
 
-      canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {});
+      canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
+        canvas.getObjects().forEach((o: TypedShape | TypedPolygon | TypedGroup) => {
+          if (isLocalObject(o.id as string, instanceId)) {
+            (o as TypedShape).set({ selectable: true, evented: true})
+
+            if ((o as TypedGroup)._objects) {
+              (o as TypedGroup).toActiveSelection();
+              canvas.discardActiveObject();
+            }
+          }
+        });
+      });
     }
 
     if (state.actionType === UNDO) {
@@ -87,6 +118,13 @@ export const UndoRedo = (
             target: { objects },
             type: 'reconstruct'
           }
+
+          if (
+            state.events[state.eventIndex + 1].type === 'activeSelection' &&
+            state.events[state.eventIndex].type === 'added'
+          ) {
+            eventSerializer.push('removed', { id: state.events[state.eventIndex + 1].event.id });
+          } 
           
           eventSerializer?.push('reconstruct', payload);
         } else {

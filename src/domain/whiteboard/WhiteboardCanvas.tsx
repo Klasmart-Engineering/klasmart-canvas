@@ -83,6 +83,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   const { dispatch: undoRedoDispatch } = UndoRedo(
     canvas as fabric.Canvas,
     eventSerializer,
+    userId
   );
 
   const {

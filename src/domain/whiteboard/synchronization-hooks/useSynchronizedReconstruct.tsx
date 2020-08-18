@@ -20,7 +20,7 @@ const useSynchronizedReconstruct = (
     const reconstruct = (id: string, target: any) => {
       if (!shouldHandleRemoteEvent(id)) return;
       const objects = JSON.parse(target.param).objects;
-      // const objects = JSON.parse(targetParam).objects;
+
       objects.forEach((object: TypedShape) => {
         if (object && object.type === 'path') {
           const group: TypedGroup | undefined = canvas?.getObjects().filter((o: any) => o._objects)[0] as TypedGroup;
@@ -65,6 +65,15 @@ const useSynchronizedReconstruct = (
           // Ignore is required, typing is wrong in definition file.
           //@ts-ignore
           fabric.Ellipse.fromObject(object, (o: TypedShape) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            o.set({ selectable: false, evented: false });
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(o);
+          });
+        } else if (object && object.type === 'triangle') {
+          // Ignore is required, typing is wrong in definition file.
+          //@ts-ignore
+          fabric.Triangle.fromObject(object, (o: TypedShape) => {
             const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
             o.set({ selectable: false, evented: false });
             canvas?.remove(old as fabric.Object);

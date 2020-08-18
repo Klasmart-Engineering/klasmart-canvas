@@ -56,8 +56,9 @@ const useSynchronizedRemoved = (
         id: e.target.id,
       };
 
-      if (canvas) {
+      if (canvas && (!e.target?._objects && e.target?._objects?.length > 0)) {
         const event = { event: payload, type: 'removed' };
+
         undoRedoDispatch({
           type: SET,
           payload: (canvas.getObjects() as unknown) as TypedShape[],
