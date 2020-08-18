@@ -449,14 +449,14 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
 
     // When mouse down eraser is able to remove objects
     canvas?.on('mouse:down', (e: ICanvasMouseEvent) => {
-      if (eraser || !e.target) {
+      if (eraser) {
         return false;
       }
 
       // if the click is made over an object
       if (
-        (e.target.id && isLocalObject(e.target.id, canvasId)) ||
-        !e.target.id
+        e.target &&
+        ((e.target.id && isLocalObject(e.target.id, canvasId)) || !e.target.id)
       ) {
         canvas.remove(e.target);
         canvas.renderAll();
