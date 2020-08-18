@@ -58,13 +58,21 @@ export const UndoRedo = (
     ) {
       canvas.clear();
       const mapped = JSON.parse(state.activeState as string).objects.map((object: TypedShape | TypedGroup) => {
+        if ((object as TypedGroup).objects) {
+          let _objects = (object as TypedGroup).objects; 
+          let mappedObjects = (_objects as TypedShape[]).map((o: TypedShape) => {
+            return { ...o, fromJSON: true };
+          });
+
+          return { ...object, fromJSON: true, objects: mappedObjects };
+        }
         return { ...object, fromJSON: true };
       });
 
       canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
         canvas.getObjects().forEach((o: TypedShape | TypedPolygon | TypedGroup) => {
           if (isLocalObject(o.id as string, instanceId)) {
-            (o as TypedShape).set({ selectable: true, evented: true})
+            (o as TypedShape).set({ selectable: true, evented: true })
 
             if ((o as TypedGroup)._objects) {
               (o as TypedGroup).toActiveSelection();
@@ -87,7 +95,7 @@ export const UndoRedo = (
       } else if (nextEvent.type !== 'activeSelection') {
         let currentEvent = state.events[state.eventIndex];
 
-        if (currentEvent.type !== 'activeSelection' && currentEvent.type !== 'remove') {
+        if (currentEvent && currentEvent.type !== 'activeSelection' && currentEvent.type !== 'remove') {
           let id = (nextEvent.event as IUndoRedoSingleEvent).id;
           let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
           let object = objects.filter((o: ObjectEvent) => (o.id === id))[0];
@@ -98,7 +106,7 @@ export const UndoRedo = (
           }
 
           eventSerializer?.push('reconstruct', payload);
-        } else {
+        } else if (state.activeStateIndex !== null) {
           let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
           let payload: ObjectEvent = {
             id: (nextEvent.event as IUndoRedoSingleEvent).id,

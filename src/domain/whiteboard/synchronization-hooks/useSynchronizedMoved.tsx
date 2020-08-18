@@ -38,6 +38,8 @@ const useSynchronizedMoved = (
         scaleY: e.target.scaleY,
         flipX: e.target.flipX,
         flipY: e.target.flipY,
+        originX: e.target.originX,
+        originY: e.target.originY,
       } as ICanvasObject;
 
       const payload: ObjectEvent = {
@@ -194,8 +196,8 @@ const useSynchronizedMoved = (
               scaleY: target.scaleY || 1,
               flipX: target.flipX || false,
               flipY: target.flipY || false,
-              originX: 'left',
-              originY: 'top',
+              originX: target.originX || 'left',
+              originY: target.originY || 'top',
             });
             obj.setCoords();   
   

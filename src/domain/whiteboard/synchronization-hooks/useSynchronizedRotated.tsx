@@ -51,8 +51,8 @@ const useSynchronizedRotated = (
               scaleY: target.scaleY,
               flipX: target.flipX,
               flipY: target.flipY,
-              originX: 'left',
-              originY: 'top',
+              originX: target.originX || 'left',
+              originY: target.originY || 'top',
             });
             obj.setCoords();
           }
@@ -71,7 +71,7 @@ const useSynchronizedRotated = (
   /** Register and handle local event. */
   useEffect(() => {
     const objectRotated = (e: fabric.IEvent | CanvasEvent) => {
-      if (!e.target || !(e.target as ICanvasObject)._objects) return;
+      if (!e.target) return;
 
       const type = (e.target as ICanvasObject).get('type');
       const activeIds: string[] = [];

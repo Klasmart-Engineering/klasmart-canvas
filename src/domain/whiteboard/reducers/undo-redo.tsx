@@ -8,13 +8,8 @@ export const UNDO = 'CANVAS_UNDO';
 export const REDO = 'CANVAS_REDO';
 export const SET = 'CANVAS_SET';
 export const SET_GROUP = 'CANVAS_SET_GROUP';
-export const SET_GROUP_SVG = 'CANVAS_SET_GROUP_SVG';
-export const MODIFY = 'CANVAS_MODIFY';
 export const UPDATE_OTHER = 'CANVAS_UPDATE_OTHER';
 export const SET_OTHER = 'CANVAS_SET_OTHER';
-
-// This file is a work in progress. Proper interfaces need to be created, and reducer
-// may need to be refactored.
 
 /**
  * Model for storing the canvas history for undo/redo functionality.
@@ -198,11 +193,9 @@ const reducer = (
   switch (action.type) {
     // Sets state when new object is created.
     case SET: {
-      // Once all object types are synched, this if statement can be removed.
-      if (!action.event) {
+      if (!action.event || (action.event.type === 'removed' && state.activeStateIndex === null)) {
         return state;
       }
-
       let states = [...state.states];
       let events = [...state.events];
       const selfItems = action.payload?.filter(
@@ -275,7 +268,6 @@ const reducer = (
       let events = [...state.events];
 
       let selfItems = action.payload?.filter((object: TypedShape | TypedGroup) => {
-
         if ((object as TypedGroup)._objects) {
           return object;
         }
@@ -354,7 +346,6 @@ const reducer = (
 
     // Steps back to previous state.
     case UNDO: {
-      
       if (state.activeStateIndex === null) {
         return state;
       }

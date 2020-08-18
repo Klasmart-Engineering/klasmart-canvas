@@ -50,8 +50,8 @@ const useSynchronizedScaled = (
               scaleY: target.scaleY,
               flipX: target.flipX,
               flipY: target.flipY,
-              originX: 'left',
-              originY: 'top',
+              originX: target.originX || 'left',
+              originY: target.originY || 'top',
             });
             obj.setCoords();
           }
