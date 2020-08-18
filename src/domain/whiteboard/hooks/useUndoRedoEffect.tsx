@@ -87,7 +87,7 @@ export const UndoRedo = (
       } else if (nextEvent.type !== 'activeSelection') {
         let currentEvent = state.events[state.eventIndex];
 
-        if (currentEvent.type !== 'activeSelection') {
+        if (currentEvent.type !== 'activeSelection' && currentEvent.type !== 'remove') {
           let id = (nextEvent.event as IUndoRedoSingleEvent).id;
           let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
           let object = objects.filter((o: ObjectEvent) => (o.id === id))[0];
@@ -145,6 +145,8 @@ export const UndoRedo = (
       let event = state.events[state.eventIndex];
       if (event.type === 'added') {
         eventSerializer?.push('added', event.event as ObjectEvent);
+      } else if (event.type === 'removed') {
+        eventSerializer?.push('removed', { id: (event.event as IUndoRedoSingleEvent).id } as ObjectEvent);
       } else if (event && event.type !== 'activeSelection') {
         let id = (event.event as IUndoRedoSingleEvent).id;
         let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
