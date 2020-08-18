@@ -66,6 +66,8 @@ const useSynchronizedMoved = (
     (type: ObjectType, e: CanvasEvent) => {
       const activeIds: string[] = [];
 
+      if (!e.target || !e.target._objects) return;
+
       e.target._objects.forEach((activeObject: ICanvasObject) => {
         if (!shouldSerializeEvent(activeObject.id as string)) return;
         const matrix = activeObject.calcTransformMatrix();

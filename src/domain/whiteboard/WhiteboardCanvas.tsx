@@ -40,6 +40,7 @@ import {
   ObjectType,
 } from './event-serializer/PaintEventSerializer';
 import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
+import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -829,7 +830,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         type: SET,
         payload: (canvas?.getObjects() as unknown) as TypedShape[],
         canvasId: userId,
-        event,
+        event: event as unknown as IUndoRedoEvent,
       });
     }
   }, [fontColor, canvas, undoRedoDispatch, userId]);
@@ -857,7 +858,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         type: SET,
         payload: (canvas?.getObjects() as unknown) as TypedShape[],
         canvasId: userId,
-        event,
+        event: event as unknown as IUndoRedoEvent,
       });
     }
   }, [penColor, canvas, undoRedoDispatch, userId]);
@@ -884,7 +885,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         type: SET,
         payload: (canvas?.getObjects() as unknown) as TypedShape[],
         canvasId: userId,
-        event,
+        event: event as unknown as IUndoRedoEvent,
       });
     }
   }, [lineWidth, canvas, undoRedoDispatch, userId]);
@@ -944,7 +945,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           type: SET,
           payload: (canvas?.getObjects() as unknown) as TypedShape[],
           canvasId: userId,
-          event,
+          event: event as unknown as IUndoRedoEvent,
         });
       } else if (obj?.type === 'activeSelection') {
         let events: any[] = [];
@@ -992,7 +993,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           type: SET_GROUP,
           payload: mappedObjects as TypedShape[],
           canvasId: userId,
-          event: events,
+          event: events as unknown as IUndoRedoEvent,
         });
       }
     }

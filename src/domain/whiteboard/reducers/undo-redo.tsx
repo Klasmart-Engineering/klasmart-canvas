@@ -218,7 +218,7 @@ const reducer = (
       const currentState = objectStringifier([
         ...selfItems,
         ...otherObjects,
-      ] as [fabric.Object | TypedShape]);
+      ] as unknown as [fabric.Object | TypedShape]);
 
       // This block removed future states if a new event has
       // been created after an undo.
@@ -301,7 +301,7 @@ const reducer = (
           objects: [
           ...selfItems,
           ...otherObjects,
-        ] as [fabric.Object | TypedShape]
+        ] as unknown as [fabric.Object | TypedShape]
       });
 
       // This block removed future states if a new event has

@@ -52,17 +52,17 @@ const useSynchronizedRemoved = (
   /** Register and handle local event. */
   useEffect(() => {
     const objectRemoved = (e: fabric.IEvent | CanvasEvent) => {
-      if (
-        !e.target ||
-        (e.target && e.target.id && !shouldSerializeEvent(e.target.id))
-      )
-        return;
+      if (!e.target) return;
+      if ((e.target as ICanvasObject).id && !shouldSerializeEvent((e.target as ICanvasObject).id as string)) return;
 
       const payload = {
-        id: e.target.id,
+        id: (e.target as ICanvasObject).id as string,
       };
 
-      if (canvas && (!e.target?._objects && e.target?._objects?.length > 0)) {
+      const canvasEvent = e.target as ICanvasObject;
+      const groupObjects = canvasEvent?._objects || [];
+
+      if (canvas && (!canvasEvent?._objects && groupObjects.length > 0)) {
         const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
 
         undoRedoDispatch({

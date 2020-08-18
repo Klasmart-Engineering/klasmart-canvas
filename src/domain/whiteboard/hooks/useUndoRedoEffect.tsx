@@ -7,6 +7,7 @@ import {
   PaintEventSerializer,
   ObjectEvent,
 } from '../event-serializer/PaintEventSerializer';
+import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
 
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
@@ -76,7 +77,7 @@ export const UndoRedo = (
 
     if (state.actionType === UNDO) {
       const payload = {
-        id: nextEvent.event?.id || '',
+        id: (nextEvent.event as IUndoRedoSingleEvent)?.id || '',
       } as ObjectEvent;
 
       // Serialize the event for synchronization
@@ -87,7 +88,7 @@ export const UndoRedo = (
         let currentEvent = state.events[state.eventIndex];
 
         if (currentEvent.type !== 'activeSelection') {
-          let id = nextEvent.event.id;
+          let id = (nextEvent.event as IUndoRedoSingleEvent).id;
           let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
           let object = objects.filter((o: ObjectEvent) => (o.id === id))[0];
           let payload: ObjectEvent = {
@@ -100,7 +101,7 @@ export const UndoRedo = (
         } else {
           let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
           let payload: ObjectEvent = {
-            id: nextEvent.event.id,
+            id: (nextEvent.event as IUndoRedoSingleEvent).id,
             target: { objects },
             type: 'reconstruct'
           }
@@ -113,7 +114,7 @@ export const UndoRedo = (
           state.events[state.eventIndex + 1].type === 'activeSelection') ||
           state.events[state.eventIndex].type === 'added'
         ) {
-          let id = state.events[state.eventIndex].event.id;
+          let id = (state.events[state.eventIndex].event as IUndoRedoSingleEvent).id;
           let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
           let payload: ObjectEvent = {
             id,
@@ -125,7 +126,7 @@ export const UndoRedo = (
             state.events[state.eventIndex + 1].type === 'activeSelection' &&
             state.events[state.eventIndex].type === 'added'
           ) {
-            eventSerializer.push('removed', { id: state.events[state.eventIndex + 1].event.id });
+            eventSerializer.push('removed', { id: (state.events[state.eventIndex + 1].event as IUndoRedoSingleEvent).id });
           } 
           
           eventSerializer?.push('reconstruct', payload);
@@ -133,7 +134,7 @@ export const UndoRedo = (
           let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
 
           let payload: ObjectEvent = {
-            id: nextEvent.event.id,
+            id: (nextEvent.event as IUndoRedoSingleEvent).id,
             target: { objects },
             type: 'reconstruct'
           }
@@ -143,9 +144,9 @@ export const UndoRedo = (
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];
       if (event.type === 'added') {
-        eventSerializer?.push('added', event.event);
+        eventSerializer?.push('added', event.event as ObjectEvent);
       } else if (event && event.type !== 'activeSelection') {
-        let id = event.event.id;
+        let id = (event.event as IUndoRedoSingleEvent).id;
         let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
         let object = objects.filter((o: TypedShape | TypedGroup) => (o.id === id))[0];
 
@@ -157,7 +158,7 @@ export const UndoRedo = (
 
         eventSerializer?.push('reconstruct', payload);
       } else {
-        let id = state.events[state.eventIndex].event.id;
+        let id = (state.events[state.eventIndex].event as IUndoRedoSingleEvent).id;
         let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
         let payload: ObjectEvent = {
           id,

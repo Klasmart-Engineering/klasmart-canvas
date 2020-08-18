@@ -71,13 +71,16 @@ const useSynchronizedRotated = (
   /** Register and handle local event. */
   useEffect(() => {
     const objectRotated = (e: fabric.IEvent | CanvasEvent) => {
-      if (!e.target || !e.target._objects) return;
+      if (!e.target || !(e.target as ICanvasObject)._objects) return;
 
-      const type = e.target.get('type');
+      const type = (e.target as ICanvasObject).get('type');
       const activeIds: string[] = [];
 
       if (type === 'activeSelection') {
-        e.target._objects.forEach((activeObject: ICanvasObject) => {
+        if (!e.target || !(e.target as ICanvasObject)._objects) return;
+        const targetObjects = (e.target as ICanvasObject)._objects;
+
+        targetObjects?.forEach((activeObject: ICanvasObject) => {
           if (activeObject.id && !shouldSerializeEvent(activeObject.id)) return;
 
           const matrix = activeObject.calcTransformMatrix();
@@ -154,11 +157,11 @@ const useSynchronizedRotated = (
         });
 
       } else {
-        if (!e.target.id) {
+        if (!(e.target as ICanvasObject).id) {
           return;
         }
 
-        const id = e.target.id;
+        const id = (e.target as ICanvasObject).id;
 
         const target = {
           top: e.target.top,
@@ -173,7 +176,7 @@ const useSynchronizedRotated = (
         const payload: ObjectEvent = {
           type: type as ObjectType,
           target,
-          id,
+          id: id as string,
         };
 
         if (canvas) {

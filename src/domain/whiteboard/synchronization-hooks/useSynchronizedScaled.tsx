@@ -70,11 +70,13 @@ const useSynchronizedScaled = (
   useEffect(() => {
     const objectScaled = (e: fabric.IEvent | CanvasEvent) => {
       if (!e.target) return;
-      const type = e.target.get('type');
+      const type = (e.target as ICanvasObject).get('type');
       const activeIds: string[] = [];
 
-      if (type === 'activeSelection' && e.target._objects) {
-        e.target._objects.forEach((activeObject: ICanvasObject) => {
+      if (type === 'activeSelection' && (e.target as ICanvasObject)._objects) {
+        const groupObjects = (e.target as ICanvasObject)._objects || [];
+
+        groupObjects.forEach((activeObject: ICanvasObject) => {
           if (activeObject.id && !shouldSerializeEvent(activeObject.id)) return;
 
           const matrix = activeObject.calcTransformMatrix();
@@ -146,13 +148,13 @@ const useSynchronizedScaled = (
         });
       
       } else {
-        if (!e.target.id) {
+        if (!(e.target as ICanvasObject).id) {
           return;
         }
 
-        if (!shouldSerializeEvent(e.target.id)) return;
+        if (!shouldSerializeEvent((e.target as ICanvasObject).id as string)) return;
 
-        const type: ObjectType = e.target.get('type') as ObjectType;
+        const type: ObjectType = (e.target as ICanvasObject).get('type') as ObjectType;
         const target = {
           top: e.target.top,
           left: e.target.left,
@@ -166,7 +168,7 @@ const useSynchronizedScaled = (
         const payload: ObjectEvent = {
           type,
           target,
-          id: e.target.id,
+          id: (e.target as ICanvasObject).id as string,
         };
 
         if (canvas) {
