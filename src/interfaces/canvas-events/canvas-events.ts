@@ -1,15 +1,10 @@
-import { Point } from 'fabric/fabric-impl';
+import { Point, IEvent } from 'fabric/fabric-impl';
+import { ICanvasObject } from '../objects/canvas-object';
 
 /**
  * Model for fabricjs mouse events.
  */
-export default interface CanvasEvent {
-  e: MouseEvent;
-  absolutePointer: Point;
-  button: number;
-  isClick: boolean;
-  pointer: { x: number; y: number };
-  subTargets: any[];
-  target: any;
-  transform: any;
+export default interface CanvasEvent extends IEvent {
+  pointer?: Point;
+  target?: ICanvasObject;
 }

@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { IPainterController } from './IPainterController';
 import { PainterEvent } from './PainterEvent';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 /**
  * This class is responsible for receiving remote events and translating that into
@@ -92,39 +93,39 @@ export class EventPainterController extends EventEmitter
     }
   }
 
-  private added(id: string, objectType: string, target: any) {
+  private added(id: string, objectType: string, target: ICanvasObject) {
     this.emit('added', id, objectType, target);
   }
 
-  private moved(id: string, objectType: string, target: any) {
+  private moved(id: string, objectType: string, target: ICanvasObject) {
     this.emit('moved', id, objectType, target);
   }
 
-  private rotated(id: string, objectType: string, target: any) {
+  private rotated(id: string, objectType: string, target: ICanvasObject) {
     this.emit('rotated', id, objectType, target);
   }
 
-  private scaled(id: string, objectType: string, target: any) {
+  private scaled(id: string, objectType: string, target: ICanvasObject) {
     this.emit('scaled', id, objectType, target);
   }
 
-  private skewed(id: string, target: any) {
+  private skewed(id: string, target: ICanvasObject) {
     this.emit('skewed', id, target);
   }
 
-  private colorChanged(id: string, objectType: string, target: any) {
+  private colorChanged(id: string, objectType: string, target: ICanvasObject) {
     this.emit('colorChanged', id, objectType, target);
   }
 
-  private modified(id: string, objectType: string, target: any) {
+  private modified(id: string, objectType: string, target: ICanvasObject) {
     this.emit('modified', id, objectType, target);
   }
 
-  private fontFamilyChanged(id: string, target: any) {
+  private fontFamilyChanged(id: string, target: ICanvasObject) {
     this.emit('fontFamilyChanged', id, target);
   }
 
-  private reconstruct(id: string, target: any) {
+  private reconstruct(id: string, target: PainterEvent) {
     this.emit('reconstruct', id, target);
   }
 

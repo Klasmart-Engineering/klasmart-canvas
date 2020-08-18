@@ -10,6 +10,7 @@ import React, {
 import { EventPainterController } from './event-serializer/EventPainterController';
 import { PainterEvent } from './event-serializer/PainterEvent';
 import { PaintEventSerializer } from './event-serializer/PaintEventSerializer';
+import ICanvasActions from './canvas-actions/ICanvasActions';
 
 // NOTE: This is used to scale up the coordinates sent in events
 // to save bytes in the text representation of numbers. E.g. 33
@@ -17,28 +18,29 @@ import { PaintEventSerializer } from './event-serializer/PaintEventSerializer';
 export const NormalizeCoordinates = 1000;
 
 type Props = {
-  children?: ReactChild | ReactChildren | null | Element[] | any;
-  simulateNetworkSynchronization?: boolean
+  children?: ReactChild | ReactChildren | null | Element[];
+  simulateNetworkSynchronization?: boolean;
 };
 
 interface IEventSerializerState {
-  eventSerializer?: PaintEventSerializer;
-  eventController?: EventPainterController;
+  eventSerializer: PaintEventSerializer;
+  eventController: EventPainterController;
 }
 
 interface IEventSerializerContext {
   state: IEventSerializerState;
-  actions: any;
+  actions: ICanvasActions;
 }
 
 const Context = createContext<IEventSerializerContext>({
-  state: {},
-  actions: {},
+  state: {} as IEventSerializerState,
+  actions: {} as ICanvasActions,
 });
 
 // NOTE: This class was added to allow demonstrating synchronizing whiteboard events without any network or server.
 export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
-  children, simulateNetworkSynchronization
+  children,
+  simulateNetworkSynchronization,
 }: Props): JSX.Element => {
   const [eventSerializer] = useState<PaintEventSerializer>(
     new PaintEventSerializer(NormalizeCoordinates)
@@ -89,7 +91,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
           eventSerializer: eventSerializer,
           eventController: eventController,
         },
-        actions: {},
+        actions: {} as ICanvasActions,
       }}
     >
       {children}

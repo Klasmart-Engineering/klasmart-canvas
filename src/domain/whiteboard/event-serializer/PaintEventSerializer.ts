@@ -1,5 +1,6 @@
 import { PainterEvent, PainterEventType } from './PainterEvent';
 import { EventEmitter } from 'events';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 // TODO: This service should probably implement some sort of
 // event batching, especially the line drawing can generate
@@ -19,10 +20,10 @@ export declare interface PaintEventSerializer {
 export interface ObjectEvent {
   id: string;
   type: ObjectType;
-  target: any;
+  target: ICanvasObject;
 }
 
-export type ObjectType = 'path' | 'textbox';
+export type ObjectType = 'path' | 'textbox' | 'activeSelection';
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {

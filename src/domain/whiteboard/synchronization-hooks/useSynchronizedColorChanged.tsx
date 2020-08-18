@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 const useSynchronizedColorChanged = (
   canvas: fabric.Canvas | undefined,
@@ -14,10 +14,14 @@ const useSynchronizedColorChanged = (
   } = useSharedEventSerializer();
 
   useEffect(() => {
-    const colorChanged = (id: string, objectType: string, target: any) => {
+    const colorChanged = (
+      id: string,
+      objectType: string,
+      target: ICanvasObject
+    ) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
-      canvas?.forEachObject(function (obj: any) {
+      canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
           if (objectType === 'textbox') {
             obj.set({
@@ -34,7 +38,7 @@ const useSynchronizedColorChanged = (
 
       undoRedoDispatch({
         type: SET_OTHER,
-        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        payload: canvas?.getObjects(),
         canvasId: userId,
       });
 

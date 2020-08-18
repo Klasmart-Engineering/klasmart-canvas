@@ -1,5 +1,11 @@
 import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
+import {
+  ObjectEvent,
+  ObjectType,
+} from '../event-serializer/PaintEventSerializer';
 
 const useSynchronizedModified = (
   canvas: fabric.Canvas | undefined,
@@ -12,16 +18,20 @@ const useSynchronizedModified = (
 
   /** Register and handle remote event. */
   useEffect(() => {
-    const modified = (id: string, objectType: string, target: any) => {
+    const modified = (
+      id: string,
+      objectType: string,
+      target: ICanvasObject
+    ) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
-      canvas?.forEachObject(function (obj: any) {
+      canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
-          if (objectType === 'textbox') {
+          if (objectType === 'textbox' && target.left && obj.left) {
             obj.set({
               text: target.text,
               fontFamily: target.fontFamily,
-              stroke: target.fill,
+              stroke: target.fill?.toString(),
               top: target.top,
               left: target.left + 1,
               width: target.width,
@@ -43,13 +53,14 @@ const useSynchronizedModified = (
 
   /** Register and handle local events. */
   useEffect(() => {
-    const objectModified = (e: any) => {
-      if (!shouldSerializeEvent(e.target.id)) return;
+    const objectModified = (e: CanvasEvent) => {
+      if (!e.target || (e.target.id && !shouldSerializeEvent(e.target.id)))
+        return;
 
-      const type = e.target.get('type');
+      const type = e.target.get('type') as ObjectType;
 
       // If text has been modified
-      if (type === 'textbox') {
+      if (type === 'textbox' && e.target.id) {
         const target = {
           ...(type === 'textbox' && {
             text: e.target.text,
@@ -59,9 +70,9 @@ const useSynchronizedModified = (
             left: e.target.left,
             width: e.target.width,
           }),
-        };
+        } as ICanvasObject;
 
-        const payload = {
+        const payload: ObjectEvent = {
           type,
           target,
           id: e.target.id,

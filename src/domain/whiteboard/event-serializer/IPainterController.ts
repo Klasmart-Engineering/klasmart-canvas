@@ -1,13 +1,14 @@
 import { PainterEventType } from './PainterEvent';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 export interface IPainterController {
   on(
     event: PainterEventType,
-    listener: (id: string, objectType: string, target: any) => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
   removeListener(
     event: PainterEventType,
-    listener: (id: string, objectType: string, target: any) => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
 
   // TODO: Theres a "ease of use" concern we should think about with this event interface. We can
@@ -26,69 +27,78 @@ export interface IPainterController {
 
   on(
     event: 'added',
-    listener: (id: string, objectType: string, target: any) => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
   on(
     event: 'moved',
-    listener: (id: string, objectType: string, target: any) => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
   on(
     event: 'rotated',
-    listener: (id: string, objectType: string, target: any) => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
   on(
     event: 'scaled',
-    listener: (id: string, objectType: string, target: any) => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
-  on(event: 'skewed', listener: (id: string, target: any) => void): this;
+  on(
+    event: 'skewed',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
   on(
     event: 'colorChanged',
-    listener: (id: string, objectType: string, target: any) => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
-  on(event: 'modified', listener: (id: string, target: any) => void): this;
+  on(
+    event: 'modified',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
   on(
     event: 'fontFamilyChanged',
-    listener: (id: string, target: any) => void
+    listener: (id: string, target: ICanvasObject) => void
   ): this;
   on(event: 'removed', listener: (id: string) => void): this;
-  on(event: 'reconstruct', listener: (id: string, target: any) => void): this;
+  on(
+    event: 'reconstruct',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
 
   removeListener(
     event: 'added',
-    listener: (id: string, objectType: string, target: any) => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
   removeListener(
     event: 'moved',
-    listener: (id: string, objectType: string, target: any) => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
   removeListener(
     event: 'rotated',
-    listener: (id: string, objectType: string, target: any) => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
   removeListener(
     event: 'scaled',
-    listener: (id: string, objectType: string, target: any) => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
   removeListener(
     event: 'skewed',
-    listener: (id: string, target: any) => void
+    listener: (id: string, target: ICanvasObject) => void
   ): this;
   removeListener(
     event: 'colorChanged',
-    listener: (id: string, objectType: string, target: any) => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
   removeListener(
     event: 'modified',
-    listener: (id: string, target: any) => void
+    listener: (id: string, target: ICanvasObject) => void
   ): this;
   removeListener(
     event: 'fontFamilyChanged',
-    listener: (id: string, target: any) => void
+    listener: (id: string, target: ICanvasObject) => void
   ): this;
   removeListener(event: 'removed', listener: (id: string) => void): this;
   removeListener(
     event: 'reconstruct',
-    listener: (id: string, target: any) => void
+    listener: (id: string, target: ICanvasObject) => void
   ): this;
 
   replayEvents(): Promise<void>;

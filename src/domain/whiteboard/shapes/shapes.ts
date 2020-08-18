@@ -196,8 +196,8 @@ export const generic = (
   thickness: number
 ): fabric.Object => {
   let shape = new fabric.Path(path);
-  const scaleX = 1 / (((shape.width as unknown) as number) / width);
-  const scaleY = 1 / (((shape.height as unknown) as number) / height);
+  const scaleX = 1 / (Number(shape.width) / width);
+  const scaleY = 1 / (Number(shape.height) / height);
 
   fabric.util.object.extend(shape, {
     shapeType: 'shape',

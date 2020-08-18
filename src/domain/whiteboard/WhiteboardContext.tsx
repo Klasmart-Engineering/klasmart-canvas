@@ -17,9 +17,9 @@ import { useLineWidth } from './hooks/useLineWidth';
 import { useFloodFill } from './hooks/useFloodFill';
 import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 import ICanvasActions from './canvas-actions/ICanvasActions';
+import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 
-// @ts-ignore
-export const WhiteboardContext = createContext<any>();
+export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
 export const WhiteboardProvider = ({
   children,
@@ -77,7 +77,7 @@ export const WhiteboardProvider = ({
 
     return object[0] === canvasId;
   };
-  const [eventedObjects, updateEventedObjects] = useState('true');
+  const [eventedObjects, updateEventedObjects] = useState(true);
 
   // Temporary code to get undo / redo working while there are two boards
   // on the view.

@@ -17,8 +17,6 @@ import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
-import { UNDO, REDO } from '../../domain/whiteboard/reducers/undo-redo';
-
 // Toolbar Element Available Types
 type ToolbarElementTypes =
   | IBasicToolbarButton
@@ -41,6 +39,7 @@ function Toolbar() {
     updateFontFamily,
     openClearWhiteboardModal,
     setPointerEvents,
+    textIsActive,
     updateTextIsActive,
     updateShapeIsActive,
     updateBrushIsActive,
@@ -64,11 +63,11 @@ function Toolbar() {
     changeStrokeColor,
     stamp,
     updateStamp,
-    dispatch,
+    // dispatch,
     updateShapesAreSelectable,
     updateShapesAreEvented,
-    canvasId,
-  }: any = useContext(WhiteboardContext);
+    // canvasId,
+  } = useContext(WhiteboardContext);
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -78,6 +77,23 @@ function Toolbar() {
   function handleToolsElementClick(tool: string) {
     // Set Erase Type in initial value
     updateEraseType(null);
+
+    /*
+      If you click on another button different than
+      the mentioned below the selected object will be deselected;
+      the cases mentioned below will be handled in WhiteboardContext.
+      The textIsActive validation was added here to fix
+      a text synchronization issue
+    */
+    if (
+      (tool !== ELEMENTS.ERASE_TYPE_TOOL &&
+        tool !== ELEMENTS.ADD_TEXT_TOOL &&
+        tool !== ELEMENTS.LINE_TYPE_TOOL &&
+        tool !== ELEMENTS.LINE_WIDTH_TOOL) ||
+      textIsActive
+    ) {
+      discardActiveObject();
+    }
 
     /*
       It is setted to true when you select Add Text Tool,
@@ -110,21 +126,6 @@ function Toolbar() {
     updateEventedObjects(
       tool === ELEMENTS.POINTERS_TOOL || tool === ELEMENTS.MOVE_OBJECTS_TOOL
     );
-
-    /*
-      If you click on another button different than
-      the mentioned below the selected object will be deselected;
-      the cases mentioned below will be handled in WhiteboardContext
-    */
-    if (
-      tool !== ELEMENTS.ERASE_TYPE_TOOL &&
-      tool !== ELEMENTS.ADD_TEXT_TOOL &&
-      tool !== ELEMENTS.ADD_SHAPE_TOOL &&
-      tool !== ELEMENTS.LINE_TYPE_TOOL &&
-      tool !== ELEMENTS.LINE_WIDTH_TOOL
-    ) {
-      discardActiveObject();
-    }
 
     if (
       tool === ELEMENTS.POINTERS_TOOL ||
@@ -160,11 +161,11 @@ function Toolbar() {
         break;
 
       case ELEMENTS.UNDO_ACTION:
-        dispatch({ type: UNDO, canvasId });
+        // dispatch({ type: UNDO, canvasId });
         break;
 
       case ELEMENTS.REDO_ACTION:
-        dispatch({ type: REDO, canvasId });
+      // dispatch({ type: REDO, canvasId });
     }
   }
 
@@ -184,7 +185,7 @@ function Toolbar() {
         break;
 
       case ELEMENTS.LINE_WIDTH_TOOL:
-        updateLineWidth(option);
+        updateLineWidth(Number(option));
         break;
 
       case ELEMENTS.FLOOD_FILL_TOOL:
@@ -210,7 +211,7 @@ function Toolbar() {
    * @param {number} index - index that the element has in the ToolbarSection
    * @param {string} specific (optional) - specific value/option to use
    */
-  function handleToolsElementAction(tool: string, specific?: string) {
+  function handleToolsElementAction(tool: string, specific: string) {
     updateEraseType(null);
 
     switch (tool) {
@@ -288,7 +289,7 @@ function Toolbar() {
    * Set the parent's definedOptionName in the given tool
    * @param {string} tool - Tool to set the definedOption
    */
-  function setSelectedOptionSelector(tool: string): string {
+  function setSelectedOptionSelector(tool: string): string | number | null {
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
         return pointer;
@@ -442,8 +443,8 @@ function createToolbarSelector(
   active: boolean,
   onClick: (tool: string) => void,
   onChange: (tool: string, value: string) => void,
-  onAction: (tool: string) => void,
-  selectedValue: string,
+  onAction: (tool: string, value: string) => void,
+  selectedValue: string | number | null,
   colorPalette?: IColorPalette
 ): JSX.Element {
   return (
@@ -477,7 +478,7 @@ function createSpecialSelector(
   id: string,
   Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>,
   active: boolean,
-  selectedValue: string,
+  selectedValue: string | number | null,
   styleOptions: IStyleOptions[],
   onClick: (tool: string) => void,
   onChange: (tool: string, value: string) => void
