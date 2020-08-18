@@ -1,4 +1,4 @@
-import React, { createContext, ReactChild, ReactChildren } from 'react';
+import React, { createContext, ReactChild, ReactChildren, useCallback } from 'react';
 
 export interface IToolbarActions {
     // TODO: Typed tool parameter.
@@ -7,8 +7,14 @@ export interface IToolbarActions {
     // TODO: Typed color parameter.
     selectColor: (color: string) => void;
 
-    // TODO: Typed textStyle input.
-    selectTextStyle: (textStyle: string) => void;
+    // TODO: Typed brushStyle input.
+    selectBrushStyle: (brushStyle: string) => void;
+
+    clear: (filter?: string) => void;
+
+    undo: () => void;
+
+    redo: () => void;
 }
 
 export interface IToolbarState {
@@ -57,17 +63,48 @@ export interface IToolbarContext {
     // TODO: Function to redo.
 }
 
-export const Context = createContext<IToolbarContext>({
-    state: {}, status: {}, actions: {}
-});
+export const Context = createContext<IToolbarContext | undefined>(undefined);
 
 export type Props = {
     children?: ReactChild | ReactChildren | undefined
 }
 
 export default function ToolbarContextProvider({children}: Props): JSX.Element {
+    const selectToolAction = useCallback((tool: string) => {
+
+    }, []);
+
+    const selectColorAction = useCallback((color: string) => {
+
+    }, []);
+
+    const selectBrushStyleAction = useCallback((textStyle: string) => {
+
+    }, []);
+
+    const clearAction = useCallback((filter?: string) => {
+
+    }, []);
+
+    const undoAction = useCallback(() => {
+
+    }, []);
+
+    const redoAction = useCallback(() => {
+
+    }, []);
+
+    const actions: IToolbarActions = {
+        selectTool: selectToolAction,
+        selectColor: selectColorAction,
+        selectBrushStyle: selectBrushStyleAction,
+        clear: clearAction,
+        undo: undoAction,
+        redo: redoAction,
+    }
+
     return (
-        <Context.Provider value={{state: {}, status: {}, actions: {}}}>
+        <Context.Provider value={{state: {}, status: {}, actions}}>
             {children}
         </Context.Provider>
     )
