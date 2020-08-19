@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
-import { CanvasAction, SET } from '../reducers/undo-redo';
+import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 import {
   ObjectEvent,
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 
 const useSynchronizedScaled = (
   canvas: fabric.Canvas | undefined,
@@ -49,8 +50,8 @@ const useSynchronizedScaled = (
               scaleY: target.scaleY,
               flipX: target.flipX,
               flipY: target.flipY,
-              originX: 'left',
-              originY: 'top',
+              originX: target.originX || 'left',
+              originY: target.originY || 'top',
             });
             obj.setCoords();
           }
@@ -67,12 +68,15 @@ const useSynchronizedScaled = (
   }, [canvas, eventController, shouldHandleRemoteEvent]);
 
   useEffect(() => {
-    const objectScaled = (e: CanvasEvent) => {
+    const objectScaled = (e: fabric.IEvent | CanvasEvent) => {
       if (!e.target) return;
-      const type = e.target.get('type');
+      const type = (e.target as ICanvasObject).get('type');
+      const activeIds: string[] = [];
 
-      if (type === 'activeSelection' && e.target._objects) {
-        e.target._objects.forEach((activeObject: ICanvasObject) => {
+      if (type === 'activeSelection' && (e.target as ICanvasObject)._objects) {
+        const groupObjects = (e.target as ICanvasObject)._objects || [];
+
+        groupObjects.forEach((activeObject: ICanvasObject) => {
           if (activeObject.id && !shouldSerializeEvent(activeObject.id)) return;
 
           const matrix = activeObject.calcTransformMatrix();
@@ -117,16 +121,40 @@ const useSynchronizedScaled = (
             id: activeObject.id || '',
           };
 
+          activeIds.push(activeObject.id as string);
+
           eventSerializer?.push('scaled', payload);
         });
+
+        const payload = {
+          type,
+          svg: true,
+          target: null,
+          id: `${userId}:group`,
+        };
+
+        const event = { event: payload, type: 'activeSelection', activeIds };
+        const filtered = canvas?.getObjects().filter((o: any) => {
+          return !o.group;
+        });
+
+        let active = canvas?.getActiveObject();
+
+        undoRedoDispatch({
+          type: SET_GROUP,
+          payload: [ ...filtered as any[], active ],
+          canvasId: userId,
+          event: event as unknown as IUndoRedoEvent,
+        });
+      
       } else {
-        if (!e.target.id) {
+        if (!(e.target as ICanvasObject).id) {
           return;
         }
 
-        if (!shouldSerializeEvent(e.target.id)) return;
+        if (!shouldSerializeEvent((e.target as ICanvasObject).id as string)) return;
 
-        const type: ObjectType = e.target.get('type') as ObjectType;
+        const type: ObjectType = (e.target as ICanvasObject).get('type') as ObjectType;
         const target = {
           top: e.target.top,
           left: e.target.left,
@@ -140,7 +168,7 @@ const useSynchronizedScaled = (
         const payload: ObjectEvent = {
           type,
           target,
-          id: e.target.id,
+          id: (e.target as ICanvasObject).id as string,
         };
 
         if (canvas) {
@@ -150,7 +178,7 @@ const useSynchronizedScaled = (
             type: SET,
             payload: canvas.getObjects(),
             canvasId: userId,
-            event,
+            event: event as unknown as IUndoRedoEvent,
           });
         }
 

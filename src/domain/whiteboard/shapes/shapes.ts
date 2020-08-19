@@ -1,4 +1,5 @@
 import { fabric } from 'fabric';
+import { TypedShape, TypedPolygon } from '../../../interfaces/shapes/shapes';
 
 // filled shape default values
 const filledShape = {
@@ -117,7 +118,7 @@ export const pentagon = (
   color: string,
   filled: boolean,
   thickness: number
-): fabric.Object => {
+): TypedShape => {
   let shape = new fabric.Polygon([
     { x: 200, y: 0 },
     { x: 250, y: 42 },
@@ -153,7 +154,7 @@ export const hexagon = (
   color: string,
   filled: boolean,
   thickness: number
-): fabric.Object => {
+): TypedPolygon => {
   let shape = new fabric.Polygon([
     { x: 125, y: 0 },
     { x: 275, y: 0 },
@@ -194,7 +195,7 @@ export const generic = (
   color: string,
   filled: boolean,
   thickness: number
-): fabric.Object => {
+): TypedShape => {
   let shape = new fabric.Path(path);
   const scaleX = 1 / (Number(shape.width) / width);
   const scaleY = 1 / (Number(shape.height) / height);
@@ -230,7 +231,7 @@ export const star = (
   color: string,
   filled: boolean,
   thickness: number
-): fabric.Object => {
+): TypedShape => {
   const path: string = `
     M 202.000 222.000 \
     L 225.511 234.361 \
@@ -261,7 +262,7 @@ export const arrow = (
   color: string,
   filled: boolean,
   thickness: number
-): fabric.Object => {
+): TypedShape => {
   const path: string = `
     M421.976,196.712L236.111,10.848C228.884,3.615,220.219,0,210.131,0c-9.9,0-18.464,3.615-25.697,10.848L163.023,32.26
     c-7.234,6.853-10.85,15.418-10.85,25.697c0,10.277,3.616,18.842,10.85,25.697l83.653,83.937H45.677
@@ -287,7 +288,7 @@ export const chat = (
   color: string,
   filled: boolean,
   thickness: number
-): fabric.Object => {
+): TypedShape => {
   const path: string = `
     M29,1.5c-16.016,0-29,11.641-29,26c0,5.292,1.768,10.211,4.796,14.318
     C4.398,46.563,3.254,53.246,0,56.5c0,0,9.943-1.395,16.677-5.462c0.007,0.003,0.015,0.006,0.022,0.009

@@ -1,50 +1,34 @@
 import { useEffect } from 'react';
 import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
+import { TypedGroup } from '../../../interfaces/shapes/group';
+import { TypedShape, TypedPolygon } from '../../../interfaces/shapes/shapes';
 import { Canvas } from 'fabric/fabric-impl';
-import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
-import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
 import {
   PaintEventSerializer,
   ObjectEvent,
 } from '../event-serializer/PaintEventSerializer';
-import { PainterEventType } from '../event-serializer/PainterEvent';
+import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
 
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
 
 /**
- * Reconstructs an object based on past events.
- * @param id Object ID.
- * @param events Array of events
- * @param numToRemove Number of events to ignore.
+ * Determine if an object belongs to local canvas.
+ * @param id Object ID
+ * @param canvasId Canvas ID
  */
-const objectReconstructor = (
-  id: string,
-  events: IUndoRedoEvent[],
-  numToRemove: number
-) => {
-  let filtered = events.filter((event: IUndoRedoEvent) => {
-    return event.event?.id === id;
-  });
-
-  if (numToRemove) {
-    filtered.splice(-numToRemove);
+const isLocalObject = (id: string, canvasId: string): boolean => {
+  if (!id) {
+    return false;
   }
 
-  const mapped = filtered.map((event: IUndoRedoEvent) => {
-    return event.event;
-  });
+  const object = id.split(':');
 
-  let reconstructedTarget = {};
+  if (!object.length) {
+    throw new Error('Invalid ID');
+  }
 
-  mapped.forEach((object: IUndoRedoSingleEvent) => {
-    reconstructedTarget = { ...reconstructedTarget, ...object.target };
-  });
-
-  return {
-    ...filtered[filtered.length - 1],
-    event: { ...filtered[0].event, target: reconstructedTarget },
-  };
+  return object[0] === canvasId;
 };
 
 /**
@@ -56,7 +40,7 @@ const objectReconstructor = (
 export const UndoRedo = (
   canvas: Canvas,
   eventSerializer: PaintEventSerializer,
-  _canvasId: string
+  instanceId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
 
@@ -67,84 +51,135 @@ export const UndoRedo = (
 
     let nextEvent = state.events[state.eventIndex + 1];
 
-    // Rerenders canvas when an undo or redo event has been executed.
+    // Rerenders local canvas when an undo or redo event has been executed.
     if (
-      (state.actionType === UNDO && nextEvent.type !== 'activeSelection') ||
+      (state.actionType === UNDO) ||
       state.actionType === REDO
     ) {
       canvas.clear();
-      canvas.loadFromJSON(state.activeState, () => {});
+      const mapped = JSON.parse(state.activeState as string).objects.map((object: TypedShape | TypedGroup) => {
+        if ((object as TypedGroup).objects) {
+          let _objects = (object as TypedGroup).objects; 
+          let mappedObjects = (_objects as TypedShape[]).map((o: TypedShape) => {
+            return { ...o, fromJSON: true };
+          });
+
+          return { ...object, fromJSON: true, objects: mappedObjects };
+        }
+        return { ...object, fromJSON: true };
+      });
+
+      canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
+        canvas.getObjects().forEach((o: TypedShape | TypedPolygon | TypedGroup) => {
+          if (isLocalObject(o.id as string, instanceId)) {
+            (o as TypedShape).set({ selectable: true, evented: true })
+
+            if ((o as TypedGroup)._objects) {
+              (o as TypedGroup).toActiveSelection();
+              canvas.discardActiveObject();
+            }
+          }
+        });
+      });
     }
 
     if (state.actionType === UNDO) {
-      let event = state.events[state.eventIndex];
-
       const payload = {
-        id: nextEvent.event?.id || '',
+        id: (nextEvent.event as IUndoRedoSingleEvent)?.id || '',
       } as ObjectEvent;
 
       // Serialize the event for synchronization
       if (nextEvent.type === 'added') {
+        // If undoing the creation of an object, remove.
         eventSerializer?.push('removed', payload);
-      } else if (nextEvent.type !== 'activeSelection' && event.event?.id) {
-        let id = event.event.id;
-        let allEvents = [...state.events];
-        let futureEvents = allEvents.splice(state.eventIndex + 1);
-        futureEvents = futureEvents.filter(
-          (e: IUndoRedoEvent) => e.event?.id === id
-        );
-        const reconstructedEvent = objectReconstructor(
-          id,
-          state.events,
-          futureEvents.length
-        );
+      } else if (nextEvent.type !== 'activeSelection') {
+        let currentEvent = state.events[state.eventIndex];
 
+        if (currentEvent && currentEvent.type !== 'activeSelection' && currentEvent.type !== 'remove') {
+          let id = (nextEvent.event as IUndoRedoSingleEvent).id;
+          let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+          let object = objects.filter((o: ObjectEvent) => (o.id === id))[0];
+          let payload: ObjectEvent = {
+            id,
+            target: { objects: [object]},
+            type: 'reconstruct'
+          }
+
+          eventSerializer?.push('reconstruct', payload);
+        } else if (state.activeStateIndex !== null) {
+          let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+          let payload: ObjectEvent = {
+            id: (nextEvent.event as IUndoRedoSingleEvent).id,
+            target: { objects },
+            type: 'reconstruct'
+          }
+          eventSerializer?.push('reconstruct', payload);
+        }
+      } else {
         if (
-          reconstructedEvent.type !== 'added' &&
-          reconstructedEvent.event.id
+          (state.events[state.eventIndex].type === 'activeSelection' &&
+          state.events[state.eventIndex + 1] &&
+          state.events[state.eventIndex + 1].type === 'activeSelection') ||
+          state.events[state.eventIndex].type === 'added'
         ) {
-          eventSerializer?.push('reconstruct', {
-            id: reconstructedEvent.event.id,
-          } as ObjectEvent);
-        } else if (reconstructedEvent.event.id) {
-          eventSerializer?.push('removed', payload);
-          eventSerializer?.push('added', {
-            id: reconstructedEvent.event.id,
-          } as ObjectEvent);
+          let id = (state.events[state.eventIndex].event as IUndoRedoSingleEvent).id;
+          let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+          let payload: ObjectEvent = {
+            id,
+            target: { objects },
+            type: 'reconstruct'
+          }
+
+          if (
+            state.events[state.eventIndex + 1].type === 'activeSelection' &&
+            state.events[state.eventIndex].type === 'added'
+          ) {
+            eventSerializer.push('removed', { id: (state.events[state.eventIndex + 1].event as IUndoRedoSingleEvent).id });
+          } 
+          
+          eventSerializer?.push('reconstruct', payload);
+        } else {
+          let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+
+          let payload: ObjectEvent = {
+            id: (nextEvent.event as IUndoRedoSingleEvent).id,
+            target: { objects },
+            type: 'reconstruct'
+          }
+          eventSerializer?.push('reconstruct', payload);
         }
       }
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];
+      if (event.type === 'added') {
+        eventSerializer?.push('added', event.event as ObjectEvent);
+      } else if (event.type === 'removed') {
+        eventSerializer?.push('removed', { id: (event.event as IUndoRedoSingleEvent).id } as ObjectEvent);
+      } else if (event && event.type !== 'activeSelection') {
+        let id = (event.event as IUndoRedoSingleEvent).id;
+        let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+        let object = objects.filter((o: TypedShape | TypedGroup) => (o.id === id))[0];
 
-      if (event.type === 'added' && event.event.id) {
-        eventSerializer?.push('added', { id: event.event.id } as ObjectEvent);
+        let payload: ObjectEvent = {
+          id,
+          target: { objects: [object]},
+          type: 'reconstruct'
+        }
+
+        eventSerializer?.push('reconstruct', payload);
       } else {
-        let id = event.event?.id;
-        let allEvents = [...state.events];
-        let futureEvents = allEvents.splice(state.eventIndex + 1);
-        futureEvents = futureEvents.filter(
-          (e: IUndoRedoEvent) => e.event?.id === id
-        );
-        const reconstructed = objectReconstructor(
-          id || '',
-          state.events,
-          futureEvents.length
-        );
-
-        eventSerializer?.push(
-          reconstructed.type as PainterEventType,
-          {
-            id: reconstructed.event.id || '',
-          } as ObjectEvent
-        );
+        let id = (state.events[state.eventIndex].event as IUndoRedoSingleEvent).id;
+        let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+        let payload: ObjectEvent = {
+          id,
+          target: { objects },
+          type: 'reconstruct'
+        }
+        
+        eventSerializer?.push('reconstruct', payload);
       }
     }
-
-    return () => {
-      // canvas?.off('object:modified');
-      // canvas?.off('object:removed');
-    };
-  }, [state, canvas, dispatch, eventSerializer]);
+  }, [state, canvas, dispatch, eventSerializer, instanceId]);
 
   return { state, dispatch };
 };

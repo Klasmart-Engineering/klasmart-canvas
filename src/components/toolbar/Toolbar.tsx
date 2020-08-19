@@ -63,10 +63,10 @@ function Toolbar() {
     changeStrokeColor,
     stamp,
     updateStamp,
-    // dispatch,
     updateShapesAreSelectable,
+    undo,
+    redo,
     updateShapesAreEvented,
-    // canvasId,
   } = useContext(WhiteboardContext);
 
   /**
@@ -161,11 +161,12 @@ function Toolbar() {
         break;
 
       case ELEMENTS.UNDO_ACTION:
-        // dispatch({ type: UNDO, canvasId });
+        undo();
         break;
 
       case ELEMENTS.REDO_ACTION:
-      // dispatch({ type: REDO, canvasId });
+        redo();
+        break;
     }
   }
 
@@ -453,9 +454,9 @@ function createToolbarSelector(
       id={id}
       options={options}
       active={active}
-      selectedValue={selectedValue}
+      selectedValue={selectedValue as string}
       colorPalette={colorPalette}
-      onAction={onAction}
+      onAction={onAction as any}
       onClick={onClick}
       onChange={onChange}
     />
@@ -489,7 +490,7 @@ function createSpecialSelector(
       id={id}
       Icon={Icon}
       active={active}
-      selectedValue={selectedValue}
+      selectedValue={selectedValue as string}
       styleOptions={styleOptions}
       onClick={onClick}
       onChange={onChange}

@@ -5,7 +5,9 @@ import ICanvasActions from './ICanvasActions';
 import * as shapes from '../shapes/shapes';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { isFreeDrawing, isShape } from '../utils/shapes';
+import { UNDO, REDO, SET } from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
+import { v4 as uuidv4 } from 'uuid';
 import { IEvent, Point } from 'fabric/fabric-impl';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasMouseEvent } from '../../../interfaces/canvas-events/canvas-mouse-event';
@@ -16,8 +18,13 @@ export interface ICanvasActionsState {
   mouseDown: (specific: string, color?: string) => void;
 }
 
-export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
-  console.log(canvasId);
+export const useCanvasActions = (
+  canvas?: fabric.Canvas,
+  dispatch?: any,
+  canvasId?: string,
+  eventSerializer?: any,
+  userId?: string
+) => {
   const {
     shapeIsActive,
     updateFontColor,
@@ -168,12 +175,12 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
         } else {
           shape.setCoords();
           canvas.renderAll();
-          // TODO: Handle Undo/Redo dispatch.
-          // dispatch({ type: SET, payload: canvas.getObjects() });
+
+          dispatch({ type: 'CANVAS_SET', payload: canvas.getObjects() });
         }
       });
     },
-    [canvas]
+    [canvas, dispatch]
   );
 
   /**
@@ -299,19 +306,93 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
         }
 
         const size = setShapeSize(shape, e);
+        const id = `${userId}:${uuidv4()}`;
         resize = false;
 
         if (size && size.width <= 2 && size.height <= 2) {
           canvas.remove(shape);
         } else {
+          shape.set({ id });
           shape.setCoords();
           canvas.renderAll();
-          // TODO: Handle Undo/Redo dispatch.
-          // dispatch({ type: SET, payload: canvas.getObjects() });
+          let type = shape.type;
+          let payload = {};
+          let target = {
+            type,
+            id,
+          };
+
+          const requiredProps = [
+            'id',
+            'height',
+            'width',
+            'left',
+            'top',
+            'strokeWidth',
+            'stroke',
+            'fill',
+            'name',
+            'scaleX',
+            'scaleY',
+            'strokeUniform',
+            'originX',
+            'originY',
+          ];
+
+          const requiredEllipseProps = [
+            'id',
+            'ry',
+            'rx',
+            'left',
+            'top',
+            'strokeWidth',
+            'stroke',
+            'fill',
+            'strokeUniform',
+            'originY',
+            'originX',
+          ];
+
+          if (type !== 'ellipse') {
+            requiredProps.forEach((prop: string) => {
+              if (shape && (shape as any)[prop]) {
+                target = { ...target, [prop]: (shape as any)[prop] };
+              }
+            });
+
+            payload = {
+              type,
+              target,
+              id,
+            };
+          } else {
+            requiredEllipseProps.forEach((prop: string) => {
+              if (shape && (shape as any)[prop]) {
+                target = { ...target, [prop]: (shape as any)[prop] };
+              }
+            });
+
+            payload = {
+              type,
+              target,
+              id,
+            };
+          }
+
+          eventSerializer?.push('added', payload);
+
+          const event = { event: payload, type: 'added' };
+
+          dispatch({
+            type: SET,
+            payload: (canvas?.getObjects() as unknown) as TypedShape[],
+            canvasId: userId,
+            event,
+          });
         }
       });
     },
-    [canvas, shapeIsActive, shapeSelector]
+    [canvas, shapeIsActive, shapeSelector, eventSerializer, userId, dispatch]
   );
 
   /**
@@ -358,7 +439,7 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
         canvas.renderAll();
 
         // TODO: Handle Undo/Redo dispatch.
-        // dispatch({ type: SET, payload: canvas.getObjects() });
+        dispatch({ type: SET, payload: canvas.getObjects() });
       }
     },
     [
@@ -368,6 +449,7 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
       mouseDown,
       shape,
       updateShapeColor,
+      dispatch,
     ]
   );
 
@@ -403,6 +485,29 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
   }, [canvas, closeModal]);
 
   /**
+   * Set Canvas Whiteboard selection ability
+   * @param {boolean} selection - value to set in canvas and objects selection
+   */
+  const setCanvasSelection = useCallback(
+    (selection: boolean) => {
+      if (canvas) {
+        canvas.selection = selection;
+        // canvas.forEachObject((object: fabric.Object) => {
+        // @ts-ignore
+        // if (isLocalObject(object.id, userId)) {
+        //   object.set({
+        //     selectable: selection,
+        //   });
+        // }
+        // });
+
+        canvas.renderAll();
+      }
+    },
+    [canvas]
+  );
+
+  /**
    * Set the cursor to be showed when a object hover happens
    * @param {string} cursor - Cursor name to show
    */
@@ -428,7 +533,13 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
     let activeObjects = canvas?.getActiveObjects();
 
     canvas?.getObjects().forEach((object: ICanvasObject) => {
-      if ((object.id && isLocalObject(object.id, canvasId)) || !object.id) {
+      console.log(object.id);
+      console.log(userId);
+      console.log(object.id && isLocalObject(object.id, userId as string));
+      if (
+        (object.id && isLocalObject(object.id, userId as string)) ||
+        !object.id
+      ) {
         object.set({
           selectable: true,
           evented: true,
@@ -456,7 +567,8 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
       // if the click is made over an object
       if (
         e.target &&
-        ((e.target.id && isLocalObject(e.target.id, canvasId)) || !e.target.id)
+        ((e.target.id && isLocalObject(e.target.id, userId as string)) ||
+          !e.target.id)
       ) {
         canvas.remove(e.target);
         canvas.renderAll();
@@ -481,7 +593,9 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
       }
 
       if (
-        (e.target && e.target.id && isLocalObject(e.target.id, canvasId)) ||
+        (e.target &&
+          e.target.id &&
+          isLocalObject(e.target.id, userId as string)) ||
         (e.target && !e.target.id)
       ) {
         canvas.remove(e.target);
@@ -508,6 +622,14 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
     canvas?.discardActiveObject().renderAll();
   }, [canvas]);
 
+  const undo = useCallback(() => {
+    dispatch({ type: UNDO, canvasId: canvasId });
+  }, [dispatch, canvasId]);
+
+  const redo = useCallback(() => {
+    dispatch({ type: REDO, canvasId: canvasId });
+  }, [dispatch, canvasId]);
+
   const state = useMemo(() => {
     const actions = {
       fillColor,
@@ -517,7 +639,10 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
       discardActiveObject,
       addShape,
       eraseObject,
+      setCanvasSelection,
       setHoverCursorObjects,
+      undo,
+      redo,
     };
 
     return { actions, mouseDown };
@@ -529,8 +654,11 @@ export const useCanvasActions = (canvasId: string, canvas?: fabric.Canvas) => {
     eraseObject,
     fillColor,
     mouseDown,
+    setCanvasSelection,
     setHoverCursorObjects,
     textColor,
+    undo,
+    redo,
   ]);
 
   return state;

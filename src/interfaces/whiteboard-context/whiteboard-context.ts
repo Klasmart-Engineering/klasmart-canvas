@@ -53,4 +53,6 @@ export interface IWhiteboardContext {
   changeStrokeColor: (color: string) => void;
   addShape: (shape: string) => void;
   eraseObject: () => void;
+  undo: () => void;
+  redo: () => void;
 }

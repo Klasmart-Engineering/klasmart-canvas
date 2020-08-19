@@ -9,7 +9,10 @@ export interface ICanvasActions {
   discardActiveObject: () => void;
   addShape: (shapeToAdd: string) => void;
   eraseObject: () => void;
+  setCanvasSelection: (selection: boolean) => void;
   setHoverCursorObjects: (cursor: string) => void;
+  undo: () => void;
+  redo: () => void;
 }
 
 export default ICanvasActions;

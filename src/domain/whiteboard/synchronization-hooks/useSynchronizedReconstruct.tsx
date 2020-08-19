@@ -1,60 +1,114 @@
 import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
+import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { fabric } from 'fabric';
+import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 const useSynchronizedReconstruct = (
   canvas: fabric.Canvas | undefined,
-  shouldHandleRemoteEvent: (id: string) => boolean
+  shouldHandleRemoteEvent: (id: string) => boolean,
+  userId: string,
+  undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
   const {
     state: { eventController },
   } = useSharedEventSerializer();
 
   useEffect(() => {
-    const reconstruct = (id: string, target: ICanvasObject) => {
+
+  const reconstruct = (id: string, target: ICanvasObject) => {
       if (!shouldHandleRemoteEvent(id)) return;
+      const objects = JSON.parse(target.param as string).objects;
 
-      canvas?.forEachObject(function (obj: ICanvasObject) {
-        if (obj.id !== id || !target.param) return;
-
-        canvas?.remove(obj);
-        canvas.renderAll();
-        const oObject = obj.toJSON(['strokeUniform', 'id']);
-        let nObject = { ...oObject, ...JSON.parse(target.param) };
-
-        switch (target.objectType) {
-          case 'path': {
-            fabric.Path.fromObject(nObject, (path: fabric.Object) => {
-              canvas.add(path);
-            });
-            break;
+      objects.forEach((object: TypedShape) => {
+        if (object && object.type === 'path') {
+          const group: TypedGroup | undefined = canvas?.getObjects().filter((o: any) => o._objects)[0] as TypedGroup;
+          if (group && group.id) {
+            canvas?.remove(group);
           }
-          case 'textbox': {
-            if (JSON.parse(target.param).fill) {
-              delete nObject.stroke;
-            } else {
-              nObject = { ...nObject, fill: nObject.stroke };
-              delete nObject.stroke;
+
+          fabric.Path.fromObject(object, (path: TypedShape) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            path.set({ selectable: false, evented: false });
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(path);
+          });
+
+          canvas?.renderAll();
+        } else if (object && object.type === 'polygon') {
+          // Ignore is required, typing is wrong in definition file.
+          //@ts-ignore
+          fabric.Polygon.fromObject(object, (o: TypedShape) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            o.set({ selectable: false, evented: false });
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(o);
+          });
+        } else if (object && object.type === 'textbox') {
+          fabric.Textbox.fromObject(object, (path: TypedShape) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            path.set({ selectable: false, evented: false });
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(path);
+          });
+        } else if (object && object.type === 'rect') {
+          // Ignore is required, typing is wrong in definition file.
+          //@ts-ignore
+          fabric.Rect.fromObject(object, (o: TypedShape) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            o.set({ selectable: false, evented: false });
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(o);
+          });
+        } else if (object && object.type === 'ellipse') {
+          // Ignore is required, typing is wrong in definition file.
+          //@ts-ignore
+          fabric.Ellipse.fromObject(object, (o: TypedShape) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            o.set({ selectable: false, evented: false });
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(o);
+          });
+        } else if (object && object.type === 'triangle') {
+          // Ignore is required, typing is wrong in definition file.
+          //@ts-ignore
+          fabric.Triangle.fromObject(object, (o: TypedShape) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            o.set({ selectable: false, evented: false });
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(o);
+          });
+        } else if (object) {
+          fabric.Group.fromObject(object, (group: fabric.Group) => {
+            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            if (group._objects) {
+              group._objects.forEach((o: TypedShape) => {
+                const oldO = canvas?.getObjects().filter((oldObject: TypedShape) => oldObject.id === o.id)[0];
+                canvas?.remove(oldO as fabric.Object);
+              });
             }
-
-            fabric.Textbox.fromObject(nObject, (path: fabric.Object) => {
-              canvas.add(path);
-            });
-            break;
-          }
+            group.set({ selectable: false, evented: false });
+            canvas?.remove(old as fabric.Object);
+            canvas?.add(group);
+          });
         }
-      });
 
-      canvas?.renderAll();
-    };
+        undoRedoDispatch({
+          type: SET_OTHER,
+          payload: (canvas?.getObjects() as unknown) as TypedShape[],
+          canvasId: userId,
+        });
+      });
+    }
 
     eventController?.on('reconstruct', reconstruct);
 
     return () => {
       eventController?.removeListener('reconstruct', reconstruct);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent]);
+  }, [canvas, eventController, shouldHandleRemoteEvent, undoRedoDispatch, userId]);
 };
 
 export default useSynchronizedReconstruct;

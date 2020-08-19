@@ -31,7 +31,7 @@ import useSynchronizedRotated from './synchronization-hooks/useSynchronizedRotat
 import useSynchronizedScaled from './synchronization-hooks/useSynchronizedScaled';
 import useSynchronizedSkewed from './synchronization-hooks/useSynchronizedSkewed';
 import useSynchronizedReconstruct from './synchronization-hooks/useSynchronizedReconstruct';
-import { SET } from './reducers/undo-redo';
+import { SET, SET_GROUP, UNDO, REDO } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import { IEvent, ITextOptions } from 'fabric/fabric-impl';
@@ -41,6 +41,7 @@ import {
 } from './event-serializer/PaintEventSerializer';
 import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
+import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -89,7 +90,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   const { dispatch: undoRedoDispatch } = UndoRedo(
     canvas as fabric.Canvas,
     eventSerializer,
-    instanceId
+    userId
   );
 
   const {
@@ -119,7 +120,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     floodFill,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
-  const { actions, mouseDown } = useCanvasActions(userId, canvas);
+  const { actions, mouseDown } = useCanvasActions(
+    canvas,
+    undoRedoDispatch,
+    instanceId,
+    eventSerializer,
+    userId
+  );
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -298,8 +305,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     const pathCreated = (e: ICanvasDrawingEvent) => {
       if (e.path) {
-        e.path.selectable = false;
-        e.path.evented = false;
         e.path.strokeUniform = true;
         canvas?.renderAll();
       }
@@ -768,7 +773,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     undoRedoDispatch
   );
   useSynchronizedSkewed(canvas, filterOutgoingEvents, filterIncomingEvents);
-  useSynchronizedReconstruct(canvas, filterIncomingEvents);
+  useSynchronizedReconstruct(
+    canvas,
+    filterIncomingEvents,
+    userId,
+    undoRedoDispatch
+  );
   useSynchronizedColorChanged(
     canvas,
     userId,
@@ -785,8 +795,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     if (objects && objects.length) {
       objects.forEach((obj: ICanvasObject) => {
+        const type: ObjectType = obj.get('type') as ObjectType;
+
         if (obj.id && isLocalObject(obj.id, userId)) {
-          const type: ObjectType = obj.get('type') as ObjectType;
           const target = (type: string) => {
             return type === 'textbox'
               ? { fill: obj.fill }
@@ -798,15 +809,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             target: target(type) as ICanvasObject,
             id: obj.id,
           };
-
-          const event = { event: payload, type: 'colorChanged' };
-
-          undoRedoDispatch({
-            type: SET,
-            payload: canvas?.getObjects(),
-            canvasId: userId,
-            event,
-          });
 
           eventSerializer?.push('colorChanged', payload);
         }
@@ -821,6 +823,87 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     undoRedoDispatch,
     isLocalObject,
   ]);
+
+  useEffect(() => {
+    if (fontColor && canvas) {
+      const obj = canvas.getActiveObject() as any;
+
+      if (!obj) return;
+
+      const type = obj?.get('type');
+
+      if (type !== 'textbox') return;
+
+      const payload = {
+        type,
+        target: { fill: obj?.fill },
+        id: obj?.id,
+      };
+
+      const event = { event: payload, type: 'colorChanged' };
+
+      undoRedoDispatch({
+        type: SET,
+        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        canvasId: userId,
+        event: (event as unknown) as IUndoRedoEvent,
+      });
+    }
+  }, [fontColor, canvas, undoRedoDispatch, userId]);
+
+  useEffect(() => {
+    if (penColor && canvas) {
+      const obj = canvas.getActiveObject() as any;
+
+      if (!obj) return;
+
+      const type = obj?.get('type');
+
+      if (type === 'textbox') return;
+
+      const payload = {
+        type,
+        target: { stroke: obj?.stroke },
+        id: obj?.id,
+      };
+
+      const event = { event: payload, type: 'colorChanged' };
+
+      undoRedoDispatch({
+        type: SET,
+        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        canvasId: userId,
+        event: (event as unknown) as IUndoRedoEvent,
+      });
+    }
+  }, [penColor, canvas, undoRedoDispatch, userId]);
+
+  useEffect(() => {
+    if (lineWidth && canvas) {
+      const obj = canvas.getActiveObject() as any;
+
+      if (!obj) return;
+
+      const type = obj?.get('type');
+
+      if (type === 'textbox') return;
+
+      const payload = {
+        type,
+        target: { strokeWidth: obj?.strokeWidth },
+        id: obj?.id,
+      };
+
+      const event = { event: payload, type: 'colorChanged' };
+
+      undoRedoDispatch({
+        type: SET,
+        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        canvasId: userId,
+        event: (event as unknown) as IUndoRedoEvent,
+      });
+    }
+  }, [lineWidth, canvas, undoRedoDispatch, userId]);
 
   /**
    * Send synchronization event for fontFamily changes.
@@ -850,6 +933,84 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       });
     }
   }, [canvas, eventSerializer, userId, fontFamily, isLocalObject]);
+
+  useEffect(() => {
+    if (canvas && fontFamily) {
+      const obj = canvas?.getActiveObject() as any;
+      const type = obj?.get('type');
+
+      if (type === 'textbox' && obj) {
+        const target = {
+          fontFamily,
+        };
+
+        const payload = {
+          type,
+          target,
+          id: obj?.id,
+        };
+
+        const event = { event: payload, type: 'fontFamilyChanged' };
+
+        obj.set({ fontFamily });
+
+        undoRedoDispatch({
+          type: SET,
+          payload: (canvas?.getObjects() as unknown) as TypedShape[],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      } else if (obj?.type === 'activeSelection') {
+        let events: any[] = [];
+        const eventId: string = uuidv4();
+
+        obj._objects.forEach((object: any) => {
+          const payload = {
+            type,
+            target: { fontFamily },
+            id: object.id,
+          };
+
+          const event = { event: payload, type: 'activeSelection', eventId };
+          events.push(event);
+          object.set({ fontFamily });
+        });
+
+        let mappedObjects = canvas?.getObjects().map((object: any) => {
+          if (!object.group) {
+            return object.toJSON(['strokeUniform', 'id']);
+          }
+          const matrix = object.calcTransformMatrix();
+          const options = fabric.util.qrDecompose(matrix);
+          const transformed = object.toJSON(['strokeUniform', 'id']);
+          let top = object.group.height / 2 + object.top + object.group.top;
+          let left = object.group.width / 2 + object.left + object.group.left;
+
+          events.forEach((event: any) => {
+            if (event.event.id === object.id) {
+              event.event.target.top = top;
+              event.event.target.left = left;
+            }
+          });
+
+          return {
+            ...transformed,
+            top,
+            left,
+            scaleX: options.scaleX,
+            scaleY: options.scaleY,
+          };
+        });
+
+        undoRedoDispatch({
+          type: SET_GROUP,
+          payload: mappedObjects as TypedShape[],
+          canvasId: userId,
+          event: (events as unknown) as IUndoRedoEvent,
+        });
+      }
+    }
+  }, [canvas, fontFamily, undoRedoDispatch, userId]);
 
   /**
    * If pointerEvents changes to false, all the selected objects
@@ -919,6 +1080,19 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateCanvasActions(actions);
   }, [actions, updateCanvasActions]);
 
+  // Will be modified once only one board is visible.
+  const keyDown = (e: any) => {
+    if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
+      undoRedoDispatch({ type: UNDO, canvasId: instanceId });
+      return;
+    }
+
+    if (e.which === 89 && e.ctrlKey) {
+      undoRedoDispatch({ type: REDO, canvasId: instanceId });
+      return;
+    }
+  };
+
   // TODO: Possible to have dynamically sized canvas? With raw canvas it's
   // possible to set the "pixel (background)" size separately from the
   // style size. So we can have a fixed resolution draw buffer and it will
@@ -927,18 +1101,27 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   // canvas doesn't have a fixed size and could vary between different
   // activities etc. For now the user will have to pass in the exact
   // width and height they want to have the canvas in.
+  // Note: Added div wrapper to execute onKeyDown. Once canvas final form
+  // takes place, this may or may not be modified.
 
   return (
-    <canvas
-      width={width}
-      height={height}
-      id={instanceId}
-      style={initialStyle}
-      onClick={() => {
-        actions.addShape(shape);
-      }}
+    <div
+      tabIndex={0}
+      onKeyDown={keyDown}
+      style={{ backgroundColor: 'transparent ' }}
     >
-      {children}
-    </canvas>
+      <canvas
+        width={width}
+        height={height}
+        id={instanceId}
+        style={initialStyle}
+        tabIndex={0}
+        onClick={() => {
+          actions.addShape(shape);
+        }}
+      >
+        {children}
+      </canvas>
+    </div>
   );
 };

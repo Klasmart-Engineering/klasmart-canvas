@@ -8,4 +8,6 @@ export interface IPathTarget {
   selectable?: boolean;
   evented?: boolean;
   strokeUniform?: boolean;
+  top?: number;
+  left?: number;
 }

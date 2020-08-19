@@ -19,11 +19,11 @@ export declare interface PaintEventSerializer {
 
 export interface ObjectEvent {
   id: string;
-  type: ObjectType;
-  target: ICanvasObject;
+  type?: ObjectType;
+  target?: ICanvasObject | { objects: ICanvasObject[]};
 }
 
-export type ObjectType = 'path' | 'textbox' | 'activeSelection';
+export type ObjectType = 'path' | 'textbox' | 'activeSelection' | 'reconstruct';
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {
@@ -71,7 +71,7 @@ export class PaintEventSerializer extends EventEmitter
     const serialized: PainterEvent = {
       id: uniqueObjectId,
       type,
-      objectType: object.type,
+      objectType: object.type as string,
       param: JSON.stringify(object.target),
     };
 

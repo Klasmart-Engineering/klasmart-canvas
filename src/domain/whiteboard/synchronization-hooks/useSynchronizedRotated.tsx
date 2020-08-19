@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
-import { CanvasAction, SET } from '../reducers/undo-redo';
+import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 import {
   ObjectEvent,
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 
 const useSynchronizedRotated = (
   canvas: fabric.Canvas | undefined,
@@ -50,8 +51,8 @@ const useSynchronizedRotated = (
               scaleY: target.scaleY,
               flipX: target.flipX,
               flipY: target.flipY,
-              originX: 'left',
-              originY: 'top',
+              originX: target.originX || 'left',
+              originY: target.originY || 'top',
             });
             obj.setCoords();
           }
@@ -69,12 +70,17 @@ const useSynchronizedRotated = (
 
   /** Register and handle local event. */
   useEffect(() => {
-    const objectRotated = (e: CanvasEvent) => {
-      if (!e.target || !e.target._objects) return;
+    const objectRotated = (e: fabric.IEvent | CanvasEvent) => {
+      if (!e.target) return;
 
-      const type = e.target.get('type');
+      const type = (e.target as ICanvasObject).get('type');
+      const activeIds: string[] = [];
+
       if (type === 'activeSelection') {
-        e.target._objects.forEach((activeObject: ICanvasObject) => {
+        if (!e.target || !(e.target as ICanvasObject)._objects) return;
+        const targetObjects = (e.target as ICanvasObject)._objects;
+
+        targetObjects?.forEach((activeObject: ICanvasObject) => {
           if (activeObject.id && !shouldSerializeEvent(activeObject.id)) return;
 
           const matrix = activeObject.calcTransformMatrix();
@@ -111,6 +117,8 @@ const useSynchronizedRotated = (
             scaleY: options.scaleY,
             flipX: flipX(),
             flipY: flipY(),
+            originX: 'center',
+            originY: 'center',
           } as ICanvasObject;
 
           const payload: ObjectEvent = {
@@ -119,14 +127,41 @@ const useSynchronizedRotated = (
             id: activeObject.id || '',
           };
 
+          activeIds.push(activeObject.id as string);
+
           eventSerializer?.push('rotated', payload);
         });
+
+        let svg = canvas?.getActiveObject().toSVG();
+
+        const payload = {
+          type,
+          svg: true,
+          target: { svg },
+          id: `${userId}:svg`,
+        };
+
+        const event = { event: payload, type: 'activeSelection', activeIds };
+
+        let filtered = canvas?.getObjects().filter((o: any) => {
+          return !o.group;
+        });
+
+        let active = canvas?.getActiveObject();
+
+        undoRedoDispatch({
+          type: SET_GROUP,
+          payload: [ ...filtered as any[], active ],
+          canvasId: userId,
+          event: event as unknown as IUndoRedoEvent,
+        });
+
       } else {
-        if (!e.target.id) {
+        if (!(e.target as ICanvasObject).id) {
           return;
         }
 
-        const id = e.target.id;
+        const id = (e.target as ICanvasObject).id;
 
         const target = {
           top: e.target.top,
@@ -141,17 +176,17 @@ const useSynchronizedRotated = (
         const payload: ObjectEvent = {
           type: type as ObjectType,
           target,
-          id,
+          id: id as string,
         };
 
         if (canvas) {
-          const event = { event: payload, type: 'moved' };
+          const event = { event: payload, type: 'rotated' };
 
           undoRedoDispatch({
             type: SET,
             payload: canvas.getObjects(),
             canvasId: userId,
-            event,
+            event: event as unknown as IUndoRedoEvent,
           });
         }
 

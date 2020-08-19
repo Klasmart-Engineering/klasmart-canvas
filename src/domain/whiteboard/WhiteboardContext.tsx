@@ -140,6 +140,21 @@ export const WhiteboardProvider = ({
     canvasActions?.eraseObject();
   }, [canvasActions]);
 
+  const setCanvasSelectionAction = useCallback(
+    (selection: boolean) => {
+      canvasActions?.setCanvasSelection(selection);
+    },
+    [canvasActions]
+  );
+
+  const undoAction = useCallback(() => {
+    canvasActions?.undo();
+  }, [canvasActions]);
+
+  const redoAction = useCallback(() => {
+    canvasActions?.redo();
+  }, [canvasActions]);
+
   /**
    * List of available colors in toolbar
    * */
@@ -209,6 +224,9 @@ export const WhiteboardProvider = ({
     clearWhiteboard: clearWhiteboardAction,
     eraseObject: eraseObjectAction,
     changeStrokeColor: changeStrokeColorAction,
+    setCanvasSelection: setCanvasSelectionAction,
+    undo: undoAction,
+    redo: redoAction,
   };
 
   return (
