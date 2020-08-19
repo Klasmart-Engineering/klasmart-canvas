@@ -42,6 +42,7 @@ import {
 import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
+import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -63,6 +64,7 @@ export type Props = {
   cssWidth?: string | number;
   cssHeight?: string | number;
   filterUsers?: string[];
+  clearWhiteboardPermissions: IClearWhiteboardPermissions;
 };
 
 export const WhiteboardCanvas: FunctionComponent<Props> = ({
@@ -755,7 +757,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterOutgoingEvents,
     filterIncomingEvents,
     userId,
-    undoRedoDispatch,
+    undoRedoDispatch
   );
   useSynchronizedRemoved(
     canvas,

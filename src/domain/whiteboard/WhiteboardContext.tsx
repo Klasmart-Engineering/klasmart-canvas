@@ -18,13 +18,16 @@ import { useFloodFill } from './hooks/useFloodFill';
 import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 import ICanvasActions from './canvas-actions/ICanvasActions';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
+import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
 export const WhiteboardProvider = ({
   children,
+  clearWhiteboardPermissions,
 }: {
   children: React.ReactNode;
+  clearWhiteboardPermissions: IClearWhiteboardPermissions;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();
@@ -66,9 +69,7 @@ export const WhiteboardProvider = ({
   // apply action to.
   const [canvasActions, updateCanvasActions] = useState<ICanvasActions>();
 
-  const isLocalObject = (id: string, canvasId: string) => {
-    if (!id) return;
-
+  const isLocalObject = (id: string, canvasId: string | undefined) => {
     const object = id.split(':');
 
     if (!object.length) {
@@ -121,9 +122,26 @@ export const WhiteboardProvider = ({
     [canvasActions]
   );
 
-  const clearWhiteboardAction = useCallback(() => {
-    canvasActions?.clearWhiteboard();
-  }, [canvasActions]);
+  const clearWhiteboardActionClearMyself = useCallback(() => {
+    if (clearWhiteboardPermissions.allowClearMyself) {
+      canvasActions?.clearWhiteboardClearMySelf();
+    }
+  }, [canvasActions, clearWhiteboardPermissions]);
+
+  const clearWhiteboardAllowClearOthersAction = useCallback(
+    (userId) => {
+      if (clearWhiteboardPermissions.allowClearOthers) {
+        canvasActions?.clearWhiteboardAllowClearOthers(userId);
+      }
+    },
+    [canvasActions, clearWhiteboardPermissions]
+  );
+
+  const clearWhiteboardActionClearAll = useCallback(() => {
+    if (clearWhiteboardPermissions.allowClearAll) {
+      canvasActions?.clearWhiteboardClearAll();
+    }
+  }, [canvasActions, clearWhiteboardPermissions]);
 
   const discardActiveObjectAction = useCallback(() => {
     canvasActions?.discardActiveObject();
@@ -221,7 +239,9 @@ export const WhiteboardProvider = ({
     textColor: textColorAction,
     addShape: addShapeAction,
     discardActiveObject: discardActiveObjectAction,
-    clearWhiteboard: clearWhiteboardAction,
+    clearWhiteboard: clearWhiteboardActionClearMyself,
+    clearWhiteboardAllowClearOthers: clearWhiteboardAllowClearOthersAction,
+    clearWhiteboardClearAll: clearWhiteboardActionClearAll,
     eraseObject: eraseObjectAction,
     changeStrokeColor: changeStrokeColorAction,
     setCanvasSelection: setCanvasSelectionAction,
@@ -231,7 +251,19 @@ export const WhiteboardProvider = ({
 
   return (
     <WhiteboardContext.Provider value={value}>
-      <ClearWhiteboardModal clearWhiteboard={clearWhiteboardAction} />
+      {/*: Should work for student and teacher */}
+      <button onClick={() => clearWhiteboardActionClearMyself()}>
+        Clear My self
+      </button>
+      {/*: Should work only for teacher */}
+      <button onClick={() => clearWhiteboardActionClearAll()}>Clear All</button>
+      {/*: Should work only for teacher */}
+      <button onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
+        Clear student
+      </button>
+      <ClearWhiteboardModal
+        clearWhiteboard={clearWhiteboardActionClearMyself}
+      />
       {children}
     </WhiteboardContext.Provider>
   );
