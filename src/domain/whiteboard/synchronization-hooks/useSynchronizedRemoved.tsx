@@ -62,7 +62,7 @@ const useSynchronizedRemoved = (
       const canvasEvent = e.target as ICanvasObject;
       const groupObjects = canvasEvent?._objects || [];
 
-      if (canvas && (!canvasEvent?._objects || groupObjects.length > 0)) {
+      if (canvas && payload.id && (!canvasEvent?._objects || groupObjects.length > 0)) {
         const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
 
         undoRedoDispatch({

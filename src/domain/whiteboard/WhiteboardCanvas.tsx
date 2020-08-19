@@ -739,7 +739,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     undoRedoDispatch
   );
-  useSynchronizedModified(canvas, filterOutgoingEvents, filterIncomingEvents);
+  useSynchronizedModified(
+    canvas,
+    filterOutgoingEvents,
+    filterIncomingEvents,
+    userId,
+    undoRedoDispatch,
+  );
   useSynchronizedRemoved(
     canvas,
     userId,

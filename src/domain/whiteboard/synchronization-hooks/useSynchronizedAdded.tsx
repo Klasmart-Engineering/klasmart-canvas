@@ -104,7 +104,7 @@ const useSynchronizedAdded = (
         id: e.target.id,
       };
 
-      if (canvas) {
+      if (canvas && (payload.target as ICanvasObject)?.text?.trim().length) {
         const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
         undoRedoDispatch({
@@ -209,6 +209,13 @@ const useSynchronizedAdded = (
 
         (text as ICanvasObject).id = id;
         canvas?.add(text);
+
+        undoRedoDispatch({
+          type: SET_OTHER,
+          payload: (canvas?.getObjects() as unknown) as TypedShape[],
+          canvasId: userId,
+        });
+
         return;
       }
 
