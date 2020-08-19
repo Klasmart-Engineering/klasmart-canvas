@@ -40,6 +40,7 @@ import {
   ObjectType,
 } from './event-serializer/PaintEventSerializer';
 import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
+import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
 
 /**
@@ -117,7 +118,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateShape,
     updateShapeColor,
     floodFill,
-  } = useContext(WhiteboardContext);
+  } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
     canvas,
@@ -272,7 +273,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      canvas?.off('mouse:down');
+      if (!eraseType) {
+        canvas?.off('mouse:down');
+      }
     };
   }, [
     canvas,
@@ -282,6 +285,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateFontFamily,
     updateFontColor,
     userId,
+    eraseType,
   ]);
 
   /**
@@ -660,6 +664,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         canvas.renderAll();
       });
     }
+
+    return () => {
+      if (!textIsActive) {
+        canvas?.off('mouse:down');
+      }
+    };
   }, [
     actions,
     canvas,
@@ -670,6 +680,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     manageShapeOutsideClick,
     reorderShapes,
     userId,
+    textIsActive,
   ]);
 
   /**

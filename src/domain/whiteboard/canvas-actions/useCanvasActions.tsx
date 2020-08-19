@@ -11,6 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { IEvent, Point } from 'fabric/fabric-impl';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasMouseEvent } from '../../../interfaces/canvas-events/canvas-mouse-event';
+import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
 
 export interface ICanvasActionsState {
   actions: ICanvasActions;
@@ -35,7 +36,7 @@ export const useCanvasActions = (
     penColor,
     lineWidth,
     isLocalObject,
-  } = useContext(WhiteboardContext);
+  } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
    * Adds shape to whiteboard.
@@ -318,7 +319,7 @@ export const useCanvasActions = (
           let payload = {};
           let target = {
             type,
-            id
+            id,
           };
 
           const requiredProps = [
@@ -335,7 +336,7 @@ export const useCanvasActions = (
             'scaleY',
             'strokeUniform',
             'originX',
-            'originY'
+            'originY',
           ];
 
           const requiredEllipseProps = [
@@ -349,13 +350,13 @@ export const useCanvasActions = (
             'fill',
             'strokeUniform',
             'originY',
-            'originX'
+            'originX',
           ];
 
           if (type !== 'ellipse') {
             requiredProps.forEach((prop: string) => {
               if (shape && (shape as any)[prop]) {
-                target = { ...target, [prop]: (shape as any)[prop]};
+                target = { ...target, [prop]: (shape as any)[prop] };
               }
             });
 
@@ -367,7 +368,7 @@ export const useCanvasActions = (
           } else {
             requiredEllipseProps.forEach((prop: string) => {
               if (shape && (shape as any)[prop]) {
-                target = { ...target, [prop]: (shape as any)[prop]};
+                target = { ...target, [prop]: (shape as any)[prop] };
               }
             });
 
@@ -492,12 +493,12 @@ export const useCanvasActions = (
       if (canvas) {
         canvas.selection = selection;
         // canvas.forEachObject((object: fabric.Object) => {
-          // @ts-ignore
-          // if (isLocalObject(object.id, userId)) {
-          //   object.set({
-          //     selectable: selection,
-          //   });
-          // }
+        // @ts-ignore
+        // if (isLocalObject(object.id, userId)) {
+        //   object.set({
+        //     selectable: selection,
+        //   });
+        // }
         // });
 
         canvas.renderAll();
@@ -532,7 +533,13 @@ export const useCanvasActions = (
     let activeObjects = canvas?.getActiveObjects();
 
     canvas?.getObjects().forEach((object: ICanvasObject) => {
-      if ((object.id && isLocalObject(object.id, canvasId as string)) || !object.id) {
+      console.log(object.id);
+      console.log(userId);
+      console.log(object.id && isLocalObject(object.id, userId as string));
+      if (
+        (object.id && isLocalObject(object.id, userId as string)) ||
+        !object.id
+      ) {
         object.set({
           selectable: true,
           evented: true,
@@ -553,14 +560,15 @@ export const useCanvasActions = (
 
     // When mouse down eraser is able to remove objects
     canvas?.on('mouse:down', (e: ICanvasMouseEvent) => {
-      if (eraser || !e.target) {
+      if (eraser) {
         return false;
       }
 
       // if the click is made over an object
       if (
-        (e.target.id && isLocalObject(e.target.id, canvasId as string)) ||
-        !e.target.id
+        e.target &&
+        ((e.target.id && isLocalObject(e.target.id, userId as string)) ||
+          !e.target.id)
       ) {
         canvas.remove(e.target);
         canvas.renderAll();
@@ -585,7 +593,9 @@ export const useCanvasActions = (
       }
 
       if (
-        (e.target && e.target.id && isLocalObject(e.target.id, canvasId as string)) ||
+        (e.target &&
+          e.target.id &&
+          isLocalObject(e.target.id, userId as string)) ||
         (e.target && !e.target.id)
       ) {
         canvas.remove(e.target);
