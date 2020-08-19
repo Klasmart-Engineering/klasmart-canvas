@@ -595,12 +595,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     let clickedColor: string | null = null;
     const differentFill = '#dcdcdc';
     const differentStroke = '#c8c8c8';
+    const isLocalShape = (shape: TypedShape) => {
+      return shape.id && isLocalObject(shape.id, userId);
+    };
 
     if (floodFillIsActive) {
       canvas?.forEachObject((object: TypedShape) => {
         object.set({
-          perPixelTargetFind: isEmptyShape(object) ? false : true,
-          hoverCursor: 'auto',
+          evented: true,
+          hoverCursor: isLocalShape(object) ? 'default' : 'not-allowed',
+          perPixelTargetFind: isShape(object) ? false : true,
         });
       });
 
@@ -662,8 +666,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     floodFill,
     floodFillIsActive,
     getColorInCoord,
+    isLocalObject,
     manageShapeOutsideClick,
     reorderShapes,
+    userId,
   ]);
 
   /**
@@ -762,7 +768,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     undoRedoDispatch
   );
   useSynchronizedSkewed(canvas, filterOutgoingEvents, filterIncomingEvents);
-  useSynchronizedReconstruct(canvas, filterIncomingEvents, userId, undoRedoDispatch);
+  useSynchronizedReconstruct(
+    canvas,
+    filterIncomingEvents,
+    userId,
+    undoRedoDispatch
+  );
   useSynchronizedColorChanged(
     canvas,
     userId,
@@ -780,7 +791,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (objects && objects.length) {
       objects.forEach((obj: ICanvasObject) => {
         const type: ObjectType = obj.get('type') as ObjectType;
-        
+
         if (obj.id && isLocalObject(obj.id, userId)) {
           const target = (type: string) => {
             return type === 'textbox'
@@ -793,7 +804,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             target: target(type) as ICanvasObject,
             id: obj.id,
           };
-        
+
           eventSerializer?.push('colorChanged', payload);
         }
       });
@@ -810,31 +821,30 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useEffect(() => {
     if (fontColor && canvas) {
-      const obj = canvas.getActiveObject() as any;
-   
+      const obj = canvas.getActiveObject() as ICanvasObject;
+
       if (!obj) return;
-  
+
       const type = obj?.get('type');
 
       if (type !== 'textbox') return;
-      
+
       const payload = {
         type,
         target: { fill: obj?.fill },
         id: obj?.id,
       };
-
+      console.log(payload.target);
       const event = { event: payload, type: 'colorChanged' };
 
       undoRedoDispatch({
         type: SET,
-        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        payload: canvas?.getObjects() as TypedShape[],
         canvasId: userId,
-        event: event as unknown as IUndoRedoEvent,
+        event: (event as unknown) as IUndoRedoEvent,
       });
     }
   }, [fontColor, canvas, undoRedoDispatch, userId]);
-
 
   useEffect(() => {
     if (penColor && canvas) {
@@ -845,7 +855,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       const type = obj?.get('type');
 
       if (type === 'textbox') return;
-      
+
       const payload = {
         type,
         target: { stroke: obj?.stroke },
@@ -856,36 +866,36 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       undoRedoDispatch({
         type: SET,
-        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        payload: canvas?.getObjects() as TypedShape[],
         canvasId: userId,
-        event: event as unknown as IUndoRedoEvent,
+        event: (event as unknown) as IUndoRedoEvent,
       });
     }
   }, [penColor, canvas, undoRedoDispatch, userId]);
 
   useEffect(() => {
     if (lineWidth && canvas) {
-      const obj = canvas.getActiveObject() as any;
+      const obj = canvas.getActiveObject() as ICanvasObject;
 
       if (!obj) return;
 
       const type = obj?.get('type');
 
       if (type === 'textbox') return;
-      
+
       const payload = {
         type,
         target: { strokeWidth: obj?.strokeWidth },
         id: obj?.id,
       };
-      
+
       const event = { event: payload, type: 'colorChanged' };
 
       undoRedoDispatch({
         type: SET,
-        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        payload: canvas?.getObjects() as TypedShape[],
         canvasId: userId,
-        event: event as unknown as IUndoRedoEvent,
+        event: (event as unknown) as IUndoRedoEvent,
       });
     }
   }, [lineWidth, canvas, undoRedoDispatch, userId]);
@@ -919,14 +929,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
   }, [canvas, eventSerializer, userId, fontFamily, isLocalObject]);
 
-
   useEffect(() => {
-    if (canvas && fontFamily) {  
-      const obj = canvas?.getActiveObject() as any;
+    if (canvas && fontFamily) {
+      const obj = canvas?.getActiveObject() as ICanvasObject;
       const type = obj?.get('type');
 
       if (type === 'textbox' && obj) {
-
         const target = {
           fontFamily,
         };
@@ -936,28 +944,28 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           target,
           id: obj?.id,
         };
-        
+
         const event = { event: payload, type: 'fontFamilyChanged' };
 
         obj.set({ fontFamily });
 
         undoRedoDispatch({
           type: SET,
-          payload: (canvas?.getObjects() as unknown) as TypedShape[],
+          payload: canvas?.getObjects() as TypedShape[],
           canvasId: userId,
-          event: event as unknown as IUndoRedoEvent,
+          event: (event as unknown) as IUndoRedoEvent,
         });
       } else if (obj?.type === 'activeSelection') {
         let events: any[] = [];
         const eventId: string = uuidv4();
 
-        obj._objects.forEach((object: any) => {
+        obj._objects?.forEach((object: any) => {
           const payload = {
             type,
             target: { fontFamily },
             id: object.id,
           };
-  
+
           const event = { event: payload, type: 'activeSelection', eventId };
           events.push(event);
           object.set({ fontFamily });
@@ -970,34 +978,33 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           const matrix = object.calcTransformMatrix();
           const options = fabric.util.qrDecompose(matrix);
           const transformed = object.toJSON(['strokeUniform', 'id']);
-          let top = (object.group.height / 2 + object.top) + object.group.top;
-          let left = (object.group.width / 2 + object.left) + object.group.left;
-  
+          let top = object.group.height / 2 + object.top + object.group.top;
+          let left = object.group.width / 2 + object.left + object.group.left;
+
           events.forEach((event: any) => {
             if (event.event.id === object.id) {
               event.event.target.top = top;
               event.event.target.left = left;
             }
           });
-  
+
           return {
             ...transformed,
             top,
             left,
             scaleX: options.scaleX,
             scaleY: options.scaleY,
-          }
+          };
         });
 
         undoRedoDispatch({
           type: SET_GROUP,
           payload: mappedObjects as TypedShape[],
           canvasId: userId,
-          event: events as unknown as IUndoRedoEvent,
+          event: (events as unknown) as IUndoRedoEvent,
         });
       }
     }
-
   }, [canvas, fontFamily, undoRedoDispatch, userId]);
 
   /**
@@ -1068,7 +1075,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateCanvasActions(actions);
   }, [actions, updateCanvasActions]);
 
-
   // Will be modified once only one board is visible.
   const keyDown = (e: any) => {
     if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
@@ -1080,7 +1086,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       undoRedoDispatch({ type: REDO, canvasId: instanceId });
       return;
     }
-  }
+  };
 
   // TODO: Possible to have dynamically sized canvas? With raw canvas it's
   // possible to set the "pixel (background)" size separately from the
@@ -1097,7 +1103,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     <div
       tabIndex={0}
       onKeyDown={keyDown}
-      style={{ backgroundColor: 'transparent '}}
+      style={{ backgroundColor: 'transparent ' }}
     >
       <canvas
         width={width}
