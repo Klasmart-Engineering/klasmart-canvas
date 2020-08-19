@@ -19,11 +19,15 @@ const useSynchronizedColorChanged = (
       objectType: string,
       target: ICanvasObject
     ) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+      if (id && !shouldHandleRemoteEvent(id)) return;
+
+      if (objectType === 'background' && canvas) {
+        canvas.backgroundColor = target.fill?.toString();
+      }
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
-          if (objectType === 'textbox') {
+          if (objectType === 'textbox' || objectType === 'shape') {
             obj.set({
               fill: target.fill,
             });

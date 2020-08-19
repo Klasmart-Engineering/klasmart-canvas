@@ -607,9 +607,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas?.forEachObject((object: TypedShape) => {
         object.set({
           evented: true,
-          hoverCursor: isLocalShape(object) ? 'default' : 'not-allowed',
+          hoverCursor: isLocalShape(object) ? 'pointer' : 'not-allowed',
           perPixelTargetFind: isShape(object) ? false : true,
         });
+
+        console.log('evented: ', object.evented);
       });
 
       reorderShapes();
@@ -619,10 +621,25 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         // Click out of any object
         if (!event.target) {
           canvas.backgroundColor = floodFill;
+
+          const payload: ObjectEvent = {
+            type: 'background',
+            target: {
+              fill: floodFill,
+            } as ICanvasObject,
+            id: '',
+          };
+
+          eventSerializer?.push('colorChanged', payload);
         }
 
         // Click on object shape
-        if (event.target && event.pointer && isEmptyShape(event.target)) {
+        if (
+          event.target &&
+          event.pointer &&
+          isEmptyShape(event.target) &&
+          (event.target as ICanvasObject).id
+        ) {
           // Store the current stroke and fill colors to reset them
           originalStroke = event.target.stroke;
           originalFill = event.target.fill;
@@ -636,12 +653,25 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
           clickedColor = getColorInCoord(event.pointer.x, event.pointer.y);
 
-          if (clickedColor === differentFill) {
+          if (
+            clickedColor === differentFill &&
+            (event.target as ICanvasObject).id
+          ) {
             // If user click inside of the shape
             event.target.set({
               fill: floodFill,
               stroke: originalStroke,
             });
+
+            const payload: ObjectEvent = {
+              type: 'shape',
+              target: {
+                fill: event.target.fill,
+              } as ICanvasObject,
+              id: (event.target as ICanvasObject).id || '',
+            };
+
+            eventSerializer?.push('colorChanged', payload);
           } else if (clickedColor === differentStroke) {
             // If user click in the border of the shape
             event.target.set({
@@ -681,6 +711,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     reorderShapes,
     userId,
     textIsActive,
+    eventSerializer,
   ]);
 
   /**
@@ -761,7 +792,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterOutgoingEvents,
     filterIncomingEvents,
     userId,
-    undoRedoDispatch,
+    undoRedoDispatch
   );
   useSynchronizedRemoved(
     canvas,

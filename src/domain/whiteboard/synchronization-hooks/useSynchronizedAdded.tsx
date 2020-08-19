@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useContext } from 'react';
 import { PainterEvents } from '../event-serializer/PainterEvents';
 import {
   ObjectEvent,
@@ -13,6 +13,7 @@ import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-drawing-event';
 import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { WhiteboardContext } from '../WhiteboardContext';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -21,6 +22,7 @@ const useSynchronizedAdded = (
   shouldHandleRemoteEvent: (id: string) => boolean,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
+  const { floodFillIsActive } = useContext(WhiteboardContext);
   const {
     state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
@@ -49,14 +51,14 @@ const useSynchronizedAdded = (
       const stateTarget = { ...target, top: e.path.top, left: e.path.left };
 
       if (canvas) {
-        const event = {
+        const event = ({
           event: {
             id: e.path.id,
             target: stateTarget,
             type: 'path',
           },
           type: 'added',
-        } as unknown as IUndoRedoEvent;
+        } as unknown) as IUndoRedoEvent;
 
         undoRedoDispatch({
           type: SET,
@@ -100,7 +102,11 @@ const useSynchronizedAdded = (
 
       const payload: ObjectEvent = {
         type,
-        target : { ...target, top: e.target.top, left: e.target.left } as ICanvasObject,
+        target: {
+          ...target,
+          top: e.target.top,
+          left: e.target.left,
+        } as ICanvasObject,
         id: e.target.id,
       };
 
@@ -129,8 +135,10 @@ const useSynchronizedAdded = (
    * Generates a new shape based on shape name.
    * @param target Object data.
    */
-  const generateGenericShape = (target: { [key: string]: number | string | boolean}): TypedShape | TypedPolygon => {
-    switch(target.name) {
+  const generateGenericShape = (target: {
+    [key: string]: number | string | boolean;
+  }): TypedShape | TypedPolygon => {
+    switch (target.name) {
       case 'chatBubble': {
         return chat(
           target.width as number,
@@ -173,7 +181,7 @@ const useSynchronizedAdded = (
         );
       }
     }
-  }
+  };
 
   /** Register and handle remote added event. */
   useEffect(() => {
@@ -235,8 +243,13 @@ const useSynchronizedAdded = (
 
         canvas?.add(res);
         canvas?.renderAll();
-      } else if ((objectType === 'path' || objectType === 'polygon') && target.name) {
-        shape = generateGenericShape(target as unknown as { [key: string]: string | number | boolean; });
+      } else if (
+        (objectType === 'path' || objectType === 'polygon') &&
+        target.name
+      ) {
+        shape = generateGenericShape(
+          (target as unknown) as { [key: string]: string | number | boolean }
+        );
       }
 
       if (objectType === 'rect') {
@@ -255,7 +268,8 @@ const useSynchronizedAdded = (
         target = {
           ...target,
           selectable: false,
-          evented: false
+          evented: floodFillIsActive,
+          hoverCursor: floodFillIsActive ? 'not-allowed' : 'move',
         } as ICanvasObject;
 
         shape.set(target as Partial<fabric.Ellipse>);
@@ -278,6 +292,7 @@ const useSynchronizedAdded = (
   }, [
     canvas,
     eventController,
+    floodFillIsActive,
     shouldHandleRemoteEvent,
     undoRedoDispatch,
     userId,
