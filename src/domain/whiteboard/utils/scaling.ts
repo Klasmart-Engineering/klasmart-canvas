@@ -66,8 +66,8 @@ export const setPathSize = (
 ): Dimensions => {
   const width = getLength(end.x, start.x) / 2;
   const height = getLength(end.y, start.y) / 2;
-  const scaleX = 2 / Number(shape.width) / width;
-  const scaleY = 2 / Number(shape.height) / height;
+  const scaleX = 2 / (Number(shape.width) / width);
+  const scaleY = 2 / (Number(shape.height) / height);
 
   shape.set({ scaleX, scaleY });
   return { width, height };
