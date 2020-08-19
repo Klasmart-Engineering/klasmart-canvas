@@ -57,7 +57,10 @@ export interface IPainterController {
     event: 'fontFamilyChanged',
     listener: (id: string, target: ICanvasObject) => void
   ): this;
-  on(event: 'removed', listener: (id: string) => void): this;
+  on(
+    event: 'removed',
+    listener: (id: string, permission: boolean) => void
+  ): this;
   on(
     event: 'reconstruct',
     listener: (id: string, target: ICanvasObject) => void
@@ -95,7 +98,10 @@ export interface IPainterController {
     event: 'fontFamilyChanged',
     listener: (id: string, target: ICanvasObject) => void
   ): this;
-  removeListener(event: 'removed', listener: (id: string) => void): this;
+  removeListener(
+    event: 'removed',
+    listener: (id: string, permission: boolean) => void
+  ): this;
   removeListener(
     event: 'reconstruct',
     listener: (id: string, target: ICanvasObject) => void
