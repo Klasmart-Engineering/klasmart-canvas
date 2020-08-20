@@ -35,8 +35,8 @@ function Whiteboard() {
               userId="teacher"
               initialStyle={canvasStyle}
               pointerEvents={true}
-              width={740 * window.devicePixelRatio}
-              height={460 * window.devicePixelRatio}
+              width={740}
+              height={460}
               cssWidth={'740px'}
               cssHeight={'460px'}
             >

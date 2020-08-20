@@ -459,7 +459,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (canvas) {
         console.log(window.devicePixelRatio);
         const context = canvas.getContext();
-        const colorData = context.getImageData(x, y, 1, 1).data.slice(0, 3);
+        const colorData = context
+          .getImageData(
+            x * window.devicePixelRatio,
+            y * window.devicePixelRatio,
+            1,
+            1
+          )
+          .data.slice(0, 3);
         return (
           '#' +
           (
