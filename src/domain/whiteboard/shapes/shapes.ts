@@ -329,7 +329,7 @@ export const laserPointer = () => {
     flipY: true,
     angle: -50,
   });
-}
+};
 
 export const brush = () => {
   const shape = new fabric.PatternBrush();

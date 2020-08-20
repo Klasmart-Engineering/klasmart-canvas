@@ -20,10 +20,15 @@ export declare interface PaintEventSerializer {
 export interface ObjectEvent {
   id: string;
   type?: ObjectType;
-  target?: ICanvasObject | { objects: ICanvasObject[]};
+  target?: ICanvasObject | { objects: ICanvasObject[] };
 }
 
-export type ObjectType = 'path' | 'textbox' | 'activeSelection' | 'reconstruct' | 'pointer';
+export type ObjectType =
+  | 'path'
+  | 'textbox'
+  | 'activeSelection'
+  | 'reconstruct'
+  | 'pointer';
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {

@@ -65,8 +65,6 @@ export type Props = {
   cssWidth?: string | number;
   cssHeight?: string | number;
   filterUsers?: string[];
-  allowPointer?: boolean;
-  universalPermits: boolean;
 };
 
 export const WhiteboardCanvas: FunctionComponent<Props> = ({
@@ -79,8 +77,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   height,
   cssWidth,
   cssHeight,
-  allowPointer,
-  universalPermits,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
 
@@ -125,6 +121,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateShapeColor,
     floodFill,
     laserIsActive,
+    allowPointer,
+    universalPermits,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -391,7 +389,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     eraseType,
     shapesAreEvented,
     isLocalObject,
-    laserIsActive
+    laserIsActive,
   ]);
 
   /**

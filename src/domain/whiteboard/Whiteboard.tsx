@@ -39,8 +39,6 @@ function Whiteboard() {
               height={460}
               cssWidth={'740px'}
               cssHeight={'460px'}
-              universalPermits={true}
-              allowPointer={true}
             >
               <button>Teacher</button>
             </WhiteboardCanvas>
@@ -71,8 +69,6 @@ function Whiteboard() {
               height={460}
               cssWidth={'740px'}
               cssHeight={'460px'}
-              universalPermits={false}
-              allowPointer={false}
             >
               <button>Student</button>
             </WhiteboardCanvas>

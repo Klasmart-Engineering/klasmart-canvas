@@ -15,4 +15,3 @@ export const useLaserIsAvailable = () => {
   const [laserIsAvailable, updateLaserIsAvailable] = useState(false);
   return { laserIsAvailable, updateLaserIsAvailable };
 };
-

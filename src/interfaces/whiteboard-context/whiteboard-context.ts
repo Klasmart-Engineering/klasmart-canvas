@@ -57,4 +57,6 @@ export interface IWhiteboardContext {
   eraseObject: () => void;
   undo: () => void;
   redo: () => void;
+  allowPointer: boolean;
+  universalPermits: (id: string) => boolean;
 }

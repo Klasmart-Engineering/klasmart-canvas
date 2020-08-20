@@ -81,6 +81,14 @@ export const WhiteboardProvider = ({
   };
   const [eventedObjects, updateEventedObjects] = useState(true);
 
+  // Hard coded until functionality to provide permissions to students is implemented.
+  const allowPointer = false;
+
+  // Hard coded until roles fully integrated.
+  const universalPermits = (id: string) => {
+    return id === 'teacher';
+  };
+
   // Temporary code to get undo / redo working while there are two boards
   // on the view.
   /* const tempKeyDown = (e: any) => {
@@ -231,6 +239,8 @@ export const WhiteboardProvider = ({
     setCanvasSelection: setCanvasSelectionAction,
     undo: undoAction,
     redo: redoAction,
+    allowPointer,
+    universalPermits,
   };
 
   return (
