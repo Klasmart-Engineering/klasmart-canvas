@@ -1,4 +1,5 @@
 import { fabric } from 'fabric';
+import floodFillCursor from '../../assets/cursors/flood-fill.cur';
 
 import { v4 as uuidv4 } from 'uuid';
 import React, {
@@ -607,7 +608,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas?.forEachObject((object: TypedShape) => {
         object.set({
           evented: true,
-          hoverCursor: isLocalShape(object) ? 'pointer' : 'not-allowed',
+          hoverCursor: isLocalShape(object)
+            ? `url("${floodFillCursor}"), auto`
+            : 'not-allowed',
           perPixelTargetFind: isShape(object) ? false : true,
         });
 
@@ -696,6 +699,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
+      if (canvas) {
+        canvas.defaultCursor = 'default';
+      }
+
       if (!textIsActive) {
         canvas?.off('mouse:down');
       }
