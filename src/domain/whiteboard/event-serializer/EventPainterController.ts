@@ -82,7 +82,7 @@ export class EventPainterController extends EventEmitter
         this.fontFamilyChanged(event.id, target);
         break;
       case 'removed':
-        this.removed(event.id);
+        this.removed(event.id, target);
         break;
       case 'reconstruct':
         this.reconstruct(event.id, event);
@@ -129,8 +129,8 @@ export class EventPainterController extends EventEmitter
     this.emit('reconstruct', id, target);
   }
 
-  private removed(id: string) {
-    this.emit('removed', id);
+  private removed(id: string, target: boolean) {
+    this.emit('removed', id, target);
   }
 
   private moving(id: string, target: ICanvasObject) {

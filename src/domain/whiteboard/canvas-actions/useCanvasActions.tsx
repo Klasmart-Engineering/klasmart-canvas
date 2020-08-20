@@ -12,6 +12,7 @@ import { IEvent, Point } from 'fabric/fabric-impl';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasMouseEvent } from '../../../interfaces/canvas-events/canvas-mouse-event';
 import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
+import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 
 export interface ICanvasActionsState {
   actions: ICanvasActions;
@@ -474,15 +475,76 @@ export const useCanvasActions = (
   /**
    * Clears all whiteboard elements
    * */
-  const clearWhiteboard = useCallback(() => {
-    if (canvas) {
-      canvas.clear();
-      canvas.backgroundColor = '#ffffff';
-      canvas.renderAll();
-    }
+  const clearWhiteboardClearAll = useCallback(() => {
+    canvas?.getObjects().forEach((obj: ICanvasObject) => {
+      if (obj.id) {
+        const target = {
+          id: obj.id,
+          target: {
+            strategy: 'allowClearAll',
+          },
+        };
 
+        canvas?.remove(obj);
+        eventSerializer?.push('removed', target as ObjectEvent);
+      }
+    });
+  }, [canvas, eventSerializer]);
+
+  /**
+   * Clears all whiteboard elements
+   * */
+  const clearWhiteboardClearMySelf = useCallback(() => {
+    canvas?.getObjects().forEach((obj: ICanvasObject) => {
+      if (obj.id && isLocalObject(obj.id, userId)) {
+        const target = {
+          id: obj.id,
+          target: {
+            strategy: 'allowClearMyself',
+          },
+        };
+
+        canvas?.remove(obj);
+        eventSerializer?.push('removed', target as ObjectEvent);
+      }
+    });
     closeModal();
-  }, [canvas, closeModal]);
+
+    // If isLocalObject is added in dependencies an infinity loop happens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvas, closeModal, canvasId, eventSerializer]);
+
+  /**
+   * Clears all whiteboard with allowClearOthers strategy
+   * */
+  const clearWhiteboardAllowClearOthers = useCallback(
+    (userId: string) => {
+      canvas?.getObjects().forEach((obj: ICanvasObject) => {
+        if (obj.id) {
+          const object = obj.id.split(':');
+
+          if (!object.length) {
+            throw new Error('Invalid ID');
+          }
+
+          if (object[0] === userId) {
+            canvas?.remove(obj);
+          }
+
+          const target = {
+            id: obj.id,
+            target: {
+              strategy: 'allowClearOthers',
+              userId,
+            },
+          };
+
+          eventSerializer?.push('removed', target as ObjectEvent);
+        }
+      });
+    },
+    [canvas, eventSerializer]
+  );
 
   /**
    * Set Canvas Whiteboard selection ability
@@ -635,7 +697,7 @@ export const useCanvasActions = (
       fillColor,
       changeStrokeColor,
       textColor,
-      clearWhiteboard,
+      clearWhiteboardClearAll,
       discardActiveObject,
       addShape,
       eraseObject,
@@ -643,13 +705,15 @@ export const useCanvasActions = (
       setHoverCursorObjects,
       undo,
       redo,
+      clearWhiteboardAllowClearOthers,
+      clearWhiteboardClearMySelf,
     };
 
     return { actions, mouseDown };
   }, [
     addShape,
     changeStrokeColor,
-    clearWhiteboard,
+    clearWhiteboardClearAll,
     discardActiveObject,
     eraseObject,
     fillColor,
@@ -659,6 +723,8 @@ export const useCanvasActions = (
     textColor,
     undo,
     redo,
+    clearWhiteboardAllowClearOthers,
+    clearWhiteboardClearMySelf,
   ]);
 
   return state;

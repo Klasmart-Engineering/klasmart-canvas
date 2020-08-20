@@ -22,6 +22,13 @@ const useSynchronizedReconstruct = (
       if (!shouldHandleRemoteEvent(id)) return;
       const objects = JSON.parse(target.param as string).objects;
 
+      const reset = (object: TypedShape): void => {
+        const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+        object.set({ selectable: false, evented: false });
+        canvas?.remove(old as fabric.Object);
+        canvas?.add(object);
+      };
+
       objects.forEach((object: TypedShape) => {
         if (object && object.type === 'path') {
           const group: TypedGroup | undefined = canvas?.getObjects().filter((o: any) => o._objects)[0] as TypedGroup;
@@ -30,10 +37,7 @@ const useSynchronizedReconstruct = (
           }
 
           fabric.Path.fromObject(object, (path: TypedShape) => {
-            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
-            path.set({ selectable: false, evented: false });
-            canvas?.remove(old as fabric.Object);
-            canvas?.add(path);
+            reset(path);
           });
 
           canvas?.renderAll();
@@ -41,44 +45,29 @@ const useSynchronizedReconstruct = (
           // Ignore is required, typing is wrong in definition file.
           //@ts-ignore
           fabric.Polygon.fromObject(object, (o: TypedShape) => {
-            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
-            o.set({ selectable: false, evented: false });
-            canvas?.remove(old as fabric.Object);
-            canvas?.add(o);
+            reset(o);
           });
         } else if (object && object.type === 'textbox') {
-          fabric.Textbox.fromObject(object, (path: TypedShape) => {
-            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
-            path.set({ selectable: false, evented: false });
-            canvas?.remove(old as fabric.Object);
-            canvas?.add(path);
+          fabric.Textbox.fromObject(object, (text: TypedShape) => {
+            reset(text);
           });
         } else if (object && object.type === 'rect') {
           // Ignore is required, typing is wrong in definition file.
           //@ts-ignore
           fabric.Rect.fromObject(object, (o: TypedShape) => {
-            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
-            o.set({ selectable: false, evented: false });
-            canvas?.remove(old as fabric.Object);
-            canvas?.add(o);
+            reset(o);
           });
         } else if (object && object.type === 'ellipse') {
           // Ignore is required, typing is wrong in definition file.
           //@ts-ignore
           fabric.Ellipse.fromObject(object, (o: TypedShape) => {
-            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
-            o.set({ selectable: false, evented: false });
-            canvas?.remove(old as fabric.Object);
-            canvas?.add(o);
+            reset(o);
           });
         } else if (object && object.type === 'triangle') {
           // Ignore is required, typing is wrong in definition file.
           //@ts-ignore
           fabric.Triangle.fromObject(object, (o: TypedShape) => {
-            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
-            o.set({ selectable: false, evented: false });
-            canvas?.remove(old as fabric.Object);
-            canvas?.add(o);
+            reset(o);
           });
         } else if (object) {
           fabric.Group.fromObject(object, (group: fabric.Group) => {

@@ -18,7 +18,6 @@ export interface IWhiteboardContext {
   updateShapeColor: (color: string) => void;
   fillColor: (color: string) => void;
   textColor: (color: string) => void;
-  clearWhiteboard: () => void;
   openClearWhiteboardModal: () => void;
   closeModal: () => void;
   penLine: string;
@@ -50,7 +49,10 @@ export interface IWhiteboardContext {
   updateCanvasActions: (actions: ICanvasActions) => void;
   laserIsActive: boolean;
   updateLaserIsActive: (status: boolean) => void;
-  isLocalObject: (id: string, canvasId: string) => boolean | undefined;
+  isLocalObject: (
+    id: string,
+    canvasId: string | undefined
+  ) => boolean | undefined;
   discardActiveObject: () => void;
   changeStrokeColor: (color: string) => void;
   addShape: (shape: string) => void;
@@ -59,4 +61,7 @@ export interface IWhiteboardContext {
   redo: () => void;
   allowPointer: boolean;
   universalPermits: (id: string) => boolean;
+  clearWhiteboard: () => void;
+  clearWhiteboardAllowClearOthers: (userId: string) => void;
+  clearWhiteboardClearAll: () => void;
 }
