@@ -457,10 +457,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   const getColorInCoord = useCallback(
     (x: number, y: number): string | null => {
       if (canvas) {
-        const colorData = canvas
-          .getContext()
-          .getImageData(x, y, 1, 1)
-          .data.slice(0, 3);
+        console.log(window.devicePixelRatio);
+        const context = canvas.getContext();
+        context.scale(window.devicePixelRatio, window.devicePixelRatio);
+        const colorData = context.getImageData(x, y, 1, 1).data.slice(0, 3);
         return (
           '#' +
           (
@@ -755,7 +755,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterOutgoingEvents,
     filterIncomingEvents,
     userId,
-    undoRedoDispatch,
+    undoRedoDispatch
   );
   useSynchronizedRemoved(
     canvas,
