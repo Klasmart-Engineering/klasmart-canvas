@@ -392,12 +392,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * 'Escape' event for deselect active objects
    * */
   const keyDownHandler = useCallback(
-    (e: {
-      key: string;
-      which?: number;
-      ctrlKey?: boolean;
-      shiftKey?: boolean;
-    }) => {
+    (e: KeyboardEvent) => {
       // The following two blocks, used for undo and redo, can not
       // be integrated while there are two boards in the canvas.
       // if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
@@ -415,6 +410,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         objects.forEach((object: fabric.Object) => {
           if (!(object as ITextOptions)?.isEditing) {
+            e.preventDefault();
             canvas.remove(object);
             canvas.discardActiveObject().renderAll();
           }
