@@ -62,6 +62,10 @@ export interface IPainterController {
     event: 'reconstruct',
     listener: (id: string, target: ICanvasObject) => void
   ): this;
+  on(
+    event: 'moving',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
 
   removeListener(
     event: 'added',
@@ -98,6 +102,10 @@ export interface IPainterController {
   removeListener(event: 'removed', listener: (id: string) => void): this;
   removeListener(
     event: 'reconstruct',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+  removeListener(
+    event: 'moving',
     listener: (id: string, target: ICanvasObject) => void
   ): this;
 

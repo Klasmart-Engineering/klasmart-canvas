@@ -23,7 +23,7 @@ export interface ObjectEvent {
   target?: ICanvasObject | { objects: ICanvasObject[]};
 }
 
-export type ObjectType = 'path' | 'textbox' | 'activeSelection' | 'reconstruct';
+export type ObjectType = 'path' | 'textbox' | 'activeSelection' | 'reconstruct' | 'pointer';
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {

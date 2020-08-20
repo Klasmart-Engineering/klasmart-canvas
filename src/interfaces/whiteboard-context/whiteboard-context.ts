@@ -48,6 +48,8 @@ export interface IWhiteboardContext {
   shapesAreEvented: boolean;
   updateShapesAreEvented: (status: boolean) => void;
   updateCanvasActions: (actions: ICanvasActions) => void;
+  laserIsActive: boolean;
+  updateLaserIsActive: (status: boolean) => void;
   isLocalObject: (id: string, canvasId: string) => boolean | undefined;
   discardActiveObject: () => void;
   changeStrokeColor: (color: string) => void;

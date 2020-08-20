@@ -16,6 +16,7 @@ import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 import { useLineWidth } from './hooks/useLineWidth';
 import { useFloodFill } from './hooks/useFloodFill';
 import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
+import { useLaserIsActive } from './hooks/useLaserIsActive';
 import ICanvasActions from './canvas-actions/ICanvasActions';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 
@@ -51,6 +52,7 @@ export const WhiteboardProvider = ({
   } = useShapesAreSelectable();
   const { shapesAreEvented, updateShapesAreEvented } = useShapesAreEvented();
   const { floodFillIsActive, updateFloodFillIsActive } = useFloodFillIsActive();
+  const { laserIsActive, updateLaserIsActive } = useLaserIsActive();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -214,6 +216,8 @@ export const WhiteboardProvider = ({
     shapesAreSelectable,
     shapesAreEvented,
     updateCanvasActions,
+    laserIsActive,
+    updateLaserIsActive,
     isLocalObject,
 
     // NOTE: Actions that will get invoked based on registered handler.

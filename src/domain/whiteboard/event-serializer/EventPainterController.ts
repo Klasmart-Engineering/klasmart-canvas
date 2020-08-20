@@ -88,7 +88,7 @@ export class EventPainterController extends EventEmitter
         this.reconstruct(event.id, event);
         break;
       case 'moving':
-        console.error('Not implemented yet!');
+        this.moving(event.id, target);
         break;
     }
   }
@@ -131,5 +131,9 @@ export class EventPainterController extends EventEmitter
 
   private removed(id: string) {
     this.emit('removed', id);
+  }
+
+  private moving(id: string, target: ICanvasObject) {
+    this.emit('moving', id, target);
   }
 }
