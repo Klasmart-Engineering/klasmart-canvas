@@ -264,12 +264,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               return;
             }
 
-            text.on('selected', () => {
-              if (text.fill && text.fontFamily) {
-                updateFontColor(text.fill.toString());
-                updateFontFamily(text.fontFamily);
-              }
-            });
+            // text.on('selected', () => {
+            //   if (text.fill && text.fontFamily) {
+            //     updateFontColor(text.fill.toString());
+            //     updateFontFamily(text.fontFamily);
+            //   }
+            // });
 
             text.on('modified', () => {
               if (text?.text?.replace(/\s/g, '').length === 0) {
