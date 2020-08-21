@@ -315,6 +315,7 @@ export const useCanvasActions = (
         } else {
           shape.set({ id });
           shape.setCoords();
+          canvas.setActiveObject(shape);
           canvas.renderAll();
           let type = shape.type;
           let payload = {};
