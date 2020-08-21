@@ -28,6 +28,8 @@ export type ObjectType =
   | 'textbox'
   | 'activeSelection'
   | 'reconstruct'
+  | 'shape'
+  | 'background'
   | 'pointer';
 
 export class PaintEventSerializer extends EventEmitter
