@@ -460,7 +460,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (canvas) {
         const colorData = canvas
           .getContext()
-          .getImageData(x, y, 1, 1)
+          .getImageData(
+            x * window.devicePixelRatio,
+            y * window.devicePixelRatio,
+            1,
+            1
+          )
           .data.slice(0, 3);
         return (
           '#' +
@@ -604,8 +609,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       return shape.id && isLocalObject(shape.id, userId);
     };
 
-    if (floodFillIsActive) {
-      canvas?.forEachObject((object: TypedShape) => {
+    if (floodFillIsActive && canvas) {
+      canvas.defaultCursor = `url("${floodFillCursor}"), auto`;
+      canvas.forEachObject((object: TypedShape) => {
         object.set({
           evented: true,
           hoverCursor: isLocalShape(object)
@@ -613,14 +619,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             : 'not-allowed',
           perPixelTargetFind: isShape(object) ? false : true,
         });
-
-        console.log('evented: ', object.evented);
       });
 
       reorderShapes();
-      canvas?.renderAll();
+      canvas.renderAll();
 
-      canvas?.on('mouse:down', (event: fabric.IEvent) => {
+      canvas.on('mouse:down', (event: fabric.IEvent) => {
         // Click out of any object
         if (!event.target) {
           canvas.backgroundColor = floodFill;
@@ -670,6 +674,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               type: 'shape',
               target: {
                 fill: event.target.fill,
+                objectsOrdering: canvas
+                  .getObjects()
+                  .map((obj: ICanvasObject, index) => {
+                    return { id: obj.id, index: index };
+                  }),
               } as ICanvasObject,
               id: (event.target as ICanvasObject).id || '',
             };
@@ -715,10 +724,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     getColorInCoord,
     isLocalObject,
     manageShapeOutsideClick,
-    reorderShapes,
     userId,
     textIsActive,
     eventSerializer,
+    reorderShapes,
   ]);
 
   /**
@@ -889,7 +898,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         target: { fill: obj?.fill },
         id: obj?.id,
       };
-      console.log(payload.target);
+
       const event = { event: payload, type: 'colorChanged' };
 
       undoRedoDispatch({

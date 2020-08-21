@@ -38,6 +38,16 @@ const useSynchronizedColorChanged = (
             });
           }
         }
+
+        if (objectType === 'shape') {
+          const index = target.objectsOrdering?.find(
+            (find) => obj.id === find.id
+          )?.index;
+
+          if (index !== undefined) {
+            obj.moveTo(index);
+          }
+        }
       });
 
       undoRedoDispatch({

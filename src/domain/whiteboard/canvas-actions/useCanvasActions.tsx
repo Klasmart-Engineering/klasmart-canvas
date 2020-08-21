@@ -533,9 +533,6 @@ export const useCanvasActions = (
     let activeObjects = canvas?.getActiveObjects();
 
     canvas?.getObjects().forEach((object: ICanvasObject) => {
-      console.log(object.id);
-      console.log(userId);
-      console.log(object.id && isLocalObject(object.id, userId as string));
       if (
         (object.id && isLocalObject(object.id, userId as string)) ||
         !object.id
