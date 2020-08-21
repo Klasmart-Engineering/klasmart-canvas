@@ -1,4 +1,5 @@
 import { fabric } from 'fabric';
+import floodFillCursor from '../../assets/cursors/flood-fill.cur';
 
 import { v4 as uuidv4 } from 'uuid';
 import React, {
@@ -464,7 +465,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (canvas) {
         const colorData = canvas
           .getContext()
-          .getImageData(x, y, 1, 1)
+          .getImageData(
+            x * window.devicePixelRatio,
+            y * window.devicePixelRatio,
+            1,
+            1
+          )
           .data.slice(0, 3);
         return (
           '#' +
@@ -604,26 +610,48 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     let clickedColor: string | null = null;
     const differentFill = '#dcdcdc';
     const differentStroke = '#c8c8c8';
+    const isLocalShape = (shape: TypedShape) => {
+      return shape.id && isLocalObject(shape.id, userId);
+    };
 
-    if (floodFillIsActive) {
-      canvas?.forEachObject((object: TypedShape) => {
+    if (floodFillIsActive && canvas) {
+      canvas.defaultCursor = `url("${floodFillCursor}"), auto`;
+      canvas.forEachObject((object: TypedShape) => {
         object.set({
-          perPixelTargetFind: isEmptyShape(object) ? false : true,
-          hoverCursor: 'auto',
+          evented: true,
+          hoverCursor: isLocalShape(object)
+            ? `url("${floodFillCursor}"), auto`
+            : 'not-allowed',
+          perPixelTargetFind: isShape(object) ? false : true,
         });
       });
 
       reorderShapes();
-      canvas?.renderAll();
+      canvas.renderAll();
 
-      canvas?.on('mouse:down', (event: fabric.IEvent) => {
+      canvas.on('mouse:down', (event: fabric.IEvent) => {
         // Click out of any object
         if (!event.target) {
           canvas.backgroundColor = floodFill;
+
+          const payload: ObjectEvent = {
+            type: 'background',
+            target: {
+              fill: floodFill,
+            } as ICanvasObject,
+            id: '',
+          };
+
+          eventSerializer?.push('colorChanged', payload);
         }
 
         // Click on object shape
-        if (event.target && event.pointer && isEmptyShape(event.target)) {
+        if (
+          event.target &&
+          event.pointer &&
+          isEmptyShape(event.target) &&
+          (event.target as ICanvasObject).id
+        ) {
           // Store the current stroke and fill colors to reset them
           originalStroke = event.target.stroke;
           originalFill = event.target.fill;
@@ -637,12 +665,30 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
           clickedColor = getColorInCoord(event.pointer.x, event.pointer.y);
 
-          if (clickedColor === differentFill) {
+          if (
+            clickedColor === differentFill &&
+            (event.target as ICanvasObject).id
+          ) {
             // If user click inside of the shape
             event.target.set({
               fill: floodFill,
               stroke: originalStroke,
             });
+
+            const payload: ObjectEvent = {
+              type: 'shape',
+              target: {
+                fill: event.target.fill,
+                objectsOrdering: canvas
+                  .getObjects()
+                  .map((obj: ICanvasObject, index) => {
+                    return { id: obj.id, index: index };
+                  }),
+              } as ICanvasObject,
+              id: (event.target as ICanvasObject).id || '',
+            };
+
+            eventSerializer?.push('colorChanged', payload);
           } else if (clickedColor === differentStroke) {
             // If user click in the border of the shape
             event.target.set({
@@ -667,6 +713,17 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
+      if (canvas && !floodFillIsActive) {
+        canvas.defaultCursor = 'default';
+        canvas.forEachObject((object: ICanvasObject) => {
+          object.set({
+            hoverCursor: 'default',
+            evented: false,
+            perPixelTargetFind: false,
+          });
+        });
+      }
+
       if (!textIsActive) {
         canvas?.off('mouse:down');
       }
@@ -677,9 +734,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     floodFill,
     floodFillIsActive,
     getColorInCoord,
+    isLocalObject,
     manageShapeOutsideClick,
-    reorderShapes,
+    userId,
     textIsActive,
+    eventSerializer,
+    reorderShapes,
   ]);
 
   /**
@@ -847,7 +907,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useEffect(() => {
     if (fontColor && canvas) {
-      const obj = canvas.getActiveObject() as any;
+      const obj = canvas.getActiveObject() as ICanvasObject;
 
       if (!obj) return;
 
@@ -865,7 +925,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       undoRedoDispatch({
         type: SET,
-        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        payload: canvas?.getObjects() as TypedShape[],
         canvasId: userId,
         event: (event as unknown) as IUndoRedoEvent,
       });
@@ -892,7 +952,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       undoRedoDispatch({
         type: SET,
-        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        payload: canvas?.getObjects() as TypedShape[],
         canvasId: userId,
         event: (event as unknown) as IUndoRedoEvent,
       });
@@ -901,7 +961,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useEffect(() => {
     if (lineWidth && canvas) {
-      const obj = canvas.getActiveObject() as any;
+      const obj = canvas.getActiveObject() as ICanvasObject;
 
       if (!obj) return;
 
@@ -919,7 +979,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       undoRedoDispatch({
         type: SET,
-        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        payload: canvas?.getObjects() as TypedShape[],
         canvasId: userId,
         event: (event as unknown) as IUndoRedoEvent,
       });
@@ -957,7 +1017,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useEffect(() => {
     if (canvas && fontFamily) {
-      const obj = canvas?.getActiveObject() as any;
+      const obj = canvas?.getActiveObject() as ICanvasObject;
       const type = obj?.get('type');
 
       if (type === 'textbox' && obj) {
@@ -977,7 +1037,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         undoRedoDispatch({
           type: SET,
-          payload: (canvas?.getObjects() as unknown) as TypedShape[],
+          payload: canvas?.getObjects() as TypedShape[],
           canvasId: userId,
           event: (event as unknown) as IUndoRedoEvent,
         });
@@ -985,7 +1045,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         let events: any[] = [];
         const eventId: string = uuidv4();
 
-        obj._objects.forEach((object: any) => {
+        obj._objects?.forEach((object: any) => {
           const payload = {
             type,
             target: { fontFamily },

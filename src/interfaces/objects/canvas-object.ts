@@ -8,6 +8,10 @@ export interface ICanvasObject extends fabric.Object {
   fontFamily?: string;
   objectType?: ObjectType;
   param?: string;
+  objectsOrdering?: {
+    id: string;
+    index: number;
+  }[];
   strategy?: string;
   userId?: string;
 }
