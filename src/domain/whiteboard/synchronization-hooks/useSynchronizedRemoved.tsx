@@ -6,6 +6,11 @@ import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 
+interface ITarget {
+  strategy: string;
+  userId: string;
+}
+
 const useSynchronizedRemoved = (
   canvas: fabric.Canvas | undefined,
   userId: string,
@@ -19,14 +24,46 @@ const useSynchronizedRemoved = (
 
   /** Register and handle remote event. */
   useEffect(() => {
-    const removed = (id: string) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const removed = (objectId: string, target: ITarget) => {
+      switch (target.strategy) {
+        case 'allowClearMyself':
+          if (!shouldHandleRemoteEvent(objectId)) return;
+          canvas?.forEachObject(function (obj: ICanvasObject) {
+            if (obj.id === objectId) {
+              canvas?.remove(obj);
+            }
+          });
+          break;
+        case 'allowClearAll':
+          if (shouldHandleRemoteEvent(objectId)) return;
+          canvas?.forEachObject(function (obj: ICanvasObject) {
+            canvas?.remove(obj);
+          });
+          break;
+        case 'allowClearOthers':
+          if (shouldHandleRemoteEvent(objectId)) return;
+          canvas?.forEachObject(function (obj: ICanvasObject) {
+            if (obj.id) {
+              const object = obj.id.split(':');
 
-      canvas?.forEachObject(function (obj: ICanvasObject) {
-        if (obj.id && obj.id === id) {
-          canvas?.remove(obj);
-        }
-      });
+              if (!object.length) {
+                throw new Error('Invalid ID');
+              }
+
+              if (object[0] === target.userId) {
+                canvas?.remove(obj);
+              }
+            }
+          });
+          break;
+        default:
+          canvas?.forEachObject(function (obj: ICanvasObject) {
+            if (obj.id && obj.id === objectId) {
+              canvas?.remove(obj);
+            }
+          });
+      }
+
       canvas?.renderAll();
 
       undoRedoDispatch({
@@ -53,7 +90,11 @@ const useSynchronizedRemoved = (
   useEffect(() => {
     const objectRemoved = (e: fabric.IEvent | CanvasEvent) => {
       if (!e.target) return;
-      if ((e.target as ICanvasObject).id && !shouldSerializeEvent((e.target as ICanvasObject).id as string)) return;
+      if (
+        (e.target as ICanvasObject).id &&
+        !shouldSerializeEvent((e.target as ICanvasObject).id as string)
+      )
+        return;
 
       const payload = {
         id: (e.target as ICanvasObject).id as string,
@@ -62,7 +103,11 @@ const useSynchronizedRemoved = (
       const canvasEvent = e.target as ICanvasObject;
       const groupObjects = canvasEvent?._objects || [];
 
-      if (canvas && payload.id && (!canvasEvent?._objects || groupObjects.length > 0)) {
+      if (
+        canvas &&
+        payload.id &&
+        (!canvasEvent?._objects || groupObjects.length > 0)
+      ) {
         const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
 
         undoRedoDispatch({

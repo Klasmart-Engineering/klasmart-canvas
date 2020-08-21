@@ -29,7 +29,8 @@ export type ObjectType =
   | 'activeSelection'
   | 'reconstruct'
   | 'shape'
-  | 'background';
+  | 'background'
+  | 'pointer';
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {

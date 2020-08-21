@@ -67,6 +67,9 @@ function Toolbar() {
     undo,
     redo,
     updateShapesAreEvented,
+    updateLaserIsActive,
+    allowPointer,
+    universalPermits,
   } = useContext(WhiteboardContext);
 
   /**
@@ -75,6 +78,10 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
+    if (tool === ELEMENTS.LASER_TOOL && !allowPointer && !universalPermits) {
+      return;
+    }
+
     // Set Erase Type in initial value
     updateEraseType(null);
 
@@ -116,6 +123,11 @@ function Toolbar() {
      * Indicates if flood-fill/paint bucket is active.
      */
     updateFloodFillIsActive(tool === ELEMENTS.FLOOD_FILL_TOOL);
+
+    /**
+     * Indicates if laser tool is active.
+     */
+    updateLaserIsActive(tool === ELEMENTS.LASER_TOOL);
 
     /*
       It is setted to false when you select Pointer Tool,

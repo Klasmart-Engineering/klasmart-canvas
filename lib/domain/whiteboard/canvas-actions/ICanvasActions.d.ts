@@ -5,7 +5,6 @@ export interface ICanvasActions {
     fillColor: (color: string) => void;
     changeStrokeColor: (color: string) => void;
     textColor: (color: string) => void;
-    clearWhiteboard: () => void;
     discardActiveObject: () => void;
     addShape: (specific?: string) => void;
     eraseObject: () => void;

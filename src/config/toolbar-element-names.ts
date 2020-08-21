@@ -14,4 +14,5 @@ export const ELEMENTS = {
   ADD_TEXT_TOOL: 'add_text',
   ADD_SHAPE_TOOL: 'add_shape',
   ADD_STAMP_TOOL: 'add_stamp',
+  LASER_TOOL: 'laser_pointer',
 };

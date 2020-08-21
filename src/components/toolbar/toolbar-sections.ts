@@ -240,13 +240,6 @@ const toolsSection: IBasicToolbarSection = {
           iconName: 'Crosshair',
         },
         {
-          id: 'laser_pointer',
-          value: 'laser',
-          title: 'Laser Pointer',
-          iconSrc: laser,
-          iconName: 'Laser',
-        },
-        {
           id: 'left_pointer',
           value: 'left',
           title: 'Left Pointer',
@@ -275,6 +268,13 @@ const toolsSection: IBasicToolbarSection = {
           iconName: 'Down',
         },
       ],
+    },
+    // Laser pointer tool.
+    {
+      id: 'laser_pointer',
+      title: 'Laser Pointer',
+      iconSrc: laser,
+      iconName: 'Laser',
     },
     // Move - ToolbarButton
     {

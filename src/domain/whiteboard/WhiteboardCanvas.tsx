@@ -32,6 +32,7 @@ import useSynchronizedRotated from './synchronization-hooks/useSynchronizedRotat
 import useSynchronizedScaled from './synchronization-hooks/useSynchronizedScaled';
 import useSynchronizedSkewed from './synchronization-hooks/useSynchronizedSkewed';
 import useSynchronizedReconstruct from './synchronization-hooks/useSynchronizedReconstruct';
+import useSynchronizedPointer from './synchronization-hooks/useSynchronizedPointer';
 import { SET, SET_GROUP, UNDO, REDO } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
@@ -43,6 +44,7 @@ import {
 import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
+import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -64,6 +66,7 @@ export type Props = {
   cssWidth?: string | number;
   cssHeight?: string | number;
   filterUsers?: string[];
+  clearWhiteboardPermissions: IClearWhiteboardPermissions;
 };
 
 export const WhiteboardCanvas: FunctionComponent<Props> = ({
@@ -119,6 +122,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateShape,
     updateShapeColor,
     floodFill,
+    laserIsActive,
+    allowPointer,
+    universalPermits,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -366,7 +372,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         canvas?.off('mouse:up');
       }
 
-      canvas?.off('mouse:move');
+      if (!laserIsActive) {
+        canvas?.off('mouse:move');
+      }
     };
   }, [
     canvas,
@@ -383,6 +391,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     eraseType,
     shapesAreEvented,
     isLocalObject,
+    laserIsActive,
   ]);
 
   /**
@@ -391,12 +400,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * 'Escape' event for deselect active objects
    * */
   const keyDownHandler = useCallback(
-    (e: {
-      key: string;
-      which?: number;
-      ctrlKey?: boolean;
-      shiftKey?: boolean;
-    }) => {
+    (e: KeyboardEvent) => {
       // The following two blocks, used for undo and redo, can not
       // be integrated while there are two boards in the canvas.
       // if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
@@ -414,6 +418,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         objects.forEach((object: fabric.Object) => {
           if (!(object as ITextOptions)?.isEditing) {
+            e.preventDefault();
             canvas.remove(object);
             canvas.discardActiveObject().renderAll();
           }
@@ -708,8 +713,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      if (canvas) {
+      if (canvas && !floodFillIsActive) {
         canvas.defaultCursor = 'default';
+        canvas.forEachObject((object: ICanvasObject) => {
+          object.set({
+            hoverCursor: 'default',
+            evented: false,
+            perPixelTargetFind: false,
+          });
+        });
       }
 
       if (!textIsActive) {
@@ -845,6 +857,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     undoRedoDispatch
   );
   useSynchronizedFontFamilyChanged(canvas, filterIncomingEvents);
+  useSynchronizedPointer(
+    canvas,
+    !allowPointer,
+    universalPermits,
+    filterIncomingEvents,
+    userId,
+    penColor,
+    laserIsActive,
+    allowPointer
+  );
 
   /**
    * Send synchronization event for penColor and fontColor changes.
