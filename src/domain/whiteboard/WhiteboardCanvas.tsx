@@ -1,5 +1,5 @@
 import { fabric } from 'fabric';
-import floodFillCursor from '../../assets/cursors/flood-fill.cur';
+import floodFillCursor from '../../assets/cursors/flood-fill.png';
 
 import { v4 as uuidv4 } from 'uuid';
 import React, {
@@ -713,9 +713,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      if (canvas && !floodFillIsActive) {
+      if (canvas) {
         canvas.defaultCursor = 'default';
-        canvas.forEachObject((object: ICanvasObject) => {
+      }
+
+      if (!floodFillIsActive && eraseType !== 'object') {
+        canvas?.forEachObject((object: ICanvasObject) => {
           object.set({
             hoverCursor: 'default',
             evented: false,
@@ -724,7 +727,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         });
       }
 
-      if (!textIsActive) {
+      if (!textIsActive && eraseType !== 'object') {
         canvas?.off('mouse:down');
       }
     };
@@ -740,6 +743,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     textIsActive,
     eventSerializer,
     reorderShapes,
+    eraseType,
   ]);
 
   /**

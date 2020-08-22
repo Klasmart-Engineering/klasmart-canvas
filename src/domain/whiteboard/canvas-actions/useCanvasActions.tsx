@@ -1,5 +1,6 @@
 import { useCallback, useContext, useMemo } from 'react';
 import { fabric } from 'fabric';
+import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 import { WhiteboardContext } from '../WhiteboardContext';
 import ICanvasActions from './ICanvasActions';
 import * as shapes from '../shapes/shapes';
@@ -601,9 +602,8 @@ export const useCanvasActions = (
         !object.id
       ) {
         object.set({
-          selectable: true,
           evented: true,
-          hoverCursor: 'pointer',
+          hoverCursor: `url("${eraseObjectCursor}"), auto`,
         });
       } else if (object.id) {
         object.set({
@@ -612,9 +612,9 @@ export const useCanvasActions = (
       }
     });
 
-    if (activeObjects?.length) {
+    if (activeObjects?.length && activeObjects.length > 1) {
       canvas?.getActiveObject().set({
-        hoverCursor: 'pointer',
+        hoverCursor: `url("${eraseObjectCursor}"), auto`,
       });
     }
 
@@ -624,9 +624,13 @@ export const useCanvasActions = (
         return false;
       }
 
+      canvas.defaultCursor = `url("${eraseObjectCursor}"), auto`;
+      eraser = true;
+
       // if the click is made over an object
       if (
         e.target &&
+        !e.target._objects &&
         ((e.target.id && isLocalObject(e.target.id, userId as string)) ||
           !e.target.id)
       ) {
@@ -635,15 +639,14 @@ export const useCanvasActions = (
       }
 
       // if the click is made over an object group
-      if (e.target && activeObjects?.length) {
-        activeObjects.forEach(function (object: fabric.Object) {
+      if (e.target?._objects) {
+        e.target._objects.forEach(function (object: fabric.Object) {
           canvas.remove(object);
         });
 
-        canvas.discardActiveObject().renderAll();
+        canvas.discardActiveObject();
+        canvas.renderAll();
       }
-
-      eraser = true;
     });
 
     // When mouse is over an object
@@ -669,6 +672,7 @@ export const useCanvasActions = (
         return false;
       }
 
+      canvas.defaultCursor = 'default';
       eraser = false;
     });
     // If isLocalObject is added in dependencies an infinity loop happens
