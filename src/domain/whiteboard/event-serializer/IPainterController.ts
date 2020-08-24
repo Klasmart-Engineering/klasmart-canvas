@@ -69,6 +69,10 @@ export interface IPainterController {
     event: 'moving',
     listener: (id: string, target: ICanvasObject) => void
   ): this;
+  on(
+    event: 'fontColorChanged',
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
+  ): this;
 
   removeListener(
     event: 'added',
@@ -113,6 +117,10 @@ export interface IPainterController {
   removeListener(
     event: 'moving',
     listener: (id: string, target: ICanvasObject) => void
+  ): this;
+  removeListener(
+    event: 'fontColorChanged',
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
 
   replayEvents(): Promise<void>;

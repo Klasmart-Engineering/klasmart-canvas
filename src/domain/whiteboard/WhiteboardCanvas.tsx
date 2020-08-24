@@ -33,6 +33,7 @@ import useSynchronizedScaled from './synchronization-hooks/useSynchronizedScaled
 import useSynchronizedSkewed from './synchronization-hooks/useSynchronizedSkewed';
 import useSynchronizedReconstruct from './synchronization-hooks/useSynchronizedReconstruct';
 import useSynchronizedPointer from './synchronization-hooks/useSynchronizedPointer';
+import useSynchronizedFontColorChanged from './synchronization-hooks/useSynchronizedFontColorChanged';
 import { SET, SET_GROUP, UNDO, REDO } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
@@ -470,7 +471,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           console.log(e);
         });
     },
-    [canvas]
+    [canvas, eventSerializer, isLocalObject, userId]
   );
 
   /**
@@ -889,9 +890,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     laserIsActive,
     allowPointer
   );
+  useSynchronizedFontColorChanged(
+    canvas,
+    userId,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
 
   /**
-   * Send synchronization event for penColor and fontColor changes.
+   * Send synchronization event for penColor changes.
    * */
   useEffect(() => {
     const objects = canvas?.getActiveObjects();
@@ -901,15 +908,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         const type: ObjectType = obj.get('type') as ObjectType;
 
         if (obj.id && isLocalObject(obj.id, userId)) {
-          const target = (type: string) => {
-            return type === 'textbox'
-              ? { fill: obj.fill }
-              : { stroke: obj.stroke, strokeWidth: obj.strokeWidth };
+          const target = () => {
+            return { stroke: obj.stroke, strokeWidth: obj.strokeWidth };
           };
 
           const payload: ObjectEvent = {
             type,
-            target: target(type) as ICanvasObject,
+            target: target() as ICanvasObject,
             id: obj.id,
           };
 
