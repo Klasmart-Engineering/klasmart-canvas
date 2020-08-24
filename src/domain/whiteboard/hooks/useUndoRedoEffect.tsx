@@ -31,6 +31,11 @@ const isLocalObject = (id: string, canvasId: string): boolean => {
   return object[0] === canvasId;
 };
 
+/**
+ * Get's previous set color for canvas background.
+ * @param currentIndex Current event index.
+ * @param events List of events.
+ */
 const getPreviousBackground = (currentIndex: number, events: any): string => {
   let i = currentIndex;
   
