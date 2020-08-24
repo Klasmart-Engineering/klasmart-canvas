@@ -262,13 +262,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               return;
             }
 
-            text.on('selected', () => {
-              if (text.fill && text.fontFamily) {
-                updateFontColor(text.fill.toString());
-                updateFontFamily(text.fontFamily);
-              }
-            });
-
             text.on('modified', () => {
               if (text?.text?.replace(/\s/g, '').length === 0) {
                 canvas.remove(canvas.getActiveObject());
@@ -436,6 +429,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   /**
    * Loads selected font. Default is Arial
+   * Send synchronization event for fontFamily changes.
    * */
   const fontFamilyLoader = useCallback(
     (font: string) => {
@@ -446,6 +440,30 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           if (canvas?.getActiveObject()) {
             (canvas.getActiveObject() as fabric.IText).set('fontFamily', font);
             canvas.requestRenderAll();
+
+            const objects = canvas?.getActiveObjects();
+
+            if (objects && objects.length) {
+              objects.forEach((obj: ICanvasObject) => {
+                if (obj.id && isLocalObject(obj.id, userId)) {
+                  const type = obj.get('type');
+
+                  if (type === 'textbox') {
+                    const target = {
+                      fontFamily: obj.fontFamily,
+                    } as ICanvasObject;
+
+                    const payload: ObjectEvent = {
+                      type,
+                      target,
+                      id: obj.id,
+                    };
+
+                    eventSerializer?.push('fontFamilyChanged', payload);
+                  }
+                }
+              });
+            }
           }
         })
         .catch((e: IEvent) => {
@@ -989,35 +1007,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       });
     }
   }, [lineWidth, canvas, undoRedoDispatch, userId]);
-
-  /**
-   * Send synchronization event for fontFamily changes.
-   * */
-  useEffect(() => {
-    const objects = canvas?.getActiveObjects();
-
-    if (objects && objects.length) {
-      objects.forEach((obj: ICanvasObject) => {
-        if (obj.id && isLocalObject(obj.id, userId)) {
-          const type = obj.get('type');
-
-          if (type === 'textbox') {
-            const target = {
-              fontFamily,
-            } as ICanvasObject;
-
-            const payload: ObjectEvent = {
-              type,
-              target,
-              id: obj.id,
-            };
-
-            eventSerializer?.push('fontFamilyChanged', payload);
-          }
-        }
-      });
-    }
-  }, [canvas, eventSerializer, userId, fontFamily, isLocalObject]);
 
   useEffect(() => {
     if (canvas && fontFamily) {
