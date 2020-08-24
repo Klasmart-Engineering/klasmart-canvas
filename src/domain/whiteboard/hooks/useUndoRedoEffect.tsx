@@ -38,7 +38,7 @@ const getPreviousBackground = (currentIndex: number, events: any): string => {
     return '#fff';
   }
 
-  for (i; i <= currentIndex; i--) {
+  for (i; i >= 0; i--) {
     if (events[i].event.type === 'background') {
       return events[i].event.target.fill;
     }
