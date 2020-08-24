@@ -31,6 +31,23 @@ const isLocalObject = (id: string, canvasId: string): boolean => {
   return object[0] === canvasId;
 };
 
+const getPreviousBackground = (currentIndex: number, events: any): string => {
+  let i = currentIndex;
+  
+  if (i < 0) {
+    return '#fff';
+  }
+
+  for (i; i <= currentIndex; i--) {
+    if (events[i].event.type === 'background') {
+      return events[i].event.target.fill;
+    }
+  }
+
+  return '#fff';
+}
+
+
 /**
  * Custom hook to track canvas history.
  * @param canvas Canvas being manipulated
@@ -56,7 +73,6 @@ export const UndoRedo = (
       (state.actionType === UNDO) ||
       state.actionType === REDO
     ) {
-      canvas.clear();
       const mapped = JSON.parse(state.activeState as string).objects.map((object: TypedShape | TypedGroup) => {
         if ((object as TypedGroup).objects) {
           let _objects = (object as TypedGroup).objects; 
@@ -94,6 +110,11 @@ export const UndoRedo = (
         eventSerializer?.push('removed', payload);
       } else if (nextEvent.type !== 'activeSelection') {
         let currentEvent = state.events[state.eventIndex];
+        if ((nextEvent?.event as any).type === 'background') {
+          canvas.backgroundColor = getPreviousBackground(state.eventIndex, state.events);
+          canvas.renderAll();
+          return;
+        };
 
         if (currentEvent && currentEvent.type !== 'activeSelection' && currentEvent.type !== 'remove') {
           let id = (nextEvent.event as IUndoRedoSingleEvent).id;
@@ -151,6 +172,13 @@ export const UndoRedo = (
       }
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];
+
+      if ((event?.event as any).type === 'background') {
+        canvas.backgroundColor = (event.event as IUndoRedoSingleEvent).target.fill as string || '#fff';
+        canvas.renderAll();
+        return;
+      };
+
       if (event.type === 'added') {
         eventSerializer?.push('added', event.event as ObjectEvent);
       } else if (event.type === 'removed') {

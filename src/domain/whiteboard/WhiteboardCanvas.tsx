@@ -642,6 +642,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             id: '',
           };
 
+          const eventState = { event: payload, type: 'colorChanged' } as IUndoRedoEvent;
+        
+          undoRedoDispatch({
+            type: SET,
+            payload: canvas.getObjects(),
+            canvasId: userId,
+            event: eventState,
+          });
+
           eventSerializer?.push('colorChanged', payload);
         }
 
@@ -687,6 +696,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               } as ICanvasObject,
               id: (event.target as ICanvasObject).id || '',
             };
+        
+            const eventState = { event: payload, type: 'colorChanged' } as IUndoRedoEvent;
+        
+            undoRedoDispatch({
+              type: SET,
+              payload: canvas.getObjects(),
+              canvasId: userId,
+              event: eventState,
+            });
 
             eventSerializer?.push('colorChanged', payload);
           } else if (clickedColor === differentStroke) {
