@@ -642,7 +642,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             id: '',
           };
 
-          const eventState = { event: payload, type: 'colorChanged' } as IUndoRedoEvent;
+          const eventState = { event: { ...payload, id: `${userId}:background` }, type: 'colorChanged' } as IUndoRedoEvent;
         
           undoRedoDispatch({
             type: SET,

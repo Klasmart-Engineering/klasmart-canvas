@@ -20,6 +20,15 @@ const useSynchronizedReconstruct = (
 
   const reconstruct = (id: string, target: ICanvasObject) => {
       if (!shouldHandleRemoteEvent(id)) return;
+
+      const parsed = JSON.parse(target.param as string);
+
+      if (parsed.background && canvas) {
+        canvas?.setBackgroundColor(parsed.background, () => {});
+        canvas.renderAll();
+        return;
+      }
+      
       const objects = JSON.parse(target.param as string).objects;
 
       const reset = (object: TypedShape): void => {

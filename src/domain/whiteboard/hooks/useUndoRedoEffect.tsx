@@ -96,6 +96,10 @@ export const UndoRedo = (
             }
           }
         });
+
+        const fill = getPreviousBackground(state.eventIndex, state.events);
+        canvas.backgroundColor = fill;
+        canvas.renderAll();
       });
     }
 
@@ -111,8 +115,16 @@ export const UndoRedo = (
       } else if (nextEvent.type !== 'activeSelection') {
         let currentEvent = state.events[state.eventIndex];
         if ((nextEvent?.event as any).type === 'background') {
-          canvas.backgroundColor = getPreviousBackground(state.eventIndex, state.events);
+          const fill = getPreviousBackground(state.eventIndex, state.events);
+          canvas.backgroundColor = fill;
           canvas.renderAll();
+
+          let payload: ObjectEvent = {
+            id: (nextEvent.event as IUndoRedoSingleEvent).id,
+            target: { background: fill },
+            type: 'reconstruct'
+          }
+          eventSerializer?.push('reconstruct', payload);
           return;
         };
 
@@ -176,6 +188,13 @@ export const UndoRedo = (
       if ((event?.event as any).type === 'background') {
         canvas.backgroundColor = (event.event as IUndoRedoSingleEvent).target.fill as string || '#fff';
         canvas.renderAll();
+
+        let payload: ObjectEvent = {
+          id: (event.event as IUndoRedoSingleEvent).id,
+          target: { background: (event.event as IUndoRedoSingleEvent).target.fill as string || 'fff' },
+          type: 'reconstruct'
+        }
+        eventSerializer?.push('reconstruct', payload);
         return;
       };
 
