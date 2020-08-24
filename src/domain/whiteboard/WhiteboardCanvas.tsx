@@ -465,12 +465,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (canvas) {
         const colorData = canvas
           .getContext()
-          .getImageData(
-            x * window.devicePixelRatio,
-            y * window.devicePixelRatio,
-            1,
-            1
-          )
+          .getImageData(x * devicePixelRatio, y * devicePixelRatio, 1, 1)
           .data.slice(0, 3);
         return (
           '#' +
@@ -615,12 +610,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
 
     if (floodFillIsActive && canvas) {
-      canvas.defaultCursor = `url("${floodFillCursor}"), auto`;
+      canvas.defaultCursor = `url("${floodFillCursor}") 2 15, default`;
       canvas.forEachObject((object: TypedShape) => {
         object.set({
           evented: true,
           hoverCursor: isLocalShape(object)
-            ? `url("${floodFillCursor}"), auto`
+            ? `url("${floodFillCursor}") 2 15, default`
             : 'not-allowed',
           perPixelTargetFind: isShape(object) ? false : true,
         });
