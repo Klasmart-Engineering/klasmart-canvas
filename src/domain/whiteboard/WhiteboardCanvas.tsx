@@ -615,12 +615,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
 
     if (floodFillIsActive && canvas) {
-      canvas.defaultCursor = `url("${floodFillCursor}"), auto`;
+      canvas.defaultCursor = `url("${floodFillCursor}") 2 15, auto`;
       canvas.forEachObject((object: TypedShape) => {
         object.set({
           evented: true,
           hoverCursor: isLocalShape(object)
-            ? `url("${floodFillCursor}"), auto`
+            ? `url("${floodFillCursor}") 2 15, auto`
             : 'not-allowed',
           perPixelTargetFind: isShape(object) ? false : true,
         });
