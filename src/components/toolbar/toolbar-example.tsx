@@ -9,7 +9,7 @@ export default function ToolbarExample({
     children,
 }: Props): JSX.Element {
 
-    const { state: { tools, colors }, actions: { selectTool, selectColor } } = useToolbarContext();
+    const { state: { tools, colors }, actions: { selectTool, selectColor, clear, undo, redo } } = useToolbarContext();
 
     const selectObjectEraser = useCallback(() => {
         const eraserOptions = tools.eraser.options;
@@ -38,6 +38,9 @@ export default function ToolbarExample({
             <button onClick={() => selectColorByName("red_color")}>Color: Red</button>
             <button onClick={() => selectColorByName("green_color")}>Color: Green</button>
             <button onClick={() => selectColorByName("blue_color")}>Color: Blue</button>
+            <button onClick={() => undo()}>Undo</button>
+            <button onClick={() => redo()}>Redo</button>
+            <button onClick={() => clear()}>Clear</button>
             {children}
         </div>
     )

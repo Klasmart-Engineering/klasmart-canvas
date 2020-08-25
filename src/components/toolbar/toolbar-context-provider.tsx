@@ -128,6 +128,9 @@ export default function ToolbarContextProvider({
     changeStrokeColor,
     textColor,
     fillColor,
+    undo,
+    redo,
+    clearWhiteboard,
   } = useContext(WhiteboardContext);
 
   const selectToolOption = useCallback((toolId: string, option: IToolbarSelectorOption) => {
@@ -217,6 +220,8 @@ export default function ToolbarContextProvider({
   const selectColorAction = useCallback((color: IStyleOption) => {
     updateFloodFill(String(color.value));
 
+    // NOTE: Added this conditional because without it selected
+    // lines would get filled (not just stroked) whenever the color was selected.
     if (selectedTool === "shape") {
       fillColor(String(color.value));
     } else {
@@ -225,11 +230,17 @@ export default function ToolbarContextProvider({
     }
   }, [changeStrokeColor, fillColor, selectedTool, textColor, updateFloodFill]);
 
-  const clearAction = useCallback((_filter?: string) => { }, []);
+  const clearAction = useCallback((_filter?: string) => {
+    clearWhiteboard();
+  }, [clearWhiteboard]);
 
-  const undoAction = useCallback(() => { }, []);
+  const undoAction = useCallback(() => {
+    undo();
+  }, [undo]);
 
-  const redoAction = useCallback(() => { }, []);
+  const redoAction = useCallback(() => {
+    redo();
+  }, [redo]);
 
   const actions: IToolbarActions = {
     selectTool: selectToolAction,
@@ -241,9 +252,17 @@ export default function ToolbarContextProvider({
 
   const status: IToolbarStatus = {
     selectedTool,
+
+    // TODO: Implement selectedToolOption state.
     selectedToolOptions: undefined,
+
+    // TODO: Implement selectedColor state.
     selectedColor: undefined,
+
+    // TODO: Implement canRedo state.
     canRedo: false,
+
+    // TODO: Implement canUndo state.
     canUndo: false,
   };
 
