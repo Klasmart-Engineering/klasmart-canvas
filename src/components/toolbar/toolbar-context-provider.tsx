@@ -156,8 +156,11 @@ export default function ToolbarContextProvider({
       case ELEMENTS.ADD_STAMP_TOOL:
         updateStamp(option.value);
         break;
+      case ELEMENTS.ERASE_TYPE_TOOL:
+        updateEraseType(option.value);
+        break;
     }
-  }, [updateFloodFill, updateFontFamily, updateLineWidth, updatePenLine, updatePointer, updateShape, updateStamp]);
+  }, [updateEraseType, updateFloodFill, updateFontFamily, updateLineWidth, updatePenLine, updatePointer, updateShape, updateStamp]);
 
   const selectToolAction = useCallback((toolType: ToolType, option?: IToolbarSelectorOption) => {
     const tool = toolsLookup[toolType];
