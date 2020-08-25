@@ -487,11 +487,22 @@ export const useCanvasActions = (
           },
         };
 
+        obj.set({ groupClear: true });
         canvas?.remove(obj);
         eventSerializer?.push('removed', target as ObjectEvent);
       }
     });
-  }, [canvas, eventSerializer]);
+
+    // Add cleared whiteboard to undo / redo state.
+    const event = { event: [], type: 'clearedWhiteboard' };
+
+    dispatch({
+      type: SET,
+      payload: [],
+      canvasId: userId,
+      event,
+    });
+  }, [canvas, eventSerializer, dispatch, userId]);
 
   /**
    * Clears all whiteboard elements
@@ -506,11 +517,22 @@ export const useCanvasActions = (
           },
         };
 
+        obj.set({ groupClear: true });
         canvas?.remove(obj);
         eventSerializer?.push('removed', target as ObjectEvent);
       }
     });
     closeModal();
+
+    // Add cleared whiteboard to undo / redo state.
+    const event = { event: [], type: 'clearedWhiteboard' };
+
+    dispatch({
+      type: SET,
+      payload: [],
+      canvasId: userId,
+      event,
+    });
 
     // If isLocalObject is added in dependencies an infinity loop happens
     // eslint-disable-next-line react-hooks/exhaustive-deps
