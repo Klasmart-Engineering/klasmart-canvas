@@ -607,9 +607,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     let originalStroke = null;
     let originalFill = null;
+    let originalBackground = null;
     let clickedColor: string | null = null;
     const differentFill = '#dcdcdc';
-    const differentStroke = '#c8c8c8';
+    const differentStroke = '#dbdbdb';
+    const differentBackground = '#dadada';
+
     const isLocalShape = (shape: TypedShape) => {
       return shape.id && isLocalObject(shape.id, userId);
     };
@@ -655,12 +658,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           // Store the current stroke and fill colors to reset them
           originalStroke = event.target.stroke;
           originalFill = event.target.fill;
+          originalBackground = canvas.backgroundColor;
 
           // Change stroke to a provisional color to be identified
           event.target.set({
             stroke: differentStroke,
             fill: differentFill,
           });
+          canvas.backgroundColor = differentBackground;
           canvas.renderAll();
 
           clickedColor = getColorInCoord(event.pointer.x, event.pointer.y);
@@ -674,6 +679,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               fill: floodFill,
               stroke: originalStroke,
             });
+            canvas.backgroundColor = originalBackground;
 
             const payload: ObjectEvent = {
               type: 'shape',
@@ -695,12 +701,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               stroke: originalStroke,
               fill: originalFill,
             });
+            canvas.backgroundColor = originalBackground;
           } else {
             // If user click outside of the shape
             event.target.set({
               stroke: originalStroke,
               fill: originalFill,
             });
+            canvas.backgroundColor = originalBackground;
 
             if (event.e) {
               manageShapeOutsideClick(event);
