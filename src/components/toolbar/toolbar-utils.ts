@@ -21,7 +21,7 @@ export const selectorOptionsWithId = (id: string) => {
       (t: GenericToolbarSelector & Object) =>
         t.id === id && t.hasOwnProperty('options')
     )
-    .map((t) => (t as IBasicToolbarSelector).options)[0];
+    .map((t) => { return (t as IBasicToolbarSelector).options })[0];
 };
 
 export const selectorStyleOptionsWithId = (id: string) => {
