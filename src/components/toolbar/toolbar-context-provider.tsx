@@ -125,6 +125,9 @@ export default function ToolbarContextProvider({
     updateFontFamily,
     updateShape,
     updateStamp,
+    changeStrokeColor,
+    textColor,
+    fillColor,
   } = useContext(WhiteboardContext);
 
   const selectToolOption = useCallback((toolId: string, option: IToolbarSelectorOption) => {
@@ -156,6 +159,7 @@ export default function ToolbarContextProvider({
       case ELEMENTS.ADD_STAMP_TOOL:
         updateStamp(option.value);
         break;
+
       case ELEMENTS.ERASE_TYPE_TOOL:
         updateEraseType(option.value);
         break;
@@ -210,7 +214,16 @@ export default function ToolbarContextProvider({
     }
   }, [discardActiveObject, selectToolOption, setPointerEvents, textIsActive, tools.elements, updateBrushIsActive, updateEraseType, updateEventedObjects, updateFloodFillIsActive, updateLaserIsActive, updateShapeIsActive, updateShapesAreEvented, updateShapesAreSelectable, updateTextIsActive]);
 
-  const selectColorAction = useCallback((_color: IStyleOption) => { }, []);
+  const selectColorAction = useCallback((color: IStyleOption) => {
+    updateFloodFill(String(color.value));
+
+    if (selectedTool === "shape") {
+      fillColor(String(color.value));
+    } else {
+      changeStrokeColor(String(color.value));
+      textColor(String(color.value));
+    }
+  }, [changeStrokeColor, fillColor, selectedTool, textColor, updateFloodFill]);
 
   const clearAction = useCallback((_filter?: string) => { }, []);
 
