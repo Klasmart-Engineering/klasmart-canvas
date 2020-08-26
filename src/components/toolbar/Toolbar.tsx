@@ -97,7 +97,7 @@ function Toolbar() {
         tool !== ELEMENTS.ADD_TEXT_TOOL &&
         tool !== ELEMENTS.LINE_TYPE_TOOL &&
         tool !== ELEMENTS.LINE_WIDTH_TOOL) ||
-      textIsActive
+      (textIsActive && tool !== ELEMENTS.ADD_TEXT_TOOL)
     ) {
       discardActiveObject();
     }
