@@ -35,8 +35,7 @@ import useSynchronizedReconstruct from './synchronization-hooks/useSynchronizedR
 import useSynchronizedPointer from './synchronization-hooks/useSynchronizedPointer';
 import useSynchronizedSetToolbarPermissions from './synchronization-hooks/useSynchronizedSetToolbarPermissions';
 import useSynchronizedFontColorChanged from './synchronization-hooks/useSynchronizedFontColorChanged';
-
-import { SET, SET_GROUP, UNDO, REDO } from './reducers/undo-redo';
+import { SET, SET_GROUP } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import { IEvent, ITextOptions, Canvas } from 'fabric/fabric-impl';
@@ -1279,7 +1278,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateCanvasActions(actions);
   }, [actions, updateCanvasActions]);
 
-  // Will be modified once only one board is visible.
+  // TODO: Will be re-added once only one board is visible.
+  /*
   const keyDown = (e: any) => {
     if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
       undoRedoDispatch({ type: UNDO, canvasId: instanceId });
@@ -1291,6 +1291,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       return;
     }
   };
+  */
 
   /**
    * Makes local objects unselectable when toolbar is disabled by the teacher.
@@ -1319,23 +1320,17 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   // takes place, this may or may not be modified.
 
   return (
-    <div
+    <canvas
+      width={width}
+      height={height}
+      id={instanceId}
+      style={initialStyle}
       tabIndex={0}
-      onKeyDown={keyDown}
-      style={{ backgroundColor: 'transparent ' }}
+      onClick={() => {
+        actions.addShape(shape);
+      }}
     >
-      <canvas
-        width={width}
-        height={height}
-        id={instanceId}
-        style={initialStyle}
-        tabIndex={0}
-        onClick={() => {
-          actions.addShape(shape);
-        }}
-      >
-        {children}
-      </canvas>
-    </div>
+      {children}
+    </canvas>
   );
 };
