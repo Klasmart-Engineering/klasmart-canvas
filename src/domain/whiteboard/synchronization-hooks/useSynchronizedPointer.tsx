@@ -44,7 +44,7 @@ const useSynchronizedPointer = (
         ?.getObjects()
         .filter((o: ICanvasObject) => o.id === id)[0];
 
-      if ((e.e as MouseEvent).which && canvas) {
+      if ((e.e as MouseEvent).which && (e.e as MouseEvent).buttons && canvas) {
         canvas.defaultCursor = 'none';
 
         if (!laser) {
@@ -71,7 +71,7 @@ const useSynchronizedPointer = (
         };
 
         eventSerializer.push('moving', payload);
-      } else if (!(e.e as MouseEvent).which && laser && canvas) {
+      } else if (laser && canvas) {
         canvas.defaultCursor = 'default';
         canvas?.remove(laser);
         canvas?.renderAll();
