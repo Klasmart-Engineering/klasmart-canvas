@@ -1,5 +1,7 @@
 import { fabric } from 'fabric';
 import floodFillCursor from '../../assets/cursors/flood-fill.png';
+import FloodFill from 'q-floodfill'
+import { trimmer } from './utils/trimmer';
 
 import { v4 as uuidv4 } from 'uuid';
 import React, {
@@ -615,10 +617,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
 
     if (floodFillIsActive && canvas) {
+      const tempCanvas = document.createElement('canvas');
+      const tempContext = tempCanvas.getContext('2d');
+      tempCanvas.height = canvas.getHeight() * 2;
+      tempCanvas.width = canvas.getWidth() * 2;
+
+
+      const context = canvas.getContext();
+      const imgData = context.getImageData(0, 0, canvas.getWidth() * 2, canvas.getHeight() * 2);
+      const floodFillData = new FloodFill(imgData);
+
       canvas.defaultCursor = `url("${floodFillCursor}"), auto`;
       canvas.forEachObject((object: TypedShape) => {
         object.set({
           evented: true,
+          selectable: true,
           hoverCursor: isLocalShape(object)
             ? `url("${floodFillCursor}"), auto`
             : 'not-allowed',
@@ -631,6 +644,48 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       canvas.on('mouse:down', (event: fabric.IEvent) => {
         // Click out of any object
+        // console.log(floodFillData, event.pointer);
+
+        if (event.target && event.target.get('type') === 'path') {
+          floodFillData.fill(
+            floodFill,
+            Math.round((event.pointer as { x: number; y: number }).x) * 2,
+            Math.round((event.pointer as { x: number; y: number }).y) * 2,
+            200
+          );
+
+          console.log(trimmer, tempContext);
+
+          context.putImageData(imgData, 0, 0);
+
+          return;
+
+          // Block 1 exp.
+          // tempContext?.putImageData(imgData, 0, 0);
+          // let tempCanvas2 = trimmer(tempCanvas);
+
+          // let tempData = tempCanvas2.toDataURL();
+
+          // interface TypedImage extends fabric.Image {
+          //   id?: string;
+          // }
+
+          // fabric.Image.fromURL(tempData, (image: TypedImage) => {
+          //   image.set({
+          //     scaleX: 0.5,
+          //     scaleY: 0.5,
+          //     top: event.target?.top,
+          //     left: event.target?.left,
+          //     id: (event.target as TypedImage).id
+          //   });
+
+          //   canvas.remove(event.target as fabric.Object);
+          //   canvas.add(image);
+          // });
+          // end
+        }
+
+
         if (!event.target) {
           canvas.backgroundColor = floodFill;
 
