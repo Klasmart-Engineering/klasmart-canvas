@@ -163,7 +163,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const wrapper = lowerCanvas?.parentElement;
     const upperCanvas = wrapper?.getElementsByClassName('upper-canvas')[0];
 
-    if (wrapper) setWrapper(wrapper);
+    if (wrapper) {
+      setWrapper(wrapper)
+
+      // TODO: We may want to make the position style
+      // controlled by property or variable.
+      wrapper.style.position = "absolute";
+    };
     if (lowerCanvas) setLowerCanvas(lowerCanvas as HTMLCanvasElement);
     if (upperCanvas) setUpperCanvas(upperCanvas as HTMLCanvasElement);
   }, [canvas, instanceId]);
