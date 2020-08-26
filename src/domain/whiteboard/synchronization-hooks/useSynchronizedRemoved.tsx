@@ -66,11 +66,13 @@ const useSynchronizedRemoved = (
 
       canvas?.renderAll();
 
-      undoRedoDispatch({
-        type: SET_OTHER,
-        payload: canvas?.getObjects(),
-        canvasId: userId,
-      });
+      if (shouldHandleRemoteEvent(objectId)) {
+        undoRedoDispatch({
+          type: SET_OTHER,
+          payload: canvas?.getObjects(),
+          canvasId: userId,
+        });
+      }
     };
 
     eventController?.on('removed', removed);
@@ -106,7 +108,8 @@ const useSynchronizedRemoved = (
       if (
         canvas &&
         payload.id &&
-        (!canvasEvent?._objects || groupObjects.length > 0)
+        (!canvasEvent?._objects || groupObjects.length > 0) &&
+        !(e.target as ICanvasObject).groupClear
       ) {
         const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
 

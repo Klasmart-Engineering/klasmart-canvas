@@ -14,4 +14,5 @@ export interface ICanvasObject extends fabric.Object {
   }[];
   strategy?: string;
   userId?: string;
+  groupClear?: boolean;
 }
