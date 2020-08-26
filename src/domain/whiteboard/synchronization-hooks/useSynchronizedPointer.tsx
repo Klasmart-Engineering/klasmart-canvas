@@ -136,7 +136,7 @@ const useSynchronizedPointer = (
 
     return () => {
       eventController?.removeListener('moving', moved);
-    }
+    };
   }, [
     canvas,
     eventController,
