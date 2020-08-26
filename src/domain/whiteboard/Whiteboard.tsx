@@ -59,7 +59,6 @@ function Whiteboard() {
               height={460}
               cssWidth={'740px'}
               cssHeight={'460px'}
-              clearWhiteboardPermissions={teacher}
             >
               <button>Teacher</button>
             </WhiteboardCanvas>
@@ -93,7 +92,6 @@ function Whiteboard() {
               height={460}
               cssWidth={'740px'}
               cssHeight={'460px'}
-              clearWhiteboardPermissions={student}
             >
               <button>Student</button>
             </WhiteboardCanvas>
@@ -127,7 +125,6 @@ function Whiteboard() {
               height={460}
               cssWidth={'740px'}
               cssHeight={'460px'}
-              clearWhiteboardPermissions={student}
             >
               <button>Student</button>
             </WhiteboardCanvas>

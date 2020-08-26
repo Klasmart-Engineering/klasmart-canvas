@@ -1,6 +1,5 @@
 import { CSSProperties, FunctionComponent, ReactChild, ReactChildren } from 'react';
 import '../../assets/style/whiteboard.css';
-import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
  * @field userId: The user's ID, events originating from this canvas will contain this ID.
@@ -21,6 +20,5 @@ export declare type Props = {
     cssWidth?: string | number;
     cssHeight?: string | number;
     filterUsers?: string[];
-    clearWhiteboardPermissions: IClearWhiteboardPermissions;
 };
 export declare const WhiteboardCanvas: FunctionComponent<Props>;
