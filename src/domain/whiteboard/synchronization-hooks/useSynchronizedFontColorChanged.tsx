@@ -3,7 +3,7 @@ import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
-const useSynchronizedColorChanged = (
+const useSynchronizedFontColorChanged = (
   canvas: fabric.Canvas | undefined,
   userId: string,
   shouldHandleRemoteEvent: (id: string) => boolean,
@@ -21,31 +21,12 @@ const useSynchronizedColorChanged = (
     ) => {
       if (id && !shouldHandleRemoteEvent(id)) return;
 
-      if (objectType === 'background' && canvas) {
-        canvas.backgroundColor = target.fill?.toString();
-      }
-
       canvas?.forEachObject(function (obj: ICanvasObject) {
-        if (obj.id && obj.id === id && objectType !== 'textbox') {
-          if (objectType === 'shape') {
+        if (obj.id && obj.id === id) {
+          if (objectType === 'textbox') {
             obj.set({
               fill: target.fill,
             });
-          } else {
-            obj.set({
-              stroke: target.stroke,
-              strokeWidth: target.strokeWidth,
-            });
-          }
-        }
-
-        if (objectType === 'shape') {
-          const index = target.objectsOrdering?.find(
-            (find) => obj.id === find.id
-          )?.index;
-
-          if (index !== undefined) {
-            obj.moveTo(index);
           }
         }
       });
@@ -59,10 +40,10 @@ const useSynchronizedColorChanged = (
       canvas?.renderAll();
     };
 
-    eventController?.on('colorChanged', colorChanged);
+    eventController?.on('fontColorChanged', colorChanged);
 
     return () => {
-      eventController?.removeListener('colorChanged', colorChanged);
+      eventController?.removeListener('fontColorChanged', colorChanged);
     };
   }, [
     canvas,
@@ -73,4 +54,4 @@ const useSynchronizedColorChanged = (
   ]);
 };
 
-export default useSynchronizedColorChanged;
+export default useSynchronizedFontColorChanged;
