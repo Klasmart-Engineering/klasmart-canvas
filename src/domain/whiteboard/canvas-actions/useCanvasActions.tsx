@@ -255,9 +255,41 @@ export const useCanvasActions = (
         }
       };
 
+      /**
+       * Removes the recent created shape and set resize variable in false
+       */
+      const cancelShapeCreation = () => {
+        if (resize) {
+          canvas?.remove(shape);
+          resize = false;
+        }
+      };
+
+      /**
+       * Return the movement hability in the current target shape
+       * @param {IEvent} event - current event, necessary to know
+       * which is the current target shape
+       */
+      const allowMovementInShape = (event: IEvent) => {
+        if (event.target) {
+          event.target.set({
+            lockMovementX: false,
+            lockMovementY: false,
+          });
+        }
+      };
+
       canvas?.on('mouse:down', (e: IEvent) => {
-        if (e.target || resize) {
+        if (resize) {
           return;
+        }
+
+        // Locking movement to avoid shapes moving
+        if (e.target) {
+          e.target.set({
+            lockMovementX: true,
+            lockMovementY: true,
+          });
         }
 
         shape = shapeSelector(shapeToAdd);
@@ -276,6 +308,24 @@ export const useCanvasActions = (
 
         canvas.add(shape);
         resize = true;
+
+        /*
+          Canceling shapes creation in object:scaling 
+          and object:rotating events
+        */
+        canvas.on({
+          'object:scaling': cancelShapeCreation,
+          'object:rotating': cancelShapeCreation,
+        });
+
+        /*
+          When the shape was resized or rotated
+          the shape's movement is allowed
+        */
+        canvas.on({
+          'object:scaled': allowMovementInShape,
+          'object:rotated': allowMovementInShape,
+        });
       });
 
       canvas?.on('mouse:move', (e: IEvent) => {
@@ -313,6 +363,16 @@ export const useCanvasActions = (
         } else {
           shape.set({ id });
           shape.setCoords();
+
+          /*
+            Setting the recent created shape like evented
+            to can be resized and rotated
+          */
+          shape.set({
+            evented: true,
+            hoverCursor: 'default',
+          });
+
           canvas.setActiveObject(shape);
           canvas.renderAll();
           let type = shape.type;
