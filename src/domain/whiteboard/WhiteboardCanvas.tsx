@@ -789,6 +789,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     eventSerializer,
     reorderShapes,
     eraseType,
+    undoRedoDispatch
   ]);
 
   /**
