@@ -90,6 +90,9 @@ export class EventPainterController extends EventEmitter
       case 'moving':
         this.moving(event.id, target);
         break;
+      case 'fontColorChanged':
+        this.fontColorChanged(event.id, event.objectType, target);
+        break;
     }
   }
 
@@ -135,5 +138,13 @@ export class EventPainterController extends EventEmitter
 
   private moving(id: string, target: ICanvasObject) {
     this.emit('moving', id, target);
+  }
+
+  private fontColorChanged(
+    id: string,
+    objectType: string,
+    target: ICanvasObject
+  ) {
+    this.emit('fontColorChanged', id, objectType, target);
   }
 }

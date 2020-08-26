@@ -9,7 +9,8 @@ export type PainterEventType =
   | 'fontFamilyChanged'
   | 'removed'
   | 'reconstruct'
-  | 'moving';
+  | 'moving'
+  | 'fontColorChanged';
 
 export interface PainterEvent {
   // The event type.
