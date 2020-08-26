@@ -76,22 +76,14 @@ export interface IToolbarState {
 export interface IToolbarStatus {
   selectedTool: ToolType | undefined;
   selectedColor: IStyleOption | undefined;
-  selectedToolOptions: IToolbarSelectorOption | undefined;
-  canRedo: boolean;
-  canUndo: boolean;
+  selectedToolOption: IToolbarSelectorOption | undefined;
+  // TODO: Undo/Redo available?
 }
 
 export interface IToolbarContext {
   state: IToolbarState;
   status: IToolbarStatus;
   actions: IToolbarActions;
-
-  // Status
-  // TODO: Current selected color
-  // TODO: Current selected text style
-  // TODO: Current selected line style
-  // TODO: Current selected shape
-  // TODO: Undo/Redo available?
 }
 
 export const Context = createContext<IToolbarContext>(undefined as unknown as IToolbarContext);
@@ -105,6 +97,7 @@ export default function ToolbarContextProvider({
 }: Props): JSX.Element {
   const [tools, setTools] = useState(toolsSection);
   const [selectedTool, setSelectedTool] = useState<ToolType | undefined>(undefined);
+  const [selectedColor, setSelectedColor] = useState<IStyleOption | undefined>(undefined);
 
   const { updateEraseType,
     discardActiveObject,
@@ -228,7 +221,9 @@ export default function ToolbarContextProvider({
       changeStrokeColor(String(color.value));
       textColor(String(color.value));
     }
-  }, [changeStrokeColor, fillColor, selectedTool, textColor, updateFloodFill]);
+
+    setSelectedColor(color);
+  }, [changeStrokeColor, fillColor, selectedTool, textColor, updateFloodFill, setSelectedColor]);
 
   const clearAction = useCallback((_filter?: string) => {
     clearWhiteboard();
@@ -254,16 +249,12 @@ export default function ToolbarContextProvider({
     selectedTool,
 
     // TODO: Implement selectedToolOption state.
-    selectedToolOptions: undefined,
+    selectedToolOption: undefined,
 
-    // TODO: Implement selectedColor state.
-    selectedColor: undefined,
+    selectedColor: selectedColor,
 
     // TODO: Implement canRedo state.
-    canRedo: false,
-
     // TODO: Implement canUndo state.
-    canUndo: false,
   };
 
   return (
