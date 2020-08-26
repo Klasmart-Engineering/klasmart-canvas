@@ -20,5 +20,6 @@ export declare type Props = {
     cssWidth?: string | number;
     cssHeight?: string | number;
     filterUsers?: string[];
+    display?: boolean;
 };
 export declare const WhiteboardCanvas: FunctionComponent<Props>;

@@ -67,6 +67,7 @@ export type Props = {
   cssWidth?: string | number;
   cssHeight?: string | number;
   filterUsers?: string[];
+  display?: boolean;
 };
 
 export const WhiteboardCanvas: FunctionComponent<Props> = ({
@@ -79,6 +80,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   height,
   cssWidth,
   cssHeight,
+  display,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
   const [wrapper, setWrapper] = useState<HTMLElement>();
@@ -173,6 +175,19 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (lowerCanvas) setLowerCanvas(lowerCanvas as HTMLCanvasElement);
     if (upperCanvas) setUpperCanvas(upperCanvas as HTMLCanvasElement);
   }, [canvas, instanceId]);
+
+  /** 
+   * Update wrapper display state.
+   */
+  useEffect(() => {
+    if (!wrapper) return;
+
+    if (display) {
+      wrapper.style.removeProperty("display")
+    } else {
+      wrapper.style.display = "none";
+    }
+  }, [wrapper, display])
 
   /**
    * Update the CSS Width/Height
