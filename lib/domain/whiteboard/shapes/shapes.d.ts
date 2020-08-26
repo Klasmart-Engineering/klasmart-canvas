@@ -1,4 +1,5 @@
 import { fabric } from 'fabric';
+import { TypedShape, TypedPolygon } from '../../../interfaces/shapes/shapes';
 /**
  * Creates Rectangle Shape
  * @param width With of shape
@@ -28,13 +29,13 @@ export declare const circle: (width: number, height: number, color: string, fill
  * @param color Color of shape
  * @param filled Flag to set a shape filled or not
  */
-export declare const pentagon: (color: string, filled: boolean, thickness: number) => fabric.Object;
+export declare const pentagon: (color: string, filled: boolean, thickness: number) => TypedShape;
 /**
  * Creates pentagon shape.
  * @param color Color of shape
  * @param filled Flag to set a shape filled or not
  */
-export declare const hexagon: (color: string, filled: boolean, thickness: number) => fabric.Object;
+export declare const hexagon: (color: string, filled: boolean, thickness: number) => TypedPolygon;
 /**
  * Method to create a shape.
  * @param path Shape to be created path
@@ -43,7 +44,7 @@ export declare const hexagon: (color: string, filled: boolean, thickness: number
  * @param color Color of shape.
  * @param filled Flag to set a shape filled or not
  */
-export declare const generic: (path: string, width: number, height: number, color: string, filled: boolean, thickness: number) => fabric.Object;
+export declare const generic: (path: string, width: number, height: number, color: string, filled: boolean, thickness: number) => TypedShape;
 /**
  * Creates a star shape.
  * @param width Width of shape
@@ -51,7 +52,7 @@ export declare const generic: (path: string, width: number, height: number, colo
  * @param color Color of shape
  * @param filled Flag to set a shape filled or not
  */
-export declare const star: (width: number, height: number, color: string, filled: boolean, thickness: number) => fabric.Object;
+export declare const star: (width: number, height: number, color: string, filled: boolean, thickness: number) => TypedShape;
 /**
  * Creates an arrow shape.
  * @param width Width of shape
@@ -59,7 +60,7 @@ export declare const star: (width: number, height: number, color: string, filled
  * @param color Color of shape
  * @param filled Flag to set a shape filled or not
  */
-export declare const arrow: (width: number, height: number, color: string, filled: boolean, thickness: number) => fabric.Object;
+export declare const arrow: (width: number, height: number, color: string, filled: boolean, thickness: number) => TypedShape;
 /**
  * Creates a chat bubble shape
  * @param width Width of shape
@@ -67,5 +68,9 @@ export declare const arrow: (width: number, height: number, color: string, fille
  * @param color Color of shape
  * @param filled Flag to set a shape filled or not
  */
-export declare const chat: (width: number, height: number, color: string, filled: boolean, thickness: number) => fabric.Object;
+export declare const chat: (width: number, height: number, color: string, filled: boolean, thickness: number) => TypedShape;
+/**
+ * Creates laser pointer shape, used for pointer tool.
+ */
+export declare const laserPointer: () => fabric.Object;
 export declare const brush: () => fabric.PatternBrush;

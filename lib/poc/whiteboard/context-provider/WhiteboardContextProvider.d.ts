@@ -4,6 +4,7 @@ import { PointerPainterController } from '../controller/PointerPainterController
 import { EventPainterController } from '../controller/EventPainterController';
 import { Permissions } from '../types/Permissions';
 import { ShapesRepository } from '../composition/ShapesRepository';
+import ICanvasActions from '../../../domain/whiteboard/canvas-actions/ICanvasActions';
 interface IWhiteboardState {
     display: boolean;
     permissions: Permissions;
@@ -14,10 +15,10 @@ interface IWhiteboardState {
 }
 interface IWhiteboardContext {
     state: IWhiteboardState;
-    actions: any;
+    actions: ICanvasActions | {};
 }
 declare type Props = {
-    children?: ReactChild | ReactChildren | null | any;
+    children?: ReactChild | ReactChildren | null;
     userId: string;
     whiteboardId: string;
 };

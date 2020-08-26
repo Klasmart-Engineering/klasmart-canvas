@@ -1,4 +1,5 @@
 import { fabric } from 'fabric';
+import { Point } from 'fabric/fabric-impl';
 /**
  * Dimensions model. Indicates an object with
  * height and width.
@@ -19,18 +20,18 @@ export declare const getLength: (x1: number, x2: number) => number;
  * @param start Start coordinates.
  * @param end End coordinates.
  */
-export declare const setSize: (shape: fabric.Rect | fabric.Triangle, start: any, end: any) => Dimensions;
+export declare const setSize: (shape: fabric.Rect | fabric.Triangle, start: Point, end: Point) => Dimensions;
 /**
  * Sets circle size and returns dimensions.
  * @param shape Fabric ellipse
  * @param start Start coordinates.
  * @param end End coordinates.
  */
-export declare const setCircleSize: (shape: fabric.Ellipse, start: any, end: any) => Dimensions;
+export declare const setCircleSize: (shape: fabric.Ellipse, start: Point, end: Point) => Dimensions;
 /**
  * Sets custom shape size and returns dimensions.
  * @param shape Custom shape.
  * @param start Start coordinates.
  * @param end End coordinates.
  */
-export declare const setPathSize: (shape: fabric.Object, start: any, end: any) => Dimensions;
+export declare const setPathSize: (shape: fabric.Object, start: Point, end: Point) => Dimensions;
