@@ -98,6 +98,7 @@ export default function ToolbarContextProvider({
   const [tools, setTools] = useState(toolsSection);
   const [selectedTool, setSelectedTool] = useState<ToolType | undefined>(undefined);
   const [selectedColor, setSelectedColor] = useState<IStyleOption | undefined>(undefined);
+  const [selectedOption, setSelectedOption] = useState<IToolbarSelectorOption | undefined>(undefined);
 
   const { updateEraseType,
     discardActiveObject,
@@ -204,6 +205,7 @@ export default function ToolbarContextProvider({
     setTools({ active: tool.id, elements: [...tools.elements] });
 
     setSelectedTool(toolType);
+    setSelectedOption(option);
 
     if (option) {
       selectToolOption(tool.id, option);
@@ -247,14 +249,8 @@ export default function ToolbarContextProvider({
 
   const status: IToolbarStatus = {
     selectedTool,
-
-    // TODO: Implement selectedToolOption state.
-    selectedToolOption: undefined,
-
+    selectedToolOption: selectedOption,
     selectedColor: selectedColor,
-
-    // TODO: Implement canRedo state.
-    // TODO: Implement canUndo state.
   };
 
   return (
