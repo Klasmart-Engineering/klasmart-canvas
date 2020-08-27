@@ -69,6 +69,10 @@ export interface IPainterController {
     event: 'moving',
     listener: (id: string, target: ICanvasObject) => void
   ): this;
+  on(
+    event: 'setToolbarPermissions',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
 
   removeListener(
     event: 'added',
@@ -112,6 +116,10 @@ export interface IPainterController {
   ): this;
   removeListener(
     event: 'moving',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+  removeListener(
+    event: 'setToolbarPermissions',
     listener: (id: string, target: ICanvasObject) => void
   ): this;
 
