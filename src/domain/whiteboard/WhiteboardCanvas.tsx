@@ -2,6 +2,7 @@ import { fabric } from 'fabric';
 import floodFillCursor from '../../assets/cursors/flood-fill.png';
 import FloodFill from 'q-floodfill'
 import { trimmer } from './utils/trimmer';
+import FloodFiller from './utils/floodFiller';
 
 import { v4 as uuidv4 } from 'uuid';
 import React, {
@@ -640,14 +641,19 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     if (floodFillIsActive && canvas) {
       const tempCanvas = document.createElement('canvas');
-      const tempContext = tempCanvas.getContext('2d');
+      const tempContext = tempCanvas.getContext('2d') as CanvasRenderingContext2D;
       tempCanvas.height = canvas.getHeight() * 2;
       tempCanvas.width = canvas.getWidth() * 2;
+
+      const palette = tempContext.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
 
 
       const context = canvas.getContext();
       const imgData = context.getImageData(0, 0, canvas.getWidth() * 2, canvas.getHeight() * 2);
-      const floodFillData = new FloodFill(imgData);
+
+      // const floodFillData = new FloodFill(imgData);
+      // const floodFiller = new FloodFiller(imgData, canvas.getWidth() * 2, canvas.getHeight() * 2);
+      const floodFiller = new FloodFiller(imgData);
       
       canvas.defaultCursor = `url("${floodFillCursor}") 2 15, default`;
       canvas.forEachObject((object: TypedShape) => {
@@ -664,29 +670,86 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       reorderShapes();
       canvas.renderAll();
 
-      canvas.on('mouse:down', (event: fabric.IEvent) => {
+      canvas.on('mouse:down', async (event: fabric.IEvent) => {
         // Click out of any object
         // console.log(floodFillData, event.pointer);
 
         if (event.target && event.target.get('type') === 'path') {
-          floodFillData.fill(
+          console.log(FloodFill);
+          // floodFillData.fill(
+          //   floodFill,
+          //   Math.round((event.pointer as { x: number; y: number }).x) * 2,
+          //   Math.round((event.pointer as { x: number; y: number }).y) * 2,
+          //   200
+          // );
+
+          // let test = floodFiller.fill(
+          //   floodFill,
+          //   Math.round((event.pointer as { x: number; y: number }).x) * 2,
+          //   Math.round((event.pointer as { x: number; y: number }).y) * 2,
+          //   200
+          // );
+
+          let data = floodFiller.fill(
+            { 
+              x: Math.round((event.pointer as { x: number; y: number }).x) * 2,
+              y: Math.round((event.pointer as { x: number; y: number }).y) * 2,
+            },
             floodFill,
-            Math.round((event.pointer as { x: number; y: number }).x) * 2,
-            Math.round((event.pointer as { x: number; y: number }).y) * 2,
             200
           );
 
-          console.log(trimmer, tempContext);
+          // let data = await floodFiller.fillExp(
+          //   { 
+          //     x: Math.round((event.pointer as { x: number; y: number }).x) * 2,
+          //     y: Math.round((event.pointer as { x: number; y: number }).y) * 2,
+          //   },
+          //   floodFill,
+          //   200
+          // );
 
-          context.putImageData(imgData, 0, 0);
+          console.log(trimmer);
+
+
+          // @ts-ignore
+          palette.data.set(new Uint8ClampedArray(data.coords)); 
+          tempContext.putImageData(palette, 0, 0);
+          let imgData = tempContext.getImageData(data.x, data.y, data.width, data.height);
+
+          tempCanvas.width = data.width;
+          tempCanvas.height = data.height;
+          tempContext.putImageData(imgData,0,0);
+
+          const tempData = tempCanvas.toDataURL();
+
+          fabric.Image.fromURL(tempData, (image: any) => {
+            image.set({ 
+              top: data.y / 2,
+              left: data.x / 2,
+              scaleX: 0.5,
+              scaleY: 0.5,
+              selectable: false,
+              evented: false
+            });
+            canvas.add(image);
+            canvas.discardActiveObject();
+          });
+
+          tempCanvas.remove();
 
           return;
 
-          // Block 1 exp.
-          // tempContext?.putImageData(imgData, 0, 0);
-          // let tempCanvas2 = trimmer(tempCanvas);
+          // context.putImageData(imgData, 0, 0);
 
+          // return;
+
+          // Block 1 exp.
+          
+          // tempContext?.putImageData(test, 0, 0);
+          // let tempCanvas2 = trimmer(tempCanvas);
           // let tempData = tempCanvas2.toDataURL();
+
+          // tempCanvas.remove();
 
           // interface TypedImage extends fabric.Image {
           //   id?: string;
@@ -701,10 +764,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           //     id: (event.target as TypedImage).id
           //   });
 
-          //   canvas.remove(event.target as fabric.Object);
+          //   // canvas.remove(event.target as fabric.Object);
           //   canvas.add(image);
           // });
           // end
+
+          return;
         }
 
 
