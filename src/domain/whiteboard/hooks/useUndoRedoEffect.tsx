@@ -32,6 +32,28 @@ const isLocalObject = (id: string, canvasId: string): boolean => {
 };
 
 /**
+ * Get's previous set color for canvas background.
+ * @param currentIndex Current event index.
+ * @param events List of events.
+ */
+const getPreviousBackground = (currentIndex: number, events: any): string => {
+  let i = currentIndex;
+  
+  if (i < 0) {
+    return '#fff';
+  }
+
+  for (i; i >= 0; i--) {
+    if (events[i].event.type === 'background') {
+      return events[i].event.target.fill;
+    }
+  }
+
+  return '#fff';
+}
+
+
+/**
  * Custom hook to track canvas history.
  * @param canvas Canvas being manipulated
  * @param eventSerializer Event serializer
@@ -56,7 +78,6 @@ export const UndoRedo = (
       (state.actionType === UNDO) ||
       state.actionType === REDO
     ) {
-      canvas.clear();
       const mapped = JSON.parse(state.activeState as string).objects.map((object: TypedShape | TypedGroup) => {
         if ((object as TypedGroup).objects) {
           let _objects = (object as TypedGroup).objects; 
@@ -80,6 +101,10 @@ export const UndoRedo = (
             }
           }
         });
+
+        const fill = getPreviousBackground(state.eventIndex, state.events);
+        canvas.backgroundColor = fill;
+        canvas.renderAll();
       });
     }
 
@@ -94,6 +119,19 @@ export const UndoRedo = (
         eventSerializer?.push('removed', payload);
       } else if (nextEvent.type !== 'activeSelection') {
         let currentEvent = state.events[state.eventIndex];
+        if ((nextEvent?.event as any).type === 'background') {
+          const fill = getPreviousBackground(state.eventIndex, state.events);
+          canvas.backgroundColor = fill;
+          canvas.renderAll();
+
+          let payload: ObjectEvent = {
+            id: (nextEvent.event as IUndoRedoSingleEvent).id,
+            target: { background: fill },
+            type: 'reconstruct'
+          }
+          eventSerializer?.push('reconstruct', payload);
+          return;
+        };
 
         if (currentEvent && currentEvent.type !== 'activeSelection' && currentEvent.type !== 'remove') {
           let id = (nextEvent.event as IUndoRedoSingleEvent).id;
@@ -151,6 +189,20 @@ export const UndoRedo = (
       }
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];
+
+      if ((event?.event as any).type === 'background') {
+        canvas.backgroundColor = (event.event as IUndoRedoSingleEvent).target.fill as string || '#fff';
+        canvas.renderAll();
+
+        let payload: ObjectEvent = {
+          id: (event.event as IUndoRedoSingleEvent).id,
+          target: { background: (event.event as IUndoRedoSingleEvent).target.fill as string || 'fff' },
+          type: 'reconstruct'
+        }
+        eventSerializer?.push('reconstruct', payload);
+        return;
+      };
+
       if (event.type === 'added') {
         eventSerializer?.push('added', event.event as ObjectEvent);
       } else if (event.type === 'removed') {

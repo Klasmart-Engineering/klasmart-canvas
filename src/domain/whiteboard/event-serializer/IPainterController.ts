@@ -73,6 +73,10 @@ export interface IPainterController {
     event: 'setToolbarPermissions',
     listener: (id: string, target: ICanvasObject) => void
   ): this;
+  on(
+    event: 'fontColorChanged',
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
+  ): this;
 
   removeListener(
     event: 'added',
@@ -121,6 +125,10 @@ export interface IPainterController {
   removeListener(
     event: 'setToolbarPermissions',
     listener: (id: string, target: ICanvasObject) => void
+  ): this;
+  removeListener(
+    event: 'fontColorChanged',
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
 
   replayEvents(): Promise<void>;

@@ -2,7 +2,6 @@ import { useCallback, useContext, useMemo } from 'react';
 import { fabric } from 'fabric';
 import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 import { WhiteboardContext } from '../WhiteboardContext';
-import ICanvasActions from './ICanvasActions';
 import * as shapes from '../shapes/shapes';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { isFreeDrawing, isShape } from '../utils/shapes';
@@ -13,12 +12,10 @@ import { IEvent, Point } from 'fabric/fabric-impl';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasMouseEvent } from '../../../interfaces/canvas-events/canvas-mouse-event';
 import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
-import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
-
-export interface ICanvasActionsState {
-  actions: ICanvasActions;
-  mouseDown: (specific: string, color?: string) => void;
-}
+import {
+  ObjectEvent,
+  ObjectType,
+} from '../event-serializer/PaintEventSerializer';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -258,9 +255,41 @@ export const useCanvasActions = (
         }
       };
 
+      /**
+       * Removes the recent created shape and set resize variable in false
+       */
+      const cancelShapeCreation = () => {
+        if (resize) {
+          canvas?.remove(shape);
+          resize = false;
+        }
+      };
+
+      /**
+       * Return the movement hability in the current target shape
+       * @param {IEvent} event - current event, necessary to know
+       * which is the current target shape
+       */
+      const allowMovementInShape = (event: IEvent) => {
+        if (event.target) {
+          event.target.set({
+            lockMovementX: false,
+            lockMovementY: false,
+          });
+        }
+      };
+
       canvas?.on('mouse:down', (e: IEvent) => {
-        if (e.target || resize) {
+        if (resize) {
           return;
+        }
+
+        // Locking movement to avoid shapes moving
+        if (e.target) {
+          e.target.set({
+            lockMovementX: true,
+            lockMovementY: true,
+          });
         }
 
         shape = shapeSelector(shapeToAdd);
@@ -279,6 +308,24 @@ export const useCanvasActions = (
 
         canvas.add(shape);
         resize = true;
+
+        /*
+          Canceling shapes creation in object:scaling 
+          and object:rotating events
+        */
+        canvas.on({
+          'object:scaling': cancelShapeCreation,
+          'object:rotating': cancelShapeCreation,
+        });
+
+        /*
+          When the shape was resized or rotated
+          the shape's movement is allowed
+        */
+        canvas.on({
+          'object:scaled': allowMovementInShape,
+          'object:rotated': allowMovementInShape,
+        });
       });
 
       canvas?.on('mouse:move', (e: IEvent) => {
@@ -316,6 +363,16 @@ export const useCanvasActions = (
         } else {
           shape.set({ id });
           shape.setCoords();
+
+          /*
+            Setting the recent created shape like evented
+            to can be resized and rotated
+          */
+          shape.set({
+            evented: true,
+            hoverCursor: 'default',
+          });
+
           canvas.setActiveObject(shape);
           canvas.renderAll();
           let type = shape.type;
@@ -457,7 +514,7 @@ export const useCanvasActions = (
   );
 
   /**
-   * Add specific color to selected text
+   * Add specific color to selected text or group of texts
    * @param {string} color - color to set
    */
   const textColor = useCallback(
@@ -469,9 +526,47 @@ export const useCanvasActions = (
       ) {
         canvas.getActiveObject().set('fill', color);
         canvas.renderAll();
+
+        const object: ICanvasObject = canvas?.getActiveObject();
+
+        const payload = {
+          type: 'textbox',
+          target: { fill: color },
+          id: object.id,
+        };
+
+        eventSerializer?.push('fontColorChanged', payload);
+        return;
       }
+
+      canvas?.getObjects().forEach((obj: ICanvasObject) => {
+        if (obj.id) {
+          const type: ObjectType = obj.get('type') as ObjectType;
+          if (type === 'textbox') {
+            const target = (type: string) => {
+              if (type === 'textbox') {
+                return {
+                  fill: color,
+                };
+              }
+            };
+
+            obj.set({
+              fill: color,
+            });
+
+            const payload: ObjectEvent = {
+              type,
+              target: target(type) as ICanvasObject,
+              id: obj.id,
+            };
+
+            eventSerializer?.push('fontColorChanged', payload);
+          }
+        }
+      });
     },
-    [canvas, updateFontColor]
+    [canvas, updateFontColor, eventSerializer]
   );
 
   /**
@@ -487,11 +582,22 @@ export const useCanvasActions = (
           },
         };
 
+        obj.set({ groupClear: true });
         canvas?.remove(obj);
         eventSerializer?.push('removed', target as ObjectEvent);
       }
     });
-  }, [canvas, eventSerializer]);
+
+    // Add cleared whiteboard to undo / redo state.
+    const event = { event: [], type: 'clearedWhiteboard' };
+
+    dispatch({
+      type: SET,
+      payload: [],
+      canvasId: userId,
+      event,
+    });
+  }, [canvas, eventSerializer, dispatch, userId]);
 
   /**
    * Clears all whiteboard elements
@@ -506,11 +612,22 @@ export const useCanvasActions = (
           },
         };
 
+        obj.set({ groupClear: true });
         canvas?.remove(obj);
         eventSerializer?.push('removed', target as ObjectEvent);
       }
     });
     closeModal();
+
+    // Add cleared whiteboard to undo / redo state.
+    const event = { event: [], type: 'clearedWhiteboard' };
+
+    dispatch({
+      type: SET,
+      payload: [],
+      canvasId: userId,
+      event,
+    });
 
     // If isLocalObject is added in dependencies an infinity loop happens
     // eslint-disable-next-line react-hooks/exhaustive-deps
