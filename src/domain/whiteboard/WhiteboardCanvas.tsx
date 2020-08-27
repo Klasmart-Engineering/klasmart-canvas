@@ -182,10 +182,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (!wrapper) return;
 
-    if (display) {
-      wrapper.style.removeProperty("display")
-    } else {
+    if (display === false) {
       wrapper.style.display = "none";
+    } else {
+      wrapper.style.removeProperty("display")
     }
   }, [wrapper, display])
 
