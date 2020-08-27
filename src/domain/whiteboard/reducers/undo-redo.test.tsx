@@ -8,6 +8,7 @@ import {
   CanvasHistoryState,
   CanvasAction,
 } from './undo-redo';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 test('should set state history from initial value', () => {
   const { result } = renderHook<
@@ -27,6 +28,10 @@ test('should set state history to activeStateIndex 0.', () => {
     result.current.dispatch({
       type: SET,
       payload: [{ padding: 12 }] as fabric.Object[],
+      event: {
+        type: 'added',
+        event: { id: 'teacher:test', target: {} as ICanvasObject },
+      },
     });
   });
 
@@ -44,10 +49,18 @@ test('should set state history to activeStateIndex 1.', () => {
     result.current.dispatch({
       type: SET,
       payload: [{ padding: 12 }, { padding: 14 }] as fabric.Object[],
+      event: {
+        type: 'added',
+        event: { id: 'teacher:test', target: {} as ICanvasObject },
+      },
     });
     result.current.dispatch({
       type: SET,
       payload: [{ padding: 12 }, { padding: 16 }] as fabric.Object[],
+      event: {
+        type: 'added',
+        event: { id: 'teacher:test', target: {} as ICanvasObject },
+      },
     });
   });
 
@@ -65,10 +78,18 @@ test('should set state history to activeStateIndex 0 when undone.', () => {
     result.current.dispatch({
       type: SET,
       payload: [{ padding: 18 }, { padding: 10 }] as fabric.Object[],
+      event: {
+        type: 'added',
+        event: { id: 'teacher:test', target: {} as ICanvasObject },
+      },
     });
     result.current.dispatch({
       type: SET,
       payload: [{ padding: 28 }, { padding: 20 }] as fabric.Object[],
+      event: {
+        type: 'added',
+        event: { id: 'teacher:test', target: {} as ICanvasObject },
+      },
     });
     result.current.dispatch({ type: UNDO });
   });
@@ -93,10 +114,18 @@ test('should set state history to activeStateIndex 1 when redone.', () => {
     result.current.dispatch({
       type: SET,
       payload: [{ padding: 10 }, { padding: 12 }] as fabric.Object[],
+      event: {
+        type: 'added',
+        event: { id: 'teacher:test', target: {} as ICanvasObject },
+      },
     });
     result.current.dispatch({
       type: SET,
       payload: [{ padding: 11 }, { padding: 11 }] as fabric.Object[],
+      event: {
+        type: 'added',
+        event: { id: 'teacher:test', target: {} as ICanvasObject },
+      },
     });
     result.current.dispatch({ type: UNDO });
     result.current.dispatch({ type: REDO });
