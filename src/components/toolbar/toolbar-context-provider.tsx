@@ -58,7 +58,8 @@ const thickness = selectorStyleOptionsWithId('line_width')
 export interface IToolbarActions {
   selectTool: (toolType: ToolType, options?: IToolbarSelectorOption) => void;
 
-  selectColor: (color: IStyleOption) => void;
+  selectColorByName: (colorName: string) => void;
+  selectColorByValue: (color: string) => void;
 
   clear: (filter?: string) => void;
 
@@ -77,7 +78,7 @@ export interface IToolbarState {
 
 export interface IToolbarStatus {
   selectedTool: ToolType | undefined;
-  selectedColor: IStyleOption | undefined;
+  selectedColor: string | undefined;
   selectedToolOption: IToolbarSelectorOption | undefined;
   // TODO: Undo/Redo available?
 }
@@ -99,7 +100,7 @@ export default function ToolbarContextProvider({
 }: Props): JSX.Element {
   const [tools, setTools] = useState(toolsSection);
   const [selectedTool, setSelectedTool] = useState<ToolType | undefined>(undefined);
-  const [selectedColor, setSelectedColor] = useState<IStyleOption | undefined>(undefined);
+  const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [selectedOption, setSelectedOption] = useState<IToolbarSelectorOption | undefined>(undefined);
 
   const { updateEraseType,
@@ -216,20 +217,33 @@ export default function ToolbarContextProvider({
     }
   }, [discardActiveObject, selectToolOption, setPointerEvents, textIsActive, tools.elements, updateBrushIsActive, updateEraseType, updateEventedObjects, updateFloodFillIsActive, updateLaserIsActive, updateShapeIsActive, updateShapesAreEvented, updateShapesAreSelectable, updateTextIsActive]);
 
-  const selectColorAction = useCallback((color: IStyleOption) => {
-    updateFloodFill(String(color.value));
+  const selectColorByValueAction = useCallback((color: string) => {
+    // TODO: There might be bugs in this action, I'm not sure in which
+    // condition the 'updateFloodFill/fillColor/changeStrokeColor/textColor' 
+    // should be called. I think from the user's perspective they should
+    // select one color and that color is used based on which tool is 
+    // selected.
+
+    updateFloodFill(color);
 
     // NOTE: Added this conditional because without it selected
     // lines would get filled (not just stroked) whenever the color was selected.
     if (selectedTool === "shape") {
-      fillColor(String(color.value));
+      fillColor(color);
     } else {
-      changeStrokeColor(String(color.value));
-      textColor(String(color.value));
+      changeStrokeColor(color);
+      textColor(color);
     }
 
     setSelectedColor(color);
-  }, [changeStrokeColor, fillColor, selectedTool, textColor, updateFloodFill, setSelectedColor]);
+  }, [changeStrokeColor, fillColor, selectedTool, textColor, updateFloodFill]);
+
+  const selectColorByNameAction = useCallback((colorName: string) => {
+    const color = colors.get(colorName);
+    if (!color) return;
+    
+    selectColorByValueAction(String(color.value));
+  }, [selectColorByValueAction]);
 
   const clearAction = useCallback((filter?: string) => {
     if (filter) {
@@ -253,7 +267,8 @@ export default function ToolbarContextProvider({
 
   const actions: IToolbarActions = {
     selectTool: selectToolAction,
-    selectColor: selectColorAction,
+    selectColorByName: selectColorByNameAction,
+    selectColorByValue: selectColorByValueAction,
     clear: clearAction,
     clearAll: clearAllAction,
     undo: undoAction,

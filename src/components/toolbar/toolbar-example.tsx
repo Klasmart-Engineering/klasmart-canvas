@@ -9,7 +9,7 @@ export default function ToolbarExample({
     children,
 }: Props): JSX.Element {
 
-    const { state: { tools, colors }, actions: { selectTool, selectColor, clear, undo, redo } } = useToolbarContext();
+    const { state: { tools }, actions: { selectTool, selectColorByName, clear, undo, redo } } = useToolbarContext();
 
     const selectObjectEraser = useCallback(() => {
         const eraserOptions = tools.eraser.options;
@@ -17,13 +17,6 @@ export default function ToolbarExample({
             selectTool("eraser", eraserOptions[0]);
         }
     }, [selectTool, tools.eraser.options]);
-
-    const selectColorByName = useCallback((colorName: string) => {
-        const color = colors.get(colorName);
-        if (!color) return;
-
-        selectColor(color);
-    }, [colors, selectColor])
 
     return (
         <div id="toolbar-example">

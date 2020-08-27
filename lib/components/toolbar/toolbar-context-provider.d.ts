@@ -6,7 +6,8 @@ export declare type ToolType = 'select' | 'pointer' | 'move' | 'eraser' | 'line'
 declare type OptionalToolOptions = IToolbarSelectorOption[] | undefined;
 export interface IToolbarActions {
     selectTool: (toolType: ToolType, options?: IToolbarSelectorOption) => void;
-    selectColor: (color: IStyleOption) => void;
+    selectColorByName: (colorName: string) => void;
+    selectColorByValue: (color: string) => void;
     clear: (filter?: string) => void;
     clearAll: () => void;
     undo: () => void;
@@ -22,7 +23,7 @@ export interface IToolbarState {
 }
 export interface IToolbarStatus {
     selectedTool: ToolType | undefined;
-    selectedColor: IStyleOption | undefined;
+    selectedColor: string | undefined;
     selectedToolOption: IToolbarSelectorOption | undefined;
 }
 export interface IToolbarContext {
