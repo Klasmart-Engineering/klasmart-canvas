@@ -539,7 +539,7 @@ export const useCanvasActions = (
         return;
       }
 
-      canvas?.getObjects().forEach((obj: ICanvasObject) => {
+      canvas?.getActiveObjects().forEach((obj: ICanvasObject) => {
         if (obj.id) {
           const type: ObjectType = obj.get('type') as ObjectType;
           if (type === 'textbox') {
