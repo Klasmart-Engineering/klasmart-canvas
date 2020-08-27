@@ -664,8 +664,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             id: '',
           };
 
-          const eventState = { event: { ...payload, id: `${userId}:background` }, type: 'colorChanged' } as IUndoRedoEvent;
-        
+          const eventState = {
+            event: { ...payload, id: `${userId}:background` },
+            type: 'colorChanged',
+          } as IUndoRedoEvent;
+
           undoRedoDispatch({
             type: SET,
             payload: canvas.getObjects(),
@@ -721,9 +724,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               } as ICanvasObject,
               id: (event.target as ICanvasObject).id || '',
             };
-        
-            const eventState = { event: payload, type: 'colorChanged' } as IUndoRedoEvent;
-        
+
+            const eventState = {
+              event: payload,
+              type: 'colorChanged',
+            } as IUndoRedoEvent;
+
             undoRedoDispatch({
               type: SET,
               payload: canvas.getObjects(),
@@ -789,7 +795,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     eventSerializer,
     reorderShapes,
     eraseType,
-    undoRedoDispatch
+    undoRedoDispatch,
   ]);
 
   /**
@@ -1023,6 +1029,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       if (type === 'textbox') return;
 
+      if (obj?.strokeWidth === lineWidth) return;
+
       const payload = {
         type,
         target: { strokeWidth: obj?.strokeWidth },
@@ -1084,11 +1092,23 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         let mappedObjects = canvas?.getObjects().map((object: any) => {
           if (!object.group) {
-            return object.toJSON(['strokeUniform', 'id']);
+            return object.toJSON([
+              'strokeUniform',
+              'id',
+              'selectable',
+              'evented',
+              'shapeType',
+            ]);
           }
           const matrix = object.calcTransformMatrix();
           const options = fabric.util.qrDecompose(matrix);
-          const transformed = object.toJSON(['strokeUniform', 'id']);
+          const transformed = object.toJSON([
+            'strokeUniform',
+            'id',
+            'selectable',
+            'evented',
+            'shapeType',
+          ]);
           let top = object.group.height / 2 + object.top + object.group.top;
           let left = object.group.width / 2 + object.left + object.group.left;
 

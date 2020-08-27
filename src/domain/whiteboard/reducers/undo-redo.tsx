@@ -119,7 +119,13 @@ const objectStringifier = (payload: (fabric.Object | TypedShape)[]): string => {
 
   if (payload) {
     formatted = payload.map((object: fabric.Object | TypedShape) =>
-      object.toJSON(['strokeUniform', 'id', 'selectable', 'evented'])
+      object.toJSON([
+        'strokeUniform',
+        'id',
+        'selectable',
+        'evented',
+        'shapeType',
+      ])
     );
   }
 
