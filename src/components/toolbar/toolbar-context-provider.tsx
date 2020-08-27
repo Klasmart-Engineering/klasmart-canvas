@@ -72,8 +72,8 @@ export interface IToolbarActions {
 
 export interface IToolbarState {
   tools: Record<ToolType, { id: string, options: OptionalToolOptions }>;
-  colors: Map<string, IStyleOption>;
-  thickness: Map<string, IThicknessStyle>;
+  colors: IStyleOption[];
+  thickness: IThicknessStyle[];
 }
 
 export interface IToolbarStatus {
@@ -283,7 +283,7 @@ export default function ToolbarContextProvider({
 
   return (
     <Context.Provider
-      value={{ state: { tools: toolsLookup, colors, thickness }, status, actions }}
+      value={{ state: { tools: toolsLookup, colors: Array.from(colors.values()), thickness: Array.from(thickness.values()) }, status, actions }}
     >
       {children}
     </Context.Provider>

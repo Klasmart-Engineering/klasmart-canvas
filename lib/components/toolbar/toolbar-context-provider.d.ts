@@ -18,8 +18,8 @@ export interface IToolbarState {
         id: string;
         options: OptionalToolOptions;
     }>;
-    colors: Map<string, IStyleOption>;
-    thickness: Map<string, IThicknessStyle>;
+    colors: IStyleOption[];
+    thickness: IThicknessStyle[];
 }
 export interface IToolbarStatus {
     selectedTool: ToolType | undefined;
