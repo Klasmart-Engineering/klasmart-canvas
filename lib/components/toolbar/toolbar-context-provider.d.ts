@@ -8,6 +8,7 @@ export interface IToolbarActions {
     selectTool: (toolType: ToolType, options?: IToolbarSelectorOption) => void;
     selectColor: (color: IStyleOption) => void;
     clear: (filter?: string) => void;
+    clearAll: () => void;
     undo: () => void;
     redo: () => void;
 }

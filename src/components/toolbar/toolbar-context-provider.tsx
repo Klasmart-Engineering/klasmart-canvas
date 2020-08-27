@@ -62,6 +62,8 @@ export interface IToolbarActions {
 
   clear: (filter?: string) => void;
 
+  clearAll: () => void;
+
   undo: () => void;
 
   redo: () => void;
@@ -125,6 +127,8 @@ export default function ToolbarContextProvider({
     undo,
     redo,
     clearWhiteboard,
+    clearWhiteboardAllowClearOthers: clearWhiteboardOther,
+    clearWhiteboardClearAll: clearWhiteboardAll,
   } = useContext(WhiteboardContext);
 
   const selectToolOption = useCallback((toolId: string, option: IToolbarSelectorOption) => {
@@ -227,9 +231,17 @@ export default function ToolbarContextProvider({
     setSelectedColor(color);
   }, [changeStrokeColor, fillColor, selectedTool, textColor, updateFloodFill, setSelectedColor]);
 
-  const clearAction = useCallback((_filter?: string) => {
-    clearWhiteboard();
-  }, [clearWhiteboard]);
+  const clearAction = useCallback((filter?: string) => {
+    if (filter) {
+      clearWhiteboardOther(filter);
+    } else {
+      clearWhiteboard();
+    }
+  }, [clearWhiteboard, clearWhiteboardOther]);
+
+  const clearAllAction = useCallback(() => {
+    clearWhiteboardAll();
+  }, [clearWhiteboardAll]);
 
   const undoAction = useCallback(() => {
     undo();
@@ -243,6 +255,7 @@ export default function ToolbarContextProvider({
     selectTool: selectToolAction,
     selectColor: selectColorAction,
     clear: clearAction,
+    clearAll: clearAllAction,
     undo: undoAction,
     redo: redoAction,
   };
