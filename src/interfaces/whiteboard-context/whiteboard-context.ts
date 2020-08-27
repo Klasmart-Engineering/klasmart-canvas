@@ -64,4 +64,6 @@ export interface IWhiteboardContext {
   clearWhiteboard: () => void;
   clearWhiteboardAllowClearOthers: (userId: string) => void;
   clearWhiteboardClearAll: () => void;
+  toolbarIsEnabled: boolean;
+  setToolbarIsEnabled: (enabled: boolean) => void;
 }

@@ -33,6 +33,7 @@ import useSynchronizedScaled from './synchronization-hooks/useSynchronizedScaled
 import useSynchronizedSkewed from './synchronization-hooks/useSynchronizedSkewed';
 import useSynchronizedReconstruct from './synchronization-hooks/useSynchronizedReconstruct';
 import useSynchronizedPointer from './synchronization-hooks/useSynchronizedPointer';
+import useSynchronizedSetToolbarPermissions from './synchronization-hooks/useSynchronizedSetToolbarPermissions';
 import { SET, SET_GROUP, UNDO, REDO } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
@@ -81,7 +82,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   cssHeight,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
-
   const [wrapper, setWrapper] = useState<HTMLElement>();
   const [lowerCanvas, setLowerCanvas] = useState<HTMLCanvasElement>();
   const [upperCanvas, setUpperCanvas] = useState<HTMLCanvasElement>();
@@ -125,6 +125,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     laserIsActive,
     allowPointer,
     universalPermits,
+    toolbarIsEnabled,
+    setToolbarIsEnabled,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -323,7 +325,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
       canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
       canvas.freeDrawingBrush.width = lineWidth;
-      canvas.isDrawingMode = true;
+      canvas.isDrawingMode = toolbarIsEnabled;
 
       canvas.on('path:created', pathCreated);
     } else if (canvas && !brushIsActive) {
@@ -333,7 +335,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     return () => {
       canvas?.off('path:created');
     };
-  }, [brushIsActive, canvas, lineWidth, penColor]);
+  }, [brushIsActive, canvas, lineWidth, penColor, toolbarIsEnabled]);
 
   /**
    * Disables shape canvas mouse events.
@@ -871,6 +873,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     laserIsActive,
     allowPointer
   );
+  useSynchronizedSetToolbarPermissions(
+    userId,
+    filterIncomingEvents,
+    setToolbarIsEnabled
+  );
 
   /**
    * Send synchronization event for penColor and fontColor changes.
@@ -1112,7 +1119,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * necessaries to erase objects are setted or removed
    */
   useEffect(() => {
-    if (eraseType === 'object' && canvas) {
+    if (eraseType === 'object' && canvas && toolbarIsEnabled) {
       actions.eraseObject();
 
       if (canvas.getActiveObjects().length === 1) {
@@ -1128,7 +1135,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
     };
-  }, [eraseType, canvas, actions, textIsActive]);
+  }, [eraseType, canvas, actions, textIsActive, toolbarIsEnabled]);
 
   useEffect(() => {
     if (shape && shapeIsActive) {
@@ -1177,6 +1184,23 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       return;
     }
   };
+
+  /**
+   * Makes local objects unselectable when toolbar is disabled by the teacher.
+   * */
+
+  useEffect(() => {
+    canvas?.discardActiveObject();
+    canvas?.renderAll();
+    canvas?.forEachObject((object: ICanvasObject) => {
+      if (object.id && isLocalObject(object.id, userId)) {
+        object.set({
+          evented: toolbarIsEnabled,
+          selectable: toolbarIsEnabled,
+        });
+      }
+    });
+  }, [canvas, toolbarIsEnabled, isLocalObject, userId]);
 
   // TODO: Possible to have dynamically sized canvas? With raw canvas it's
   // possible to set the "pixel (background)" size separately from the
