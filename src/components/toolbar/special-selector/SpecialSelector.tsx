@@ -116,7 +116,6 @@ function SpecialSelector(props: ISpecialSelector) {
     width: '100%',
     height: '32px',
     border: 'none',
-    marginLeft: '4px',
     paddingRight: 0,
     backgroundColor: active ? '#d9d9d9' : '#fff',
     borderRadius: '4px',
@@ -145,6 +144,13 @@ function SpecialSelector(props: ISpecialSelector) {
     gridAutoColumns: 'repeat(6, auto)',
   };
 
+  const iconContainerStyle: CSSProperties = {
+    width: '100%',
+    display: 'flex',
+    alignContent: 'center',
+    justifyContent: 'center',
+  };
+
   return (
     <div className="selector-container" style={selectorContainerStyle}>
       <button
@@ -158,7 +164,9 @@ function SpecialSelector(props: ISpecialSelector) {
         ].join(' ')}
         onClick={handleClick}
       >
-        <Icon style={selectedOption.style} />
+        <div style={iconContainerStyle}>
+          <Icon style={selectedOption.style} />
+        </div>
         <ArrowRightIcon onClick={handleArrowClick} style={arrowStyle} />
       </button>
       {showOptions && active ? (

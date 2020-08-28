@@ -23,13 +23,15 @@ function SpecialButton(props: ISpecialButton) {
   }
 
   const toolbarButtonStyle: CSSProperties = {
-    border: "none",
-    width: "36px",
-    marginLeft: "2px",
-    backgroundColor: selected ? "#d9d9d9" : "#fff",
-    borderRadius: "4px",
+    border: 'none',
+    width: '36px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: selected ? '#d9d9d9' : '#fff',
+    borderRadius: '4px',
     outline: 0,
-  }
+  };
 
   return (
     <button

@@ -11,6 +11,7 @@ interface IToolbarSectionComponent {
  */
 function ToolbarSection({ children }: IToolbarSectionComponent) {
   const toolbarSectionStyle: CSSProperties = {
+    width: '52px',
     display: 'flex',
     flexDirection: 'column',
     border: 'solid 1px #d0d0d0',
