@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import ToolbarSection from './toolbar-section/ToolbarSection';
 import '../../assets/style/toolbar.css';
 import ToolbarButton from './toolbar-button/ToolbarButton';
@@ -154,7 +154,11 @@ function Toolbar() {
     );
 
     // set the clicked tool like active style in Toolbar
-    if (toolbarIsEnabled) {
+    if (
+      toolbarIsEnabled ||
+      tool === ELEMENTS.ADD_TEXT_TOOL ||
+      tool === ELEMENTS.ADD_STAMP_TOOL
+    ) {
       setTools({
         active: tool,
         elements: [...tools.elements],
@@ -337,6 +341,25 @@ function Toolbar() {
         return '';
     }
   }
+
+  /**
+   * If a permission element is active in Toolbar, when the permission
+   * will be revoked the active tool will change to the first one (pointers)
+   */
+  useEffect(() => {
+    if (
+      !toolbarIsEnabled &&
+      tools.active !== ELEMENTS.ADD_TEXT_TOOL &&
+      tools.active !== ELEMENTS.ADD_STAMP_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: [...tools.elements],
+      });
+    }
+    // If tools.elements and tools.active are added an infinite loop happens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolbarIsEnabled]);
 
   const toolbarContainerStyle: CSSProperties = {
     display: 'flex',
