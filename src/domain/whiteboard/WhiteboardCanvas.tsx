@@ -1,7 +1,5 @@
 import { fabric } from 'fabric';
 import floodFillCursor from '../../assets/cursors/flood-fill.png';
-import FloodFill from 'q-floodfill'
-import { trimmer } from './utils/trimmer';
 import FloodFiller from './utils/floodFiller';
 
 import { v4 as uuidv4 } from 'uuid';
@@ -659,10 +657,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.forEachObject((object: TypedShape) => {
         object.set({
           evented: true,
-          selectable: true,
+          selectable: object.get('type') !== 'image' ? true : false,
           hoverCursor: isLocalShape(object)
             ? `url("${floodFillCursor}") 2 15, default`
-            : 'not-allowed',
+            : `url("${floodFillCursor}") 2 15, default`,
           perPixelTargetFind: isShape(object) ? false : true,
         });
       });
@@ -672,44 +670,20 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       canvas.on('mouse:down', async (event: fabric.IEvent) => {
         // Click out of any object
-        // console.log(floodFillData, event.pointer);
+        if (event.target && (event.target.get('type') === 'path' || event.target.get('type') === 'image')) {
 
-        if (event.target && event.target.get('type') === 'path') {
-          console.log(FloodFill);
-          // floodFillData.fill(
-          //   floodFill,
-          //   Math.round((event.pointer as { x: number; y: number }).x) * 2,
-          //   Math.round((event.pointer as { x: number; y: number }).y) * 2,
-          //   200
-          // );
-
-          // let test = floodFiller.fill(
-          //   floodFill,
-          //   Math.round((event.pointer as { x: number; y: number }).x) * 2,
-          //   Math.round((event.pointer as { x: number; y: number }).y) * 2,
-          //   200
-          // );
-
-          let data = floodFiller.fill(
+          let data = await floodFiller.fillExp(
             { 
               x: Math.round((event.pointer as { x: number; y: number }).x) * 2,
               y: Math.round((event.pointer as { x: number; y: number }).y) * 2,
             },
             floodFill,
-            200
+            0
           );
 
-          // let data = await floodFiller.fillExp(
-          //   { 
-          //     x: Math.round((event.pointer as { x: number; y: number }).x) * 2,
-          //     y: Math.round((event.pointer as { x: number; y: number }).y) * 2,
-          //   },
-          //   floodFill,
-          //   200
-          // );
-
-          console.log(trimmer);
-
+          if (!data) {
+            return;
+          }
 
           // @ts-ignore
           palette.data.set(new Uint8ClampedArray(data.coords)); 
@@ -729,46 +703,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               scaleX: 0.5,
               scaleY: 0.5,
               selectable: false,
-              evented: false
+              evented: false,
             });
             canvas.add(image);
             canvas.discardActiveObject();
           });
 
           tempCanvas.remove();
-
-          return;
-
-          // context.putImageData(imgData, 0, 0);
-
-          // return;
-
-          // Block 1 exp.
-          
-          // tempContext?.putImageData(test, 0, 0);
-          // let tempCanvas2 = trimmer(tempCanvas);
-          // let tempData = tempCanvas2.toDataURL();
-
-          // tempCanvas.remove();
-
-          // interface TypedImage extends fabric.Image {
-          //   id?: string;
-          // }
-
-          // fabric.Image.fromURL(tempData, (image: TypedImage) => {
-          //   image.set({
-          //     scaleX: 0.5,
-          //     scaleY: 0.5,
-          //     top: event.target?.top,
-          //     left: event.target?.left,
-          //     id: (event.target as TypedImage).id
-          //   });
-
-          //   // canvas.remove(event.target as fabric.Object);
-          //   canvas.add(image);
-          // });
-          // end
-
           return;
         }
 
