@@ -17,18 +17,22 @@ import { useLineWidth } from './hooks/useLineWidth';
 import { useFloodFill } from './hooks/useFloodFill';
 import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 import { useLaserIsActive } from './hooks/useLaserIsActive';
+import { useToolbarPermissions } from './hooks/useToolbarPermissions';
 import ICanvasActions from './canvas-actions/ICanvasActions';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
+import AuthMenu from '../../components/AuthMenu';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
 export const WhiteboardProvider = ({
   children,
   clearWhiteboardPermissions,
+  userId,
 }: {
   children: React.ReactNode;
   clearWhiteboardPermissions: IClearWhiteboardPermissions;
+  userId: string;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();
@@ -56,6 +60,7 @@ export const WhiteboardProvider = ({
   const { shapesAreEvented, updateShapesAreEvented } = useShapesAreEvented();
   const { floodFillIsActive, updateFloodFillIsActive } = useFloodFillIsActive();
   const { laserIsActive, updateLaserIsActive } = useLaserIsActive();
+  const { toolbarIsEnabled, setToolbarIsEnabled } = useToolbarPermissions();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -133,10 +138,10 @@ export const WhiteboardProvider = ({
   );
 
   const clearWhiteboardActionClearMyself = useCallback(() => {
-    if (clearWhiteboardPermissions.allowClearMyself) {
+    if (clearWhiteboardPermissions.allowClearMyself && toolbarIsEnabled) {
       canvasActions?.clearWhiteboardClearMySelf();
     }
-  }, [canvasActions, clearWhiteboardPermissions]);
+  }, [canvasActions, clearWhiteboardPermissions, toolbarIsEnabled]);
 
   const clearWhiteboardAllowClearOthersAction = useCallback(
     (userId) => {
@@ -261,6 +266,8 @@ export const WhiteboardProvider = ({
     redo: redoAction,
     allowPointer,
     universalPermits,
+    toolbarIsEnabled,
+    setToolbarIsEnabled,
   };
 
   return (
@@ -275,6 +282,9 @@ export const WhiteboardProvider = ({
       <button onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
         Clear student
       </button>
+      {/*<div>Whiteboard Context {toolbarIsEnabled.toString()}</div>*/}
+      <AuthMenu userId={userId} setToolbarIsEnabled={setToolbarIsEnabled} />
+
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />

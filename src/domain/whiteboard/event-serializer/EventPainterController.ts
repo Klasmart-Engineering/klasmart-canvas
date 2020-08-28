@@ -90,6 +90,9 @@ export class EventPainterController extends EventEmitter
       case 'moving':
         this.moving(event.id, target);
         break;
+      case 'setToolbarPermissions':
+        this.setToolbarPermissions(event.id, target);
+        break;
       case 'fontColorChanged':
         this.fontColorChanged(event.id, event.objectType, target);
         break;
@@ -138,6 +141,10 @@ export class EventPainterController extends EventEmitter
 
   private moving(id: string, target: ICanvasObject) {
     this.emit('moving', id, target);
+  }
+
+  private setToolbarPermissions(id: string, target: ICanvasObject) {
+    this.emit('setToolbarPermissions', id, target);
   }
 
   private fontColorChanged(
