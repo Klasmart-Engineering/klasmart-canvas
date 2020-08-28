@@ -130,7 +130,6 @@ function ToolbarSelector(props: IToolbarSelector) {
     width: '100%',
     height: '32px',
     border: 'none',
-    marginLeft: '4px',
     paddingRight: 0,
     backgroundColor: active ? '#d9d9d9' : '#fff',
     borderRadius: '4px',
