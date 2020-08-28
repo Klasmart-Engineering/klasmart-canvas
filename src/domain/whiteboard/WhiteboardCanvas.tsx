@@ -1234,7 +1234,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useEffect(() => {
     canvas?.forEachObject((object: ICanvasObject) => {
-      if (object.id && isLocalObject(object.id, userId) && !toolbarIsEnabled) {
+      if (object.id && isLocalObject(object.id, userId)) {
         object.set({
           evented: toolbarIsEnabled,
           selectable: toolbarIsEnabled,
