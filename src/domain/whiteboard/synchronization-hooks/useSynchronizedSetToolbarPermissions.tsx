@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 
 const useSynchronizedSetToolbarPermissions = (
+  canvas: fabric.Canvas | undefined,
   userId: string,
   shouldHandleRemoteEvent: (id: string) => boolean,
   setToolbarIsEnabled: (enabled: boolean) => void
@@ -15,6 +16,8 @@ const useSynchronizedSetToolbarPermissions = (
       //if (!shouldHandleRemoteEvent(id)) return;
       if (userId === id) return;
 
+      canvas?.discardActiveObject();
+      canvas?.renderAll();
       setToolbarIsEnabled(target);
     };
 
@@ -26,7 +29,13 @@ const useSynchronizedSetToolbarPermissions = (
         setToolbarPermissions
       );
     };
-  }, [eventController, setToolbarIsEnabled, shouldHandleRemoteEvent, userId]);
+  }, [
+    canvas,
+    eventController,
+    setToolbarIsEnabled,
+    shouldHandleRemoteEvent,
+    userId,
+  ]);
 };
 
 export default useSynchronizedSetToolbarPermissions;

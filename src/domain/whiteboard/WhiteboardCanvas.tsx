@@ -927,6 +927,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     allowPointer
   );
   useSynchronizedSetToolbarPermissions(
+    canvas,
     userId,
     filterIncomingEvents,
     setToolbarIsEnabled
@@ -1218,10 +1219,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
 
   useEffect(() => {
-    canvas?.discardActiveObject();
-    canvas?.renderAll();
     canvas?.forEachObject((object: ICanvasObject) => {
-      if (object.id && isLocalObject(object.id, userId)) {
+      if (object.id && isLocalObject(object.id, userId) && !toolbarIsEnabled) {
         object.set({
           evented: toolbarIsEnabled,
           selectable: toolbarIsEnabled,
