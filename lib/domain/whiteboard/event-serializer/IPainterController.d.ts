@@ -14,6 +14,7 @@ export interface IPainterController {
     on(event: 'removed', listener: (id: string, permission: boolean) => void): this;
     on(event: 'reconstruct', listener: (id: string, target: ICanvasObject) => void): this;
     on(event: 'moving', listener: (id: string, target: ICanvasObject) => void): this;
+    on(event: 'setToolbarPermissions', listener: (id: string, target: ICanvasObject) => void): this;
     on(event: 'fontColorChanged', listener: (id: string, objectType: string, target: ICanvasObject) => void): this;
     removeListener(event: 'added', listener: (id: string, objectType: string, target: ICanvasObject) => void): this;
     removeListener(event: 'moved', listener: (id: string, objectType: string, target: ICanvasObject) => void): this;
@@ -26,6 +27,7 @@ export interface IPainterController {
     removeListener(event: 'removed', listener: (id: string, permission: boolean) => void): this;
     removeListener(event: 'reconstruct', listener: (id: string, target: ICanvasObject) => void): this;
     removeListener(event: 'moving', listener: (id: string, target: ICanvasObject) => void): this;
+    removeListener(event: 'setToolbarPermissions', listener: (id: string, target: ICanvasObject) => void): this;
     removeListener(event: 'fontColorChanged', listener: (id: string, objectType: string, target: ICanvasObject) => void): this;
     replayEvents(): Promise<void>;
 }

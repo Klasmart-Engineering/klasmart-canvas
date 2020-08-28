@@ -12,7 +12,7 @@ export interface ObjectEvent {
         objects: ICanvasObject[];
     } | {
         background: string;
-    };
+    } | boolean;
 }
 export declare type ObjectType = 'path' | 'textbox' | 'activeSelection' | 'reconstruct' | 'shape' | 'background' | 'pointer';
 export declare class PaintEventSerializer extends EventEmitter implements PaintEventSerializer {

@@ -5,6 +5,7 @@ import React, {
   useCallback,
   useContext,
   useState,
+  useMemo,
 } from 'react';
 
 import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
@@ -30,30 +31,6 @@ export type ToolType =
   | 'stamp';
 
 type OptionalToolOptions = IToolbarSelectorOption[] | undefined;
-
-const toolsLookup: Record<ToolType, { id: string, options: OptionalToolOptions }> = {
-  select: { id: 'pointers', options: selectorOptionsWithId('pointers') },
-  pointer: { id: 'laser_pointer', options: selectorOptionsWithId('laser_pointer') },
-  move: { id: 'move_objects', options: selectorOptionsWithId('move_objects') },
-  eraser: { id: 'erase_type', options: selectorOptionsWithId('erase_type') },
-  line: { id: 'line_type', options: selectorOptionsWithId('line_type') },
-  fill: { id: 'flood_fill', options: selectorOptionsWithId('flood_fill') },
-  text: { id: 'add_text', options: selectorOptionsWithId('add_text') },
-  shape: { id: 'add_shape', options: selectorOptionsWithId('add_shape') },
-  stamp: { id: 'add_stamp', options: selectorOptionsWithId('add_stamp') },
-};
-
-const colors = colorPaletteOptions.reduce((map, color) => {
-  return map.set(color.id, color);
-}, new Map<string, IStyleOption>());
-
-const thickness = selectorStyleOptionsWithId('line_width')
-  .map((opt) => {
-    return { id: opt.id, style: opt.style, value: opt.value };
-  })
-  .reduce((map, style) => {
-    return map.set(style.id, style);
-  }, new Map<string, IThicknessStyle>());
 
 export interface IToolbarActions {
   selectTool: (toolType: ToolType, options?: IToolbarSelectorOption) => void;
@@ -131,6 +108,44 @@ export default function ToolbarContextProvider({
     clearWhiteboardAllowClearOthers: clearWhiteboardOther,
     clearWhiteboardClearAll: clearWhiteboardAll,
   } = useContext(WhiteboardContext);
+
+  const toolsLookup = useMemo<Record<ToolType, { id: string, options: OptionalToolOptions }>>(() => {
+    return {
+      select: { id: 'pointers', options: selectorOptionsWithId('pointers') },
+      pointer: { id: 'laser_pointer', options: selectorOptionsWithId('laser_pointer') },
+      move: { id: 'move_objects', options: selectorOptionsWithId('move_objects') },
+      eraser: { id: 'erase_type', options: selectorOptionsWithId('erase_type') },
+      line: { id: 'line_type', options: selectorOptionsWithId('line_type') },
+      fill: { id: 'flood_fill', options: selectorOptionsWithId('flood_fill') },
+      text: { id: 'add_text', options: selectorOptionsWithId('add_text') },
+      shape: { id: 'add_shape', options: selectorOptionsWithId('add_shape') },
+      stamp: { id: 'add_stamp', options: selectorOptionsWithId('add_stamp') },
+    };
+  }, []);
+
+  const colorsLookup = useMemo(() => {
+    return colorPaletteOptions.reduce((map, color) => {
+      return map.set(color.id, color);
+    }, new Map<string, IStyleOption>())
+  }, []);
+
+  const colors = useMemo(() => {
+    return Array.from(colorsLookup.values());
+  }, [colorsLookup])
+
+  const thicknessLookup = useMemo(() => {
+    return selectorStyleOptionsWithId('line_width')
+      .map((opt) => {
+        return { id: opt.id, style: opt.style, value: opt.value };
+      })
+      .reduce((map, style) => {
+        return map.set(style.id, style);
+      }, new Map<string, IThicknessStyle>())
+  }, []);
+
+  const thickness = useMemo(() => {
+    return Array.from(thicknessLookup.values());
+  }, [thicknessLookup])
 
   const selectToolOption = useCallback((toolId: string, option: IToolbarSelectorOption) => {
     switch (toolId) {
@@ -215,7 +230,7 @@ export default function ToolbarContextProvider({
     if (option) {
       selectToolOption(tool.id, option);
     }
-  }, [discardActiveObject, selectToolOption, setPointerEvents, textIsActive, tools.elements, updateBrushIsActive, updateEraseType, updateEventedObjects, updateFloodFillIsActive, updateLaserIsActive, updateShapeIsActive, updateShapesAreEvented, updateShapesAreSelectable, updateTextIsActive]);
+  }, [discardActiveObject, selectToolOption, setPointerEvents, textIsActive, tools.elements, toolsLookup, updateBrushIsActive, updateEraseType, updateEventedObjects, updateFloodFillIsActive, updateLaserIsActive, updateShapeIsActive, updateShapesAreEvented, updateShapesAreSelectable, updateTextIsActive]);
 
   const selectColorByValueAction = useCallback((color: string) => {
     // TODO: There might be bugs in this action, I'm not sure in which
@@ -239,11 +254,11 @@ export default function ToolbarContextProvider({
   }, [changeStrokeColor, fillColor, selectedTool, textColor, updateFloodFill]);
 
   const selectColorByNameAction = useCallback((colorName: string) => {
-    const color = colors.get(colorName);
+    const color = colorsLookup.get(colorName);
     if (!color) return;
-    
+
     selectColorByValueAction(String(color.value));
-  }, [selectColorByValueAction]);
+  }, [colorsLookup, selectColorByValueAction]);
 
   const clearAction = useCallback((filter?: string) => {
     if (filter) {
@@ -283,7 +298,7 @@ export default function ToolbarContextProvider({
 
   return (
     <Context.Provider
-      value={{ state: { tools: toolsLookup, colors: Array.from(colors.values()), thickness: Array.from(thickness.values()) }, status, actions }}
+      value={{ state: { tools: toolsLookup, colors, thickness }, status, actions }}
     >
       {children}
     </Context.Provider>
