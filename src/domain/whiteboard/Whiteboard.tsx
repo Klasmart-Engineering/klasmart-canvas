@@ -33,9 +33,6 @@ function Whiteboard() {
         clearWhiteboardPermissions={teacher}
       >
         <div className="whiteboard">
-          <ToolbarContextProvider>
-            <ToolbarExample />
-          </ToolbarContextProvider>
           <Toolbar />
           <div
             style={{
