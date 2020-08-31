@@ -70,6 +70,7 @@ function Toolbar() {
     updateLaserIsActive,
     allowPointer,
     universalPermits,
+    toolbarIsEnabled,
   } = useContext(WhiteboardContext);
 
   /**
@@ -153,10 +154,12 @@ function Toolbar() {
     );
 
     // set the clicked tool like active style in Toolbar
-    setTools({
-      active: tool,
-      elements: [...tools.elements],
-    });
+    if (toolbarIsEnabled) {
+      setTools({
+        active: tool,
+        elements: [...tools.elements],
+      });
+    }
   }
 
   /**
@@ -167,18 +170,20 @@ function Toolbar() {
   function handleActionsElementClick(tool: string) {
     discardActiveObject();
 
-    switch (tool) {
-      case ELEMENTS.CLEAR_WHITEBOARD_ACTION:
-        openClearWhiteboardModal();
-        break;
+    if (toolbarIsEnabled) {
+      switch (tool) {
+        case ELEMENTS.CLEAR_WHITEBOARD_ACTION:
+          openClearWhiteboardModal();
+          break;
 
-      case ELEMENTS.UNDO_ACTION:
-        undo();
-        break;
+        case ELEMENTS.UNDO_ACTION:
+          undo();
+          break;
 
-      case ELEMENTS.REDO_ACTION:
-        redo();
-        break;
+        case ELEMENTS.REDO_ACTION:
+          redo();
+          break;
+      }
     }
   }
 
