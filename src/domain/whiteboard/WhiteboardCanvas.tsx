@@ -46,15 +46,17 @@ import {
 import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
+import useFixedAspectScaling, { ScaleMode } from './utils/useFixedAspectScaling';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
  * @field userId: The user's ID, events originating from this canvas will contain this ID.
  * @field style: How the canvas should be styled.
  * @field pointerEvents: Enable or disable pointer interaction.
- * @field width: The width of this canvas.
- * @field height: The height of this canvas.
+ * @field pixelWidth: The width of this canvas buffer in pixels.
+ * @field pixelHeight: The height of this canvas buffer in pixels.
  * @field filterUsers: Only render remote events originating from userId's in this list.
+ * @field scaleMode: Determines how the canvas should scale if parent element doesn't match aspect ratio.
  */
 export type Props = {
   children?: ReactChild | ReactChildren | null;
@@ -62,12 +64,11 @@ export type Props = {
   userId: string;
   initialStyle?: CSSProperties;
   pointerEvents: boolean;
-  width?: string | number;
-  height: string | number;
-  cssWidth?: string | number;
-  cssHeight?: string | number;
+  pixelWidth: number;
+  pixelHeight: number;
   filterUsers?: string[];
   display?: boolean;
+  scaleMode?: ScaleMode;
 };
 
 export const WhiteboardCanvas: FunctionComponent<Props> = ({
@@ -76,16 +77,17 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   userId,
   initialStyle,
   pointerEvents,
-  width,
-  height,
-  cssWidth,
-  cssHeight,
+  pixelWidth,
+  pixelHeight,
   display,
+  scaleMode,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
   const [wrapper, setWrapper] = useState<HTMLElement>();
   const [lowerCanvas, setLowerCanvas] = useState<HTMLCanvasElement>();
   const [upperCanvas, setUpperCanvas] = useState<HTMLCanvasElement>();
+
+  const { width, height, top, left } = useFixedAspectScaling(wrapper?.parentElement, (pixelWidth / pixelHeight), scaleMode || "ScaleToFit");
 
   // Event serialization for synchronizing whiteboard state.
   const {
@@ -194,19 +196,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     if (wrapper && lowerCanvas && upperCanvas) {
-      if (cssWidth) {
-        wrapper.style.width = String(cssWidth);
-        lowerCanvas.style.width = String(cssWidth);
-        upperCanvas.style.width = String(cssWidth);
-      }
 
-      if (cssHeight) {
-        wrapper.style.height = String(cssHeight);
-        lowerCanvas.style.height = String(cssHeight);
-        upperCanvas.style.height = String(cssHeight);
-      }
+      const widthStyle = `${width}px`;
+      wrapper.style.width = widthStyle;
+      lowerCanvas.style.width = widthStyle;
+      upperCanvas.style.width = widthStyle;
+
+      const heightStyle = `${height}px`;
+      wrapper.style.height = heightStyle;
+      lowerCanvas.style.height = heightStyle;
+      upperCanvas.style.height = heightStyle;
+
+      const wrapperTransform = `translate(${left}, ${top})`;
+      wrapper.style.transform = wrapperTransform;
     }
-  }, [wrapper, lowerCanvas, upperCanvas, cssWidth, cssHeight]);
+  }, [wrapper, lowerCanvas, upperCanvas, width, height, left, top]);
 
   /**
    * Update the pointer events to make canvas click through.
@@ -1342,8 +1346,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   return (
     <canvas
-      width={width}
-      height={height}
+      width={pixelWidth}
+      height={pixelHeight}
       id={instanceId}
       style={initialStyle}
       tabIndex={0}

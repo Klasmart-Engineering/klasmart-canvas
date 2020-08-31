@@ -12,6 +12,7 @@
     "react-color": "^2.18.1",
     "react-dom": "^16.13.1",
     "react-player": "^2.5.0",
+    "resize-observer-polyfill": "^1.5.1",
     "typescript": "^3.9.7",
     "uuid": "^8.3.0"
   },
