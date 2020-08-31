@@ -39,7 +39,7 @@ import useSynchronizedFontColorChanged from './synchronization-hooks/useSynchron
 import { SET, SET_GROUP, UNDO, REDO } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
-import { IEvent, ITextOptions } from 'fabric/fabric-impl';
+import { IEvent, ITextOptions, Canvas } from 'fabric/fabric-impl';
 import {
   ObjectEvent,
   ObjectType,
@@ -517,10 +517,26 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Reorder the current shapes letting the shapes over their container shape
    */
   const reorderShapes = useCallback(() => {
+    let temporal;
+    let actualIndex;
+    let compareIndex;
+
+    const getObjectIndex = (object: ICanvasObject, canvas: Canvas) => {
+      return canvas.getObjects().indexOf(object);
+    };
+
     canvas?.forEachObject((actual) => {
       canvas.forEachObject((compare) => {
-        if (actual.isContainedWithinObject(compare)) {
-          canvas.bringForward(actual);
+        actualIndex = getObjectIndex(actual, canvas);
+        compareIndex = getObjectIndex(compare, canvas);
+
+        if (
+          actual.isContainedWithinObject(compare) &&
+          actualIndex < compareIndex
+        ) {
+          temporal = getObjectIndex(actual, canvas);
+          actual.moveTo(compareIndex);
+          compare.moveTo(temporal);
         }
       });
     });
@@ -533,25 +549,32 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   const manageChanges = useCallback(
     (event: fabric.IEvent) => {
+      reorderShapes();
+
       // Free Drawing Line Selected
       if (
-        (event.target && isFreeDrawing(event.target)) ||
-        (event.target && isEmptyShape(event.target))
+        !shapeIsActive &&
+        !brushIsActive &&
+        ((event.target && isFreeDrawing(event.target)) ||
+          (event.target && isEmptyShape(event.target)))
       ) {
         updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
         updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
       }
 
       // Shape Selected
-      if (event.target && isShape(event.target)) {
+      if (event.target && isShape(event.target) && !shapeIsActive) {
         updateShape(event.target.name || DEFAULT_VALUES.SHAPE);
 
-        if ((event.target as TypedShape).shapeType === 'shape') {
+        if (
+          (event.target as TypedShape).shapeType === 'shape' &&
+          !brushIsActive
+        ) {
           updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
           updateLineWidth(
             event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH
           );
-        } else if (event.target.fill) {
+        } else if (event.target.fill && !brushIsActive) {
           updateShapeColor(
             event.target.fill.toString() || DEFAULT_VALUES.SHAPE_COLOR
           );
@@ -570,8 +593,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       }
     },
     [
-      updateFontColor,
-      updateFontFamily,
+      brushIsActive,
+      reorderShapes,
+      shapeIsActive,
       updateLineWidth,
       updatePenColor,
       updateShape,
@@ -625,15 +649,41 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   );
 
   /**
+   * Set the given visibility in all the controls in the given object.
+   * @param {ICanvasObject} object - Object to set controls visibility.
+   * @param {boolean} visibility - Visibility state.
+   */
+  const setObjectControlsVisibility = (
+    object: ICanvasObject,
+    visibility: boolean
+  ) => {
+    object.setControlsVisibility({
+      bl: visibility,
+      br: visibility,
+      mb: visibility,
+      ml: visibility,
+      mr: visibility,
+      mt: visibility,
+      tl: visibility,
+      tr: visibility,
+      mtr: visibility,
+    });
+  };
+
+  /**
    * Set the objects like evented if you select pointer or move tool
    */
   useEffect(() => {
     if (eventedObjects) {
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
+          setObjectControlsVisibility(object, true);
           object.set({
             evented: true,
             selectable: true,
+            lockMovementX: false,
+            lockMovementY: false,
+            hasBorders: true,
           });
         }
       });
@@ -661,8 +711,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (floodFillIsActive && canvas && toolbarIsEnabled) {
       canvas.defaultCursor = `url("${floodFillCursor}") 2 15, default`;
       canvas.forEachObject((object: TypedShape) => {
+        setObjectControlsVisibility(object as ICanvasObject, false);
         object.set({
+          selectable: false,
           evented: true,
+          lockMovementX: true,
+          lockMovementY: true,
+          hasBorders: false,
           hoverCursor: isLocalShape(object)
             ? `url("${floodFillCursor}") 2 15, default`
             : 'not-allowed',
@@ -732,6 +787,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               fill: floodFill,
               stroke: originalStroke,
             });
+
+            canvas.discardActiveObject();
             canvas.backgroundColor = originalBackground;
 
             const payload: ObjectEvent = {
