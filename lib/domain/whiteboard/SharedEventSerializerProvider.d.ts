@@ -6,6 +6,7 @@ export declare const NormalizeCoordinates = 1000;
 declare type Props = {
     children?: ReactChild | ReactChildren | null | Element[];
     simulateNetworkSynchronization?: boolean;
+    simulatePersistence?: boolean;
 };
 interface IEventSerializerState {
     eventSerializer: PaintEventSerializer;
