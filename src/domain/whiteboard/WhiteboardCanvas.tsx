@@ -671,8 +671,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.on('mouse:down', async (event: fabric.IEvent) => {
         // Click out of any object
         if (event.target && (event.target.get('type') === 'path' || event.target.get('type') === 'image')) {
+          let id = event.target.get('type') !== 'path' ? (event.target as TypedShape).id : null;
+          const clickedColor = getColorInCoord(
+            Math.round((event.pointer as { x: number; y: number }).x), 
+            Math.round((event.pointer as { x: number; y: number }).y)
+          );
 
-          let data = await floodFiller.fillExp(
+          let data = await floodFiller.fill(
             { 
               x: Math.round((event.pointer as { x: number; y: number }).x) * 2,
               y: Math.round((event.pointer as { x: number; y: number }).y) * 2,
@@ -688,15 +693,23 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           // @ts-ignore
           palette.data.set(new Uint8ClampedArray(data.coords)); 
           tempContext.putImageData(palette, 0, 0);
-          let imgData = tempContext.getImageData(data.x, data.y, data.width, data.height);
+          let newImgData = tempContext.getImageData(data.x, data.y, data.width, data.height);
 
           tempCanvas.width = data.width;
           tempCanvas.height = data.height;
-          tempContext.putImageData(imgData,0,0);
+          tempContext.putImageData(newImgData,0,0);
 
           const tempData = tempCanvas.toDataURL();
 
           fabric.Image.fromURL(tempData, (image: any) => {
+
+            if (!id || (event.target as any).color !== clickedColor) {
+              // generate new ID, which will be for the image created by the new color.
+              id = `${userId}:${uuidv4()}`;
+            } else if ((event.target as any).color === clickedColor) {
+              canvas.remove(event.target as fabric.Object);
+            }
+
             image.set({ 
               top: data.y / 2,
               left: data.x / 2,
@@ -704,7 +717,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               scaleY: 0.5,
               selectable: false,
               evented: false,
+              id,
+              color: floodFill
             });
+
             canvas.add(image);
             canvas.discardActiveObject();
           });

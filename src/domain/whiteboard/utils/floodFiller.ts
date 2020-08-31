@@ -12,11 +12,8 @@ type PixelCoords = {
 
 type LineQueued = [number, number, number, number]
 
-// Method 2
 export default class FloodFiller {
   public imageData: ImageData;
-
-  // part of experimental
   public color: any;
   public replacedColor: any;
   public tolerance: number;
@@ -30,128 +27,22 @@ export default class FloodFiller {
   public maxY: number = -1;
   public minY: number = -1;
 
-  // end experimental
-
+  /**
+   * Class constructor
+   * @param imageData Canvas ImageData
+   */
   constructor(imageData: ImageData) {
     this.imageData = imageData;
     this.tolerance = 0;
   }
 
-  private hexToRgb = (hex: string, opacity: number = 1) => {
-    opacity = Math.round(opacity * 255) || 255;
-    hex = hex.replace('#', '');
-    const rgb: any = [];
-    const re = new RegExp('(.{' + hex.length/3 + '})', 'g');
-    (hex.match(re) as any[]).forEach(function(l) {
-      rgb.push(parseInt(hex.length % 2 ? l+l : l, 16));
-    });
-    return rgb.concat(opacity);
-  }
-  
-  public withinTolerance = (array1: Uint8ClampedArray, offset: any, array2: Uint8ClampedArray, tolerance: number = 0) => {
-    let length = array2.length;
-		let start = offset + length;
-
-		// Iterate (in reverse) the items being compared in each array, checking their values are
-		// within tolerance of each other
-		while(start-- && length--) {
-			if(Math.abs(array1[start] - array2[length]) > tolerance) {
-				return false;
-			}
-		}
-
-		return true;
-  }
-
-  public getPointOffset = (x: number, y: number) => {
-    return 4 * (y * this.imageData.width + x)
-  };
-
-  public fill = (
-    point: { x: number; y: number } | undefined,
-    colorHex: string,
-    tolerance: number
-  ) => {
-    let directions = [[1, 0], [0, 1], [0, -1], [-1, 0]];
-    let coords = [];
-    let points = [point];
-    let seen = {};
-    let key;
-    let x;
-    let y;
-    let offset;
-    let i;
-    let x2;
-    let y2;
-    let minX = -1;
-    let minY = -1;
-    let maxX = -1;
-    let maxY = -1;
-    let targetOffset = this.getPointOffset(point?.x as number, point?.y as number);
-    let target = this.imageData.data.slice(targetOffset, targetOffset + 4);
-    let width = this.imageData.width;
-    let height = this.imageData.height;
-    let color = this.hexToRgb(colorHex, 1);
-
-    // Keep going while we have points to walk
-		while (!!(point = points.pop())) {
-			x = point.x;
-			y = point.y;
-			offset = this.getPointOffset(x, y);
-
-			// Move to next point if this pixel isn't within tolerance of the color being filled
-			if (!this.withinTolerance(this.imageData.data, offset, target, tolerance)) {
-				continue;
-			}
-
-			if (x > maxX) { maxX = x; }
-			if (y > maxY) { maxY = y; }
-			if (x < minX || minX === -1) { minX = x; }
-			if (y < minY || minY === -1) { minY = y; }
-
-			// Update the pixel to the fill color and add neighbours onto stack to traverse
-			// the fill area
-			i = directions.length;
-			while (i--) {
-				// Use the same loop for setting RGBA as for checking the neighbouring pixels
-				if (i < 4) {
-          // @ts-ignore
-					this.imageData[offset + i] = color[i];
-					coords[offset+i] = color[i];
-				}
-
-				// Get the new coordinate by adjusting x and y based on current step
-				x2 = x + directions[i][0];
-				y2 = y + directions[i][1];
-				key = x2 + ',' + y2;
-
-				// If new coordinate is out of bounds, or we've already added it, then skip to
-        // trying the next neighbour without adding this one
-        // @ts-ignore
-				if (x2 < 0 || y2 < 0 || x2 >= width || y2 >= height || seen[key]) {
-					continue;
-				}
-
-				// Push neighbour onto points array to be processed, and tag as seen
-        points.push({ x: x2, y: y2 });
-        // @ts-ignore
-				seen[key] = true;
-			}
-		}
-
-		return {
-			x: minX,
-			y: minY,
-			width: maxX-minX,
-			height: maxY-minY,
-			coords: coords
-		}
-  }
-
-
-  // Experimental, top works but slow
-
-  private getColorAtPixel = (
+  /**
+   * Gets color of specific pixel.
+   * @param imageData Canvas ImageData
+   * @param x X coordinate
+   * @param y Y coordinate
+   */
+  public getColorAtPixel = (
     imageData: ImageData,
     x: number,
     y: number,
@@ -159,7 +50,7 @@ export default class FloodFiller {
     const { width, data } = imageData
     const startPos = 4 * (y * width + x)
     if (data[startPos + 3] === undefined) {
-        throw new Error('Invalid pixel coordinates: x=' + x + '; y=' + y)
+        throw new Error(`Invalid pixel coordinates: x=${x}; y=${y}`)
     }
     return {
         r: data[startPos],
@@ -169,7 +60,12 @@ export default class FloodFiller {
     }
   }
 
-  public hex2RGBA(hex: string, alpha = 255): ColorRGBA {
+  /**
+   * Changes hex color to rgba
+   * @param hex color hex string
+   * @param alpha Opacity
+   */
+  public hex2RGBA(hex: string, alpha:number = 255): ColorRGBA {
     let parsedHex = hex
     if (hex.indexOf('#') === 0) {
         parsedHex = hex.slice(1)
@@ -203,6 +99,12 @@ export default class FloodFiller {
     }
   }
 
+  /**
+   * Checks if colors are the same.
+   * @param a Color to compare
+   * @param b Color to compare
+   * @param tolerance Color tolerance. If not 0, will return true to slight variations.
+   */
   public isSameColor = (
     a: ColorRGBA,
     b: ColorRGBA,
@@ -217,10 +119,17 @@ export default class FloodFiller {
     )
   }
 
+  /**
+   * Adds line to color fill to queue
+   * @param line Line to color fill
+   */
   private addToQueue(line: LineQueued): void {
     this.queue.push(line)
   }
 
+  /**
+   * Removes line to color fill from queue
+   */
   private popFromQueue(): LineQueued | null {
     if (!this.queue.length) {
       return null
@@ -229,6 +138,10 @@ export default class FloodFiller {
     return this.queue.pop()
   }
 
+  /**
+   * Checks if coordinates and pixel are valid.
+   * @param pixel Coordinates of pixel.
+   */
   private isValidTarget(pixel: PixelCoords | null): boolean {
     if (pixel === null) {
       //@ts-ignore
@@ -239,6 +152,13 @@ export default class FloodFiller {
     return this.isSameColor(this.replacedColor, pixelColor, tempTolerance);
   }
 
+  /**
+   * Changes color of pixel at specific coordinates.
+   * @param imageData Canvas ImageData
+   * @param color New color of pixel.
+   * @param x X coordinate
+   * @param y Y coordinate
+   */
   public setColorAtPixel(
     imageData: ImageData,
     color: ColorRGBA,
@@ -271,6 +191,11 @@ export default class FloodFiller {
     this.coords[startPos + 3] = color.a & 0xff;
   }
 
+  /**
+   * Begins process to change color of pixel
+   * @param color Color to change to
+   * @param pixel Pixel at specific coordinate
+   */
   private setPixelColor(color: ColorRGBA, pixel: PixelCoords): void {
     this.setColorAtPixel(this.imageData, color, pixel.x, pixel.y)
     this.modifiedPixelsCount++
@@ -278,7 +203,12 @@ export default class FloodFiller {
     this.modifiedPixels.add(`${pixel.x}|${pixel.y}`)
   }
 
-
+  /**
+   * Checks neighboring pixels.
+   * @param direction Direction to check to
+   * @param x X coordinate
+   * @param y Y coordinate
+   */
   private getPixelNeighbour(
       direction: string,
       x: number,
@@ -301,6 +231,11 @@ export default class FloodFiller {
       return null
   }
 
+  /**
+   * Start filling line at specific coordinate.
+   * @param x X coordinate
+   * @param y Y coordinate
+   */
   private fillLineAt(x: number, y: number): [number, number] {
       if (!this.isValidTarget({ x, y })) {
           return [-1, -1]
@@ -326,6 +261,9 @@ export default class FloodFiller {
       return [minX, maxX]
   }
 
+  /**
+   * While lines in queue, keeps checking if pixels need to color modified.
+   */
   private fillQueue(): void {
     let line = this.popFromQueue()
     while (line) {
@@ -364,7 +302,13 @@ export default class FloodFiller {
     }
   }
 
-  public fillExp = async (point: {x: number, y: number}, colorHex: string, tolerance: number): Promise<any> => {
+  /**
+   * Executes flood fill.
+   * @param point Mouse click location coordinates
+   * @param colorHex Color to change to.
+   * @param tolerance Color tolerance.
+   */
+  public fill = async (point: {x: number, y: number}, colorHex: string, tolerance: number): Promise<any> => {
     try {  
       this.color = this.hex2RGBA(colorHex);
       this.replacedColor = this.getColorAtPixel(this.imageData, point.x, point.y);
@@ -374,7 +318,6 @@ export default class FloodFiller {
         return;
       }
 
-      console.log('start filling...', this.replacedColor, this.color);
       this.addToQueue([point.x, point.x, point.y, -1])
       this.fillQueue()
 
