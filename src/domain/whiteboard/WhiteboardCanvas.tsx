@@ -346,7 +346,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Activates the mouseDown event if shape exists and shapeIsActive is true
    */
   useEffect(() => {
-    if (shape && shapeIsActive) {
+    if (shape && shapeIsActive && toolbarIsEnabled) {
       actions.discardActiveObject();
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
@@ -389,6 +389,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     shapesAreEvented,
     isLocalObject,
     laserIsActive,
+    toolbarIsEnabled,
   ]);
 
   /**
@@ -639,7 +640,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       return shape.id && isLocalObject(shape.id, userId);
     };
 
-    if (floodFillIsActive && canvas) {
+    if (floodFillIsActive && canvas && toolbarIsEnabled) {
       canvas.defaultCursor = `url("${floodFillCursor}") 2 15, default`;
       canvas.forEachObject((object: TypedShape) => {
         object.set({
@@ -799,6 +800,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     reorderShapes,
     eraseType,
     undoRedoDispatch,
+    toolbarIsEnabled,
   ]);
 
   /**
