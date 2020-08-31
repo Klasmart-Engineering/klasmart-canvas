@@ -173,10 +173,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       // TODO: We may want to make the position style
       // controlled by property or variable.
       wrapper.style.position = "absolute";
+
+      if (initialStyle && initialStyle.zIndex) {
+        wrapper.style.zIndex = String(initialStyle.zIndex);
+      }
     };
     if (lowerCanvas) setLowerCanvas(lowerCanvas as HTMLCanvasElement);
     if (upperCanvas) setUpperCanvas(upperCanvas as HTMLCanvasElement);
-  }, [canvas, instanceId]);
+  }, [canvas, initialStyle, instanceId]);
 
   /** 
    * Update wrapper display state.
