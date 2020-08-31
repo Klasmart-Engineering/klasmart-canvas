@@ -207,8 +207,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       lowerCanvas.style.height = heightStyle;
       upperCanvas.style.height = heightStyle;
 
-      const wrapperTransform = `translate(${left}, ${top})`;
+      const wrapperTransform = `translate(${left}px, ${top}px)`;
       wrapper.style.transform = wrapperTransform;
+
+      wrapper.style.top = "0px";
+      wrapper.style.left = "0px";
     }
   }, [wrapper, lowerCanvas, upperCanvas, width, height, left, top]);
 
@@ -1332,17 +1335,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       }
     });
   }, [canvas, toolbarIsEnabled, isLocalObject, userId]);
-
-  // TODO: Possible to have dynamically sized canvas? With raw canvas it's
-  // possible to set the "pixel (background)" size separately from the
-  // style size. So we can have a fixed resolution draw buffer and it will
-  // be scaled based on the style size. This might be important to make
-  // the canvas size adopt to the content behind it. The content behind
-  // canvas doesn't have a fixed size and could vary between different
-  // activities etc. For now the user will have to pass in the exact
-  // width and height they want to have the canvas in.
-  // Note: Added div wrapper to execute onKeyDown. Once canvas final form
-  // takes place, this may or may not be modified.
 
   return (
     <canvas
