@@ -22,5 +22,7 @@ export declare type Props = {
     filterUsers?: string[];
     display?: boolean;
     scaleMode?: ScaleMode;
+    centerHorizontally?: boolean;
+    centerVertically?: boolean;
 };
 export declare const WhiteboardCanvas: FunctionComponent<Props>;
