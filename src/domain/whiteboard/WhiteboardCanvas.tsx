@@ -69,6 +69,8 @@ export type Props = {
   filterUsers?: string[];
   display?: boolean;
   scaleMode?: ScaleMode;
+  centerHorizontally?: boolean;
+  centerVertically?: boolean;
 };
 
 export const WhiteboardCanvas: FunctionComponent<Props> = ({
@@ -81,13 +83,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   pixelHeight,
   display,
   scaleMode,
+  centerHorizontally,
+  centerVertically,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
   const [wrapper, setWrapper] = useState<HTMLElement>();
   const [lowerCanvas, setLowerCanvas] = useState<HTMLCanvasElement>();
   const [upperCanvas, setUpperCanvas] = useState<HTMLCanvasElement>();
 
-  const { width, height, top, left } = useFixedAspectScaling(wrapper?.parentElement, (pixelWidth / pixelHeight), scaleMode || "ScaleToFit");
+  const { width, height, top, left } = useFixedAspectScaling(wrapper?.parentElement, (pixelWidth / pixelHeight), scaleMode || "ScaleToFit", centerHorizontally || false, centerVertically || false);
 
   // Event serialization for synchronizing whiteboard state.
   const {

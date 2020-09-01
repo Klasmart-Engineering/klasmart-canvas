@@ -3,7 +3,13 @@ import ResizeObserver from 'resize-observer-polyfill';
 
 export type ScaleMode = "ScaleToFit" | "ScaleToFill";
 
-export default function useFixedAspectScaling(parent: Element | undefined | null, aspectRatio: number, scaleMode: ScaleMode) {
+export default function useFixedAspectScaling(
+    parent: Element | undefined | null,
+    aspectRatio: number,
+    scaleMode: ScaleMode,
+    centerHorizontally: boolean,
+    centerVertically: boolean
+) {
     const [top, setTop] = useState<number>(0.0);
     const [left, setLeft] = useState<number>(0.0);
     const [width, setWidth] = useState<number>(0.0);
@@ -34,15 +40,23 @@ export default function useFixedAspectScaling(parent: Element | undefined | null
             }
         }
 
-        const offsetLeft = (containerWidth - width) / 2;
-        setLeft(offsetLeft);
+        if (centerHorizontally) {
+            const offsetLeft = (containerWidth - width) / 2;
+            setLeft(offsetLeft);
+        } else {
+            setLeft(0);
+        }
 
-        const offsetTop = (containerHeight - height) / 2;
-        setTop(offsetTop);
+        if (centerVertically) {
+            const offsetTop = (containerHeight - height) / 2;
+            setTop(offsetTop);
+        } else {
+            setTop(0);
+        }
 
         setWidth(width);
         setHeight(height);
-    }, [aspectRatio, scaleMode]);
+    }, [aspectRatio, centerHorizontally, centerVertically, scaleMode]);
 
     // NOTE: Set up resize observer.
     useEffect(() => {
