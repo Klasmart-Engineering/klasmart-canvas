@@ -21,24 +21,22 @@ export class EventPainterController extends EventEmitter
   }
 
   handlePainterEvent(events: PainterEvent[]): void {
-    setTimeout(() => {
-      for (const event of events) {
-        this.events.push(event);
+    for (const event of events) {
+      this.events.push(event);
 
-        this.parseAndEmitEvent(event);
+      this.parseAndEmitEvent(event);
 
-        // TODO: We can clear the list of events if we receive a
-        // 'clear all' event. We know there wont be any events to
-        // replay to get to current state of whiteboard right after
-        // a clear (whiteboard will be empty). This assumption might
-        // change once we implement Undo/Redo functions though.
+      // TODO: We can clear the list of events if we receive a
+      // 'clear all' event. We know there wont be any events to
+      // replay to get to current state of whiteboard right after
+      // a clear (whiteboard will be empty). This assumption might
+      // change once we implement Undo/Redo functions though.
 
-        // In the Poc it used to look like this:
-        // if (event.type === 'painterClear') {
-        //   this.events.splice(0, this.events.length - 1);
-        // }
-      }
-    }, 10);
+      // In the Poc it used to look like this:
+      // if (event.type === 'painterClear') {
+      //   this.events.splice(0, this.events.length - 1);
+      // }
+    }
   }
 
   private parseAndEmitEvent(event: PainterEvent) {
