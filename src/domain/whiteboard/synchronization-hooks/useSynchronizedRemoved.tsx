@@ -91,10 +91,11 @@ const useSynchronizedRemoved = (
   /** Register and handle local event. */
   useEffect(() => {
     const objectRemoved = (e: fabric.IEvent | CanvasEvent) => {
-      if (!e.target) return;
       if (
-        (e.target as ICanvasObject).id &&
-        !shouldSerializeEvent((e.target as ICanvasObject).id as string)
+        !e.target ||
+        !(e.target as ICanvasObject).id ||
+        ((e.target as ICanvasObject).id &&
+          !shouldSerializeEvent((e.target as ICanvasObject).id as string))
       )
         return;
 

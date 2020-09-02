@@ -721,6 +721,8 @@ export const useCanvasActions = (
         object.set({
           evented: true,
           hoverCursor: `url("${eraseObjectCursor}"), auto`,
+          lockMovementX: true,
+          lockMovementY: true,
         });
       } else if (object.id) {
         object.set({
