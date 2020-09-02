@@ -3,8 +3,6 @@ import '../../assets/style/whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
 import { WhiteboardCanvas } from './WhiteboardCanvas';
-import ToolbarContextProvider from '../../components/toolbar/toolbar-context-provider';
-import ToolbarExample from '../../components/toolbar/toolbar-example';
 
 const teacher = {
   allowClearAll: true,
