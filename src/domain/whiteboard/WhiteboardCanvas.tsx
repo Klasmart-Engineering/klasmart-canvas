@@ -19,7 +19,7 @@ import { useCanvasActions } from './canvas-actions/useCanvasActions';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 import useSynchronizedAdded from './synchronization-hooks/useSynchronizedAdded';
 import useSynchronizedMoved from './synchronization-hooks/useSynchronizedMoved';
-import { isEmptyShape, isFreeDrawing, isShape } from './utils/shapes';
+import { isEmptyShape, isFreeDrawing, isShape, isText } from './utils/shapes';
 import { TypedShape } from '../../interfaces/shapes/shapes';
 
 import '../../assets/style/whiteboard.css';
@@ -613,8 +613,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           );
         }
       }
+
+      // Text Selected
+      if (event.target && isText(event.target)) {
+        const newFont = (event.target as ITextOptions).fontFamily;
+        const newFontColor = event.target.fill;
+
+        if (newFont && newFontColor) {
+          updateFontFamily(newFont);
+          updateFontColor(newFontColor.toString());
+        }
+      }
     },
     [
+      updateFontColor,
+      updateFontFamily,
       brushIsActive,
       reorderShapes,
       shapeIsActive,
