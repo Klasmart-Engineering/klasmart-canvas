@@ -6,6 +6,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useCallback,
 } from 'react';
 import { EventPainterController } from './event-serializer/EventPainterController';
 import { PainterEvent } from './event-serializer/PainterEvent';
@@ -31,11 +32,13 @@ interface IEventSerializerState {
 interface IEventSerializerContext {
   state: IEventSerializerState;
   actions: ICanvasActions;
+  requestAllEvents: () => void;
 }
 
 const Context = createContext<IEventSerializerContext>({
   state: {} as IEventSerializerState,
   actions: {} as ICanvasActions,
+  requestAllEvents: () => { },
 });
 
 // NOTE: This class was added to allow demonstrating synchronizing whiteboard events without any network or server.
@@ -86,22 +89,35 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     };
   }, [eventSerializer, eventController, simulateNetworkSynchronization]);
 
-  // NOTE: This effect sets up simulated persistance. This would simulate
-  // events being sent from the server when the user reloads the page.
-  useEffect(() => {
+
+  // NOTE: Resubmit all events serialized so far.
+  const sendAllPersistentEvents = useCallback(() => {
     if (!eventSerializer || !eventController) return;
     if (!simulateNetworkSynchronization) return;
 
     const stored = window.localStorage.getItem('canvas:simulated:events');
     if (stored !== null) {
       const persistentEvents = JSON.parse(stored);
-      console.log(
-        `applying simulated persistent events: ${persistentEvents.length}`
-      );
+      console.log(`resubmitting persistent events: ${persistentEvents.length}`);
       eventController.handlePainterEvent(persistentEvents);
     }
 
-    let remoteEvents: PainterEvent[] = [];
+  }, [eventController, eventSerializer, simulateNetworkSynchronization]);
+
+  // NOTE: This effect sets up simulated persistance. This would simulate
+  // events being sent from the server when the user reloads the page.
+  useEffect(() => {
+    if (!eventSerializer || !eventController) return;
+    if (!simulateNetworkSynchronization) return;
+
+    let remoteEvents: PainterEvent[] = []
+
+    const stored = window.localStorage.getItem('canvas:simulated:events');
+    if (stored !== null) {
+      const existingEvents = JSON.parse(stored);
+      remoteEvents.push(...existingEvents);
+    }
+
     const storeRemoteEvent = (payload: PainterEvent) => {
       const length = remoteEvents.push(payload);
       console.log(`storing simulated persistance events: ${length}`);
@@ -116,13 +132,8 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
 
     return () => {
       eventSerializer.removeListener('event', storeRemoteEvent);
-    };
-  }, [
-    eventSerializer,
-    eventController,
-    simulatePersistence,
-    simulateNetworkSynchronization,
-  ]);
+    }
+  }, [eventSerializer, eventController, simulatePersistence, simulateNetworkSynchronization, sendAllPersistentEvents]);
 
   return (
     <Context.Provider
@@ -132,6 +143,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
           eventController: eventController,
         },
         actions: {} as ICanvasActions,
+        requestAllEvents: sendAllPersistentEvents
       }}
     >
       {children}
