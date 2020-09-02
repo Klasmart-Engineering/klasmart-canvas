@@ -48,6 +48,7 @@ import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawi
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
+import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -1015,20 +1016,25 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     undoRedoDispatch
   );
+  useSynchronizedLineWidthChanged(
+    canvas,
+    userId,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
 
   /**
    * Send synchronization event for penColor changes.
    * */
   useEffect(() => {
     const objects = canvas?.getActiveObjects();
-
     if (objects && objects.length) {
       objects.forEach((obj: ICanvasObject) => {
         const type: ObjectType = obj.get('type') as ObjectType;
 
         if (obj.id && isLocalObject(obj.id, userId)) {
           const target = () => {
-            return { stroke: obj.stroke, strokeWidth: obj.strokeWidth };
+            return { stroke: obj.stroke };
           };
 
           const payload: ObjectEvent = {
@@ -1041,15 +1047,50 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         }
       });
     }
-  }, [
-    canvas,
-    eventSerializer,
-    userId,
-    penColor,
-    fontColor,
-    undoRedoDispatch,
-    isLocalObject,
-  ]);
+    /* If isLocalObject is added on dependencies,
+    an unecessary colorChange event is triggered */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvas, eventSerializer, userId, penColor, fontColor, undoRedoDispatch]);
+
+  /**
+   * Send synchronization event for lineWidth changes
+   */
+  useEffect(() => {
+    const objects = canvas?.getActiveObjects();
+    const validTypes: string[] = [
+      'rect',
+      'ellipse',
+      'triangle',
+      'polygon',
+      'path',
+    ];
+
+    if (objects && objects.length) {
+      objects.forEach((obj: ICanvasObject) => {
+        const type: ObjectType = obj.get('type') as ObjectType;
+
+        if (
+          obj.id &&
+          isLocalObject(obj.id, userId) &&
+          validTypes.includes(type)
+        ) {
+          const target = () => {
+            return { strokeWidth: lineWidth };
+          };
+
+          const payload: ObjectEvent = {
+            type,
+            target: target() as ICanvasObject,
+            id: obj.id,
+          };
+
+          eventSerializer?.push('lineWidthChanged', payload);
+        }
+      });
+    }
+    // If isLocalObject is added on dependencies, a unecessary event is emmited
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvas, eventSerializer, lineWidth, userId]);
 
   useEffect(() => {
     if (fontColor && canvas) {
@@ -1123,7 +1164,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         id: obj?.id,
       };
 
-      const event = { event: payload, type: 'colorChanged' };
+      const event = { event: payload, type: 'lineWidthChanged' };
 
       undoRedoDispatch({
         type: SET,

@@ -77,6 +77,10 @@ export interface IPainterController {
     event: 'fontColorChanged',
     listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
+  on(
+    event: 'lineWidthChanged',
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
+  ): this;
 
   removeListener(
     event: 'added',
@@ -128,6 +132,10 @@ export interface IPainterController {
   ): this;
   removeListener(
     event: 'fontColorChanged',
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
+  ): this;
+  removeListener(
+    event: 'lineWidthChanged',
     listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
 
