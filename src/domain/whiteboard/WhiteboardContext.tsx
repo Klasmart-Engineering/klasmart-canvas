@@ -288,11 +288,6 @@ export const WhiteboardProvider = ({
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />
       {children}
-
-      <ClearWhiteboardModal
-        clearWhiteboard={clearWhiteboardActionClearMyself}
-      />
-      {children}
     </WhiteboardContext.Provider>
   );
 };
