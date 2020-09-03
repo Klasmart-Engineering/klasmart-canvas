@@ -1,10 +1,10 @@
-/// <reference types="react" />
+import React from 'react';
 import '../toolbar.css';
 interface IToolbarText {
     showInput: boolean;
     text: string;
     updateText: (value: string) => void;
-    writeText: (e: any) => void;
+    writeText: (e: React.ChangeEvent | React.KeyboardEvent) => void;
 }
 /**
  * Render an InputText below of the toolbar

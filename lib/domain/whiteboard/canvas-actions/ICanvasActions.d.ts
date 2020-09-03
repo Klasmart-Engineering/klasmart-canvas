@@ -6,9 +6,14 @@ export interface ICanvasActions {
     changeStrokeColor: (color: string) => void;
     textColor: (color: string) => void;
     discardActiveObject: () => void;
-    addShape: (specific?: string) => void;
+    addShape: (shapeToAdd: string) => void;
     eraseObject: () => void;
     setCanvasSelection: (selection: boolean) => void;
     setHoverCursorObjects: (cursor: string) => void;
+    undo: () => void;
+    redo: () => void;
+    clearWhiteboardClearMySelf: () => void;
+    clearWhiteboardAllowClearOthers: (userId: string) => void;
+    clearWhiteboardClearAll: () => void;
 }
 export default ICanvasActions;
