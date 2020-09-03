@@ -101,8 +101,28 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
       console.log(`resubmitting persistent events: ${persistentEvents.length}`);
       eventController.handlePainterEvent(persistentEvents);
     }
-
   }, [eventController, eventSerializer, simulateNetworkSynchronization]);
+
+  // NOTE: Request fetching all events.
+  const refetchEvents = useCallback(() => {
+    if (!eventSerializer || !eventController) return;
+
+    eventController.requestRefetch();
+  }, [eventController, eventSerializer]);
+
+  // NOTE: This effect listens for refetch request
+  // and resubmits all events when it's invoked.
+  useEffect(() => {
+    if (!simulatePersistence) return;
+    if (!eventController) return;
+
+    eventController.on('refetch', sendAllPersistentEvents);
+
+    return () => {
+      eventController.removeListener('refetch', sendAllPersistentEvents);
+    }
+
+  }, [eventController, sendAllPersistentEvents, simulatePersistence])
 
   // NOTE: This effect sets up simulated persistance. This would simulate
   // events being sent from the server when the user reloads the page.
@@ -143,7 +163,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
           eventController: eventController,
         },
         actions: {} as ICanvasActions,
-        requestAllEvents: sendAllPersistentEvents
+        requestAllEvents: refetchEvents
       }}
     >
       {children}
