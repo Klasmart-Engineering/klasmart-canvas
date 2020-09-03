@@ -2,6 +2,28 @@
 
 ## Content Consistency
 
+#### If canvas is recreated without the context being recreated my own content of canvas disappears.
+
+##### Reproduction Steps (KidsLoop Live)
+
+1. Visit KidsLoop live site.
+2. Go into present mode.
+3. Put some content in the canvas as teacher.
+4. Put some content in the canvas as student.
+5. Go into student mode.
+
+##### Actual Results
+
+- The canvas only contains objects added by student.
+
+##### Expected Results
+
+- The canvas contains the content added in steps 3 and 4.
+
+##### Possible Reason
+
+- The canvas filter incoming events based on user ID. So the objects with user's own ID isn't applied after the canvas instance is recreated.
+
 ### Clear only removes canvas content temporarily.
 
 #### Reproduction Steps
