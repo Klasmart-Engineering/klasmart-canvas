@@ -116,10 +116,14 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     if (!simulatePersistence) return;
     if (!eventController) return;
 
-    eventController.on('refetch', sendAllPersistentEvents);
+    const refetchRequestHandler = () => {
+      sendAllPersistentEvents();
+    }
+
+    eventController.on('refetch', refetchRequestHandler);
 
     return () => {
-      eventController.removeListener('refetch', sendAllPersistentEvents);
+      eventController.removeListener('refetch', refetchRequestHandler);
     }
 
   }, [eventController, sendAllPersistentEvents, simulatePersistence])
