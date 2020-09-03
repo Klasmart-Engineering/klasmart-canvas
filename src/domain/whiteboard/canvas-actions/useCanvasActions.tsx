@@ -8,7 +8,7 @@ import { isFreeDrawing, isShape } from '../utils/shapes';
 import { UNDO, REDO, SET } from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
-import { IEvent, Point } from 'fabric/fabric-impl';
+import { IEvent, Point, ITextOptions } from 'fabric/fabric-impl';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasMouseEvent } from '../../../interfaces/canvas-events/canvas-mouse-event';
 import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
@@ -35,6 +35,7 @@ export const useCanvasActions = (
     penColor,
     lineWidth,
     isLocalObject,
+    updateClearIsActive,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
@@ -529,13 +530,15 @@ export const useCanvasActions = (
 
         const object: ICanvasObject = canvas?.getActiveObject();
 
-        const payload = {
-          type: 'textbox',
-          target: { fill: color },
-          id: object.id,
-        };
+        if (!(object as ITextOptions).isEditing) {
+          const payload = {
+            type: 'textbox',
+            target: { fill: color },
+            id: object.id,
+          };
 
-        eventSerializer?.push('fontColorChanged', payload);
+          eventSerializer?.push('fontColorChanged', payload);
+        }
         return;
       }
 
@@ -572,8 +575,9 @@ export const useCanvasActions = (
   /**
    * Clears all whiteboard elements
    * */
-  const clearWhiteboardClearAll = useCallback(() => {
-    canvas?.getObjects().forEach((obj: ICanvasObject) => {
+  const clearWhiteboardClearAll = useCallback(async () => {
+    await updateClearIsActive(true);
+    await canvas?.getObjects().forEach((obj: ICanvasObject) => {
       if (obj.id) {
         const target = {
           id: obj.id,
@@ -597,13 +601,16 @@ export const useCanvasActions = (
       canvasId: userId,
       event,
     });
-  }, [canvas, eventSerializer, dispatch, userId]);
+
+    await updateClearIsActive(false);
+  }, [canvas, dispatch, userId, updateClearIsActive, eventSerializer]);
 
   /**
    * Clears all whiteboard elements
    * */
-  const clearWhiteboardClearMySelf = useCallback(() => {
-    canvas?.getObjects().forEach((obj: ICanvasObject) => {
+  const clearWhiteboardClearMySelf = useCallback(async () => {
+    await updateClearIsActive(true);
+    await canvas?.getObjects().forEach((obj: ICanvasObject) => {
       if (obj.id && isLocalObject(obj.id, userId)) {
         const target = {
           id: obj.id,
@@ -629,16 +636,18 @@ export const useCanvasActions = (
       event,
     });
 
+    await updateClearIsActive(false);
     // If isLocalObject is added in dependencies an infinity loop happens
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, closeModal, canvasId, eventSerializer]);
+  }, [canvas, closeModal, canvasId, eventSerializer, updateClearIsActive]);
 
   /**
    * Clears all whiteboard with allowClearOthers strategy
    * */
   const clearWhiteboardAllowClearOthers = useCallback(
-    (userId: string) => {
-      canvas?.getObjects().forEach((obj: ICanvasObject) => {
+    async (userId: string) => {
+      await updateClearIsActive(true);
+      await canvas?.getObjects().forEach((obj: ICanvasObject) => {
         if (obj.id) {
           const object = obj.id.split(':');
 
@@ -661,8 +670,9 @@ export const useCanvasActions = (
           eventSerializer?.push('removed', target as ObjectEvent);
         }
       });
+      await updateClearIsActive(false);
     },
-    [canvas, eventSerializer]
+    [canvas, eventSerializer, updateClearIsActive]
   );
 
   /**

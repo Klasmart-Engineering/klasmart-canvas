@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useContext } from 'react';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { ITextOptions } from 'fabric/fabric-impl';
+import { WhiteboardContext } from '../WhiteboardContext';
 
 interface ITarget {
   strategy: string;
@@ -21,6 +23,8 @@ const useSynchronizedRemoved = (
   const {
     state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
+
+  const { clearIsActive } = useContext(WhiteboardContext);
 
   /** Register and handle remote event. */
   useEffect(() => {
@@ -110,8 +114,15 @@ const useSynchronizedRemoved = (
         canvas &&
         payload.id &&
         (!canvasEvent?._objects || groupObjects.length > 0) &&
-        !(e.target as ICanvasObject).groupClear
+        !(e.target as ICanvasObject).groupClear &&
+        !clearIsActive
       ) {
+        if (
+          (e.target as ITextOptions).text &&
+          !(e.target as ITextOptions).text?.trim()
+        )
+          return;
+
         const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
 
         undoRedoDispatch({
@@ -120,9 +131,9 @@ const useSynchronizedRemoved = (
           canvasId: userId,
           event,
         });
-      }
 
-      eventSerializer?.push('removed', payload as ObjectEvent);
+        eventSerializer?.push('removed', payload as ObjectEvent);
+      }
     };
 
     canvas?.on('object:removed', objectRemoved);
@@ -130,7 +141,14 @@ const useSynchronizedRemoved = (
     return () => {
       canvas?.off('object:removed', objectRemoved);
     };
-  }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
+  }, [
+    canvas,
+    clearIsActive,
+    eventSerializer,
+    shouldSerializeEvent,
+    undoRedoDispatch,
+    userId,
+  ]);
 };
 
 export default useSynchronizedRemoved;
