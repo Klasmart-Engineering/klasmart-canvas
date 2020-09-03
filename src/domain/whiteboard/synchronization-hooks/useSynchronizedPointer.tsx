@@ -75,7 +75,6 @@ const useSynchronizedPointer = (
         canvas.defaultCursor = 'default';
         canvas?.remove(laser);
         canvas?.renderAll();
-        eventSerializer.push('removed', { id });
       }
     };
 

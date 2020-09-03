@@ -26,7 +26,6 @@ import '../../assets/style/whiteboard.css';
 import { UndoRedo } from './hooks/useUndoRedoEffect';
 import useSynchronizedColorChanged from './synchronization-hooks/useSynchronizedColorChanged';
 import useSynchronizedFontFamilyChanged from './synchronization-hooks/useSynchronizedFontFamilyChanged';
-import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
 import useSynchronizedRemoved from './synchronization-hooks/useSynchronizedRemoved';
 import useSynchronizedRotated from './synchronization-hooks/useSynchronizedRotated';
 import useSynchronizedScaled from './synchronization-hooks/useSynchronizedScaled';
@@ -476,7 +475,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           console.log(e);
         });
     },
-    [canvas, eventSerializer, isLocalObject, userId]
+    /* If isLocalObject is added on dependencies,
+    an unecessary event is triggered */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [canvas, eventSerializer, userId]
   );
 
   /**
@@ -952,13 +954,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     undoRedoDispatch
   );
-  useSynchronizedModified(
-    canvas,
-    filterOutgoingEvents,
-    filterIncomingEvents,
-    userId,
-    undoRedoDispatch
-  );
   useSynchronizedRemoved(
     canvas,
     userId,
@@ -1032,7 +1027,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       objects.forEach((obj: ICanvasObject) => {
         const type: ObjectType = obj.get('type') as ObjectType;
 
-        if (obj.id && isLocalObject(obj.id, userId)) {
+        if (obj.id && isLocalObject(obj.id, userId) && type !== 'textbox') {
           const target = () => {
             return { stroke: obj.stroke };
           };
