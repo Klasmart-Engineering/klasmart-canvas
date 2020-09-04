@@ -33,7 +33,6 @@ const useSynchronizedPointer = (
 
   /** Emits local event. */
   useEffect(() => {
-
     let trail: Laser;
     const id: string = `${userId}:laser`;
 
@@ -42,10 +41,9 @@ const useSynchronizedPointer = (
      * @param e Canvas event.
      */
     const move = (e: CanvasEvent) => {
-
       if ((e.e as MouseEvent).which && (e.e as MouseEvent).buttons && canvas) {
         canvas.defaultCursor = 'none';
-        trail.update(e.pointer as { x: number, y: number });
+        trail.update(e.pointer as { x: number; y: number });
 
         const top = (e.pointer as fabric.Point).y;
         const left = (e.pointer as fabric.Point).x;
@@ -57,8 +55,16 @@ const useSynchronizedPointer = (
         };
 
         eventSerializer.push('moving', payload);
-      } else if (trail && canvas) {
+      } else if (trail && canvas && !trail.clear) {
         canvas.defaultCursor = 'default';
+
+        const payload: ObjectEvent = {
+          type: 'pointer',
+          target: { groupClear: true } as ICanvasObject,
+          id,
+        };
+
+        eventSerializer.push('moving', payload);
         trail.clearPointer();
       }
     };
@@ -96,7 +102,6 @@ const useSynchronizedPointer = (
 
   /** Register and handle remote moved event. */
   useEffect(() => {
-
     let trail: Laser | null;
 
     /**
@@ -112,8 +117,15 @@ const useSynchronizedPointer = (
         return;
       }
 
-      if (!trail && canvas && target) {
-        trail = new Laser(canvas as fabric.Canvas, target.fill || '#000', 20, 25);
+      if (!trail && canvas && target && !(target as ICanvasObject).groupClear) {
+        trail = new Laser(
+          canvas as fabric.Canvas,
+          target.fill || '#000000',
+          20,
+          25
+        );
+      } else if (trail && (target as ICanvasObject).groupClear) {
+        trail.clearPointer();
       } else if (trail && !target) {
         trail.remove();
         trail = null;
@@ -121,7 +133,7 @@ const useSynchronizedPointer = (
         return;
       }
 
-      trail?.update({ x:target.left, y: target.top });
+      trail?.update({ x: target.left, y: target.top });
     };
 
     eventController?.on('moving', moved);
