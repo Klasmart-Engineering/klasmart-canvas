@@ -101,10 +101,12 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
 
     let remoteEvents: PainterEvent[] = []
     const storeRemoteEvent = (payload: PainterEvent) => {
-      const length = remoteEvents.push(payload);
-      console.log(`storing simulated persistance events: ${length}`);
 
-      window.localStorage.setItem('canvas:simulated:events', JSON.stringify(remoteEvents));
+      // @ts-ignore
+      const length = remoteEvents.push(payload);
+      // console.log(`storing simulated persistance events: ${length}`);
+
+      // window.localStorage.setItem('canvas:simulated:events', JSON.stringify(remoteEvents));
     };
 
     eventSerializer.on('event', storeRemoteEvent);

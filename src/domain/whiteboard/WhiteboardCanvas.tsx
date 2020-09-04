@@ -1367,6 +1367,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       onClick={() => {
         actions.addShape(shape);
       }}
+      z-index={1}
     >
       {children}
     </canvas>
