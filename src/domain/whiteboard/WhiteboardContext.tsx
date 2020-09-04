@@ -22,6 +22,7 @@ import ICanvasActions from './canvas-actions/ICanvasActions';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 import AuthMenu from '../../components/AuthMenu';
+import { useClearIsActive } from './hooks/useClearIsActive';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -53,6 +54,7 @@ export const WhiteboardProvider = ({
   const { textIsActive, updateTextIsActive } = useTextIsActive();
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
+  const { clearIsActive, updateClearIsActive } = useClearIsActive();
   const {
     shapesAreSelectable,
     updateShapesAreSelectable,
@@ -221,6 +223,8 @@ export const WhiteboardProvider = ({
     updateShapeIsActive,
     brushIsActive,
     updateBrushIsActive,
+    clearIsActive,
+    updateClearIsActive,
     updateFontColor,
     lineWidth,
     updateLineWidth,

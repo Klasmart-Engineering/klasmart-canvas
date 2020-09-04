@@ -26,7 +26,6 @@ import '../../assets/style/whiteboard.css';
 import { UndoRedo } from './hooks/useUndoRedoEffect';
 import useSynchronizedColorChanged from './synchronization-hooks/useSynchronizedColorChanged';
 import useSynchronizedFontFamilyChanged from './synchronization-hooks/useSynchronizedFontFamilyChanged';
-import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
 import useSynchronizedRemoved from './synchronization-hooks/useSynchronizedRemoved';
 import useSynchronizedRotated from './synchronization-hooks/useSynchronizedRotated';
 import useSynchronizedScaled from './synchronization-hooks/useSynchronizedScaled';
@@ -46,7 +45,10 @@ import {
 import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
-import useFixedAspectScaling, { ScaleMode } from './utils/useFixedAspectScaling';
+import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
+import useFixedAspectScaling, {
+  ScaleMode,
+} from './utils/useFixedAspectScaling';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -91,7 +93,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   const [lowerCanvas, setLowerCanvas] = useState<HTMLCanvasElement>();
   const [upperCanvas, setUpperCanvas] = useState<HTMLCanvasElement>();
 
-  const { width, height, top, left } = useFixedAspectScaling(wrapper?.parentElement, (pixelWidth / pixelHeight), scaleMode || "ScaleToFit", centerHorizontally || false, centerVertically || false);
+  const { width, height, top, left } = useFixedAspectScaling(
+    wrapper?.parentElement,
+    pixelWidth / pixelHeight,
+    scaleMode || 'ScaleToFit',
+    centerHorizontally || false,
+    centerVertically || false
+  );
 
   // Event serialization for synchronizing whiteboard state.
   const {
@@ -172,39 +180,38 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const upperCanvas = wrapper?.getElementsByClassName('upper-canvas')[0];
 
     if (wrapper) {
-      setWrapper(wrapper)
+      setWrapper(wrapper);
 
       // TODO: We may want to make the position style
       // controlled by property or variable.
-      wrapper.style.position = "absolute";
+      wrapper.style.position = 'absolute';
 
       if (initialStyle && initialStyle.zIndex) {
         wrapper.style.zIndex = String(initialStyle.zIndex);
       }
-    };
+    }
     if (lowerCanvas) setLowerCanvas(lowerCanvas as HTMLCanvasElement);
     if (upperCanvas) setUpperCanvas(upperCanvas as HTMLCanvasElement);
   }, [canvas, initialStyle, instanceId]);
 
-  /** 
+  /**
    * Update wrapper display state.
    */
   useEffect(() => {
     if (!wrapper) return;
 
     if (display === false) {
-      wrapper.style.display = "none";
+      wrapper.style.display = 'none';
     } else {
-      wrapper.style.removeProperty("display")
+      wrapper.style.removeProperty('display');
     }
-  }, [wrapper, display])
+  }, [wrapper, display]);
 
   /**
    * Update the CSS Width/Height
    */
   useEffect(() => {
     if (wrapper && lowerCanvas && upperCanvas) {
-
       const widthStyle = `${width}px`;
       wrapper.style.width = widthStyle;
       lowerCanvas.style.width = widthStyle;
@@ -218,8 +225,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       const wrapperTransform = `translate(${left}px, ${top}px)`;
       wrapper.style.transform = wrapperTransform;
 
-      wrapper.style.top = "0px";
-      wrapper.style.left = "0px";
+      wrapper.style.top = '0px';
+      wrapper.style.left = '0px';
     }
   }, [wrapper, lowerCanvas, upperCanvas, width, height, left, top]);
 
@@ -508,7 +515,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           console.log(e);
         });
     },
-    [canvas, eventSerializer, isLocalObject, userId]
+    /* If isLocalObject is added on dependencies,
+    an unecessary event is triggered */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [canvas, eventSerializer, userId]
   );
 
   /**
@@ -986,13 +996,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     undoRedoDispatch
   );
-  useSynchronizedModified(
-    canvas,
-    filterOutgoingEvents,
-    filterIncomingEvents,
-    userId,
-    undoRedoDispatch
-  );
   useSynchronizedRemoved(
     canvas,
     userId,
@@ -1050,20 +1053,25 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     undoRedoDispatch
   );
+  useSynchronizedLineWidthChanged(
+    canvas,
+    userId,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
 
   /**
    * Send synchronization event for penColor changes.
    * */
   useEffect(() => {
     const objects = canvas?.getActiveObjects();
-
     if (objects && objects.length) {
       objects.forEach((obj: ICanvasObject) => {
         const type: ObjectType = obj.get('type') as ObjectType;
 
-        if (obj.id && isLocalObject(obj.id, userId)) {
+        if (obj.id && isLocalObject(obj.id, userId) && type !== 'textbox') {
           const target = () => {
-            return { stroke: obj.stroke, strokeWidth: obj.strokeWidth };
+            return { stroke: obj.stroke };
           };
 
           const payload: ObjectEvent = {
@@ -1076,15 +1084,50 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         }
       });
     }
-  }, [
-    canvas,
-    eventSerializer,
-    userId,
-    penColor,
-    fontColor,
-    undoRedoDispatch,
-    isLocalObject,
-  ]);
+    /* If isLocalObject is added on dependencies,
+    an unecessary colorChange event is triggered */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvas, eventSerializer, userId, penColor, fontColor, undoRedoDispatch]);
+
+  /**
+   * Send synchronization event for lineWidth changes
+   */
+  useEffect(() => {
+    const objects = canvas?.getActiveObjects();
+    const validTypes: string[] = [
+      'rect',
+      'ellipse',
+      'triangle',
+      'polygon',
+      'path',
+    ];
+
+    if (objects && objects.length) {
+      objects.forEach((obj: ICanvasObject) => {
+        const type: ObjectType = obj.get('type') as ObjectType;
+
+        if (
+          obj.id &&
+          isLocalObject(obj.id, userId) &&
+          validTypes.includes(type)
+        ) {
+          const target = () => {
+            return { strokeWidth: lineWidth };
+          };
+
+          const payload: ObjectEvent = {
+            type,
+            target: target() as ICanvasObject,
+            id: obj.id,
+          };
+
+          eventSerializer?.push('lineWidthChanged', payload);
+        }
+      });
+    }
+    // If isLocalObject is added on dependencies, a unecessary event is emmited
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvas, eventSerializer, lineWidth, userId]);
 
   useEffect(() => {
     if (fontColor && canvas) {
@@ -1158,7 +1201,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         id: obj?.id,
       };
 
-      const event = { event: payload, type: 'colorChanged' };
+      const event = { event: payload, type: 'lineWidthChanged' };
 
       undoRedoDispatch({
         type: SET,
@@ -1367,6 +1410,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       onClick={() => {
         actions.addShape(shape);
       }}
+      z-index={1}
     >
       {children}
     </canvas>

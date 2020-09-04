@@ -1,11 +1,10 @@
 import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
-import { laserPointer } from '../shapes/shapes';
-import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
+import { Laser } from '../utils/laser';
 
 /**
  * Handles laser pointer events.
@@ -34,35 +33,20 @@ const useSynchronizedPointer = (
 
   /** Emits local event. */
   useEffect(() => {
+    let trail: Laser;
+    const id: string = `${userId}:laser`;
+
     /**
      * Handles moving event for laser pointer. Emits event to other users.
      * @param e Canvas event.
      */
     const move = (e: CanvasEvent) => {
-      const id: string = `${userId}:laser`;
-      let laser: ICanvasObject | undefined = canvas
-        ?.getObjects()
-        .filter((o: ICanvasObject) => o.id === id)[0];
-
       if ((e.e as MouseEvent).which && (e.e as MouseEvent).buttons && canvas) {
         canvas.defaultCursor = 'none';
+        trail.update(e.pointer as { x: number; y: number });
 
-        if (!laser) {
-          laser = laserPointer();
-          laser.set({
-            id,
-            fill: laserColor,
-          });
-
-          canvas?.add(laser);
-          canvas?.renderAll();
-        }
-
-        const top = (e.pointer as fabric.Point).y + 3;
-        const left = (e.pointer as fabric.Point).x - 18;
-
-        laser.set({ top, left });
-        canvas?.renderAll();
+        const top = (e.pointer as fabric.Point).y;
+        const left = (e.pointer as fabric.Point).x;
 
         const payload: ObjectEvent = {
           type: 'pointer',
@@ -71,20 +55,39 @@ const useSynchronizedPointer = (
         };
 
         eventSerializer.push('moving', payload);
-      } else if (laser && canvas) {
+      } else if (trail && canvas && !trail.clear) {
         canvas.defaultCursor = 'default';
-        canvas?.remove(laser);
-        canvas?.renderAll();
-        eventSerializer.push('removed', { id });
+
+        const payload: ObjectEvent = {
+          type: 'pointer',
+          target: { groupClear: true } as ICanvasObject,
+          id,
+        };
+
+        eventSerializer.push('moving', payload);
+        trail.clearPointer();
       }
     };
 
     if (laserIsActive && (universalPermits(userId) || allowPointer)) {
+      trail = new Laser(canvas as fabric.Canvas, laserColor, 20, 25);
       canvas?.renderAll();
       canvas?.on('mouse:move', move);
     }
 
     return () => {
+      if (trail) {
+        trail.remove();
+
+        const payload: ObjectEvent = {
+          type: 'pointer',
+          target: false,
+          id,
+        };
+
+        eventSerializer.push('moving', payload);
+      }
+
       canvas?.off('mouse:move', move);
     };
   }, [
@@ -99,6 +102,8 @@ const useSynchronizedPointer = (
 
   /** Register and handle remote moved event. */
   useEffect(() => {
+    let trail: Laser | null;
+
     /**
      * Handles moving event for laser pointer. Receives event.
      * @param id User ID. Used for determining if event should be handled.
@@ -112,24 +117,23 @@ const useSynchronizedPointer = (
         return;
       }
 
-      const pointer = canvas
-        ?.getObjects()
-        .filter((o: ICanvasObject) => o.id === id)[0];
-      const laser: TypedShape = pointer ? pointer : laserPointer();
-
-      if (!pointer) {
-        laser.set({
-          selectable: false,
-          evented: false,
-          id,
-          fill: target.fill || '#000',
-        });
-        canvas?.add(laser);
-        canvas?.renderAll();
+      if (!trail && canvas && target && !(target as ICanvasObject).groupClear) {
+        trail = new Laser(
+          canvas as fabric.Canvas,
+          target.fill || '#000000',
+          20,
+          25
+        );
+      } else if (trail && (target as ICanvasObject).groupClear) {
+        trail.clearPointer();
+      } else if (trail && !target) {
+        trail.remove();
+        trail = null;
+      } else if (!trail && !canvas) {
+        return;
       }
 
-      laser.set({ top: target.top, left: target.left });
-      canvas?.renderAll();
+      trail?.update({ x: target.left, y: target.top });
     };
 
     eventController?.on('moving', moved);

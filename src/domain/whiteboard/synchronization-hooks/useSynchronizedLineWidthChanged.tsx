@@ -1,9 +1,9 @@
-import { useEffect } from 'react';
 import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { useEffect } from 'react';
 
-const useSynchronizedColorChanged = (
+const useSynchronizedLineWidthChanged = (
   canvas: fabric.Canvas | undefined,
   userId: string,
   shouldHandleRemoteEvent: (id: string) => boolean,
@@ -12,39 +12,27 @@ const useSynchronizedColorChanged = (
   const {
     state: { eventController },
   } = useSharedEventSerializer();
-
   useEffect(() => {
-    const colorChanged = (
+    const widthChanged = (
       id: string,
       objectType: string,
       target: ICanvasObject
     ) => {
+      const validTypes: string[] = [
+        'rect',
+        'ellipse',
+        'triangle',
+        'polygon',
+        'path',
+      ];
+
       if (id && !shouldHandleRemoteEvent(id)) return;
-
-      if (objectType === 'background' && canvas) {
-        canvas.backgroundColor = target.fill?.toString();
-      }
-
       canvas?.forEachObject(function (obj: ICanvasObject) {
-        if (obj.id && obj.id === id && objectType !== 'textbox') {
-          if (objectType === 'shape') {
+        if (obj.id && obj.id === id) {
+          if (validTypes.includes(objectType)) {
             obj.set({
-              fill: target.fill,
+              strokeWidth: target.strokeWidth,
             });
-          } else {
-            obj.set({
-              stroke: target.stroke,
-            });
-          }
-        }
-
-        if (objectType === 'shape') {
-          const index = target.objectsOrdering?.find(
-            (find) => obj.id === find.id
-          )?.index;
-
-          if (index !== undefined) {
-            obj.moveTo(index);
           }
         }
       });
@@ -58,10 +46,10 @@ const useSynchronizedColorChanged = (
       canvas?.renderAll();
     };
 
-    eventController?.on('colorChanged', colorChanged);
+    eventController?.on('lineWidthChanged', widthChanged);
 
     return () => {
-      eventController?.removeListener('colorChanged', colorChanged);
+      eventController?.removeListener('lineWidthChanged', widthChanged);
     };
   }, [
     canvas,
@@ -72,4 +60,4 @@ const useSynchronizedColorChanged = (
   ]);
 };
 
-export default useSynchronizedColorChanged;
+export default useSynchronizedLineWidthChanged;
