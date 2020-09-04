@@ -11,7 +11,8 @@ export type PainterEventType =
   | 'reconstruct'
   | 'moving'
   | 'setToolbarPermissions'
-  | 'fontColorChanged';
+  | 'fontColorChanged'
+  | 'lineWidthChanged';
 
 export interface PainterEvent {
   // The event type.
