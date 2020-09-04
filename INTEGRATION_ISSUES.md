@@ -27,37 +27,44 @@
 ### Clear only removes canvas content temporarily.
 
 #### Reproduction Steps
+
 1. Draw some shapes on the canvas.
 2. Use the `Clear Myself` or `Clear All`
 3. The content disappear.
 4. Reload page.
 
 ##### Actual Results
+
 - The previously cleared content is visible after the reload.
 
 ##### Expected Result
+
 - The previously cleared content is not visible after the reload.
 
 ### Clear generates multiple events in canvas.
 
 #### Reproduction Steps
+
 1. Draw some shapes on the canvas.
 2. Use the `Clear Myself` or `Clear All`
 3. The content disappears.
 
 ##### Actual Results
+
 At least two events is generated for each object removed from the whiteboard.
 
 ##### Expected Results
+
 Only one event is generated for each object removed.
 
 ##### Remarks
+
 It would be good if clear command doesn't have to generate one event for each object that's removed. It would be better if the clear event is just
-one single event and deleting the objects is handled on the client. For example: { type: clear, payload: { filter?: [string] }}. The filter array of strings would specify which user's content to clear. If undefined it would clear all. 
+one single event and deleting the objects is handled on the client. For example: { type: clear, payload: { filter?: [string] }}. The filter array of strings would specify which user's content to clear. If undefined it would clear all.
 
 ## Add Text Tool
 
-#### When adding text the input box doesn't get enlarged when characters are being typed.
+#### When adding text the input box doesn't get enlarged when characters are being typed (Only in Brave browser)
 
 #### Reproduction Steps
 
@@ -73,7 +80,7 @@ one single event and deleting the objects is handled on the client. For example:
 
 - The text editor box is at right location and resize automatically as text is being typed.
 
-#### Editing text doesn't display the cursor at selected location.
+#### Editing text doesn't display the cursor at selected location. (Only in Brave browser)
 
 #### Reproduction Steps
 
