@@ -37,7 +37,6 @@ const useSynchronizedAdded = (
       }
 
       if (!e.path.id) throw new Error(`path doesn't have any ID`);
-
       if (!shouldSerializeEvent(e.path.id)) return;
 
       const target = {
@@ -89,9 +88,8 @@ const useSynchronizedAdded = (
 
       const type: ObjectType = (e.target.get('type') || 'path') as ObjectType;
 
-      if (type === 'path') {
-        return;
-      }
+      // NOTE: Path events is handled separately by the 'path:created' handler.
+      if (type === 'path') return;
 
       if (!e.target.id) {
         PainterEvents.generateAndSetIdForTarget(userId, e.target);
