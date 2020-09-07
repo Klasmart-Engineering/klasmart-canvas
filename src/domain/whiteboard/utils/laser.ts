@@ -235,7 +235,6 @@ export class Laser {
    */
   private fadeAway() {
     let context = this.context;
-    // let alpha = this.alpha;
     let colorProps = this.hexToRgb(this.color);
 
     this.fadeInterval = setInterval(() => {
