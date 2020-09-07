@@ -49,6 +49,7 @@ import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchron
 import useFixedAspectScaling, {
   ScaleMode,
 } from './utils/useFixedAspectScaling';
+import { PainterEvents } from './event-serializer/PainterEvents';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -123,7 +124,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     fontColor,
     updateFontColor,
     penColor,
-    isLocalObject,
     eraseType,
     shape,
     shapeColor,
@@ -146,11 +146,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
+    userId,
+    instanceId,
     canvas,
     undoRedoDispatch,
-    instanceId,
     eventSerializer,
-    userId
   );
 
   /**
@@ -261,7 +261,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     canvas.getObjects().forEach((object: ICanvasObject) => {
-      if ((object.id && isLocalObject(object.id, userId)) || !object.id) {
+      if ((object.id && PainterEvents.isCreatedWithId(object.id, userId)) || !object.id) {
         object.set({
           selectable: shapesAreSelectable,
           evented: shapesAreSelectable || shapesAreEvented,
@@ -271,7 +271,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     canvas.selection = shapesAreSelectable;
     canvas.renderAll();
-  }, [canvas, isLocalObject, shapesAreEvented, shapesAreSelectable, userId]);
+  }, [canvas, shapesAreEvented, shapesAreSelectable, userId]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -359,10 +359,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     const pathCreated = (e: ICanvasDrawingEvent) => {
-      if (e.path) {
-        e.path.strokeUniform = true;
-        canvas?.renderAll();
-      }
+      if (!e.path) throw new Error('path:created event without path object.');
+
+      e.path.strokeUniform = true;
+      canvas?.renderAll();
     };
 
     if (brushIsActive && canvas) {
@@ -379,7 +379,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      canvas?.off('path:created');
+      canvas?.off('path:created', pathCreated);
     };
   }, [brushIsActive, canvas, lineWidth, penColor, toolbarIsEnabled]);
 
@@ -400,7 +400,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (shape && shapeIsActive && toolbarIsEnabled) {
       actions.discardActiveObject();
       canvas?.forEachObject((object: ICanvasObject) => {
-        if (object.id && isLocalObject(object.id, userId)) {
+        if (object.id && PainterEvents.isCreatedWithId(object.id, userId)) {
           object.set({
             evented: false,
             selectable: false,
@@ -424,24 +424,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         canvas?.off('mouse:move');
       }
     };
-  }, [
-    canvas,
-    shape,
-    shapeIsActive,
-    mouseDown,
-    penColor,
-    shapeColor,
-    actions,
-    textIsActive,
-    userId,
-    floodFillIsActive,
-    shapesAreSelectable,
-    eraseType,
-    shapesAreEvented,
-    isLocalObject,
-    laserIsActive,
-    toolbarIsEnabled,
-  ]);
+  }, [canvas, shape, shapeIsActive, mouseDown, penColor, shapeColor, actions, textIsActive, userId, floodFillIsActive, shapesAreSelectable, eraseType, shapesAreEvented, laserIsActive, toolbarIsEnabled]);
 
   /**
    * General handler for keyboard events
@@ -501,7 +484,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
             if (objects && objects.length) {
               objects.forEach((obj: ICanvasObject) => {
-                if (obj.id && isLocalObject(obj.id, userId)) {
+                if (obj.id && PainterEvents.isCreatedWithId(obj.id, userId)) {
                   const type = obj.get('type');
 
                   if (type === 'textbox') {
@@ -526,9 +509,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           console.log(e);
         });
     },
-    /* If isLocalObject is added on dependencies,
-    an unecessary event is triggered */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [canvas, eventSerializer, userId]
   );
 
@@ -732,7 +712,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (eventedObjects) {
       canvas?.forEachObject((object: ICanvasObject) => {
-        if (object.id && isLocalObject(object.id, userId)) {
+        if (object.id && PainterEvents.isCreatedWithId(object.id, userId)) {
           setObjectControlsVisibility(object, true);
           object.set({
             evented: true,
@@ -746,7 +726,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       actions.setHoverCursorObjects('move');
     }
-  }, [actions, canvas, eventedObjects, isLocalObject, userId]);
+  }, [actions, canvas, eventedObjects, userId]);
 
   /**
    * Manages the logic for Flood-fill Feature
@@ -761,7 +741,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const differentBackground = '#dadada';
 
     const isLocalShape = (shape: TypedShape) => {
-      return shape.id && isLocalObject(shape.id, userId);
+      return shape.id && PainterEvents.isCreatedWithId(shape.id, userId);
     };
 
     if (floodFillIsActive && canvas && toolbarIsEnabled) {
@@ -917,22 +897,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         canvas?.off('mouse:down');
       }
     };
-  }, [
-    actions,
-    canvas,
-    floodFill,
-    floodFillIsActive,
-    getColorInCoord,
-    isLocalObject,
-    manageShapeOutsideClick,
-    userId,
-    textIsActive,
-    eventSerializer,
-    reorderShapes,
-    eraseType,
-    undoRedoDispatch,
-    toolbarIsEnabled,
-  ]);
+  }, [actions, canvas, floodFill, floodFillIsActive, getColorInCoord, manageShapeOutsideClick, userId, textIsActive, eventSerializer, reorderShapes, eraseType, undoRedoDispatch, toolbarIsEnabled]);
 
   /**
    * If the input field (text) has length
@@ -961,15 +926,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     (id: string): boolean => {
       if (!id) return false;
 
-      const apply = isLocalObject(id, userId);
-      if (apply) {
-        //console.log(`send local event ${id} to remote`);
-        return apply;
-      }
-
-      return false;
+      return PainterEvents.isCreatedWithId(id, userId);
     },
-    [isLocalObject, userId]
+    [userId]
   );
 
   const filterIncomingEvents = useCallback(
@@ -984,13 +943,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       // TODO: Filter based on the filterUsers list. We should only
       // display events coming from users in that list if the list
       // isn't undefined.
-      const apply = !isLocalObject(id, userId);
-      if (apply) {
-        // console.log(`apply remote event ${id} locally.`);
-      }
-      return apply;
+
+      return !PainterEvents.isCreatedWithId(id, userId);
     },
-    [isLocalObject, userId]
+    [userId]
   );
 
   useSynchronizedAdded(
@@ -1080,7 +1036,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       objects.forEach((obj: ICanvasObject) => {
         const type: ObjectType = obj.get('type') as ObjectType;
 
-        if (obj.id && isLocalObject(obj.id, userId) && type !== 'textbox') {
+        if (obj.id && PainterEvents.isCreatedWithId(obj.id, userId) && type !== 'textbox') {
           const target = () => {
             return { stroke: obj.stroke };
           };
@@ -1119,7 +1075,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         if (
           obj.id &&
-          isLocalObject(obj.id, userId) &&
+          PainterEvents.isCreatedWithId(obj.id, userId) &&
           validTypes.includes(type)
         ) {
           const target = () => {
@@ -1402,14 +1358,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useEffect(() => {
     canvas?.forEachObject((object: ICanvasObject) => {
-      if (object.id && isLocalObject(object.id, userId)) {
+      if (object.id && PainterEvents.isCreatedWithId(object.id, userId)) {
         object.set({
           evented: toolbarIsEnabled,
           selectable: toolbarIsEnabled,
         });
       }
     });
-  }, [canvas, toolbarIsEnabled, isLocalObject, userId]);
+  }, [canvas, toolbarIsEnabled, userId]);
 
   return (
     <canvas
