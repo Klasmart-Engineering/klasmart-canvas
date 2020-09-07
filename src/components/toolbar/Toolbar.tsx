@@ -68,9 +68,8 @@ function Toolbar() {
     redo,
     updateShapesAreEvented,
     updateLaserIsActive,
-    allowPointer,
-    universalPermits,
     toolbarIsEnabled,
+    pointerIsEnabled,
   } = useContext(WhiteboardContext);
 
   /**
@@ -79,7 +78,7 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
-    if (tool === ELEMENTS.LASER_TOOL && !allowPointer && !universalPermits) {
+    if (tool === ELEMENTS.LASER_TOOL && !pointerIsEnabled) {
       return;
     }
 

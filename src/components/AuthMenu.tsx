@@ -16,6 +16,7 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 const options = ['Revoke all Users', 'Authorize all Users'];
+const pointerOptions = ['Pointer: Revoke all users', 'Pointer: Authorize all users']
 
 export default function AuthMenu(props: {
   userId: string;
@@ -40,6 +41,7 @@ export default function AuthMenu(props: {
   ) => {
     setSelectedIndex(index);
     setAnchorEl(null);
+    debugger;
     if (index === 1) {
       const payload = {
         id: userId,
@@ -81,10 +83,15 @@ export default function AuthMenu(props: {
             aria-controls="lock-menu"
             onClick={handleClickListItem}
           >
-            <ListItemText
-              primary="Authorize"
-              secondary={options[selectedIndex]}
-            />
+          <ListItemText
+            primary="Authorize"
+            secondary={options[selectedIndex]}
+          />
+          <ListItemText
+            style={{ paddingLeft: '20px' }}
+            primary="Authorize Pointer"
+            secondary={pointerOptions[selectedIndex]}
+          />
           </ListItem>
         </List>
         <Menu

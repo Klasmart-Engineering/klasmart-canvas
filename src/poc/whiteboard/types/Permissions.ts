@@ -9,6 +9,7 @@ export interface Permissions {
     own: boolean;
     others: boolean;
   };
+  allowPointer: boolean;
 }
 
 export const createPermissions = (isTeacher: boolean): Permissions => {
@@ -31,6 +32,7 @@ export const createEmptyPermissions = (): Permissions => {
       own: false,
       others: false,
     },
+    allowPointer: false,
   };
 };
 
@@ -46,6 +48,7 @@ export const createTeacherPermissions = (): Permissions => {
       own: true,
       others: true,
     },
+    allowPointer: true,
   };
 };
 
@@ -61,5 +64,6 @@ export const createStudentPermissions = (): Permissions => {
       own: true,
       others: false,
     },
+    allowPointer: false,
   };
 };

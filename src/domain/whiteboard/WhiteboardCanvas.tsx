@@ -138,10 +138,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateShapeColor,
     floodFill,
     laserIsActive,
-    allowPointer,
-    universalPermits,
     toolbarIsEnabled,
     setToolbarIsEnabled,
+    pointerIsEnabled,
+    setPointerIsEnabled,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -1033,19 +1033,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useSynchronizedFontFamilyChanged(canvas, filterIncomingEvents);
   useSynchronizedPointer(
     canvas,
-    !allowPointer,
-    universalPermits,
+    pointerIsEnabled,
     filterIncomingEvents,
     userId,
     penColor,
-    laserIsActive,
-    allowPointer
+    laserIsActive
   );
   useSynchronizedSetToolbarPermissions(
     canvas,
     userId,
     filterIncomingEvents,
-    setToolbarIsEnabled
+    setToolbarIsEnabled,
+    setPointerIsEnabled
   );
   useSynchronizedFontColorChanged(
     canvas,
