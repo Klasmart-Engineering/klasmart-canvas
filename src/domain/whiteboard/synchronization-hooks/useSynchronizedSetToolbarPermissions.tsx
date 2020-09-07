@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 const useSynchronizedSetToolbarPermissions = (
   canvas: fabric.Canvas | undefined,
   userId: string,
-  shouldHandleRemoteEvent: (id: string) => boolean,
+  shouldHandleRemoteEvent: EventFilterFunction,
   setToolbarIsEnabled: (enabled: boolean) => void
 ) => {
   const {

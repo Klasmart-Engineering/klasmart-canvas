@@ -9,12 +9,14 @@ import {
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 const useSynchronizedRotated = (
   canvas: fabric.Canvas | undefined,
   userId: string,
-  shouldSerializeEvent: (id: string) => boolean,
-  shouldHandleRemoteEvent: (id: string) => boolean,
+  generatedBy: string,
+  shouldSerializeEvent: EventFilterFunction,
+  shouldHandleRemoteEvent: EventFilterFunction,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
   const {
@@ -23,8 +25,8 @@ const useSynchronizedRotated = (
 
   /** Register and handle remote event. */
   useEffect(() => {
-    const rotated = (id: string, objectType: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const rotated = (id: string, generatedBy: string, objectType: string, target: ICanvasObject) => {
+      if (!shouldHandleRemoteEvent(id, generatedBy)) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
@@ -39,6 +41,7 @@ const useSynchronizedRotated = (
               flipY: target.flipY,
               originX: 'center',
               originY: 'center',
+              generatedBy,
             });
             obj.set({ left: obj.left - 1 });
             obj.setCoords();
@@ -53,6 +56,7 @@ const useSynchronizedRotated = (
               flipY: target.flipY,
               originX: target.originX || 'left',
               originY: target.originY || 'top',
+              generatedBy,
             });
             obj.setCoords();
           }
@@ -81,7 +85,10 @@ const useSynchronizedRotated = (
         const targetObjects = (e.target as ICanvasObject)._objects;
 
         targetObjects?.forEach((activeObject: ICanvasObject) => {
-          if (activeObject.id && !shouldSerializeEvent(activeObject.id)) return;
+          if (!activeObject.id) throw new Error('Rotated object without id');
+          if (!activeObject.generatedBy) throw new Error('Rotated object without generatedBy');
+
+          if (activeObject.id && !shouldSerializeEvent(activeObject.id, activeObject.generatedBy)) return;
 
           const matrix = activeObject.calcTransformMatrix();
           const options = fabric.util.qrDecompose(matrix);
@@ -129,7 +136,7 @@ const useSynchronizedRotated = (
 
           activeIds.push(activeObject.id as string);
 
-          eventSerializer?.push('rotated', payload);
+          eventSerializer?.push('rotated', generatedBy, payload);
         });
 
         let svg = canvas?.getActiveObject().toSVG();
@@ -151,17 +158,19 @@ const useSynchronizedRotated = (
 
         undoRedoDispatch({
           type: SET_GROUP,
-          payload: [ ...filtered as any[], active ],
+          payload: [...filtered as any[], active],
           canvasId: userId,
           event: event as unknown as IUndoRedoEvent,
         });
 
       } else {
-        if (!(e.target as ICanvasObject).id) {
-          return;
-        }
+        const canvasObject = e.target as ICanvasObject;
+        if (!canvasObject.id) throw new Error('Rotated object without id');
+        if (!canvasObject.generatedBy) throw new Error('Rotated object without generatedBy');
 
-        const id = (e.target as ICanvasObject).id;
+        if (!shouldSerializeEvent(canvasObject.id, canvasObject.generatedBy)) return;
+
+        const id = canvasObject.id;
 
         const target = {
           top: e.target.top,
@@ -190,7 +199,7 @@ const useSynchronizedRotated = (
           });
         }
 
-        eventSerializer?.push('rotated', payload);
+        eventSerializer?.push('rotated', generatedBy, payload);
       }
     };
 
@@ -199,7 +208,7 @@ const useSynchronizedRotated = (
     return () => {
       canvas?.off('object:rotated', objectRotated);
     };
-  }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
+  }, [canvas, eventSerializer, generatedBy, shouldSerializeEvent, undoRedoDispatch, userId]);
 };
 
 export default useSynchronizedRotated;

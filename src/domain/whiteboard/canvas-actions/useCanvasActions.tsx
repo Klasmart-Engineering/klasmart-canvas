@@ -21,6 +21,7 @@ import { PainterEvents } from '../event-serializer/PainterEvents';
 export const useCanvasActions = (
   userId: string,
   canvasId: string,
+  generatedBy: string,
   canvas?: fabric.Canvas,
   dispatch?: any,
   eventSerializer?: any,
@@ -608,10 +609,8 @@ export const useCanvasActions = (
       }) !== undefined;
     });
 
-    console.log(`clear: removing ${removeObjects.length} objects.`);
-
     removeObjects.forEach((obj: ICanvasObject) => {
-      obj.set({ groupClear: true });
+      obj.set({ groupClear: true, generatedBy });
     });
 
     canvas.remove(...removeObjects);
@@ -626,7 +625,7 @@ export const useCanvasActions = (
     });
 
     updateClearIsActive(false);
-  }, [canvas, dispatch, permissions.allowClearAll, permissions.allowClearMyself, permissions.allowClearOthers, updateClearIsActive, userId]);
+  }, [canvas, dispatch, generatedBy, permissions.allowClearAll, permissions.allowClearMyself, permissions.allowClearOthers, updateClearIsActive, userId]);
 
   const clearSelf = useCallback(() => {
     clear([userId]);
@@ -710,13 +709,23 @@ export const useCanvasActions = (
         ((e.target.id && PainterEvents.isCreatedWithId(e.target.id, userId)) ||
           !e.target.id)
       ) {
+
+        const canvasObject = e.target as ICanvasObject;
+        canvasObject.set({
+          generatedBy
+        });
+
         canvas.remove(e.target);
         canvas.renderAll();
       }
 
       // if the click is made over an object group
       if (e.target?._objects) {
-        e.target._objects.forEach(function (object: fabric.Object) {
+        e.target._objects.forEach(function (object: ICanvasObject) {
+          object.set({
+            generatedBy
+          });
+
           canvas.remove(object);
         });
 
@@ -737,7 +746,14 @@ export const useCanvasActions = (
           PainterEvents.isCreatedWithId(e.target.id, userId)) ||
         (e.target && !e.target.id)
       ) {
-        canvas.remove(e.target);
+
+        const canvasObject = e.target as ICanvasObject;
+
+        canvasObject.set({
+          generatedBy
+        });
+
+        canvas.remove(canvasObject);
         canvas.renderAll();
       }
     });
@@ -751,7 +767,7 @@ export const useCanvasActions = (
       canvas.defaultCursor = 'default';
       eraser = false;
     });
-  }, [canvas, userId]);
+  }, [canvas, generatedBy, userId]);
 
   /**
    * Deselect the actual selected object

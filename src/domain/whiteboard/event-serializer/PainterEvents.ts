@@ -47,8 +47,8 @@ export class PainterEvents {
     }
   }
 
-  public static generateAndSetIdForTarget(userId: string, target: any): void {
+  public static generateAndSetIdForTarget(userId: string, generatedBy: string, target: any): void {
     const id = PainterEvents.createId(userId);
-    target.set({ id });
+    target.set({ id, generatedBy });
   }
 }

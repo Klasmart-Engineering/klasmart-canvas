@@ -9,12 +9,14 @@ import {
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 const useSynchronizedScaled = (
   canvas: fabric.Canvas | undefined,
   userId: string,
-  shouldSerializeEvent: (id: string) => boolean,
-  shouldHandleRemoteEvent: (id: string) => boolean,
+  generatedBy: string,
+  shouldSerializeEvent: EventFilterFunction,
+  shouldHandleRemoteEvent: EventFilterFunction,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
   const {
@@ -23,8 +25,8 @@ const useSynchronizedScaled = (
 
   /** Register and handle remote event. */
   useEffect(() => {
-    const scaled = (id: string, objectType: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const scaled = (id: string, generatedBy: string, objectType: string, target: ICanvasObject) => {
+      if (!shouldHandleRemoteEvent(id, generatedBy)) return;
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
           if (objectType === 'activeSelection' && target.left && obj.left) {
@@ -38,6 +40,7 @@ const useSynchronizedScaled = (
               flipY: target.flipY,
               originX: 'center',
               originY: 'center',
+              generatedBy,
             });
             obj.set({ left: obj.left - 1 });
             obj.setCoords();
@@ -52,6 +55,7 @@ const useSynchronizedScaled = (
               flipY: target.flipY,
               originX: target.originX || 'left',
               originY: target.originY || 'top',
+              generatedBy,
             });
             obj.setCoords();
           }
@@ -77,7 +81,11 @@ const useSynchronizedScaled = (
         const groupObjects = (e.target as ICanvasObject)._objects || [];
 
         groupObjects.forEach((activeObject: ICanvasObject) => {
-          if (activeObject.id && !shouldSerializeEvent(activeObject.id)) return;
+
+          if (!activeObject.id) throw new Error('Scaled object without id');
+          if (!activeObject.generatedBy) throw new Error('Scaled object without generatedBy');
+
+          if (activeObject.id && !shouldSerializeEvent(activeObject.id, activeObject.generatedBy)) return;
 
           const matrix = activeObject.calcTransformMatrix();
           const options = fabric.util.qrDecompose(matrix);
@@ -123,7 +131,7 @@ const useSynchronizedScaled = (
 
           activeIds.push(activeObject.id as string);
 
-          eventSerializer?.push('scaled', payload);
+          eventSerializer?.push('scaled', generatedBy, payload);
         });
 
         const payload = {
@@ -142,17 +150,17 @@ const useSynchronizedScaled = (
 
         undoRedoDispatch({
           type: SET_GROUP,
-          payload: [ ...filtered as any[], active ],
+          payload: [...filtered as any[], active],
           canvasId: userId,
           event: event as unknown as IUndoRedoEvent,
         });
-      
-      } else {
-        if (!(e.target as ICanvasObject).id) {
-          return;
-        }
 
-        if (!shouldSerializeEvent((e.target as ICanvasObject).id as string)) return;
+      } else {
+        const canvasObject = e.target as ICanvasObject;
+        if (!canvasObject.id) throw new Error('Scaled object without id');
+        if (!canvasObject.generatedBy) throw new Error('Scaled object without generatedBy');
+
+        if (!shouldSerializeEvent(canvasObject.id, canvasObject.generatedBy)) return;
 
         const type: ObjectType = (e.target as ICanvasObject).get('type') as ObjectType;
         const target = {
@@ -182,7 +190,7 @@ const useSynchronizedScaled = (
           });
         }
 
-        eventSerializer?.push('scaled', payload);
+        eventSerializer?.push('scaled', generatedBy, payload);
       }
     };
 
@@ -191,7 +199,7 @@ const useSynchronizedScaled = (
     return () => {
       canvas?.off('object:scaled', objectScaled);
     };
-  }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
+  }, [canvas, eventSerializer, generatedBy, shouldSerializeEvent, undoRedoDispatch, userId]);
 };
 
 export default useSynchronizedScaled;

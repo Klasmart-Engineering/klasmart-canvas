@@ -2,11 +2,12 @@ import { useEffect } from 'react';
 import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 const useSynchronizedColorChanged = (
   canvas: fabric.Canvas | undefined,
   userId: string,
-  shouldHandleRemoteEvent: (id: string) => boolean,
+  shouldHandleRemoteEvent: EventFilterFunction,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
   const {
@@ -16,10 +17,11 @@ const useSynchronizedColorChanged = (
   useEffect(() => {
     const colorChanged = (
       id: string,
+      generatedBy: string,
       objectType: string,
       target: ICanvasObject
     ) => {
-      if (id && !shouldHandleRemoteEvent(id)) return;
+      if (!shouldHandleRemoteEvent(id, generatedBy)) return;
 
       if (objectType === 'background' && canvas) {
         canvas.backgroundColor = target.fill?.toString();
@@ -29,10 +31,12 @@ const useSynchronizedColorChanged = (
         if (obj.id && obj.id === id && objectType !== 'textbox') {
           if (objectType === 'shape') {
             obj.set({
+              generatedBy,
               fill: target.fill,
             });
           } else {
             obj.set({
+              generatedBy,
               stroke: target.stroke,
             });
           }

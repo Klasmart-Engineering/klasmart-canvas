@@ -39,12 +39,11 @@ export type ObjectType =
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {
-  readonly serializedEventIDs: string[] = [];
 
   /**
    * Push a new event to be serialized for synchronization.
    */
-  push(type: PainterEventType, object: ObjectEvent): void {
+  push(type: PainterEventType, generatedBy: string, object: ObjectEvent): void {
     // TODO: Optmization of which data get serialized, for example:
     // we wouldn't need to send anything other than id and position
     // for move events, or the updated color if object color was
@@ -76,20 +75,12 @@ export class PaintEventSerializer extends EventEmitter
     const uniqueObjectId = object.id;
     const serialized: PainterEvent = {
       id: uniqueObjectId,
+      generatedBy: generatedBy,
       type,
       objectType: object.type as string,
       param: JSON.stringify(object.target),
     };
 
-    // NOTE: The list of ID's this serialized generated is for filtering
-    // purposes. Preventing the local user from handling the same event
-    // twice. This state can be checked by using the 'didSerializeEvent'
-    // function.
-    this.serializedEventIDs.push(uniqueObjectId);
     this.emit('event', serialized);
-  }
-
-  didSerializeEvent(id: string) {
-    return this.serializedEventIDs.findIndex((id2) => id2 === id) !== -1;
   }
 }
