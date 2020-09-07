@@ -26,7 +26,7 @@ const useSynchronizedColorChanged = (
       }
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
-        if (obj.id && obj.id === id && objectType !== 'textbox') {
+        if (obj.id && obj.id === id && objectType !== 'i-text') {
           if (objectType === 'shape') {
             obj.set({
               fill: target.fill,

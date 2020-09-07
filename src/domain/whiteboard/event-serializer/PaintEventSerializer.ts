@@ -35,7 +35,8 @@ export type ObjectType =
   | 'reconstruct'
   | 'shape'
   | 'background'
-  | 'pointer';
+  | 'pointer'
+  | 'i-text';
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {

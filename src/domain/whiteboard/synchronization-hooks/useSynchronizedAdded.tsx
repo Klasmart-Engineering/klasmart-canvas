@@ -90,7 +90,7 @@ const useSynchronizedAdded = (
       }
 
       const target = {
-        ...(type === 'textbox' && {
+        ...(type === 'i-text' && {
           text: e.target.text,
           fontFamily: e.target.fontFamily,
           stroke: e.target.fill,
@@ -202,7 +202,7 @@ const useSynchronizedAdded = (
 
       if (!shouldHandleRemoteEvent(id)) return;
 
-      if (objectType === 'textbox') {
+      if (objectType === 'i-text') {
         let text = new fabric.Textbox(target.text || '', {
           fontSize: 30,
           fontWeight: 400,

@@ -23,7 +23,7 @@ const useSynchronizedFontColorChanged = (
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
-          if (objectType === 'textbox') {
+          if (objectType === 'i-text') {
             obj.set({
               fill: target.fill,
             });

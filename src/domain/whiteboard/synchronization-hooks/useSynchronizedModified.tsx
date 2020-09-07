@@ -31,7 +31,7 @@ const useSynchronizedModified = (
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
-          if (objectType === 'textbox' && target.left && obj.left) {
+          if (objectType === 'i-text' && target.left && obj.left) {
             obj.set({
               text: target.text,
               fontFamily: target.fontFamily,
@@ -49,7 +49,7 @@ const useSynchronizedModified = (
     };
 
     const payload = {
-      id: (modified as unknown as ICanvasObject).id as string,
+      id: ((modified as unknown) as ICanvasObject).id as string,
     };
 
     if (canvas && payload.id) {
@@ -68,21 +68,30 @@ const useSynchronizedModified = (
     return () => {
       eventController?.removeListener('modified', modified);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent, undoRedoDispatch, userId]);
+  }, [
+    canvas,
+    eventController,
+    shouldHandleRemoteEvent,
+    undoRedoDispatch,
+    userId,
+  ]);
 
   /** Register and handle local events. */
   useEffect(() => {
     const objectModified = (e: fabric.IEvent | CanvasEvent) => {
       if (!e.target) return;
-      if ((e.target as ICanvasObject).id && !shouldSerializeEvent((e.target as ICanvasObject).id as string))
+      if (
+        (e.target as ICanvasObject).id &&
+        !shouldSerializeEvent((e.target as ICanvasObject).id as string)
+      )
         return;
 
       const type = (e.target as ICanvasObject).get('type') as ObjectType;
 
       // If text has been modified
-      if (type === 'textbox' && (e.target as ICanvasObject).id) {
+      if (type === 'i-text' && (e.target as ICanvasObject).id) {
         const target = {
-          ...(type === 'textbox' && {
+          ...(type === 'i-text' && {
             text: (e.target as ICanvasObject).text,
             fontFamily: (e.target as ICanvasObject).fontFamily,
             stroke: e.target.fill,
@@ -104,7 +113,7 @@ const useSynchronizedModified = (
           type: SET,
           payload: canvas?.getObjects(),
           canvasId: userId,
-          event: event as unknown as IUndoRedoEvent,
+          event: event as IUndoRedoEvent,
         });
 
         eventSerializer?.push('modified', payload);

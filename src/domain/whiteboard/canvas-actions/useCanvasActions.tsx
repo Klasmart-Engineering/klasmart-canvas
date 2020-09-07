@@ -530,7 +530,7 @@ export const useCanvasActions = (
         const object: ICanvasObject = canvas?.getActiveObject();
 
         const payload = {
-          type: 'textbox',
+          type: 'i-text',
           target: { fill: color },
           id: object.id,
         };
@@ -542,9 +542,9 @@ export const useCanvasActions = (
       canvas?.getActiveObjects().forEach((obj: ICanvasObject) => {
         if (obj.id) {
           const type: ObjectType = obj.get('type') as ObjectType;
-          if (type === 'textbox') {
+          if (type === 'i-text') {
             const target = (type: string) => {
-              if (type === 'textbox') {
+              if (type === 'i-text') {
                 return {
                   fill: color,
                 };

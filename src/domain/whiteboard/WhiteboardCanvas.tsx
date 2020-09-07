@@ -294,11 +294,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             clonedTextObj.id = `${userId}:${uuidv4()}`;
 
             if (typeof textCopy === 'string') {
-              text = new fabric.Textbox(textCopy, clonedTextObj);
+              text = new fabric.IText(textCopy, clonedTextObj);
             }
 
-            // canvas.remove(canvas.getActiveObject());
-            // canvas.add(text);
+            canvas.remove(canvas.getActiveObject());
+            canvas.add(text);
             canvas.setActiveObject(text);
 
             if (text?.text?.replace(/\s/g, '').length === 0) {
@@ -493,7 +493,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
                 if (obj.id && isLocalObject(obj.id, userId)) {
                   const type = obj.get('type');
 
-                  if (type === 'textbox') {
+                  if (type === 'i-text') {
                     const target = {
                       fontFamily: obj.fontFamily,
                     } as ICanvasObject;
@@ -1101,7 +1101,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       const type = obj?.get('type');
 
-      if (type !== 'textbox') return;
+      if (type !== 'i-text') return;
 
       const payload = {
         type,
@@ -1128,7 +1128,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       const type = obj?.get('type');
 
-      if (type === 'textbox') return;
+      if (type === 'i-text') return;
 
       const payload = {
         type,
@@ -1155,7 +1155,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       const type = obj?.get('type');
 
-      if (type === 'textbox') return;
+      if (type === 'i-text') return;
 
       if (obj?.strokeWidth === lineWidth) return;
 
@@ -1181,7 +1181,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       const obj = canvas?.getActiveObject() as ICanvasObject;
       const type = obj?.get('type');
 
-      if (type === 'textbox' && obj) {
+      if (type === 'i-text' && obj) {
         const target = {
           fontFamily,
         };
