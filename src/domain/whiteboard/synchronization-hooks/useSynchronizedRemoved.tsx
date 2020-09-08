@@ -36,9 +36,7 @@ const useSynchronizedRemoved = (
         return;
       }
 
-      removeObject.set({
-        generatedBy,
-      });
+      removeObject.set({ generatedBy });
 
       canvas.remove(removeObject);
       canvas.renderAll();
@@ -70,7 +68,6 @@ const useSynchronizedRemoved = (
 
       const target = e.target as ICanvasObject;
       if (!target.id) throw new Error('object:removed event without target id');
-      if (!target.generatedBy) throw new Error('object:removed event without target generatedBy');
 
       if (!shouldSerializeEvent(target.id, target.generatedBy)) return;
 

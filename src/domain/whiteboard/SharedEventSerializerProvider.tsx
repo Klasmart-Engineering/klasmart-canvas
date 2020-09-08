@@ -94,7 +94,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     if (stored !== null) {
       const persistentEvents = JSON.parse(stored);
       console.log(`resubmitting persistent events: ${persistentEvents.length}`);
-      eventController.handlePainterEvent(persistentEvents);
+      eventController.handlePainterEvent(persistentEvents, true);
     }
   }, [eventController, eventSerializer, simulateNetworkSynchronization]);
 
