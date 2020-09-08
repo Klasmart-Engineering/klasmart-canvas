@@ -41,6 +41,10 @@ const useSynchronizedPointer = (
     const move = (e: CanvasEvent) => {
       if ((e.e as MouseEvent).which && (e.e as MouseEvent).buttons && canvas) {
         canvas.defaultCursor = 'none';
+        canvas.hoverCursor = 'none';
+        canvas?.getObjects().forEach((o: any) => {
+          o.set({ hoverCursor: 'none' });
+        });
         trail.update(e.pointer as { x: number; y: number });
 
         const top = (e.pointer as fabric.Point).y;
@@ -55,6 +59,9 @@ const useSynchronizedPointer = (
         eventSerializer.push('moving', payload);
       } else if (trail && canvas && !trail.clear) {
         canvas.defaultCursor = 'default';
+        canvas?.getObjects().forEach((o: any) => {
+          o.set({ hoverCursor: 'default' });
+        });
 
         const payload: ObjectEvent = {
           type: 'pointer',

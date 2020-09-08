@@ -11,6 +11,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useMemo,
 } from 'react';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { WhiteboardContext } from './WhiteboardContext';
@@ -738,6 +739,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [actions, canvas, eventedObjects, isLocalObject, userId]);
 
   /**
+   * Memoized laserIsActive prop.
+   */
+  const laserPointerIsActive = useMemo(() => laserIsActive, [laserIsActive]);
+
+  /**
    * Manages the logic for Flood-fill Feature
    */
   useEffect(() => {
@@ -895,7 +901,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (!floodFillIsActive && eraseType !== 'object') {
         canvas?.forEachObject((object: ICanvasObject) => {
           object.set({
-            hoverCursor: 'default',
+            hoverCursor: laserPointerIsActive ? 'none' : 'default',
             evented: false,
             perPixelTargetFind: false,
           });
@@ -921,6 +927,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     eraseType,
     undoRedoDispatch,
     toolbarIsEnabled,
+    laserPointerIsActive,
   ]);
 
   /**
