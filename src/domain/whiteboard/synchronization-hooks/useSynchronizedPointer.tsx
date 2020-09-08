@@ -19,13 +19,11 @@ import { Laser } from '../utils/laser';
  */
 const useSynchronizedPointer = (
   canvas: fabric.Canvas | undefined,
-  showPointer: boolean,
-  universalPermits: (id: string) => boolean,
+  allowPointer: boolean,
   shouldHandleRemoteEvent: (id: string) => boolean,
   userId: string,
   laserColor: string,
-  laserIsActive: boolean,
-  allowPointer: boolean | undefined
+  laserIsActive: boolean
 ) => {
   const {
     state: { eventSerializer, eventController },
@@ -69,7 +67,7 @@ const useSynchronizedPointer = (
       }
     };
 
-    if (laserIsActive && (universalPermits(userId) || allowPointer)) {
+    if (laserIsActive && allowPointer) {
       trail = new Laser(canvas as fabric.Canvas, laserColor, 20, 25);
       canvas?.renderAll();
       canvas?.on('mouse:move', move);
@@ -96,7 +94,6 @@ const useSynchronizedPointer = (
     allowPointer,
     eventSerializer,
     laserColor,
-    universalPermits,
     userId,
   ]);
 
@@ -141,13 +138,7 @@ const useSynchronizedPointer = (
     return () => {
       eventController?.removeListener('moving', moved);
     };
-  }, [
-    canvas,
-    eventController,
-    showPointer,
-    universalPermits,
-    shouldHandleRemoteEvent,
-  ]);
+  }, [canvas, eventController, allowPointer, shouldHandleRemoteEvent]);
 };
 
 export default useSynchronizedPointer;

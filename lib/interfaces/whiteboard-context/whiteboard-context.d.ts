@@ -55,11 +55,11 @@ export interface IWhiteboardContext {
     eraseObject: () => void;
     undo: () => void;
     redo: () => void;
-    allowPointer: boolean;
-    universalPermits: (id: string) => boolean;
     clearWhiteboard: () => void;
     clearWhiteboardAllowClearOthers: (userId: string) => void;
     clearWhiteboardClearAll: () => void;
     toolbarIsEnabled: boolean;
     setToolbarIsEnabled: (enabled: boolean) => void;
+    clearIsActive: boolean;
+    updateClearIsActive: (active: boolean) => void;
 }
