@@ -16,7 +16,10 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 const options = ['Revoke all Users', 'Authorize all Users'];
-const pointerOptions = ['Pointer: Revoke all users', 'Pointer: Authorize all users']
+const pointerOptions = [
+  'Pointer: Revoke all users',
+  'Pointer: Authorize all users',
+];
 
 export default function AuthMenu(props: {
   userId: string;
@@ -26,7 +29,9 @@ export default function AuthMenu(props: {
   const isTeacher = userId === 'teacher';
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [anchorPointerEl, setAnchorPointerEl] = useState<null | HTMLElement>(null);
+  const [anchorPointerEl, setAnchorPointerEl] = useState<null | HTMLElement>(
+    null
+  );
   const [selectedIndex, setSelectedIndex] = useState(1);
   const {
     state: { eventSerializer },
@@ -73,9 +78,12 @@ export default function AuthMenu(props: {
   ) => {
     setPointerIndex(index);
     setAnchorPointerEl(null);
-    
-    let payload = index === 1 ? { id: userId, target: { pointer: true }} : { id: userId, target: { pointer: false } };
-    eventSerializer?.push('setToolbarPermissions', payload);  
+
+    let payload =
+      index === 1
+        ? { id: userId, target: { pointer: true } }
+        : { id: userId, target: { pointer: false } };
+    eventSerializer?.push('setToolbarPermissions', payload);
   };
 
   const handleClose = () => {
@@ -101,10 +109,10 @@ export default function AuthMenu(props: {
             aria-controls="lock-menu"
             onClick={handleClickListItem}
           >
-          <ListItemText
-            primary="Authorize"
-            secondary={options[selectedIndex]}
-          />
+            <ListItemText
+              primary="Authorize"
+              secondary={options[selectedIndex]}
+            />
           </ListItem>
         </List>
         <Menu
@@ -124,7 +132,6 @@ export default function AuthMenu(props: {
             </MenuItem>
           ))}
         </Menu>
-        
 
         <List component="nav" aria-label="Device settings">
           <ListItem
@@ -133,11 +140,11 @@ export default function AuthMenu(props: {
             aria-controls="lock-menu"
             onClick={handleClickListPointerItem}
           >
-          <ListItemText
-            style={{ paddingLeft: '20px' }}
-            primary="Authorize Pointer"
-            secondary={pointerOptions[pointerIndex]}
-          />
+            <ListItemText
+              style={{ paddingLeft: '20px' }}
+              primary="Authorize Pointer"
+              secondary={pointerOptions[pointerIndex]}
+            />
           </ListItem>
         </List>
 

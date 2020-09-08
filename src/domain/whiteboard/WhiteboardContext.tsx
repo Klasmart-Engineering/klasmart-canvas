@@ -30,11 +30,11 @@ export const WhiteboardContext = createContext({} as IWhiteboardContext);
 export const WhiteboardProvider = ({
   children,
   clearWhiteboardPermissions,
-  userId
+  userId,
 }: {
   children: React.ReactNode;
   clearWhiteboardPermissions: IClearWhiteboardPermissions;
-  userId: string
+  userId: string;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();

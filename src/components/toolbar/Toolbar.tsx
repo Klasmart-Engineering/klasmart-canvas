@@ -365,22 +365,22 @@ function Toolbar() {
   /**
    * Indicates active tool.
    */
-  const getActiveTool = useMemo(():string => tools.active, [tools]);
+  const getActiveTool = useMemo((): string => tools.active, [tools]);
 
   /**
    * Returns tool elements.
    */
-  const getToolElements = useMemo(():IBasicToolbarSection['elements'] => [...tools.elements], [tools]);
+  const getToolElements = useMemo(
+    (): IBasicToolbarSection['elements'] => [...tools.elements],
+    [tools]
+  );
 
   /**
    * Checks if laser pointer permission is set to true. If not, and pointer is selected,
    * default pointer is automatically selected.
    */
   useEffect(() => {
-    if (
-      !pointerIsEnabled &&
-      getActiveTool === ELEMENTS.LASER_TOOL
-    ) {
+    if (!pointerIsEnabled && getActiveTool === ELEMENTS.LASER_TOOL) {
       setTools({
         active: ELEMENTS.POINTERS_TOOL,
         elements: getToolElements,

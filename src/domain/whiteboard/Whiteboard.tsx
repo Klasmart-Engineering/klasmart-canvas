@@ -27,10 +27,7 @@ function Whiteboard() {
 
   return (
     <>
-      <WhiteboardProvider
-        clearWhiteboardPermissions={teacher}
-        userId="teacher"
-      >
+      <WhiteboardProvider clearWhiteboardPermissions={teacher} userId="teacher">
         <div className="whiteboard">
           <Toolbar />
           <div
@@ -58,10 +55,7 @@ function Whiteboard() {
           </div>
         </div>
       </WhiteboardProvider>
-      <WhiteboardProvider
-        clearWhiteboardPermissions={student}
-        userId="student"
-      >
+      <WhiteboardProvider clearWhiteboardPermissions={student} userId="student">
         <div className="whiteboard">
           <Toolbar />
           <div
@@ -89,10 +83,7 @@ function Whiteboard() {
           </div>
         </div>
       </WhiteboardProvider>
-      <WhiteboardProvider
-        clearWhiteboardPermissions={student}
-        userId="student"
-      >
+      <WhiteboardProvider clearWhiteboardPermissions={student} userId="student">
         <div className="whiteboard">
           <Toolbar />
           <div

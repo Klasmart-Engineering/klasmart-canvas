@@ -23,7 +23,7 @@ const useSynchronizedPointer = (
   shouldHandleRemoteEvent: (id: string) => boolean,
   userId: string,
   laserColor: string,
-  laserIsActive: boolean,
+  laserIsActive: boolean
 ) => {
   const {
     state: { eventSerializer, eventController },
@@ -138,12 +138,7 @@ const useSynchronizedPointer = (
     return () => {
       eventController?.removeListener('moving', moved);
     };
-  }, [
-    canvas,
-    eventController,
-    allowPointer,
-    shouldHandleRemoteEvent,
-  ]);
+  }, [canvas, eventController, allowPointer, shouldHandleRemoteEvent]);
 };
 
 export default useSynchronizedPointer;
