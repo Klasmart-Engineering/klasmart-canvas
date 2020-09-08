@@ -69,6 +69,9 @@ const useSynchronizedRemoved = (
       const target = e.target as ICanvasObject;
       if (!target.id) throw new Error('object:removed event without target id');
 
+      // NOTE: Skip sending events for removed i-text boxes.
+      if (target.isType('i-text')) return;
+
       if (!shouldSerializeEvent(target.id, target.generatedBy)) return;
 
       const payload = { id: target.id };

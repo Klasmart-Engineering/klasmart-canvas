@@ -72,6 +72,9 @@ export class PaintEventSerializer extends EventEmitter
 
     // console.log(`Serializing event for object: ${object.id}`);
 
+    if (!object) throw new Error("Can't serialize event without object.");
+    if (!object.id) throw new Error("Can't serialize event for object without ID.");
+
     const uniqueObjectId = object.id;
     const serialized: PainterEvent = {
       id: uniqueObjectId,

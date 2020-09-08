@@ -456,7 +456,7 @@ export const useCanvasActions = (
             };
           }
 
-          eventSerializer?.push('added', payload);
+          eventSerializer?.push('added', generatedBy, payload);
 
           const event = { event: payload, type: 'added' };
 
@@ -554,7 +554,7 @@ export const useCanvasActions = (
             id: object.id,
           };
 
-          eventSerializer?.push('fontColorChanged', payload);
+          eventSerializer?.push('fontColorChanged', generatedBy, payload);
         }
         return;
       }
@@ -582,7 +582,7 @@ export const useCanvasActions = (
               id: obj.id,
             };
 
-            eventSerializer?.push('fontColorChanged', payload);
+            eventSerializer?.push('fontColorChanged', generatedBy, payload);
           }
         }
       });
