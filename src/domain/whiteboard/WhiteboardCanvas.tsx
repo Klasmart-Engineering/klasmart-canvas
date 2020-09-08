@@ -174,16 +174,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setCanvas(canvasInstance);
   }, [instanceId]);
 
-  /**
-   * Request all events to be resent after canvas is created.
-   */
-  useEffect(() => {
-    if (!canvas) return;
-
-    requestAllEvents();
-
-  }, [canvas, requestAllEvents, userId]);
-
   /** 
    * Reset the canvas state in case the event controller will replay all events.
    */
@@ -1403,6 +1393,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       }
     });
   }, [canvas, toolbarIsEnabled, userId]);
+
+  /**
+   * Request all events to be resent after canvas is created.
+   */
+  useEffect(() => {
+    if (!canvas) return;
+
+    requestAllEvents();
+
+  }, [canvas, requestAllEvents, userId]);
 
   return (
     <canvas
