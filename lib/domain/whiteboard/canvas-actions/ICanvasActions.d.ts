@@ -12,8 +12,7 @@ export interface ICanvasActions {
     setHoverCursorObjects: (cursor: string) => void;
     undo: () => void;
     redo: () => void;
-    clearWhiteboardClearMySelf: () => void;
-    clearWhiteboardAllowClearOthers: (userId: string) => void;
-    clearWhiteboardClearAll: () => void;
+    clear: (filterUsers?: string[]) => void;
+    clearSelf: () => void;
 }
 export default ICanvasActions;

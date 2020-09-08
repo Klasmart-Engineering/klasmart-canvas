@@ -7,7 +7,7 @@ import { PaintEventSerializer } from '../event-serializer/PaintEventSerializer';
  * @param eventSerializer Event serializer
  * @param canvasId Canvas ID
  */
-export declare const UndoRedo: (canvas: Canvas, eventSerializer: PaintEventSerializer, instanceId: string) => {
+export declare const UndoRedo: (canvas: Canvas, eventSerializer: PaintEventSerializer, generatedBy: string, instanceId: string) => {
     state: import("../reducers/undo-redo").CanvasHistoryState;
     dispatch: import("react").Dispatch<import("../reducers/undo-redo").CanvasAction>;
 };

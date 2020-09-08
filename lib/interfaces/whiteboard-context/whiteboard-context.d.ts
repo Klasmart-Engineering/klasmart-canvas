@@ -1,4 +1,5 @@
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
+import { IWhiteboardPermissions } from '../canvas-events/whiteboard-permissions';
 export interface IWhiteboardContext {
     pointer: string;
     updatePointer: (pointer: string) => void;
@@ -10,7 +11,6 @@ export interface IWhiteboardContext {
     updateFontFamily: (font: string) => void;
     fontColor: string;
     updateFontColor: (color: string) => void;
-    colorsList: string[];
     shape: string;
     updateShape: (shape: string) => void;
     shapeColor: string;
@@ -48,7 +48,6 @@ export interface IWhiteboardContext {
     updateCanvasActions: (actions: ICanvasActions) => void;
     laserIsActive: boolean;
     updateLaserIsActive: (status: boolean) => void;
-    isLocalObject: (id: string, canvasId: string | undefined) => boolean | undefined;
     discardActiveObject: () => void;
     changeStrokeColor: (color: string) => void;
     addShape: (shape: string) => void;
@@ -57,9 +56,11 @@ export interface IWhiteboardContext {
     redo: () => void;
     allowPointer: boolean;
     universalPermits: (id: string) => boolean;
-    clearWhiteboard: () => void;
-    clearWhiteboardAllowClearOthers: (userId: string) => void;
-    clearWhiteboardClearAll: () => void;
+    clear: (filterUsers?: string[]) => void;
+    clearSelf: () => void;
     toolbarIsEnabled: boolean;
     setToolbarIsEnabled: (enabled: boolean) => void;
+    clearIsActive: boolean;
+    updateClearIsActive: (active: boolean) => void;
+    permissions: IWhiteboardPermissions;
 }

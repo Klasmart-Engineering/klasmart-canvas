@@ -12,7 +12,7 @@ import { PainterEvent } from './PainterEvent';
 export declare class EventPainterController extends EventEmitter implements IPainterController {
     readonly events: PainterEvent[];
     replayEvents(): Promise<void>;
-    handlePainterEvent(events: PainterEvent[]): void;
+    handlePainterEvent(events: PainterEvent[], replaying?: boolean): void;
     requestRefetch(): void;
     private parseAndEmitEvent;
     private added;
@@ -28,4 +28,5 @@ export declare class EventPainterController extends EventEmitter implements IPai
     private moving;
     private setToolbarPermissions;
     private fontColorChanged;
+    private lineWidthChanged;
 }

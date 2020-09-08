@@ -16,12 +16,8 @@ export interface ObjectEvent {
 }
 export declare type ObjectType = 'path' | 'textbox' | 'activeSelection' | 'reconstruct' | 'shape' | 'background' | 'pointer';
 export declare class PaintEventSerializer extends EventEmitter implements PaintEventSerializer {
-    readonly multiplier: number;
-    readonly serializedEventIDs: string[];
-    constructor(multiplier: number);
     /**
      * Push a new event to be serialized for synchronization.
      */
-    push(type: PainterEventType, object: ObjectEvent): void;
-    didSerializeEvent(id: string): boolean;
+    push(type: PainterEventType, generatedBy: string, object: ObjectEvent): void;
 }

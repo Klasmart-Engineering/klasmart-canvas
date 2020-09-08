@@ -8,8 +8,7 @@ export interface IToolbarActions {
     selectTool: (toolType: ToolType, options?: IToolbarSelectorOption) => void;
     selectColorByName: (colorName: string) => void;
     selectColorByValue: (color: string) => void;
-    clear: (filter?: string) => void;
-    clearAll: () => void;
+    clear: (filter?: string[]) => void;
     undo: () => void;
     redo: () => void;
 }

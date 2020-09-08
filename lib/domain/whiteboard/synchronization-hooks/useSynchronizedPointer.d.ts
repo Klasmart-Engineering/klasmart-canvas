@@ -1,4 +1,5 @@
 import { fabric } from 'fabric';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 /**
  * Handles laser pointer events.
  * @param canvas Canvas
@@ -10,5 +11,5 @@ import { fabric } from 'fabric';
  * @param laserIsActive Indicates if laser tool is sselected.
  * @param allowPointer Indicates if user has permission to use laser pointer.
  */
-declare const useSynchronizedPointer: (canvas: fabric.Canvas | undefined, showPointer: boolean, universalPermits: (id: string) => boolean, shouldHandleRemoteEvent: (id: string) => boolean, userId: string, laserColor: string, laserIsActive: boolean, allowPointer: boolean | undefined) => void;
+declare const useSynchronizedPointer: (canvas: fabric.Canvas | undefined, showPointer: boolean, universalPermits: (id: string) => boolean, shouldHandleRemoteEvent: EventFilterFunction, userId: string, laserColor: string, laserIsActive: boolean, allowPointer: boolean | undefined, generatedBy: string) => void;
 export default useSynchronizedPointer;

@@ -25,4 +25,5 @@ export declare type Props = {
     centerHorizontally?: boolean;
     centerVertically?: boolean;
 };
+export declare type EventFilterFunction = (id: string, generatedBy?: string) => boolean;
 export declare const WhiteboardCanvas: FunctionComponent<Props>;

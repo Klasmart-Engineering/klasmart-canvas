@@ -1,8 +1,8 @@
 import React from 'react';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
-import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
+import { IWhiteboardPermissions } from '../../interfaces/canvas-events/whiteboard-permissions';
 export declare const WhiteboardContext: React.Context<IWhiteboardContext>;
-export declare const WhiteboardProvider: ({ children, clearWhiteboardPermissions, }: {
+export declare const WhiteboardProvider: ({ children, permissions, }: {
     children: React.ReactNode;
-    clearWhiteboardPermissions: IClearWhiteboardPermissions;
+    permissions: IWhiteboardPermissions;
 }) => JSX.Element;

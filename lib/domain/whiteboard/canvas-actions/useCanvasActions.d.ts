@@ -1,10 +1,9 @@
 import { fabric } from 'fabric';
-export declare const useCanvasActions: (canvas?: fabric.Canvas | undefined, dispatch?: any, canvasId?: string | undefined, eventSerializer?: any, userId?: string | undefined) => {
+export declare const useCanvasActions: (userId: string, canvasId: string, generatedBy: string, canvas?: fabric.Canvas | undefined, dispatch?: any, eventSerializer?: any) => {
     actions: {
         fillColor: (color: string) => void;
         changeStrokeColor: (color: string) => void;
         textColor: (color: string) => void;
-        clearWhiteboardClearAll: () => void;
         discardActiveObject: () => void;
         addShape: (shapeToAdd: string) => void;
         eraseObject: () => void;
@@ -12,8 +11,8 @@ export declare const useCanvasActions: (canvas?: fabric.Canvas | undefined, disp
         setHoverCursorObjects: (cursor: string) => void;
         undo: () => void;
         redo: () => void;
-        clearWhiteboardAllowClearOthers: (userId: string) => void;
-        clearWhiteboardClearMySelf: () => void;
+        clear: (filterUsers?: string[] | undefined) => void;
+        clearSelf: () => void;
     };
     mouseDown: (specific: string, color?: string | undefined) => void;
 };

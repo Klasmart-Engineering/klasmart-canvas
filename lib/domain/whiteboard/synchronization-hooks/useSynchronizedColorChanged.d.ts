@@ -1,3 +1,4 @@
 import { CanvasAction } from '../reducers/undo-redo';
-declare const useSynchronizedColorChanged: (canvas: fabric.Canvas | undefined, userId: string, shouldHandleRemoteEvent: (id: string) => boolean, undoRedoDispatch: React.Dispatch<CanvasAction>) => void;
+import { EventFilterFunction } from '../WhiteboardCanvas';
+declare const useSynchronizedColorChanged: (canvas: fabric.Canvas | undefined, userId: string, shouldHandleRemoteEvent: EventFilterFunction, undoRedoDispatch: React.Dispatch<CanvasAction>) => void;
 export default useSynchronizedColorChanged;

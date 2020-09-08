@@ -7,9 +7,9 @@ declare const _default: {
         simulateNetworkSynchronization?: boolean | undefined;
         simulatePersistence?: boolean | undefined;
     }>;
-    WhiteboardProvider: ({ children, clearWhiteboardPermissions, }: {
+    WhiteboardProvider: ({ children, permissions, }: {
         children: import("react").ReactNode;
-        clearWhiteboardPermissions: import("./interfaces/canvas-events/clear-whiteboard-permissions").IClearWhiteboardPermissions;
+        permissions: import("./interfaces/canvas-events/whiteboard-permissions").IWhiteboardPermissions;
     }) => JSX.Element;
     Toolbar: {
         useToolbarContext: typeof useToolbarContext;
