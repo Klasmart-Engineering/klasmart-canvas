@@ -20,8 +20,7 @@ import { useLaserIsActive } from './hooks/useLaserIsActive';
 import { useToolbarPermissions } from './hooks/useToolbarPermissions';
 import ICanvasActions from './canvas-actions/ICanvasActions';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
-import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
-import AuthMenu from '../../components/AuthMenu';
+import { IWhiteboardPermissions } from '../../interfaces/canvas-events/whiteboard-permissions';
 import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 
@@ -29,12 +28,10 @@ export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
 export const WhiteboardProvider = ({
   children,
-  clearWhiteboardPermissions,
-  userId,
+  permissions,
 }: {
   children: React.ReactNode;
-  clearWhiteboardPermissions: IClearWhiteboardPermissions;
-  userId: string;
+  permissions: IWhiteboardPermissions;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();
@@ -80,15 +77,6 @@ export const WhiteboardProvider = ({
   // apply action to.
   const [canvasActions, updateCanvasActions] = useState<ICanvasActions>();
 
-  const isLocalObject = (id: string, canvasId: string | undefined) => {
-    const object = id.split(':');
-
-    if (!object.length) {
-      throw new Error('Invalid ID');
-    }
-
-    return object[0] === canvasId;
-  };
   const [eventedObjects, updateEventedObjects] = useState(true);
 
   // Temporary code to get undo / redo working while there are two boards
@@ -133,26 +121,13 @@ export const WhiteboardProvider = ({
     [canvasActions]
   );
 
-  const clearWhiteboardActionClearMyself = useCallback(() => {
-    if (clearWhiteboardPermissions.allowClearMyself && toolbarIsEnabled) {
-      canvasActions?.clearWhiteboardClearMySelf();
-    }
-  }, [canvasActions, clearWhiteboardPermissions, toolbarIsEnabled]);
+  const clear = useCallback((filterUsers?: string[]) => {
+    canvasActions?.clear(filterUsers);
+  }, [canvasActions]);
 
-  const clearWhiteboardAllowClearOthersAction = useCallback(
-    (userId) => {
-      if (clearWhiteboardPermissions.allowClearOthers) {
-        canvasActions?.clearWhiteboardAllowClearOthers(userId);
-      }
-    },
-    [canvasActions, clearWhiteboardPermissions]
-  );
-
-  const clearWhiteboardActionClearAll = useCallback(() => {
-    if (clearWhiteboardPermissions.allowClearAll) {
-      canvasActions?.clearWhiteboardClearAll();
-    }
-  }, [canvasActions, clearWhiteboardPermissions]);
+  const clearSelf = useCallback(() => {
+    canvasActions?.clearSelf();
+  }, [canvasActions]);
 
   const discardActiveObjectAction = useCallback(() => {
     canvasActions?.discardActiveObject();
@@ -184,24 +159,12 @@ export const WhiteboardProvider = ({
     canvasActions?.redo();
   }, [canvasActions]);
 
-  /**
-   * List of available colors in toolbar
-   * */
-  const colorsList = [
-    'black',
-    'red',
-    'yellow',
-    'green',
-    'blue',
-    'purple',
-    'brown',
-  ];
+
 
   const value = {
     fontFamily,
     fontColor,
     updateFontFamily,
-    colorsList,
     shape,
     shapeColor,
     updateShape,
@@ -247,16 +210,15 @@ export const WhiteboardProvider = ({
     updateCanvasActions,
     laserIsActive,
     updateLaserIsActive,
-    isLocalObject,
+    permissions,
 
     // NOTE: Actions that will get invoked based on registered handler.
     fillColor: fillColorAction,
     textColor: textColorAction,
     addShape: addShapeAction,
     discardActiveObject: discardActiveObjectAction,
-    clearWhiteboard: clearWhiteboardActionClearMyself,
-    clearWhiteboardAllowClearOthers: clearWhiteboardAllowClearOthersAction,
-    clearWhiteboardClearAll: clearWhiteboardActionClearAll,
+    clear,
+    clearSelf,
     eraseObject: eraseObjectAction,
     changeStrokeColor: changeStrokeColorAction,
     setCanvasSelection: setCanvasSelectionAction,
@@ -270,20 +232,8 @@ export const WhiteboardProvider = ({
 
   return (
     <WhiteboardContext.Provider value={value}>
-      {/*: Should work for student and teacher */}
-      <button onClick={() => clearWhiteboardActionClearMyself()}>
-        Clear My self
-      </button>
-      {/*: Should work only for teacher */}
-      <button onClick={() => clearWhiteboardActionClearAll()}>Clear All</button>
-      {/*: Should work only for teacher */}
-      <button onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
-        Clear student
-      </button>
-      {/*<div>Whiteboard Context {toolbarIsEnabled.toString()}</div>*/}
-      <AuthMenu userId={userId} setToolbarIsEnabled={setToolbarIsEnabled} />
       <ClearWhiteboardModal
-        clearWhiteboard={clearWhiteboardActionClearMyself}
+        clearWhiteboard={() => { clearSelf(); closeModal(); }}
       />
       {children}
     </WhiteboardContext.Provider>

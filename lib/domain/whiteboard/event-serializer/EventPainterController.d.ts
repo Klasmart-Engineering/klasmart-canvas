@@ -13,6 +13,7 @@ export declare class EventPainterController extends EventEmitter implements IPai
     readonly events: PainterEvent[];
     replayEvents(): Promise<void>;
     handlePainterEvent(events: PainterEvent[]): void;
+    requestRefetch(): void;
     private parseAndEmitEvent;
     private added;
     private moved;

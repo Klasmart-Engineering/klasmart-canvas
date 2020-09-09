@@ -15,6 +15,7 @@ interface IEventSerializerState {
 interface IEventSerializerContext {
     state: IEventSerializerState;
     actions: ICanvasActions;
+    requestAllEvents: () => void;
 }
 export declare const SharedEventSerializerContextProvider: FunctionComponent<Props>;
 export declare function useSharedEventSerializer(): IEventSerializerContext;
