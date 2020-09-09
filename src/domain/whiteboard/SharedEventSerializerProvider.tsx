@@ -13,11 +13,6 @@ import { PainterEvent } from './event-serializer/PainterEvent';
 import { PaintEventSerializer } from './event-serializer/PaintEventSerializer';
 import ICanvasActions from './canvas-actions/ICanvasActions';
 
-// NOTE: This is used to scale up the coordinates sent in events
-// to save bytes in the text representation of numbers. E.g. 33
-// instead of 0.0333333333. Sacrificing some sub-pixel accuracy.
-export const NormalizeCoordinates = 1000;
-
 type Props = {
   children?: ReactChild | ReactChildren | null | Element[];
   simulateNetworkSynchronization?: boolean;
@@ -48,7 +43,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
   simulatePersistence,
 }: Props): JSX.Element => {
   const [eventSerializer] = useState<PaintEventSerializer>(
-    new PaintEventSerializer(NormalizeCoordinates)
+    new PaintEventSerializer()
   );
   const [eventController] = useState<EventPainterController>(
     new EventPainterController()
@@ -99,7 +94,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     if (stored !== null) {
       const persistentEvents = JSON.parse(stored);
       console.log(`resubmitting persistent events: ${persistentEvents.length}`);
-      eventController.handlePainterEvent(persistentEvents);
+      eventController.handlePainterEvent(persistentEvents, true);
     }
   }, [eventController, eventSerializer, simulateNetworkSynchronization]);
 

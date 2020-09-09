@@ -2,11 +2,12 @@ import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { useEffect } from 'react';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 const useSynchronizedLineWidthChanged = (
   canvas: fabric.Canvas | undefined,
   userId: string,
-  shouldHandleRemoteEvent: (id: string) => boolean,
+  shouldHandleRemoteEvent: EventFilterFunction,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
   const {
@@ -15,6 +16,7 @@ const useSynchronizedLineWidthChanged = (
   useEffect(() => {
     const widthChanged = (
       id: string,
+      generatedBy: string,
       objectType: string,
       target: ICanvasObject
     ) => {
@@ -26,11 +28,12 @@ const useSynchronizedLineWidthChanged = (
         'path',
       ];
 
-      if (id && !shouldHandleRemoteEvent(id)) return;
+      if (!shouldHandleRemoteEvent(id, generatedBy)) return;
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
           if (validTypes.includes(objectType)) {
             obj.set({
+              generatedBy,
               strokeWidth: target.strokeWidth,
             });
           }

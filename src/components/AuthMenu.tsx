@@ -46,7 +46,7 @@ export default function AuthMenu(props: {
         target: true,
       };
 
-      eventSerializer?.push('setToolbarPermissions', payload);
+      eventSerializer?.push('setToolbarPermissions', userId, payload);
     }
 
     if (index === 0) {
@@ -54,7 +54,7 @@ export default function AuthMenu(props: {
         id: userId,
         target: false,
       };
-      eventSerializer?.push('setToolbarPermissions', payload);
+      eventSerializer?.push('setToolbarPermissions', userId, payload);
     }
   };
 

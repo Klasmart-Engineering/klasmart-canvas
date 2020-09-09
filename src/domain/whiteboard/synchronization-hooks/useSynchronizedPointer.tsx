@@ -6,6 +6,7 @@ import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 /**
  * Handles laser pointer events.
@@ -22,11 +23,12 @@ const useSynchronizedPointer = (
   canvas: fabric.Canvas | undefined,
   showPointer: boolean,
   universalPermits: (id: string) => boolean,
-  shouldHandleRemoteEvent: (id: string) => boolean,
+  shouldHandleRemoteEvent: EventFilterFunction,
   userId: string,
   laserColor: string,
   laserIsActive: boolean,
-  allowPointer: boolean | undefined
+  allowPointer: boolean | undefined,
+  generatedBy: string,
 ) => {
   const {
     state: { eventSerializer, eventController },
@@ -70,7 +72,7 @@ const useSynchronizedPointer = (
           id,
         };
 
-        eventSerializer.push('moving', payload);
+        eventSerializer.push('moving', generatedBy, payload);
       } else if (laser && canvas) {
         canvas.defaultCursor = 'default';
         canvas?.remove(laser);
@@ -86,15 +88,7 @@ const useSynchronizedPointer = (
     return () => {
       canvas?.off('mouse:move', move);
     };
-  }, [
-    laserIsActive,
-    canvas,
-    allowPointer,
-    eventSerializer,
-    laserColor,
-    universalPermits,
-    userId,
-  ]);
+  }, [laserIsActive, canvas, allowPointer, eventSerializer, laserColor, universalPermits, userId, generatedBy]);
 
   /** Register and handle remote moved event. */
   useEffect(() => {
@@ -105,9 +99,10 @@ const useSynchronizedPointer = (
      */
     const moved = (
       id: string,
+      generatedBy: string,
       target: { top: number; left: number; fill?: string }
     ) => {
-      if (!shouldHandleRemoteEvent(id)) {
+      if (!shouldHandleRemoteEvent(id, generatedBy)) {
         return;
       }
 

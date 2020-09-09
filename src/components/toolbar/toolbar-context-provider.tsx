@@ -38,9 +38,7 @@ export interface IToolbarActions {
   selectColorByName: (colorName: string) => void;
   selectColorByValue: (color: string) => void;
 
-  clear: (filter?: string) => void;
-
-  clearAll: () => void;
+  clear: (filter?: string[]) => void;
 
   undo: () => void;
 
@@ -104,9 +102,7 @@ export default function ToolbarContextProvider({
     fillColor,
     undo,
     redo,
-    clearWhiteboard,
-    clearWhiteboardAllowClearOthers: clearWhiteboardOther,
-    clearWhiteboardClearAll: clearWhiteboardAll,
+    clear,
   } = useContext(WhiteboardContext);
 
   const toolsLookup = useMemo<Record<ToolType, { id: string, options: OptionalToolOptions }>>(() => {
@@ -260,17 +256,9 @@ export default function ToolbarContextProvider({
     selectColorByValueAction(String(color.value));
   }, [colorsLookup, selectColorByValueAction]);
 
-  const clearAction = useCallback((filter?: string) => {
-    if (filter) {
-      clearWhiteboardOther(filter);
-    } else {
-      clearWhiteboard();
-    }
-  }, [clearWhiteboard, clearWhiteboardOther]);
-
-  const clearAllAction = useCallback(() => {
-    clearWhiteboardAll();
-  }, [clearWhiteboardAll]);
+  const clearAction = useCallback((filter?: string[]) => {
+    clear(filter)
+  }, [clear]);
 
   const undoAction = useCallback(() => {
     undo();
@@ -285,7 +273,6 @@ export default function ToolbarContextProvider({
     selectColorByName: selectColorByNameAction,
     selectColorByValue: selectColorByValueAction,
     clear: clearAction,
-    clearAll: clearAllAction,
     undo: undoAction,
     redo: redoAction,
   };
