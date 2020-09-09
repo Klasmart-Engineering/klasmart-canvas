@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import ResizeObserver from 'resize-observer-polyfill';
 
-export type ScaleMode = "ScaleToFit" | "ScaleToFill";
+export type ScaleMode = "ScaleToFit" | "ScaleToFill" | "ScaleFitHorizontally" | "ScaleFitVertically";
 
 export default function useFixedAspectScaling(
     parent: Element | undefined | null,
@@ -30,7 +30,7 @@ export default function useFixedAspectScaling(
                 width = aspectCorrectedWidth;
                 height = containerHeight;
             }
-        } else {
+        } else if (scaleMode === "ScaleToFit") {
             if (aspectCorrectedWidth >= containerWidth) {
                 width = containerWidth;
                 height = aspectCorrectedHeight;
@@ -38,6 +38,12 @@ export default function useFixedAspectScaling(
                 width = aspectCorrectedWidth;
                 height = containerHeight;
             }
+        } else if (scaleMode === "ScaleFitVertically") {
+            width = aspectCorrectedWidth;
+            height = containerHeight;
+        } else if (scaleMode === "ScaleFitHorizontally") {
+            width = containerWidth;
+            height = aspectCorrectedHeight;
         }
 
         if (centerHorizontally) {
