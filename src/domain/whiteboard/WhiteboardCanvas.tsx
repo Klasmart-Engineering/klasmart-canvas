@@ -166,6 +166,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const canvasInstance = new fabric.Canvas(instanceId, {
       backgroundColor: undefined,
       isDrawingMode: false,
+      allowTouchScrolling: false,
       selectionBorderColor: 'rgba(100, 100, 255, 1)',
       selectionLineWidth: 2,
       selectionColor: 'rgba(100, 100, 255, 0.1)',
@@ -193,6 +194,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
   }, [canvas, eventController]);
+
+  /**
+   * Enable or disable allow touch scroll based on pointer events.
+   */
+  useEffect(() => {
+    if (!canvas) return;
+    canvas.allowTouchScrolling = !pointerEvents;
+  }, [pointerEvents, canvas]);
 
   /**
    * Retrieve references to elements created by fabricjs. We'll need these to

@@ -38,7 +38,7 @@ const useSynchronizedReconstruct = (
         canvas?.add(object);
       };
 
-      objects.forEach((object: TypedShape) => {
+      objects?.forEach((object: TypedShape) => {
         if (object && object.type === 'path') {
           const group: TypedGroup | undefined = canvas?.getObjects().filter((o: any) => o._objects)[0] as TypedGroup;
           if (group && group.id) {
