@@ -18,8 +18,17 @@ export interface PainterEvent {
   // The event type.
   type: PainterEventType;
 
-  // Unique ID for this event.
+  // TODO: May want to support events modifying multiple objects
+  // at once in the future. Perhaps including the object ID in 
+  // param field instead.
+  // Unique ID for the object this event is modifying.
   id: string;
+
+  // Unique ID describing which canvas generated this ID. This
+  // field is used to prevent acting on the events generated
+  // locally. The id field can't be used for this because users
+  // might modify or remove objects created by another user.
+  generatedBy: string;
 
   objectType: string;
 

@@ -16,25 +16,26 @@ import {
   ObjectEvent,
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
+import { PainterEvents } from '../event-serializer/PainterEvents';
 
 export const useCanvasActions = (
+  userId: string,
+  canvasId: string,
+  generatedBy: string,
   canvas?: fabric.Canvas,
   dispatch?: any,
-  canvasId?: string,
   eventSerializer?: any,
-  userId?: string
 ) => {
   const {
+    permissions,
     shapeIsActive,
     updateFontColor,
     shape,
     shapeColor,
     updatePenColor,
     updateShapeColor,
-    closeModal,
     penColor,
     lineWidth,
-    isLocalObject,
     updateClearIsActive,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
@@ -124,11 +125,14 @@ export const useCanvasActions = (
           anchor = { ...anchor, originY: 'bottom' };
         }
 
-        shape.set(anchor);
+        const canvasObject = shape as ICanvasObject;
+        canvasObject.set(anchor);
+        canvasObject.set({ generatedBy });
+
         canvas.renderAll();
       });
     },
-    [canvas]
+    [canvas, generatedBy]
   );
 
   const clearOnMouseEvent = useCallback((): void => {
@@ -170,17 +174,20 @@ export const useCanvasActions = (
           size = setPathSize(shape, coordsStart, e.pointer);
         }
 
+        const canvasObject = shape as ICanvasObject;
+        canvasObject.set({ generatedBy });
+
         if (size.width <= 2 && size.height <= 2) {
-          canvas.remove(shape);
+          canvas.remove(canvasObject);
         } else {
-          shape.setCoords();
+          canvasObject.setCoords();
           canvas.renderAll();
 
           dispatch({ type: 'CANVAS_SET', payload: canvas.getObjects() });
         }
       });
     },
-    [canvas, dispatch]
+    [canvas, dispatch, generatedBy]
   );
 
   /**
@@ -214,13 +221,19 @@ export const useCanvasActions = (
           });
         }
 
+        const canvasObject = shape as ICanvasObject;
+
+        canvasObject.set({
+          generatedBy
+        });
+
         clearOnMouseEvent();
         mouseMove(shape, e.pointer, specific);
         mouseUp(shape, e.pointer, specific);
-        canvas.add(shape);
+        canvas.add(canvasObject);
       });
     },
-    [canvas, clearOnMouseEvent, mouseMove, mouseUp, shapeColor, shapeSelector]
+    [canvas, clearOnMouseEvent, generatedBy, mouseMove, mouseUp, shapeColor, shapeSelector]
   );
 
   /**
@@ -295,6 +308,9 @@ export const useCanvasActions = (
 
         shape = shapeSelector(shapeToAdd);
 
+        const canvasObject = shape as ICanvasObject;
+        canvasObject.set({ generatedBy });
+
         if (e.pointer) {
           shape.set({
             top: e.pointer.y,
@@ -307,7 +323,7 @@ export const useCanvasActions = (
           startPoint = e.pointer;
         }
 
-        canvas.add(shape);
+        canvas.add(canvasObject);
         resize = true;
 
         /*
@@ -440,7 +456,7 @@ export const useCanvasActions = (
             };
           }
 
-          eventSerializer?.push('added', payload);
+          eventSerializer?.push('added', generatedBy, payload);
 
           const event = { event: payload, type: 'added' };
 
@@ -453,7 +469,7 @@ export const useCanvasActions = (
         }
       });
     },
-    [canvas, shapeIsActive, shapeSelector, eventSerializer, userId, dispatch]
+    [shapeIsActive, canvas, shapeSelector, generatedBy, userId, eventSerializer, dispatch]
   );
 
   /**
@@ -469,6 +485,10 @@ export const useCanvasActions = (
       if (!activeObjects) return;
 
       activeObjects.forEach((object: TypedShape) => {
+
+        const canvasObject = object as ICanvasObject;
+        canvasObject.set({ generatedBy });
+
         if (
           (isShape(object) && object.shapeType === 'shape') ||
           isFreeDrawing(object)
@@ -479,7 +499,7 @@ export const useCanvasActions = (
 
       canvas?.renderAll();
     },
-    [canvas, updatePenColor]
+    [canvas, generatedBy, updatePenColor]
   );
 
   /**
@@ -496,22 +516,18 @@ export const useCanvasActions = (
         canvas?.getActiveObject() &&
         canvas.getActiveObject().fill !== 'transparent'
       ) {
-        canvas.getActiveObject().set('fill', color);
+
+        const canvasObject = canvas.getActiveObject() as ICanvasObject;
+        canvasObject.set({ generatedBy });
+
+        canvasObject.set('fill', color);
         canvas.renderAll();
 
         // TODO: Handle Undo/Redo dispatch.
         dispatch({ type: SET, payload: canvas.getObjects() });
       }
     },
-    [
-      canvas,
-      clearMouseEvents,
-      clearOnMouseEvent,
-      mouseDown,
-      shape,
-      updateShapeColor,
-      dispatch,
-    ]
+    [updateShapeColor, clearOnMouseEvent, clearMouseEvents, mouseDown, shape, canvas, generatedBy, dispatch]
   );
 
   /**
@@ -529,6 +545,7 @@ export const useCanvasActions = (
         canvas.renderAll();
 
         const object: ICanvasObject = canvas?.getActiveObject();
+        object.set({ generatedBy });
 
         if (!(object as ITextOptions).isEditing) {
           const payload = {
@@ -537,7 +554,7 @@ export const useCanvasActions = (
             id: object.id,
           };
 
-          eventSerializer?.push('fontColorChanged', payload);
+          eventSerializer?.push('fontColorChanged', generatedBy, payload);
         }
         return;
       }
@@ -556,6 +573,7 @@ export const useCanvasActions = (
 
             obj.set({
               fill: color,
+              generatedBy,
             });
 
             const payload: ObjectEvent = {
@@ -564,35 +582,56 @@ export const useCanvasActions = (
               id: obj.id,
             };
 
-            eventSerializer?.push('fontColorChanged', payload);
+            eventSerializer?.push('fontColorChanged', generatedBy, payload);
           }
         }
       });
     },
-    [canvas, updateFontColor, eventSerializer]
+    [updateFontColor, canvas, generatedBy, eventSerializer]
   );
 
   /**
-   * Clears all whiteboard elements
-   * */
-  const clearWhiteboardClearAll = useCallback(async () => {
-    await updateClearIsActive(true);
-    await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-      if (obj.id) {
-        const target = {
-          id: obj.id,
-          target: {
-            strategy: 'allowClearAll',
-          },
-        };
+   * Clear shapes from the canvas.
+   * @param filterUsers: Only remove shapes created by users listed in the filter array. If the filter array
+   * is undefined all shapes will be cleared regardless of who created them.
+   */
+  const clear = useCallback((filterUsers?: string[]) => {
+    if (!canvas) throw new Error("Can't clear beacause canvas is undefined.");
 
-        obj.set({ groupClear: true });
-        canvas?.remove(obj);
-        eventSerializer?.push('removed', target as ObjectEvent);
-      }
+    if (filterUsers === undefined && !permissions.allowClearAll)
+      throw new Error('Insufficient permissions: Not allowed to clear all canvas shapes.');
+
+    if (filterUsers) {
+      if (filterUsers.includes(userId) && !permissions.allowClearMyself)
+        throw new Error('Insufficient permissions: Not allowed to clear own shapes.');
+
+      if (filterUsers.find((id) => id !== userId) !== undefined && !permissions.allowClearOthers)
+        throw new Error('Insufficient permissions: Not allowed to clear other shapes.');
+    } else {
+      if (!permissions.allowClearAll)
+        throw new Error('Insufficient permissions: Not allowed to clear all canvas shapes.');
+    }
+
+    // TODO: Is the 'clearIsActive' necessary?
+    updateClearIsActive(true);
+
+    const removeObjects = canvas.getObjects().filter((obj: ICanvasObject) => {
+      if (obj.id === undefined) return false;
+      if (filterUsers === undefined) return true;
+
+      const objectId = obj.id;
+
+      return filterUsers.find((userId) => {
+        return PainterEvents.isCreatedWithId(objectId, userId);
+      }) !== undefined;
     });
 
-    // Add cleared whiteboard to undo / redo state.
+    removeObjects.forEach((obj: ICanvasObject) => {
+      obj.set({ groupClear: true, generatedBy });
+    });
+
+    canvas.remove(...removeObjects);
+
     const event = { event: [], type: 'clearedWhiteboard' };
 
     dispatch({
@@ -602,78 +641,12 @@ export const useCanvasActions = (
       event,
     });
 
-    await updateClearIsActive(false);
-  }, [canvas, dispatch, userId, updateClearIsActive, eventSerializer]);
+    updateClearIsActive(false);
+  }, [canvas, dispatch, generatedBy, permissions.allowClearAll, permissions.allowClearMyself, permissions.allowClearOthers, updateClearIsActive, userId]);
 
-  /**
-   * Clears all whiteboard elements
-   * */
-  const clearWhiteboardClearMySelf = useCallback(async () => {
-    await updateClearIsActive(true);
-    await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-      if (obj.id && isLocalObject(obj.id, userId)) {
-        const target = {
-          id: obj.id,
-          target: {
-            strategy: 'allowClearMyself',
-          },
-        };
-
-        obj.set({ groupClear: true });
-        canvas?.remove(obj);
-        eventSerializer?.push('removed', target as ObjectEvent);
-      }
-    });
-    closeModal();
-
-    // Add cleared whiteboard to undo / redo state.
-    const event = { event: [], type: 'clearedWhiteboard' };
-
-    dispatch({
-      type: SET,
-      payload: [],
-      canvasId: userId,
-      event,
-    });
-
-    await updateClearIsActive(false);
-    // If isLocalObject is added in dependencies an infinity loop happens
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, closeModal, canvasId, eventSerializer, updateClearIsActive]);
-
-  /**
-   * Clears all whiteboard with allowClearOthers strategy
-   * */
-  const clearWhiteboardAllowClearOthers = useCallback(
-    async (userId: string) => {
-      await updateClearIsActive(true);
-      await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-        if (obj.id) {
-          const object = obj.id.split(':');
-
-          if (!object.length) {
-            throw new Error('Invalid ID');
-          }
-
-          if (object[0] === userId) {
-            canvas?.remove(obj);
-          }
-
-          const target = {
-            id: obj.id,
-            target: {
-              strategy: 'allowClearOthers',
-              userId,
-            },
-          };
-
-          eventSerializer?.push('removed', target as ObjectEvent);
-        }
-      });
-      await updateClearIsActive(false);
-    },
-    [canvas, eventSerializer, updateClearIsActive]
-  );
+  const clearSelf = useCallback(() => {
+    clear([userId]);
+  }, [clear, userId]);
 
   /**
    * Set Canvas Whiteboard selection ability
@@ -683,15 +656,6 @@ export const useCanvasActions = (
     (selection: boolean) => {
       if (canvas) {
         canvas.selection = selection;
-        // canvas.forEachObject((object: fabric.Object) => {
-        // @ts-ignore
-        // if (isLocalObject(object.id, userId)) {
-        //   object.set({
-        //     selectable: selection,
-        //   });
-        // }
-        // });
-
         canvas.renderAll();
       }
     },
@@ -702,7 +666,6 @@ export const useCanvasActions = (
    * Set the cursor to be showed when a object hover happens
    * @param {string} cursor - Cursor name to show
    */
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const setHoverCursorObjects = useCallback(
     (cursor: string): void => {
       if (canvas) {
@@ -725,7 +688,7 @@ export const useCanvasActions = (
 
     canvas?.getObjects().forEach((object: ICanvasObject) => {
       if (
-        (object.id && isLocalObject(object.id, userId as string)) ||
+        (object.id && PainterEvents.isCreatedWithId(object.id, userId)) ||
         !object.id
       ) {
         object.set({
@@ -760,16 +723,21 @@ export const useCanvasActions = (
       if (
         e.target &&
         !e.target._objects &&
-        ((e.target.id && isLocalObject(e.target.id, userId as string)) ||
+        ((e.target.id && PainterEvents.isCreatedWithId(e.target.id, userId)) ||
           !e.target.id)
       ) {
-        canvas.remove(e.target);
+
+        const canvasObject = e.target as ICanvasObject;
+        canvasObject.set({ generatedBy });
+
+        canvas.remove(canvasObject);
         canvas.renderAll();
       }
 
       // if the click is made over an object group
       if (e.target?._objects) {
-        e.target._objects.forEach(function (object: fabric.Object) {
+        e.target._objects.forEach(function (object: ICanvasObject) {
+          object.set({ generatedBy });
           canvas.remove(object);
         });
 
@@ -787,10 +755,14 @@ export const useCanvasActions = (
       if (
         (e.target &&
           e.target.id &&
-          isLocalObject(e.target.id, userId as string)) ||
+          PainterEvents.isCreatedWithId(e.target.id, userId)) ||
         (e.target && !e.target.id)
       ) {
-        canvas.remove(e.target);
+
+        const canvasObject = e.target as ICanvasObject;
+        canvasObject.set({ generatedBy });
+
+        canvas.remove(canvasObject);
         canvas.renderAll();
       }
     });
@@ -804,9 +776,7 @@ export const useCanvasActions = (
       canvas.defaultCursor = 'default';
       eraser = false;
     });
-    // If isLocalObject is added in dependencies an infinity loop happens
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, canvasId]);
+  }, [canvas, generatedBy, userId]);
 
   /**
    * Deselect the actual selected object
@@ -828,7 +798,6 @@ export const useCanvasActions = (
       fillColor,
       changeStrokeColor,
       textColor,
-      clearWhiteboardClearAll,
       discardActiveObject,
       addShape,
       eraseObject,
@@ -836,27 +805,12 @@ export const useCanvasActions = (
       setHoverCursorObjects,
       undo,
       redo,
-      clearWhiteboardAllowClearOthers,
-      clearWhiteboardClearMySelf,
+      clear,
+      clearSelf
     };
 
     return { actions, mouseDown };
-  }, [
-    addShape,
-    changeStrokeColor,
-    clearWhiteboardClearAll,
-    discardActiveObject,
-    eraseObject,
-    fillColor,
-    mouseDown,
-    setCanvasSelection,
-    setHoverCursorObjects,
-    textColor,
-    undo,
-    redo,
-    clearWhiteboardAllowClearOthers,
-    clearWhiteboardClearMySelf,
-  ]);
+  }, [fillColor, changeStrokeColor, textColor, discardActiveObject, addShape, eraseObject, setCanvasSelection, setHoverCursorObjects, undo, redo, clear, clearSelf, mouseDown]);
 
   return state;
 };

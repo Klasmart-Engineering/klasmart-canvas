@@ -5,10 +5,11 @@ import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { fabric } from 'fabric';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 const useSynchronizedReconstruct = (
   canvas: fabric.Canvas | undefined,
-  shouldHandleRemoteEvent: (id: string) => boolean,
+  shouldHandleRemoteEvent: EventFilterFunction,
   userId: string,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
@@ -17,18 +18,17 @@ const useSynchronizedReconstruct = (
   } = useSharedEventSerializer();
 
   useEffect(() => {
-
-  const reconstruct = (id: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const reconstruct = (id: string, generatedBy: string, target: ICanvasObject) => {
+      if (!shouldHandleRemoteEvent(id, generatedBy)) return;
 
       const parsed = JSON.parse(target.param as string);
 
       if (parsed.background && canvas) {
-        canvas?.setBackgroundColor(parsed.background, () => {});
+        canvas?.setBackgroundColor(parsed.background, () => { });
         canvas.renderAll();
         return;
       }
-      
+
       const objects = JSON.parse(target.param as string).objects;
 
       const reset = (object: TypedShape): void => {

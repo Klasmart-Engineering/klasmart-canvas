@@ -10,6 +10,11 @@ export declare const isFreeDrawing: (object: fabric.Object) => boolean;
  */
 export declare const isShape: (object: fabric.Object) => boolean | "" | undefined;
 /**
+ * Check if the given object is a text object
+ * @param {fabric.Object} object - object to check
+ */
+export declare const isText: (object: fabric.Object) => string | undefined;
+/**
  * Check if the given object is an empty shape
  * @param {fabric.Object} object - object to check
  */
