@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useState } from 'react';
+import React, { createContext, useCallback, useState, useReducer } from 'react';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
@@ -73,7 +73,15 @@ export const WhiteboardProvider = ({
   // instance registered, but in the future we could add support for
   // multiple instances using the instanceId to choose which one to
   // apply action to.
-  const [canvasActions, updateCanvasActions] = useState<ICanvasActions>();
+  const [canvasActions, updateCanvasActions] = useReducer((state: ICanvasActions[], action: { op: "add" | "remove", value: ICanvasActions}) => {
+    if (action.op === "add") {
+      state.push(action.value);
+    } else if (action.op === "remove") {
+      let index = state.findIndex(ca => ca === action.value);
+      if (index !== -1) state.splice(index, 1);
+    }
+    return state;
+  }, []);
 
   const [eventedObjects, updateEventedObjects] = useState(true);
 
@@ -94,64 +102,62 @@ export const WhiteboardProvider = ({
 
   const fillColorAction = useCallback(
     (color: string) => {
-      canvasActions?.fillColor(color);
+      canvasActions?.forEach(ca => ca.fillColor(color));
     },
     [canvasActions]
   );
 
   const changeStrokeColorAction = useCallback(
     (color: string) => {
-      canvasActions?.changeStrokeColor(color);
+      canvasActions?.forEach(ca => ca.changeStrokeColor(color));
     },
     [canvasActions]
   );
 
   const textColorAction = useCallback(
     (color: string) => {
-      canvasActions?.textColor(color);
+      canvasActions?.forEach(ca => ca.textColor(color));
     },
     [canvasActions]
   );
 
   const clear = useCallback((filterUsers?: string[]) => {
-    canvasActions?.clear(filterUsers);
+    canvasActions?.forEach(ca => ca.clear(filterUsers));
   }, [canvasActions]);
 
   const clearSelf = useCallback(() => {
-    canvasActions?.clearSelf();
+    canvasActions?.forEach(ca => ca.clearSelf());
   }, [canvasActions]);
 
   const discardActiveObjectAction = useCallback(() => {
-    canvasActions?.discardActiveObject();
+    canvasActions?.forEach(ca => ca.discardActiveObject());
   }, [canvasActions]);
 
   const addShapeAction = useCallback(
     (specific: string) => {
-      canvasActions?.addShape(specific);
+      canvasActions?.forEach(ca => ca.addShape(specific));
     },
     [canvasActions]
   );
 
   const eraseObjectAction = useCallback(() => {
-    canvasActions?.eraseObject();
+    canvasActions?.forEach(ca => ca.eraseObject());
   }, [canvasActions]);
 
   const setCanvasSelectionAction = useCallback(
     (selection: boolean) => {
-      canvasActions?.setCanvasSelection(selection);
+      canvasActions?.forEach(ca => ca.setCanvasSelection(selection));
     },
     [canvasActions]
   );
 
   const undoAction = useCallback(() => {
-    canvasActions?.undo();
+    canvasActions?.forEach(ca => ca.undo());
   }, [canvasActions]);
 
   const redoAction = useCallback(() => {
-    canvasActions?.redo();
+    canvasActions?.forEach(ca => ca.redo());
   }, [canvasActions]);
-
-
 
   const value = {
     fontFamily,
@@ -199,6 +205,7 @@ export const WhiteboardProvider = ({
     updateShapeColor,
     shapesAreSelectable,
     shapesAreEvented,
+    canvasActions,
     updateCanvasActions,
     laserIsActive,
     updateLaserIsActive,

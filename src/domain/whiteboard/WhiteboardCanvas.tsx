@@ -1397,7 +1397,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {
-    updateCanvasActions(actions);
+    const registerActions = actions;
+    updateCanvasActions({ op: "add", value: registerActions });
+
+    return () => {
+      updateCanvasActions({ op: "remove", value: registerActions });
+    }
   }, [actions, updateCanvasActions]);
 
   // TODO: Will be re-added once only one board is visible.
