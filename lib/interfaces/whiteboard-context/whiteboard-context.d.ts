@@ -48,6 +48,7 @@ export interface IWhiteboardContext {
     updateShapesAreEvented: (status: boolean) => void;
     updateCanvasActions: React.Dispatch<{
         op: "add" | "remove";
+        id: string;
         value: ICanvasActions;
     }>;
     laserIsActive: boolean;

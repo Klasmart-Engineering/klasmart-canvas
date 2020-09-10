@@ -2,6 +2,7 @@ import { ObjectEvent } from './PaintEventSerializer';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 export declare class PainterEvents {
     static createId(canvasId: string): string;
+    static getUserId(id: string): string;
     static isCreatedWithId(id: string, canvasId: string): boolean;
     static getEventGroup(id: string): string | undefined;
     static isCreatedWithGroup(id: string, group: string): boolean;
