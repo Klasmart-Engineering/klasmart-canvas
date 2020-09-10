@@ -38,7 +38,7 @@ import useSynchronizedFontColorChanged from './synchronization-hooks/useSynchron
 import { SET, SET_GROUP, UNDO, REDO } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
-import { IEvent, ITextOptions, Canvas } from 'fabric/fabric-impl';
+import { IEvent, ITextOptions, Canvas, Textbox } from 'fabric/fabric-impl';
 import {
   ObjectEvent,
   ObjectType,
@@ -228,7 +228,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (textIsActive) {
       canvas?.on('mouse:down', (e: fabric.IEvent) => {
-        if (e.target === null && e) {
+        if ((e.target === null && e) || e.target?.type !== 'textbox') {
           let text = new fabric.IText(' ', {
             fontFamily: fontFamily,
             fontSize: 30,
@@ -599,6 +599,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       brushIsActive,
       reorderShapes,
       shapeIsActive,
+      updateFontColor,
+      updateFontFamily,
       updateLineWidth,
       updatePenColor,
       updateShape,
@@ -692,8 +694,39 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       });
 
       actions.setHoverCursorObjects('move');
+    } else if (true) {
+      canvas?.discardActiveObject();
+      canvas?.forEachObject((object: ICanvasObject) => {
+        if (object.id && isLocalObject(object.id, userId)) {
+          setObjectControlsVisibility(object, false);
+          object.set({
+            evented: false,
+            selectable: false,
+            lockMovementX: true,
+            lockMovementY: true,
+            hasBorders: false,
+          });
+        }
+      });
+
+      actions.setHoverCursorObjects('default');
     }
   }, [actions, canvas, eventedObjects, isLocalObject, userId]);
+
+  useEffect(() => {
+    const canEditText = eventedObjects || textIsActive;
+    canvas?.forEachObject((object) => {
+      if (object.type === 'textbox') {
+        setObjectControlsVisibility(object, canEditText);
+        (object as Textbox).set({
+          evented: canEditText,
+          selectable: canEditText,
+          hasBorders: canEditText,
+          editable: canEditText,
+        });
+      }
+    });
+  }, [canvas, eventedObjects, textIsActive]);
 
   /**
    * Manages the logic for Flood-fill Feature

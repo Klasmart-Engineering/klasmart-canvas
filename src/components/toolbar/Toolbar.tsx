@@ -136,9 +136,7 @@ function Toolbar() {
     */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
-    updateEventedObjects(
-      tool === ELEMENTS.POINTERS_TOOL || tool === ELEMENTS.MOVE_OBJECTS_TOOL
-    );
+    updateEventedObjects(tool === ELEMENTS.MOVE_OBJECTS_TOOL);
 
     if (
       tool === ELEMENTS.POINTERS_TOOL ||
