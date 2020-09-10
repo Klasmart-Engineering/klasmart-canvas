@@ -10,13 +10,33 @@ export class PainterEvents {
   public static isCreatedWithId(id: string, canvasId: string) {
     if (canvasId === undefined) return false;
 
-    const object = id.split(':');
+    const canvasIdParts = id.split(':');
+    if (canvasIdParts.length < 1)
+      throw new Error('Invalid canvas ID');
 
-    if (!object.length) {
+    const parts = id.split(':');
+
+    if (parts.length < 2) {
       throw new Error('Invalid ID');
     }
 
-    return object[0] === canvasId;
+    return parts[0] === canvasIdParts[0];
+  }
+
+  public static getEventGroup(id: string): string | undefined {
+    const parts = id.split(':');
+    if (parts.length >= 3) {
+      return parts[1];
+    } else {
+      return undefined;
+    }
+  }
+
+  public static isCreatedWithGroup(id: string, group: string) {
+    const parts = id.split(':');
+    if (parts.length < 3) return false;
+
+    return parts[1] === group;
   }
 
   public static pathCreated(
