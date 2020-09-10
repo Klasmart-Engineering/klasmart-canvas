@@ -25,6 +25,7 @@ export interface ObjectEvent {
     | ICanvasObject
     | { objects: ICanvasObject[] }
     | { background: string }
+    | { pointer: boolean }
     | boolean;
 }
 
