@@ -37,7 +37,13 @@ import useSynchronizedFontColorChanged from './synchronization-hooks/useSynchron
 import { SET, SET_GROUP } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
-import { IEvent, ITextOptions, Canvas } from 'fabric/fabric-impl';
+import {
+  IEvent,
+  ITextOptions,
+  Canvas,
+  Textbox,
+  IText,
+} from 'fabric/fabric-impl';
 import {
   ObjectEvent,
   ObjectType,
@@ -49,6 +55,7 @@ import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchron
 import useFixedAspectScaling, {
   ScaleMode,
 } from './utils/useFixedAspectScaling';
+import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -266,6 +273,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Handles the logic to write text on the whiteboard
    * */
   useEffect(() => {
+    let currentTextbox: Textbox;
+    let textboxCopy: IText;
+
     if (textIsActive) {
       canvas?.on('mouse:down', (e: fabric.IEvent) => {
         if (e.target === null && e) {
@@ -312,6 +322,66 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               }
             });
           });
+        }
+      });
+
+      canvas?.on('text:editing:entered', (e: IEvent) => {
+        if (e.target?.type === 'textbox') {
+          let counter = 0;
+          let textCopy = '';
+
+          currentTextbox = e.target as Textbox;
+          currentTextbox.textLines.forEach((line, index) => {
+            let separator =
+              currentTextbox.text?.charCodeAt(counter + line.length) === 10
+                ? '\n'
+                : ' \n';
+
+            if (index === currentTextbox.textLines.length - 1) {
+              separator = '';
+            }
+
+            textCopy += `${line}${separator}`;
+            counter += line.length + 1;
+          });
+
+          const textboxProps = JSON.parse(JSON.stringify(currentTextbox));
+          delete textboxProps.text;
+          delete textboxProps.type;
+          textboxProps.type = 'i-text';
+          textboxProps.opacity = 1;
+          textboxProps.width = currentTextbox.width;
+          textboxProps.height = currentTextbox.height;
+
+          if (typeof textCopy === 'string') {
+            textboxCopy = new fabric.IText(textCopy, textboxProps);
+            canvas.add(textboxCopy);
+            canvas.setActiveObject(textboxCopy);
+            textboxCopy.enterEditing();
+            currentTextbox.set({
+              opacity: 0,
+            });
+
+            canvas.renderAll();
+          }
+        }
+      });
+
+      canvas?.on('text:editing:exited', (e: IEvent) => {
+        let regex = / \n/gi;
+        if (currentTextbox && e.target?.type === 'i-text') {
+          textboxCopy.set('isEditing', false);
+          canvas.setActiveObject(currentTextbox);
+          currentTextbox.set('isEditing', true);
+          currentTextbox.set({
+            width: textboxCopy.width,
+            height: textboxCopy.height,
+            opacity: 1,
+            text: textboxCopy.text?.replace(regex, ' '),
+          });
+          canvas.discardActiveObject();
+          canvas.remove(textboxCopy);
+          canvas.renderAll();
         }
       });
     }
@@ -1001,6 +1071,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     userId,
     filterOutgoingEvents,
     filterIncomingEvents,
+    undoRedoDispatch
+  );
+  useSynchronizedModified(
+    canvas,
+    filterOutgoingEvents,
+    filterIncomingEvents,
+    userId,
     undoRedoDispatch
   );
   useSynchronizedRotated(
