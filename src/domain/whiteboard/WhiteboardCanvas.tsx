@@ -91,6 +91,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   scaleMode,
   centerHorizontally,
   centerVertically,
+  filterUsers,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
   const [wrapper, setWrapper] = useState<HTMLElement>();
@@ -964,20 +965,19 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   );
 
   const filterIncomingEvents = useCallback(
-    (_id: string, eventGeneratedBy?: string): boolean => {
+    (id: string, eventGeneratedBy?: string): boolean => {
       if (!eventGeneratedBy) return false;
-
-      // NOTE: No event serializer means the event must have originated
-      // from somewhere else and it should be applied.
       if (!eventSerializer) return true;
 
-      // TODO: Filter based on the filterUsers list. We should only
-      // display events coming from users in that list if the list
-      // isn't undefined.
+      if (filterUsers !== undefined) {
+        if (filterUsers.find(user => PainterEvents.isCreatedWithId(id, user)) === undefined) {
+          return false;
+        }
+      }
 
       return eventGeneratedBy !== generatedBy;
     },
-    [eventSerializer, generatedBy]
+    [eventSerializer, generatedBy, filterUsers]
   );
 
   useSynchronizedAdded(
