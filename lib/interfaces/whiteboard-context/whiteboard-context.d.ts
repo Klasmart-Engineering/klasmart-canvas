@@ -1,3 +1,4 @@
+/// <reference types="react" />
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
 import { IWhiteboardPermissions } from '../canvas-events/whiteboard-permissions';
 export interface IWhiteboardContext {
@@ -45,7 +46,10 @@ export interface IWhiteboardContext {
     updateShapesAreSelectable: (status: boolean) => void;
     shapesAreEvented: boolean;
     updateShapesAreEvented: (status: boolean) => void;
-    updateCanvasActions: (actions: ICanvasActions) => void;
+    updateCanvasActions: React.Dispatch<{
+        op: "add" | "remove";
+        value: ICanvasActions;
+    }>;
     laserIsActive: boolean;
     updateLaserIsActive: (status: boolean) => void;
     discardActiveObject: () => void;
