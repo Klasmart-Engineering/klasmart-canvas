@@ -1418,7 +1418,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     requestAllEvents();
 
-  }, [canvas, requestAllEvents, userId]);
+  }, [canvas, requestAllEvents, userId, filterUsers]);
 
   return (
     <canvas
