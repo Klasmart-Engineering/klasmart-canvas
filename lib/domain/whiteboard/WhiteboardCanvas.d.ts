@@ -20,6 +20,7 @@ export declare type Props = {
     pixelWidth: number;
     pixelHeight: number;
     filterUsers?: string[];
+    filterGroups?: string[];
     display?: boolean;
     scaleMode?: ScaleMode;
     centerHorizontally?: boolean;
