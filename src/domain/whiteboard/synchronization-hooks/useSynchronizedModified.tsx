@@ -49,7 +49,7 @@ const useSynchronizedModified = (
     };
 
     const payload = {
-      id: (modified as unknown as ICanvasObject).id as string,
+      id: ((modified as unknown) as ICanvasObject).id as string,
     };
 
     if (canvas && payload.id) {
@@ -68,19 +68,31 @@ const useSynchronizedModified = (
     return () => {
       eventController?.removeListener('modified', modified);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent, undoRedoDispatch, userId]);
+  }, [
+    canvas,
+    eventController,
+    shouldHandleRemoteEvent,
+    undoRedoDispatch,
+    userId,
+  ]);
 
   /** Register and handle local events. */
   useEffect(() => {
     const objectModified = (e: fabric.IEvent | CanvasEvent) => {
       if (!e.target) return;
-      if ((e.target as ICanvasObject).id && !shouldSerializeEvent((e.target as ICanvasObject).id as string))
+      if (
+        (e.target as ICanvasObject).id &&
+        !shouldSerializeEvent((e.target as ICanvasObject).id as string)
+      )
         return;
 
       const type = (e.target as ICanvasObject).get('type') as ObjectType;
-
       // If text has been modified
-      if (type === 'textbox' && (e.target as ICanvasObject).id) {
+      if (
+        type === 'textbox' &&
+        (e.target as ICanvasObject).id &&
+        (e.target as ICanvasObject)._textBeforeEdit
+      ) {
         const target = {
           ...(type === 'textbox' && {
             text: (e.target as ICanvasObject).text,
@@ -104,7 +116,7 @@ const useSynchronizedModified = (
           type: SET,
           payload: canvas?.getObjects(),
           canvasId: userId,
-          event: event as unknown as IUndoRedoEvent,
+          event: (event as unknown) as IUndoRedoEvent,
         });
 
         eventSerializer?.push('modified', payload);

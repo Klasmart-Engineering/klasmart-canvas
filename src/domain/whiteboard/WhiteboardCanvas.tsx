@@ -273,9 +273,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Handles the logic to write text on the whiteboard
    * */
   useEffect(() => {
-    let currentTextbox: Textbox;
-    let textboxCopy: IText;
-
     if (textIsActive) {
       canvas?.on('mouse:down', (e: fabric.IEvent) => {
         if (e.target === null && e) {
@@ -324,66 +321,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           });
         }
       });
-
-      canvas?.on('text:editing:entered', (e: IEvent) => {
-        if (e.target?.type === 'textbox') {
-          let counter = 0;
-          let textCopy = '';
-
-          currentTextbox = e.target as Textbox;
-          currentTextbox.textLines.forEach((line, index) => {
-            let separator =
-              currentTextbox.text?.charCodeAt(counter + line.length) === 10
-                ? '\n'
-                : ' \n';
-
-            if (index === currentTextbox.textLines.length - 1) {
-              separator = '';
-            }
-
-            textCopy += `${line}${separator}`;
-            counter += line.length + 1;
-          });
-
-          const textboxProps = JSON.parse(JSON.stringify(currentTextbox));
-          delete textboxProps.text;
-          delete textboxProps.type;
-          textboxProps.type = 'i-text';
-          textboxProps.opacity = 1;
-          textboxProps.width = currentTextbox.width;
-          textboxProps.height = currentTextbox.height;
-
-          if (typeof textCopy === 'string') {
-            textboxCopy = new fabric.IText(textCopy, textboxProps);
-            canvas.add(textboxCopy);
-            canvas.setActiveObject(textboxCopy);
-            textboxCopy.enterEditing();
-            currentTextbox.set({
-              opacity: 0,
-            });
-
-            canvas.renderAll();
-          }
-        }
-      });
-
-      canvas?.on('text:editing:exited', (e: IEvent) => {
-        let regex = / \n/gi;
-        if (currentTextbox && e.target?.type === 'i-text') {
-          textboxCopy.set('isEditing', false);
-          canvas.setActiveObject(currentTextbox);
-          currentTextbox.set('isEditing', true);
-          currentTextbox.set({
-            width: textboxCopy.width,
-            height: textboxCopy.height,
-            opacity: 1,
-            text: textboxCopy.text?.replace(regex, ' '),
-          });
-          canvas.discardActiveObject();
-          canvas.remove(textboxCopy);
-          canvas.renderAll();
-        }
-      });
     }
 
     return () => {
@@ -401,6 +338,101 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     userId,
     eraseType,
   ]);
+
+  /**
+   * Handles the logic to set the Textbox auto grownable and text responsive
+   */
+  useEffect(() => {
+    let currentTextbox: Textbox;
+    let textboxCopy: IText;
+
+    if (textIsActive) {
+      /**
+       * Entering to edit a text object
+       * Textbox transformed in IText
+       */
+      canvas?.on('text:editing:entered', (e: IEvent) => {
+        if (e.target?.type === 'textbox') {
+          let counter = 0;
+          let textCopy = '';
+
+          /**
+           * Emulates the aspect of a Textbox keeping the lines
+           * that this had in the new IText object
+           */
+          const setLines = () => {
+            currentTextbox.textLines.forEach((line, index) => {
+              let separator =
+                currentTextbox.text?.charCodeAt(counter + line.length) === 10
+                  ? '\n'
+                  : ' \n';
+
+              if (index === currentTextbox.textLines.length - 1) {
+                separator = '';
+              }
+
+              textCopy += `${line}${separator}`;
+              counter += line.length + 1;
+            });
+          };
+
+          canvas.remove(textboxCopy);
+          currentTextbox = e.target as Textbox;
+          setLines();
+
+          // Preparing Textbox properties to be setted in IText object
+          const textboxProps = JSON.parse(JSON.stringify(currentTextbox));
+          delete textboxProps.text;
+          delete textboxProps.type;
+          textboxProps.type = 'i-text';
+          textboxProps.visible = true;
+          textboxProps.width = currentTextbox.width;
+          textboxProps.height = currentTextbox.height;
+
+          // Adding the IText and hiding the Textbox
+          if (typeof textCopy === 'string') {
+            textboxCopy = new fabric.IText(textCopy, textboxProps);
+            canvas.add(textboxCopy);
+            canvas.setActiveObject(textboxCopy);
+            textboxCopy.enterEditing();
+            currentTextbox.set({
+              visible: false,
+            });
+
+            canvas.renderAll();
+          }
+        }
+      });
+
+      /**
+       * Text Edition finished on IText object
+       * IText transformed in Textbox
+       */
+      canvas?.on('text:editing:exited', (e: IEvent) => {
+        // Updating/showing the Textbox and hiding the IText
+        if (currentTextbox && e.target?.type === 'i-text') {
+          textboxCopy.set('isEditing', false);
+          currentTextbox.set({
+            width: textboxCopy.width,
+            height: textboxCopy.height,
+            visible: true,
+            text: textboxCopy.text?.replace(/ \n/gi, ' '),
+          });
+
+          canvas.setActiveObject(currentTextbox);
+          currentTextbox.set('isEditing', true);
+          textboxCopy.set('visible', false);
+          canvas.discardActiveObject();
+          canvas.renderAll();
+        }
+      });
+    }
+
+    return () => {
+      canvas?.off('text:editing:entered');
+      canvas?.off('text:editing:exited');
+    };
+  }, [canvas, textIsActive]);
 
   /**
    * Is executed when textIsActive changes its value,
