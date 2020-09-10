@@ -11,6 +11,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useMemo,
 } from 'react';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { WhiteboardContext } from './WhiteboardContext';
@@ -125,10 +126,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateShapeColor,
     floodFill,
     laserIsActive,
-    allowPointer,
-    universalPermits,
     toolbarIsEnabled,
     setToolbarIsEnabled,
+    pointerIsEnabled,
+    setPointerIsEnabled,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -696,6 +697,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [actions, canvas, eventedObjects, isLocalObject, userId]);
 
   /**
+   * Memoized laserIsActive prop.
+   */
+  const laserPointerIsActive = useMemo(() => laserIsActive, [laserIsActive]);
+
+  /**
    * Manages the logic for Flood-fill Feature
    */
   useEffect(() => {
@@ -853,7 +859,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (!floodFillIsActive && eraseType !== 'object') {
         canvas?.forEachObject((object: ICanvasObject) => {
           object.set({
-            hoverCursor: 'default',
+            hoverCursor: laserPointerIsActive ? 'none' : 'default',
             evented: false,
             perPixelTargetFind: false,
           });
@@ -879,6 +885,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     eraseType,
     undoRedoDispatch,
     toolbarIsEnabled,
+    laserPointerIsActive,
   ]);
 
   /**
@@ -991,19 +998,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useSynchronizedFontFamilyChanged(canvas, filterIncomingEvents);
   useSynchronizedPointer(
     canvas,
-    !allowPointer,
-    universalPermits,
+    pointerIsEnabled,
     filterIncomingEvents,
     userId,
     penColor,
-    laserIsActive,
-    allowPointer
+    laserIsActive
   );
   useSynchronizedSetToolbarPermissions(
     canvas,
     userId,
     filterIncomingEvents,
-    setToolbarIsEnabled
+    setToolbarIsEnabled,
+    setPointerIsEnabled
   );
   useSynchronizedFontColorChanged(
     canvas,
