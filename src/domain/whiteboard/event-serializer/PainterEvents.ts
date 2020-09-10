@@ -7,10 +7,18 @@ export class PainterEvents {
     return `${canvasId}:${uuidv4()}`;
   }
 
+  public static getUserId(id: string) {
+    const parts = id.split(':');
+    if (parts.length < 1)
+      throw new Error('Invalid ID');
+
+    return id[0];
+  }
+
   public static isCreatedWithId(id: string, canvasId: string) {
     if (canvasId === undefined) return false;
 
-    const canvasIdParts = id.split(':');
+    const canvasIdParts = canvasId.split(':');
     if (canvasIdParts.length < 1)
       throw new Error('Invalid canvas ID');
 
