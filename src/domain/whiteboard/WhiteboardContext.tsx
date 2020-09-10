@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { createContext, useCallback, useState } from 'react';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
@@ -271,17 +272,17 @@ export const WhiteboardProvider = ({
   return (
     <WhiteboardContext.Provider value={value}>
       {/*: Should work for student and teacher */}
-      <button onClick={() => clearWhiteboardActionClearMyself()}>
+      {/* <button onClick={() => clearWhiteboardActionClearMyself()}>
         Clear My self
-      </button>
+      </button> */}
       {/*: Should work only for teacher */}
-      <button onClick={() => clearWhiteboardActionClearAll()}>Clear All</button>
+      {/* <button onClick={() => clearWhiteboardActionClearAll()}>Clear All</button> */}
       {/*: Should work only for teacher */}
-      <button onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
+      {/* <button onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
         Clear student
-      </button>
+      </button> */}
       {/*<div>Whiteboard Context {toolbarIsEnabled.toString()}</div>*/}
-      <AuthMenu userId={userId} setToolbarIsEnabled={setToolbarIsEnabled} />
+      {/* <AuthMenu userId={userId} setToolbarIsEnabled={setToolbarIsEnabled} /> */}
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />
