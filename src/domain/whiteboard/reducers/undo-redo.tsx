@@ -11,6 +11,9 @@ export const SET_GROUP = 'CANVAS_SET_GROUP';
 export const UPDATE_OTHER = 'CANVAS_UPDATE_OTHER';
 export const SET_OTHER = 'CANVAS_SET_OTHER';
 
+// @ts-ignore
+const limit = 3000;
+
 /**
  * Model for storing the canvas history for undo/redo functionality.
  * States stored as stringified objects, since fabric requires it when
@@ -241,6 +244,10 @@ const reducer = (
       const mappedSelfState = objectStringifier(selfItems);
       states = [...states, mappedSelfState];
 
+      if (states.length > limit) {
+        states.shift();
+      }
+
       let stateItems = {
         ...state,
         states,
@@ -255,6 +262,10 @@ const reducer = (
         events.splice(state.eventIndex + 1, 9e9);
       } else if (state.eventIndex < 0) {
         events = [];
+      }
+
+      if (events.length > limit) {
+        events.shift();
       }
 
       if (action.event && !Array.isArray(action.event)) {
@@ -371,6 +382,7 @@ const reducer = (
 
     // Steps back to previous state.
     case UNDO: {
+
       if (state.activeStateIndex === null) {
         return state;
       }
