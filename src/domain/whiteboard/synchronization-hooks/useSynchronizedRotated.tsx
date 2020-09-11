@@ -30,7 +30,6 @@ const useSynchronizedRotated = (
         if (obj.id && obj.id === id) {
           const object = target.eTarget;
           if (object) {
-            console.log({ object });
             obj.set({
               angle: object.angle,
               top: object.top,
@@ -200,8 +199,6 @@ const useSynchronizedRotated = (
           type: type as ObjectType,
           target: { eTarget: target, isGroup: false },
         };
-
-        console.log({ payload });
 
         eventSerializer?.push('rotated', payload);
 
