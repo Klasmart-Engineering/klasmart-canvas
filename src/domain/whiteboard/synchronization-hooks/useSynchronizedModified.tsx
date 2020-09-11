@@ -89,11 +89,7 @@ const useSynchronizedModified = (
       const type = (e.target as ICanvasObject).get('type') as ObjectType;
 
       // If text has been modified
-      if (
-        type === 'textbox' &&
-        (e.target as ICanvasObject).id &&
-        (e.target as ICanvasObject)._textBeforeEdit
-      ) {
+      if (type === 'textbox' && (e.target as ICanvasObject).id) {
         const target = {
           ...(type === 'textbox' && {
             text: (e.target as ICanvasObject).text,

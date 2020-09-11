@@ -369,11 +369,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
        * IText transformed in Textbox
        */
       canvas?.on('text:editing:exited', (e: IEvent) => {
+        const textboxWidth: number = textboxCopy.width || 0;
+
         // Updating/showing the Textbox and hiding the IText
         if (currentTextbox && e.target?.type === 'i-text') {
           textboxCopy.set('isEditing', false);
           currentTextbox.set({
-            width: textboxCopy.width,
+            width: textboxWidth + 10,
             height: textboxCopy.height,
             visible: true,
             text: textboxCopy.text?.replace(/ \n/gi, ' ').trim(),
