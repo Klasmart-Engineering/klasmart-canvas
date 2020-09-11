@@ -92,8 +92,6 @@ export interface CanvasAction {
    * Event ID. Used to determine if an event is grouped.
    */
   eventId?: string | undefined;
-
-  svg?: any;
 }
 
 /**
@@ -192,6 +190,16 @@ const determineNewRedoIndex = (
   return events.length - 1;
 };
 
+const limitValidator = (list: IUndoRedoEvent[] | string[], limit: number) => {
+  const cloned = [ ...list ];
+
+  if (list.length > limit) {
+    cloned.shift();
+  }
+
+  return cloned;
+};
+
 /**
  * History state reducer.
  * @param state Canvas state.
@@ -240,11 +248,7 @@ const reducer = (
 
       // Formats and creates new state.
       const mappedSelfState = objectStringifier(selfItems);
-      states = [...states, mappedSelfState];
-
-      if (states.length > STATES_LIMIT) {
-        states.shift();
-      }
+      states = limitValidator([...states, mappedSelfState], STATES_LIMIT) as string[];
 
       let stateItems = {
         ...state,
@@ -262,9 +266,7 @@ const reducer = (
         events = [];
       }
 
-      if (events.length > STATES_LIMIT) {
-        events.shift();
-      }
+      events = limitValidator(events, STATES_LIMIT) as IUndoRedoEvent[];
 
       if (action.event && !Array.isArray(action.event)) {
         events = [...events, action.event];
@@ -343,11 +345,7 @@ const reducer = (
 
       // Formats and creates new state.
       const mappedSelfState = JSON.stringify({ objects: selfItems });
-      states = [...states, mappedSelfState];
-
-      if (states.length > STATES_LIMIT) {
-        states.shift();
-      }
+      states = limitValidator([...states, mappedSelfState], STATES_LIMIT) as string[];
 
       let newEvent = { ...action.event, selfState: mappedSelfState };
 
@@ -367,9 +365,7 @@ const reducer = (
         events = [];
       }
 
-      if (events.length > STATES_LIMIT) {
-        events.shift();
-      }
+      events = limitValidator(events, STATES_LIMIT) as IUndoRedoEvent[];
 
       if (Array.isArray(action.event)) {
         events = [...events, ...action.event];
@@ -388,7 +384,7 @@ const reducer = (
 
     // Steps back to previous state.
     case UNDO: {
-      if (state.activeStateIndex === null || state.activeStateIndex === 0) {
+      if (!state.activeStateIndex) {
         return state;
       }
 
