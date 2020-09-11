@@ -558,6 +558,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (
         !shapeIsActive &&
         !brushIsActive &&
+        eventedObjects &&
         ((event.target && isFreeDrawing(event.target)) ||
           (event.target && isEmptyShape(event.target)))
       ) {
@@ -566,7 +567,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       }
 
       // Shape Selected
-      if (event.target && isShape(event.target) && !shapeIsActive) {
+      if (
+        event.target &&
+        isShape(event.target) &&
+        !shapeIsActive &&
+        eventedObjects
+      ) {
         updateShape(event.target.name || DEFAULT_VALUES.SHAPE);
 
         if (
@@ -585,7 +591,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       }
 
       // Text Selected
-      if (event.target && isText(event.target)) {
+      if (event.target && isText(event.target) && eventedObjects) {
         const newFont = (event.target as ITextOptions).fontFamily;
         const newFontColor = event.target.fill;
 
@@ -597,6 +603,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     },
     [
       brushIsActive,
+      eventedObjects,
       reorderShapes,
       shapeIsActive,
       updateFontColor,
