@@ -218,6 +218,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       }
     });
 
+    console.log('evented: ', shapesAreSelectable);
+
     canvas.selection = shapesAreSelectable;
     canvas.renderAll();
   }, [canvas, isLocalObject, shapesAreEvented, shapesAreSelectable, userId]);
@@ -354,6 +356,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             evented: false,
             selectable: false,
           });
+
+          console.log('no selectable');
         }
       });
 
@@ -554,6 +558,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     (event: fabric.IEvent) => {
       reorderShapes();
 
+      console.log('selection', event.target);
       // Free Drawing Line Selected
       if (
         !shapeIsActive &&
@@ -686,6 +691,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Set the objects like evented if you select pointer or move tool
    */
   useEffect(() => {
+    console.log('select: ', eventedObjects);
     if (eventedObjects) {
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
@@ -701,7 +707,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       });
 
       actions.setHoverCursorObjects('move');
-    } else if (true) {
+    } else if (!textIsActive) {
       canvas?.discardActiveObject();
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
@@ -718,7 +724,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       actions.setHoverCursorObjects('default');
     }
-  }, [actions, canvas, eventedObjects, isLocalObject, userId]);
+  }, [actions, canvas, eventedObjects, isLocalObject, textIsActive, userId]);
 
   useEffect(() => {
     const canEditText = eventedObjects || textIsActive;
