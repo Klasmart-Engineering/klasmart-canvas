@@ -707,27 +707,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       });
 
       actions.setHoverCursorObjects('move');
-    } else if (!textIsActive) {
-      canvas?.discardActiveObject();
-      canvas?.forEachObject((object: ICanvasObject) => {
-        if (object.id && isLocalObject(object.id, userId)) {
-          setObjectControlsVisibility(object, false);
-          object.set({
-            evented: false,
-            selectable: false,
-            lockMovementX: true,
-            lockMovementY: true,
-            hasBorders: false,
-          });
-        }
-      });
-
-      actions.setHoverCursorObjects('default');
     }
   }, [actions, canvas, eventedObjects, isLocalObject, textIsActive, userId]);
 
   useEffect(() => {
     const canEditText = eventedObjects || textIsActive;
+    canvas?.discardActiveObject();
     canvas?.forEachObject((object) => {
       if (object.type === 'textbox') {
         setObjectControlsVisibility(object, canEditText);
