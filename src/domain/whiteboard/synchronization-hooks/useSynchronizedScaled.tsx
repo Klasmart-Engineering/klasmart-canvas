@@ -74,28 +74,30 @@ const useSynchronizedScaled = (
         }
       }
 
+      const props = target?.eTarget;
+
       const sel = new fabric.ActiveSelection(objectsToGroup, {
         canvas: canvas,
-        originX: target?.eTarget?.originX,
-        originY: target?.eTarget?.originY,
-        top: target?.eTarget?.top,
-        left: target?.eTarget?.left,
-        width: target?.eTarget?.width,
-        height: target?.eTarget?.height,
-        scaleX: target?.eTarget?.scaleX,
-        scaleY: target?.eTarget?.scaleY,
-        flipX: target?.eTarget?.flipX,
-        flipY: target?.eTarget?.flipY,
-        angle: target?.eTarget?.angle,
-        skewX: target?.eTarget?.skewX,
-        skewY: target?.eTarget?.skewY,
-        oCoords: target?.eTarget?.oCoords,
-        aCoords: target?.eTarget?.aCoords,
-        matrixCache: target?.eTarget?.matrixCache,
-        ownMatrixCache: target?.eTarget?.ownMatrixCache,
-        snapAngle: target?.eTarget?.snapAngle,
-        snapThreshold: target?.eTarget?.snapThreshold,
-        group: target?.eTarget?.group,
+        originX: props?.originX,
+        originY: props?.originY,
+        top: props?.top,
+        left: props?.left,
+        width: props?.width,
+        height: props?.height,
+        scaleX: props?.scaleX,
+        scaleY: props?.scaleY,
+        flipX: props?.flipX,
+        flipY: props?.flipY,
+        angle: props?.angle,
+        skewX: props?.skewX,
+        skewY: props?.skewY,
+        oCoords: props?.oCoords,
+        aCoords: props?.aCoords,
+        matrixCache: props?.matrixCache,
+        ownMatrixCache: props?.ownMatrixCache,
+        snapAngle: props?.snapAngle,
+        snapThreshold: props?.snapThreshold,
+        group: props?.group,
       });
       canvas?.setActiveObject(sel);
       canvas?.requestRenderAll();
