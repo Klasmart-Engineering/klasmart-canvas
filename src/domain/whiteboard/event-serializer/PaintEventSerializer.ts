@@ -20,12 +20,12 @@ export declare interface PaintEventSerializer {
 export interface ObjectEvent {
   id: string;
   type?: ObjectType;
-
   target?:
     | ICanvasObject
     | { objects: ICanvasObject[] }
     | { background: string }
-    | boolean;
+    | boolean
+    | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean };
 }
 
 export type ObjectType =

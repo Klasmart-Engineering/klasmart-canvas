@@ -603,6 +603,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       updatePenColor,
       updateShape,
       updateShapeColor,
+      updateFontColor,
+      updateFontFamily,
     ]
   );
 
