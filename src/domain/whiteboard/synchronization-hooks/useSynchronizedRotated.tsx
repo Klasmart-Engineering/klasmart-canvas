@@ -23,36 +23,24 @@ const useSynchronizedRotated = (
 
   /** Register and handle remote event. */
   useEffect(() => {
-    const rotated = (id: string, objectType: string, target: ICanvasObject) => {
+    const objectRotated = (id: string, target: ICanvasObject) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
-          if (objectType === 'activeSelection' && target.left && obj.left) {
+          const object = target.eTarget;
+          if (object) {
+            console.log({ object });
             obj.set({
-              angle: target.angle,
-              top: target.top,
-              left: target.left + 1,
-              scaleX: target.scaleX,
-              scaleY: target.scaleY,
-              flipX: target.flipX,
-              flipY: target.flipY,
-              originX: 'center',
-              originY: 'center',
-            });
-            obj.set({ left: obj.left - 1 });
-            obj.setCoords();
-          } else {
-            obj.set({
-              angle: target.angle,
-              top: target.top,
-              left: target.left,
-              scaleX: target.scaleX,
-              scaleY: target.scaleY,
-              flipX: target.flipX,
-              flipY: target.flipY,
-              originX: target.originX || 'left',
-              originY: target.originY || 'top',
+              angle: object.angle,
+              top: object.top,
+              left: object.left,
+              scaleX: object.scaleX,
+              scaleY: object.scaleY,
+              flipX: object.flipX,
+              flipY: object.flipY,
+              originX: object.originX || 'left',
+              originY: object.originY || 'top',
             });
             obj.setCoords();
           }
@@ -61,12 +49,77 @@ const useSynchronizedRotated = (
       canvas?.renderAll();
     };
 
-    eventController?.on('rotated', rotated);
+    const groupRotated = (id: string, target: ICanvasObject) => {
+      const isLocalGroup = (id: string, canvasId: string | undefined) => {
+        const object = id.split(':');
+
+        if (!object.length) {
+          throw new Error('Invalid ID');
+        }
+
+        return object[0] === canvasId;
+      };
+
+      if (isLocalGroup(id, userId)) {
+        return;
+      }
+
+      const localObjects: any[] = canvas?.getObjects() || [];
+      const objectsToGroup = [];
+
+      for (let i = 0; i < localObjects.length; i++) {
+        if (target.activeIds) {
+          if (target.activeIds.includes(localObjects[i].id)) {
+            objectsToGroup.push(localObjects[i]);
+          }
+        }
+      }
+
+      const props = target?.eTarget;
+
+      const sel = new fabric.ActiveSelection(objectsToGroup, {
+        canvas: canvas,
+        originX: props?.originX,
+        originY: props?.originY,
+        top: props?.top,
+        left: props?.left,
+        width: props?.width,
+        height: props?.height,
+        scaleX: props?.scaleX,
+        scaleY: props?.scaleY,
+        flipX: props?.flipX,
+        flipY: props?.flipY,
+        angle: props?.angle,
+        skewX: props?.skewX,
+        skewY: props?.skewY,
+        oCoords: props?.oCoords,
+        aCoords: props?.aCoords,
+        matrixCache: props?.matrixCache,
+        ownMatrixCache: props?.ownMatrixCache,
+        snapAngle: props?.snapAngle,
+        snapThreshold: props?.snapThreshold,
+        group: props?.group,
+      });
+      canvas?.setActiveObject(sel);
+      canvas?.requestRenderAll();
+      canvas?.discardActiveObject();
+    };
+
+    const rotation = (id: string, _type: string, target: ICanvasObject) => {
+      if (target.isGroup) {
+        groupRotated(id, target);
+        return;
+      }
+
+      objectRotated(id, target);
+    };
+
+    eventController?.on('rotated', rotation);
 
     return () => {
-      eventController?.removeListener('rotated', rotated);
+      eventController?.removeListener('rotated', rotation);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent]);
+  }, [canvas, eventController, shouldHandleRemoteEvent, userId]);
 
   /** Register and handle local event. */
   useEffect(() => {
@@ -83,54 +136,23 @@ const useSynchronizedRotated = (
         targetObjects?.forEach((activeObject: ICanvasObject) => {
           if (activeObject.id && !shouldSerializeEvent(activeObject.id)) return;
 
-          const matrix = activeObject.calcTransformMatrix();
-          const options = fabric.util.qrDecompose(matrix);
-          const flipX = () => {
-            if (activeObject.flipX && e.target?.flipX) {
-              return false;
-            }
-
-            return activeObject.flipX || e.target?.flipX;
-          };
-
-          const flipY = () => {
-            if (activeObject.flipY && e.target?.flipY) {
-              return false;
-            }
-
-            return activeObject.flipY || e.target?.flipY;
-          };
-
-          const angle = () => {
-            if (e.target?.angle !== 0) {
-              return e.target?.angle;
-            }
-
-            return activeObject.angle;
-          };
-
-          const target = {
-            angle: angle(),
-            top: options.translateY,
-            left: options.translateX,
-            scaleX: options.scaleX,
-            scaleY: options.scaleY,
-            flipX: flipX(),
-            flipY: flipY(),
-            originX: 'center',
-            originY: 'center',
-          } as ICanvasObject;
-
-          const payload: ObjectEvent = {
-            type,
-            target,
-            id: activeObject.id || '',
-          };
-
           activeIds.push(activeObject.id as string);
-
-          eventSerializer?.push('rotated', payload);
         });
+
+        const groupPayload: ObjectEvent = {
+          id: userId,
+          type,
+          target: { activeIds, eTarget: e.target, isGroup: true },
+        };
+        eventSerializer?.push('rotated', groupPayload);
+
+        const activeObjects = canvas?.getActiveObjects();
+        canvas?.discardActiveObject();
+        const activeSelection = new fabric.ActiveSelection(activeObjects, {
+          canvas: canvas,
+        });
+        canvas?.setActiveObject(activeSelection);
+        canvas?.renderAll();
 
         let svg = canvas?.getActiveObject().toSVG();
 
@@ -151,18 +173,16 @@ const useSynchronizedRotated = (
 
         undoRedoDispatch({
           type: SET_GROUP,
-          payload: [ ...filtered as any[], active ],
+          payload: [...(filtered as any[]), active],
           canvasId: userId,
-          event: event as unknown as IUndoRedoEvent,
+          event: (event as unknown) as IUndoRedoEvent,
         });
-
       } else {
         if (!(e.target as ICanvasObject).id) {
           return;
         }
 
         const id = (e.target as ICanvasObject).id;
-
         const target = {
           top: e.target.top,
           left: e.target.left,
@@ -171,13 +191,19 @@ const useSynchronizedRotated = (
           scaleY: e.target.scaleY,
           flipX: e.target.flipX,
           flipY: e.target.flipY,
+          originX: e.target.originX,
+          originY: e.target.originY,
         } as ICanvasObject;
 
         const payload: ObjectEvent = {
-          type: type as ObjectType,
-          target,
           id: id as string,
+          type: type as ObjectType,
+          target: { eTarget: target, isGroup: false },
         };
+
+        console.log({ payload });
+
+        eventSerializer?.push('rotated', payload);
 
         if (canvas) {
           const event = { event: payload, type: 'rotated' };
@@ -186,11 +212,9 @@ const useSynchronizedRotated = (
             type: SET,
             payload: canvas.getObjects(),
             canvasId: userId,
-            event: event as unknown as IUndoRedoEvent,
+            event: (event as unknown) as IUndoRedoEvent,
           });
         }
-
-        eventSerializer?.push('rotated', payload);
       }
     };
 

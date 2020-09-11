@@ -23,35 +23,23 @@ const useSynchronizedScaled = (
 
   /** Register and handle remote event. */
   useEffect(() => {
-    const scaled = (id: string, objectType: string, target: ICanvasObject) => {
+    const objectScaled = (id: string, target: ICanvasObject) => {
       if (!shouldHandleRemoteEvent(id)) return;
+
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
-          if (objectType === 'activeSelection' && target.left && obj.left) {
+          const object = target.eTarget;
+          if (object) {
             obj.set({
-              angle: target.angle,
-              top: target.top,
-              left: target.left + 1,
-              scaleX: target.scaleX,
-              scaleY: target.scaleY,
-              flipX: target.flipX,
-              flipY: target.flipY,
-              originX: 'center',
-              originY: 'center',
-            });
-            obj.set({ left: obj.left - 1 });
-            obj.setCoords();
-          } else {
-            obj.set({
-              angle: target.angle,
-              top: target.top,
-              left: target.left,
-              scaleX: target.scaleX,
-              scaleY: target.scaleY,
-              flipX: target.flipX,
-              flipY: target.flipY,
-              originX: target.originX || 'left',
-              originY: target.originY || 'top',
+              angle: object.angle,
+              top: object.top,
+              left: object.left,
+              scaleX: object.scaleX,
+              scaleY: object.scaleY,
+              flipX: object.flipX,
+              flipY: object.flipY,
+              originX: object.originX || 'left',
+              originY: object.originY || 'top',
             });
             obj.setCoords();
           }
@@ -60,16 +48,80 @@ const useSynchronizedScaled = (
       canvas?.renderAll();
     };
 
+    const groupScaled = (id: string, target: ICanvasObject) => {
+      const isLocalGroup = (id: string, canvasId: string | undefined) => {
+        const object = id.split(':');
+
+        if (!object.length) {
+          throw new Error('Invalid ID');
+        }
+
+        return object[0] === canvasId;
+      };
+
+      if (isLocalGroup(id, userId)) {
+        return;
+      }
+
+      const localObjects: any[] = canvas?.getObjects() || [];
+      const objectsToGroup = [];
+
+      for (let i = 0; i < localObjects.length; i++) {
+        if (target.activeIds) {
+          if (target.activeIds.includes(localObjects[i].id)) {
+            objectsToGroup.push(localObjects[i]);
+          }
+        }
+      }
+
+      const sel = new fabric.ActiveSelection(objectsToGroup, {
+        canvas: canvas,
+        originX: target?.eTarget?.originX,
+        originY: target?.eTarget?.originY,
+        top: target?.eTarget?.top,
+        left: target?.eTarget?.left,
+        width: target?.eTarget?.width,
+        height: target?.eTarget?.height,
+        scaleX: target?.eTarget?.scaleX,
+        scaleY: target?.eTarget?.scaleY,
+        flipX: target?.eTarget?.flipX,
+        flipY: target?.eTarget?.flipY,
+        angle: target?.eTarget?.angle,
+        skewX: target?.eTarget?.skewX,
+        skewY: target?.eTarget?.skewY,
+        oCoords: target?.eTarget?.oCoords,
+        aCoords: target?.eTarget?.aCoords,
+        matrixCache: target?.eTarget?.matrixCache,
+        ownMatrixCache: target?.eTarget?.ownMatrixCache,
+        snapAngle: target?.eTarget?.snapAngle,
+        snapThreshold: target?.eTarget?.snapThreshold,
+        group: target?.eTarget?.group,
+      });
+      canvas?.setActiveObject(sel);
+      canvas?.requestRenderAll();
+      canvas?.discardActiveObject();
+    };
+
+    const scaled = (id: string, _type: string, target: ICanvasObject) => {
+      if (target.isGroup) {
+        groupScaled(id, target);
+        return;
+      }
+
+      objectScaled(id, target);
+    };
+
     eventController?.on('scaled', scaled);
 
     return () => {
       eventController?.removeListener('scaled', scaled);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent]);
+  }, [canvas, eventController, shouldHandleRemoteEvent, userId]);
 
   useEffect(() => {
     const objectScaled = (e: fabric.IEvent | CanvasEvent) => {
       if (!e.target) return;
+
       const type = (e.target as ICanvasObject).get('type');
       const activeIds: string[] = [];
 
@@ -79,52 +131,23 @@ const useSynchronizedScaled = (
         groupObjects.forEach((activeObject: ICanvasObject) => {
           if (activeObject.id && !shouldSerializeEvent(activeObject.id)) return;
 
-          const matrix = activeObject.calcTransformMatrix();
-          const options = fabric.util.qrDecompose(matrix);
-
-          const flipX = () => {
-            if (activeObject.flipX && e.target?.flipX) {
-              return false;
-            }
-
-            return activeObject.flipX || e.target?.flipX;
-          };
-          const flipY = () => {
-            if (activeObject.flipY && e.target?.flipY) {
-              return false;
-            }
-
-            return activeObject.flipY || e.target?.flipY;
-          };
-
-          const angle = () => {
-            if (e.target?.angle !== 0) {
-              return e.target?.angle;
-            }
-
-            return activeObject.angle;
-          };
-
-          const target = {
-            angle: angle(),
-            top: options.translateY,
-            left: options.translateX,
-            scaleX: options.scaleX,
-            scaleY: options.scaleY,
-            flipX: flipX(),
-            flipY: flipY(),
-          } as ICanvasObject;
-
-          const payload: ObjectEvent = {
-            type,
-            target,
-            id: activeObject.id || '',
-          };
-
           activeIds.push(activeObject.id as string);
-
-          eventSerializer?.push('scaled', payload);
         });
+
+        const groupPayload: ObjectEvent = {
+          id: userId,
+          type,
+          target: { activeIds, eTarget: e.target, isGroup: true },
+        };
+        eventSerializer?.push('scaled', groupPayload);
+
+        const activeObjects = canvas?.getActiveObjects();
+        canvas?.discardActiveObject();
+        const activeSelection = new fabric.ActiveSelection(activeObjects, {
+          canvas: canvas,
+        });
+        canvas?.setActiveObject(activeSelection);
+        canvas?.renderAll();
 
         const payload = {
           type,
@@ -142,19 +165,23 @@ const useSynchronizedScaled = (
 
         undoRedoDispatch({
           type: SET_GROUP,
-          payload: [ ...filtered as any[], active ],
+          payload: [...(filtered as any[]), active],
           canvasId: userId,
-          event: event as unknown as IUndoRedoEvent,
+          event: (event as unknown) as IUndoRedoEvent,
         });
-      
       } else {
         if (!(e.target as ICanvasObject).id) {
           return;
         }
 
-        if (!shouldSerializeEvent((e.target as ICanvasObject).id as string)) return;
+        if (!shouldSerializeEvent((e.target as ICanvasObject).id as string))
+          return;
 
-        const type: ObjectType = (e.target as ICanvasObject).get('type') as ObjectType;
+        const type: ObjectType = (e.target as ICanvasObject).get(
+          'type'
+        ) as ObjectType;
+
+        const id = (e.target as ICanvasObject).id;
         const target = {
           top: e.target.top,
           left: e.target.left,
@@ -163,13 +190,17 @@ const useSynchronizedScaled = (
           scaleY: e.target.scaleY,
           flipX: e.target.flipX,
           flipY: e.target.flipY,
+          originX: e.target.originX,
+          originY: e.target.originY,
         } as ICanvasObject;
 
         const payload: ObjectEvent = {
-          type,
-          target,
-          id: (e.target as ICanvasObject).id as string,
+          id: id as string,
+          type: type as ObjectType,
+          target: { eTarget: target, isGroup: false },
         };
+
+        eventSerializer?.push('scaled', payload);
 
         if (canvas) {
           const event = { event: payload, type: 'scaled' };
@@ -178,11 +209,9 @@ const useSynchronizedScaled = (
             type: SET,
             payload: canvas.getObjects(),
             canvasId: userId,
-            event: event as unknown as IUndoRedoEvent,
+            event: (event as unknown) as IUndoRedoEvent,
           });
         }
-
-        eventSerializer?.push('scaled', payload);
       }
     };
 
