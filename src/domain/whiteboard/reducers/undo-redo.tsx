@@ -3,6 +3,7 @@ import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { STATES_LIMIT } from '../../../config/undo-redo-values';
 
 export const UNDO = 'CANVAS_UNDO';
 export const REDO = 'CANVAS_REDO';
@@ -10,9 +11,6 @@ export const SET = 'CANVAS_SET';
 export const SET_GROUP = 'CANVAS_SET_GROUP';
 export const UPDATE_OTHER = 'CANVAS_UPDATE_OTHER';
 export const SET_OTHER = 'CANVAS_SET_OTHER';
-
-// @ts-ignore
-const limit = 3000;
 
 /**
  * Model for storing the canvas history for undo/redo functionality.
@@ -244,7 +242,7 @@ const reducer = (
       const mappedSelfState = objectStringifier(selfItems);
       states = [...states, mappedSelfState];
 
-      if (states.length > limit) {
+      if (states.length > STATES_LIMIT) {
         states.shift();
       }
 
@@ -264,7 +262,7 @@ const reducer = (
         events = [];
       }
 
-      if (events.length > limit) {
+      if (events.length > STATES_LIMIT) {
         events.shift();
       }
 
@@ -347,6 +345,10 @@ const reducer = (
       const mappedSelfState = JSON.stringify({ objects: selfItems });
       states = [...states, mappedSelfState];
 
+      if (states.length > STATES_LIMIT) {
+        states.shift();
+      }
+
       let newEvent = { ...action.event, selfState: mappedSelfState };
 
       let stateItems = {
@@ -363,6 +365,10 @@ const reducer = (
         events.splice(state.eventIndex + 1, 9e9);
       } else if (state.eventIndex < 0) {
         events = [];
+      }
+
+      if (events.length > STATES_LIMIT) {
+        events.shift();
       }
 
       if (Array.isArray(action.event)) {
@@ -382,8 +388,7 @@ const reducer = (
 
     // Steps back to previous state.
     case UNDO: {
-
-      if (state.activeStateIndex === null) {
+      if (state.activeStateIndex === null || state.activeStateIndex === 0) {
         return state;
       }
 
@@ -405,7 +410,7 @@ const reducer = (
       const activeStateIndex =
         state.activeStateIndex !== null && state.activeStateIndex >= 1
           ? state.activeStateIndex - 1
-          : null;
+          : 0;
 
       const activeSelfState =
         activeStateIndex !== null && activeStateIndex >= 0
