@@ -138,10 +138,7 @@ function Toolbar() {
 
     updateEventedObjects(tool === ELEMENTS.MOVE_OBJECTS_TOOL);
 
-    if (
-      tool === ELEMENTS.POINTERS_TOOL ||
-      tool === ELEMENTS.MOVE_OBJECTS_TOOL
-    ) {
+    if (tool === ELEMENTS.MOVE_OBJECTS_TOOL) {
       updateShapesAreSelectable(true);
     } else {
       updateShapesAreSelectable(false);

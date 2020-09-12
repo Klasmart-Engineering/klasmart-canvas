@@ -211,16 +211,20 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     canvas.getObjects().forEach((object: ICanvasObject) => {
       if ((object.id && isLocalObject(object.id, userId)) || !object.id) {
+        setObjectControlsVisibility(object, shapesAreSelectable);
         object.set({
           selectable: shapesAreSelectable,
           evented: shapesAreSelectable || shapesAreEvented,
+          lockMovementX: !shapesAreSelectable,
+          lockMovementY: !shapesAreSelectable,
+          hasBorders: shapesAreSelectable,
+          hoverCursor: shapesAreSelectable ? 'move' : 'default',
         });
       }
     });
 
-    console.log('evented: ', shapesAreSelectable);
-
     canvas.selection = shapesAreSelectable;
+    canvas.preserveObjectStacking = !shapesAreSelectable;
     canvas.renderAll();
   }, [canvas, isLocalObject, shapesAreEvented, shapesAreSelectable, userId]);
 
@@ -356,8 +360,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             evented: false,
             selectable: false,
           });
-
-          console.log('no selectable');
         }
       });
 
@@ -558,7 +560,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     (event: fabric.IEvent) => {
       reorderShapes();
 
-      console.log('selection', event.target);
       // Free Drawing Line Selected
       if (
         !shapeIsActive &&
@@ -691,7 +692,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Set the objects like evented if you select pointer or move tool
    */
   useEffect(() => {
-    console.log('select: ', eventedObjects);
     if (eventedObjects) {
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
