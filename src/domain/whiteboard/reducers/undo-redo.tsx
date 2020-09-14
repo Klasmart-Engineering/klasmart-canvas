@@ -101,7 +101,7 @@ const defaultState: CanvasHistoryState = {
   states: [],
   otherObjects: '',
   actionType: null,
-  activeStateIndex: null,
+  activeStateIndex: 0,
   activeState: null,
   events: [],
   eventIndex: -1,
