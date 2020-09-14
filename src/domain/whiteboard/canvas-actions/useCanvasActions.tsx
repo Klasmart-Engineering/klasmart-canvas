@@ -627,11 +627,14 @@ export const useCanvasActions = (
     closeModal();
 
     // Add cleared whiteboard to undo / redo state.
-    const event = { event: [], type: 'clearedWhiteboard' };
+    const event = {
+      event: { id: `${userId}:clearWhiteboard` },
+      type: 'clearWhiteboard',
+    };
 
     dispatch({
       type: SET,
-      payload: [],
+      payload: canvas?.getObjects(),
       canvasId: userId,
       event,
     });

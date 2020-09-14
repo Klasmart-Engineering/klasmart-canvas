@@ -101,7 +101,7 @@ const defaultState: CanvasHistoryState = {
   states: [],
   otherObjects: '',
   actionType: null,
-  activeStateIndex: 0,
+  activeStateIndex: null,
   activeState: null,
   events: [],
   eventIndex: -1,
@@ -384,7 +384,7 @@ const reducer = (
 
     // Steps back to previous state.
     case UNDO: {
-      if (!state.activeStateIndex) {
+      if (state.activeStateIndex === null) {
         return state;
       }
 
