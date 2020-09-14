@@ -24,6 +24,7 @@ export interface ObjectEvent {
     | ICanvasObject
     | { objects: ICanvasObject[] }
     | { background: string }
+    | { pointer: boolean }
     | boolean
     | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean };
 }

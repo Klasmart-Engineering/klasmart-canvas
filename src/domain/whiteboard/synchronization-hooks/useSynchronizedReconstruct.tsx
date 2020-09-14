@@ -16,23 +16,33 @@ const useSynchronizedReconstruct = (
     state: { eventController },
   } = useSharedEventSerializer();
 
-  useEffect(() => {
+  const getId = (id: string | undefined) => (id ? id.split(':')[0] : null);
 
-  const reconstruct = (id: string, target: ICanvasObject) => {
+  useEffect(() => {
+    const reconstruct = (id: string, target: ICanvasObject) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
       const parsed = JSON.parse(target.param as string);
+      if (parsed === false) {
+        canvas?.getObjects().forEach((object: TypedShape) => {
+          if (getId(id) === getId(object.id)) {
+            canvas.remove(object);
+          }
+        });
+      }
 
       if (parsed.background && canvas) {
         canvas?.setBackgroundColor(parsed.background, () => {});
         canvas.renderAll();
         return;
       }
-      
+
       const objects = JSON.parse(target.param as string).objects;
 
       const reset = (object: TypedShape): void => {
-        const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+        const old = canvas
+          ?.getObjects()
+          .filter((o: TypedShape) => o.id === object.id)[0];
         object.set({ selectable: false, evented: false });
         canvas?.remove(old as fabric.Object);
         canvas?.add(object);
@@ -40,7 +50,9 @@ const useSynchronizedReconstruct = (
 
       objects?.forEach((object: TypedShape) => {
         if (object && object.type === 'path') {
-          const group: TypedGroup | undefined = canvas?.getObjects().filter((o: any) => o._objects)[0] as TypedGroup;
+          const group: TypedGroup | undefined = canvas
+            ?.getObjects()
+            .filter((o: any) => o._objects)[0] as TypedGroup;
           if (group && group.id) {
             canvas?.remove(group);
           }
@@ -80,10 +92,14 @@ const useSynchronizedReconstruct = (
           });
         } else if (object) {
           fabric.Group.fromObject(object, (group: fabric.Group) => {
-            const old = canvas?.getObjects().filter((o: TypedShape) => o.id === object.id)[0];
+            const old = canvas
+              ?.getObjects()
+              .filter((o: TypedShape) => o.id === object.id)[0];
             if (group._objects) {
               group._objects.forEach((o: TypedShape) => {
-                const oldO = canvas?.getObjects().filter((oldObject: TypedShape) => oldObject.id === o.id)[0];
+                const oldO = canvas
+                  ?.getObjects()
+                  .filter((oldObject: TypedShape) => oldObject.id === o.id)[0];
                 canvas?.remove(oldO as fabric.Object);
               });
             }
@@ -99,14 +115,20 @@ const useSynchronizedReconstruct = (
           canvasId: userId,
         });
       });
-    }
+    };
 
     eventController?.on('reconstruct', reconstruct);
 
     return () => {
       eventController?.removeListener('reconstruct', reconstruct);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent, undoRedoDispatch, userId]);
+  }, [
+    canvas,
+    eventController,
+    shouldHandleRemoteEvent,
+    undoRedoDispatch,
+    userId,
+  ]);
 };
 
 export default useSynchronizedReconstruct;

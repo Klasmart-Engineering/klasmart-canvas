@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useMemo } from 'react';
 import ToolbarSection from './toolbar-section/ToolbarSection';
 import '../../assets/style/toolbar.css';
 import ToolbarButton from './toolbar-button/ToolbarButton';
@@ -16,6 +16,7 @@ import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elem
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
+import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -68,9 +69,8 @@ function Toolbar() {
     redo,
     updateShapesAreEvented,
     updateLaserIsActive,
-    allowPointer,
-    universalPermits,
     toolbarIsEnabled,
+    pointerIsEnabled,
   } = useContext(WhiteboardContext);
 
   /**
@@ -79,7 +79,7 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
-    if (tool === ELEMENTS.LASER_TOOL && !allowPointer && !universalPermits) {
+    if (tool === ELEMENTS.LASER_TOOL && !pointerIsEnabled) {
       return;
     }
 
@@ -157,7 +157,8 @@ function Toolbar() {
     if (
       toolbarIsEnabled ||
       tool === ELEMENTS.ADD_TEXT_TOOL ||
-      tool === ELEMENTS.ADD_STAMP_TOOL
+      tool === ELEMENTS.ADD_STAMP_TOOL ||
+      (pointerIsEnabled && tool === ELEMENTS.LASER_TOOL)
     ) {
       setTools({
         active: tool,
@@ -360,6 +361,32 @@ function Toolbar() {
     // If tools.elements and tools.active are added an infinite loop happens
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toolbarIsEnabled]);
+
+  /**
+   * Indicates active tool.
+   */
+  const getActiveTool = useMemo((): string => tools.active, [tools]);
+
+  /**
+   * Returns tool elements.
+   */
+  const getToolElements = useMemo(
+    (): IBasicToolbarSection['elements'] => [...tools.elements],
+    [tools]
+  );
+
+  /**
+   * Checks if laser pointer permission is set to true. If not, and pointer is selected,
+   * default pointer is automatically selected.
+   */
+  useEffect(() => {
+    if (!pointerIsEnabled && getActiveTool === ELEMENTS.LASER_TOOL) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+  }, [pointerIsEnabled, getActiveTool, getToolElements]);
 
   const toolbarContainerStyle: CSSProperties = {
     display: 'flex',
