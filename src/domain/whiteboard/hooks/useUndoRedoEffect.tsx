@@ -38,7 +38,7 @@ const isLocalObject = (id: string, canvasId: string): boolean => {
  */
 const getPreviousBackground = (currentIndex: number, events: any): string => {
   let i = currentIndex;
-  
+
   if (i < 0) {
     return '#fff';
   }
@@ -50,8 +50,7 @@ const getPreviousBackground = (currentIndex: number, events: any): string => {
   }
 
   return '#fff';
-}
-
+};
 
 /**
  * Custom hook to track canvas history.
@@ -74,33 +73,36 @@ export const UndoRedo = (
     let nextEvent = state.events[state.eventIndex + 1];
 
     // Rerenders local canvas when an undo or redo event has been executed.
-    if (
-      (state.actionType === UNDO) ||
-      state.actionType === REDO
-    ) {
-      const mapped = JSON.parse(state.activeState as string).objects.map((object: TypedShape | TypedGroup) => {
-        if ((object as TypedGroup).objects) {
-          let _objects = (object as TypedGroup).objects; 
-          let mappedObjects = (_objects as TypedShape[]).map((o: TypedShape) => {
-            return { ...o, fromJSON: true };
-          });
+    if (state.actionType === UNDO || state.actionType === REDO) {
+      const mapped = JSON.parse(state.activeState as string).objects.map(
+        (object: TypedShape | TypedGroup) => {
+          if ((object as TypedGroup).objects) {
+            let _objects = (object as TypedGroup).objects;
+            let mappedObjects = (_objects as TypedShape[]).map(
+              (o: TypedShape) => {
+                return { ...o, fromJSON: true };
+              }
+            );
 
-          return { ...object, fromJSON: true, objects: mappedObjects };
+            return { ...object, fromJSON: true, objects: mappedObjects };
+          }
+          return { ...object, fromJSON: true };
         }
-        return { ...object, fromJSON: true };
-      });
+      );
 
       canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
-        canvas.getObjects().forEach((o: TypedShape | TypedPolygon | TypedGroup) => {
-          if (isLocalObject(o.id as string, instanceId)) {
-            (o as TypedShape).set({ selectable: true, evented: true })
+        canvas
+          .getObjects()
+          .forEach((o: TypedShape | TypedPolygon | TypedGroup) => {
+            if (isLocalObject(o.id as string, instanceId)) {
+              (o as TypedShape).set({ selectable: true, evented: true });
 
-            if ((o as TypedGroup)._objects) {
-              (o as TypedGroup).toActiveSelection();
-              canvas.discardActiveObject();
+              if ((o as TypedGroup)._objects) {
+                (o as TypedGroup).toActiveSelection();
+                canvas.discardActiveObject();
+              }
             }
-          }
-        });
+          });
 
         const fill = getPreviousBackground(state.eventIndex, state.events);
         canvas.backgroundColor = fill;
@@ -127,63 +129,93 @@ export const UndoRedo = (
           let payload: ObjectEvent = {
             id: (nextEvent.event as IUndoRedoSingleEvent).id,
             target: { background: fill },
-            type: 'reconstruct'
-          }
+            type: 'reconstruct',
+          };
           eventSerializer?.push('reconstruct', payload);
           return;
-        };
+        }
 
-        if (currentEvent && currentEvent.type !== 'activeSelection' && currentEvent.type !== 'remove') {
+        if (
+          currentEvent &&
+          currentEvent.type !== 'activeSelection' &&
+          currentEvent.type !== 'remove' &&
+          nextEvent.type !== 'clearWhiteboard'
+        ) {
           let id = (nextEvent.event as IUndoRedoSingleEvent).id;
-          let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
-          let object = objects.filter((o: ObjectEvent) => (o.id === id))[0];
+          let objects = JSON.parse(
+            state.states[state.activeStateIndex as number]
+          ).objects;
+          let object = objects.filter((o: ObjectEvent) => o.id === id)[0];
           let payload: ObjectEvent = {
             id,
-            target: { objects: [object]},
-            type: 'reconstruct'
-          }
+            target: { objects: [object] },
+            type: 'reconstruct',
+          };
+
+          eventSerializer?.push('reconstruct', payload);
+        } else if (nextEvent.type === 'clearWhiteboard') {
+          let id = (nextEvent.event as IUndoRedoSingleEvent).id;
+          let objects = JSON.parse(
+            state.states[state.activeStateIndex as number]
+          ).objects;
+
+          let payload: ObjectEvent = {
+            id,
+            target: { objects: objects },
+            type: 'reconstruct',
+          };
 
           eventSerializer?.push('reconstruct', payload);
         } else if (state.activeStateIndex !== null) {
-          let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+          let objects = JSON.parse(
+            state.states[state.activeStateIndex as number]
+          ).objects;
           let payload: ObjectEvent = {
             id: (nextEvent.event as IUndoRedoSingleEvent).id,
             target: { objects },
-            type: 'reconstruct'
-          }
+            type: 'reconstruct',
+          };
           eventSerializer?.push('reconstruct', payload);
         }
       } else {
         if (
           (state.events[state.eventIndex].type === 'activeSelection' &&
-          state.events[state.eventIndex + 1] &&
-          state.events[state.eventIndex + 1].type === 'activeSelection') ||
+            state.events[state.eventIndex + 1] &&
+            state.events[state.eventIndex + 1].type === 'activeSelection') ||
           state.events[state.eventIndex].type === 'added'
         ) {
-          let id = (state.events[state.eventIndex].event as IUndoRedoSingleEvent).id;
-          let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+          let id = (state.events[state.eventIndex]
+            .event as IUndoRedoSingleEvent).id;
+          let objects = JSON.parse(
+            state.states[state.activeStateIndex as number]
+          ).objects;
           let payload: ObjectEvent = {
             id,
             target: { objects },
-            type: 'reconstruct'
-          }
+            type: 'reconstruct',
+          };
 
           if (
             state.events[state.eventIndex + 1].type === 'activeSelection' &&
             state.events[state.eventIndex].type === 'added'
           ) {
-            eventSerializer.push('removed', { id: (state.events[state.eventIndex + 1].event as IUndoRedoSingleEvent).id });
-          } 
-          
+            eventSerializer.push('removed', {
+              id: (state.events[state.eventIndex + 1]
+                .event as IUndoRedoSingleEvent).id,
+            });
+          }
+
           eventSerializer?.push('reconstruct', payload);
         } else {
-          let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+          let objects = JSON.parse(
+            state.states[state.activeStateIndex as number]
+          ).objects;
 
           let payload: ObjectEvent = {
             id: (nextEvent.event as IUndoRedoSingleEvent).id,
             target: { objects },
-            type: 'reconstruct'
-          }
+            type: 'reconstruct',
+          };
           eventSerializer?.push('reconstruct', payload);
         }
       }
@@ -191,43 +223,63 @@ export const UndoRedo = (
       let event = state.events[state.eventIndex];
 
       if ((event?.event as any).type === 'background') {
-        canvas.backgroundColor = (event.event as IUndoRedoSingleEvent).target.fill as string || '#fff';
+        canvas.backgroundColor =
+          ((event.event as IUndoRedoSingleEvent).target.fill as string) ||
+          '#fff';
         canvas.renderAll();
 
         let payload: ObjectEvent = {
           id: (event.event as IUndoRedoSingleEvent).id,
-          target: { background: (event.event as IUndoRedoSingleEvent).target.fill as string || 'fff' },
-          type: 'reconstruct'
-        }
+          target: {
+            background:
+              ((event.event as IUndoRedoSingleEvent).target.fill as string) ||
+              'fff',
+          },
+          type: 'reconstruct',
+        };
         eventSerializer?.push('reconstruct', payload);
         return;
-      };
+      }
 
       if (event.type === 'added') {
         eventSerializer?.push('added', event.event as ObjectEvent);
       } else if (event.type === 'removed') {
-        eventSerializer?.push('removed', { id: (event.event as IUndoRedoSingleEvent).id } as ObjectEvent);
+        eventSerializer?.push('removed', {
+          id: (event.event as IUndoRedoSingleEvent).id,
+        } as ObjectEvent);
+      } else if (event.type === 'clearWhiteboard') {
+        let payload: ObjectEvent = {
+          id: (event.event as IUndoRedoSingleEvent).id,
+          target: false,
+          type: 'reconstruct',
+        };
+        eventSerializer?.push('reconstruct', payload);
       } else if (event && event.type !== 'activeSelection') {
         let id = (event.event as IUndoRedoSingleEvent).id;
-        let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
-        let object = objects.filter((o: TypedShape | TypedGroup) => (o.id === id))[0];
+        let objects = JSON.parse(state.states[state.activeStateIndex as number])
+          .objects;
+        let object = objects.filter(
+          (o: TypedShape | TypedGroup) => o.id === id
+        )[0];
 
         let payload: ObjectEvent = {
           id,
-          target: { objects: [object]},
-          type: 'reconstruct'
-        }
+          target: { objects: [object] },
+          type: 'reconstruct',
+        };
 
         eventSerializer?.push('reconstruct', payload);
       } else {
-        let id = (state.events[state.eventIndex].event as IUndoRedoSingleEvent).id;
-        let objects = JSON.parse(state.states[state.activeStateIndex as number]).objects;
+        let id = (state.events[state.eventIndex].event as IUndoRedoSingleEvent)
+          .id;
+        let objects = JSON.parse(state.states[state.activeStateIndex as number])
+          .objects;
         let payload: ObjectEvent = {
           id,
           target: { objects },
-          type: 'reconstruct'
-        }
-        
+          type: 'reconstruct',
+        };
+
         eventSerializer?.push('reconstruct', payload);
       }
     }
