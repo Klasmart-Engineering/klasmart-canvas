@@ -249,7 +249,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (textIsActive) {
       canvas?.on('mouse:down', (e: fabric.IEvent) => {
-        if ((e.target === null && e) || e.target?.type !== 'textbox') {
+        if (
+          (e.target === null && e) ||
+          (e.target?.type !== 'textbox' && e.target?.type !== 'i-text')
+        ) {
           let text = new fabric.IText(' ', {
             fontFamily: fontFamily,
             fontSize: 30,
@@ -391,7 +394,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
        * IText transformed in Textbox
        */
       canvas?.on('text:editing:exited', (e: IEvent) => {
-        const textboxWidth: number = textboxCopy.width || 0;
+        if (!textboxCopy || !textboxCopy.width) return;
+
+        const textboxWidth: number = textboxCopy.width;
 
         // Updating/showing the Textbox and hiding the IText
         if (currentTextbox && e.target?.type === 'i-text') {
@@ -836,7 +841,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           evented: eventedObjects || textIsActive,
           selectable: eventedObjects || textIsActive,
           hasBorders: eventedObjects || textIsActive,
-          editable: eventedObjects || textIsActive,
+          editable: textIsActive,
           lockMovementX: !eventedObjects,
           lockMovementY: !eventedObjects,
           hasRotatingPoint: eventedObjects,
@@ -1509,14 +1514,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useEffect(() => {
     canvas?.forEachObject((object: ICanvasObject) => {
-      if (object.id && isLocalObject(object.id, userId)) {
+      if (
+        object.id &&
+        isLocalObject(object.id, userId) &&
+        shapesAreSelectable
+      ) {
         object.set({
           evented: toolbarIsEnabled,
           selectable: toolbarIsEnabled,
         });
       }
     });
-  }, [canvas, toolbarIsEnabled, isLocalObject, userId]);
+  }, [canvas, toolbarIsEnabled, isLocalObject, userId, shapesAreSelectable]);
 
   // TODO: Possible to have dynamically sized canvas? With raw canvas it's
   // possible to set the "pixel (background)" size separately from the
