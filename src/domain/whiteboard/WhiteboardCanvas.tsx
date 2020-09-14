@@ -12,6 +12,7 @@ import React, {
   useEffect,
   useState,
   useMemo,
+  KeyboardEvent,
 } from 'react';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { WhiteboardContext } from './WhiteboardContext';
@@ -56,6 +57,7 @@ import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
 import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
+import { ICanvasKeyboardEvent } from '../../interfaces/canvas-events/canvas-keyboard-event';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -512,7 +514,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * 'Escape' event for deselect active objects
    * */
   const keyDownHandler = useCallback(
-    (e: KeyboardEvent) => {
+    (e: Event) => {
       // The following two blocks, used for undo and redo, can not
       // be integrated while there are two boards in the canvas.
       // if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
@@ -525,12 +527,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       //   return;
       // }
 
-      if (e.key === 'Backspace' && canvas) {
+      if ((e as ICanvasKeyboardEvent).key === 'Backspace' && canvas) {
         const objects = canvas.getActiveObjects();
 
         objects.forEach((object: fabric.Object) => {
           if (!(object as ITextOptions)?.isEditing) {
-            e.preventDefault();
             canvas.remove(object);
             canvas.discardActiveObject().renderAll();
           }
@@ -538,7 +539,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         return;
       }
 
-      if (e.key === 'Escape' && canvas) {
+      if ((e as ICanvasKeyboardEvent).key === 'Escape' && canvas) {
         canvas.discardActiveObject();
         canvas.renderAll();
       }
@@ -1457,7 +1458,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [actions, updateCanvasActions]);
 
   // Will be modified once only one board is visible.
-  const keyDown = (e: any) => {
+  const keyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+    }
+
     if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
       undoRedoDispatch({ type: UNDO, canvasId: instanceId });
       return;
