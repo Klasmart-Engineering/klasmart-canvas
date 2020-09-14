@@ -11,6 +11,7 @@ import React, {
   useContext,
   useEffect,
   useState,
+  useMemo,
 } from 'react';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { WhiteboardContext } from './WhiteboardContext';
@@ -38,7 +39,13 @@ import useSynchronizedFontColorChanged from './synchronization-hooks/useSynchron
 import { SET, SET_GROUP, UNDO, REDO } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
-import { IEvent, ITextOptions, Canvas, Textbox } from 'fabric/fabric-impl';
+import {
+  IEvent,
+  ITextOptions,
+  Canvas,
+  Textbox,
+  IText,
+} from 'fabric/fabric-impl';
 import {
   ObjectEvent,
   ObjectType,
@@ -48,6 +55,7 @@ import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboa
 import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
+import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -125,10 +133,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateShapeColor,
     floodFill,
     laserIsActive,
-    allowPointer,
-    universalPermits,
     toolbarIsEnabled,
     setToolbarIsEnabled,
+    pointerIsEnabled,
+    setPointerIsEnabled,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -146,6 +154,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const canvasInstance = new fabric.Canvas(instanceId, {
       backgroundColor: undefined,
       isDrawingMode: false,
+      allowTouchScrolling: false,
       selectionBorderColor: 'rgba(100, 100, 255, 1)',
       selectionLineWidth: 2,
       selectionColor: 'rgba(100, 100, 255, 0.1)',
@@ -154,6 +163,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     setCanvas(canvasInstance);
   }, [instanceId]);
+
+  /**
+   * Enable or disable allow touch scroll based on pointer events.
+   */
+  useEffect(() => {
+    if (!canvas) return;
+    canvas.allowTouchScrolling = !pointerEvents;
+  }, [pointerEvents, canvas]);
 
   /**
    * Retrieve references to elements created by fabricjs. We'll need these to
@@ -254,7 +271,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           text?.hiddenTextarea?.focus();
 
           text.on('editing:exited', () => {
-            const textCopy = text.text;
+            const textCopy = text.text?.trim();
             const toObject = text.toObject();
             delete toObject.text;
             delete toObject.type;
@@ -303,6 +320,103 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     userId,
     eraseType,
   ]);
+
+  /**
+   * Handles the logic to set the Textbox auto grownable and text responsive
+   */
+  useEffect(() => {
+    let currentTextbox: Textbox;
+    let textboxCopy: IText;
+
+    if (textIsActive) {
+      /**
+       * Entering to edit a text object
+       * Textbox transformed in IText
+       */
+      canvas?.on('text:editing:entered', (e: IEvent) => {
+        if (e.target?.type === 'textbox') {
+          let counter = 0;
+          let textCopy = '';
+
+          /**
+           * Emulates the aspect of a Textbox keeping the lines
+           * that this had in the new IText object
+           */
+          const setLines = () => {
+            currentTextbox.textLines.forEach((line, index) => {
+              let separator =
+                currentTextbox.text?.charCodeAt(counter + line.length) === 10
+                  ? '\n'
+                  : ' \n';
+
+              if (index === currentTextbox.textLines.length - 1) {
+                separator = '';
+              }
+
+              textCopy += `${line}${separator}`;
+              counter += line.length + 1;
+            });
+          };
+
+          canvas.remove(textboxCopy);
+          currentTextbox = e.target as Textbox;
+          setLines();
+
+          // Preparing Textbox properties to be setted in IText object
+          const textboxProps = JSON.parse(JSON.stringify(currentTextbox));
+          delete textboxProps.text;
+          delete textboxProps.type;
+          textboxProps.type = 'i-text';
+          textboxProps.visible = true;
+          textboxProps.width = currentTextbox.width;
+          textboxProps.height = currentTextbox.height;
+
+          // Adding the IText and hiding the Textbox
+          if (typeof textCopy === 'string') {
+            textboxCopy = new fabric.IText(textCopy.trim(), textboxProps);
+            canvas.add(textboxCopy);
+            canvas.setActiveObject(textboxCopy);
+            textboxCopy.enterEditing();
+            currentTextbox.set({
+              visible: false,
+            });
+
+            canvas.renderAll();
+          }
+        }
+      });
+
+      /**
+       * Text Edition finished on IText object
+       * IText transformed in Textbox
+       */
+      canvas?.on('text:editing:exited', (e: IEvent) => {
+        const textboxWidth: number = textboxCopy.width || 0;
+
+        // Updating/showing the Textbox and hiding the IText
+        if (currentTextbox && e.target?.type === 'i-text') {
+          textboxCopy.set('isEditing', false);
+          currentTextbox.set({
+            width: textboxWidth + 10,
+            height: textboxCopy.height,
+            visible: true,
+            text: textboxCopy.text?.replace(/ \n/gi, ' ').trim(),
+          });
+
+          canvas.setActiveObject(currentTextbox);
+          currentTextbox.set('isEditing', true);
+          textboxCopy.set('visible', false);
+          canvas.discardActiveObject();
+          canvas.renderAll();
+        }
+      });
+    }
+
+    return () => {
+      canvas?.off('text:editing:entered');
+      canvas?.off('text:editing:exited');
+    };
+  }, [canvas, textIsActive]);
 
   /**
    * Is executed when textIsActive changes its value,
@@ -732,6 +846,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [canvas, eventedObjects, textIsActive, shapeIsActive, brushIsActive]);
 
   /**
+   * Memoized laserIsActive prop.
+   */
+  const laserPointerIsActive = useMemo(() => laserIsActive, [laserIsActive]);
+
+  /**
    * Manages the logic for Flood-fill Feature
    */
   useEffect(() => {
@@ -889,7 +1008,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (!floodFillIsActive && eraseType !== 'object') {
         canvas?.forEachObject((object: ICanvasObject) => {
           object.set({
-            hoverCursor: 'default',
+            hoverCursor: laserPointerIsActive ? 'none' : 'default',
             evented: false,
             perPixelTargetFind: false,
           });
@@ -915,6 +1034,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     eraseType,
     undoRedoDispatch,
     toolbarIsEnabled,
+    laserPointerIsActive,
   ]);
 
   /**
@@ -997,6 +1117,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     undoRedoDispatch
   );
+  useSynchronizedModified(
+    canvas,
+    filterOutgoingEvents,
+    filterIncomingEvents,
+    userId,
+    undoRedoDispatch
+  );
   useSynchronizedRotated(
     canvas,
     userId,
@@ -1027,19 +1154,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useSynchronizedFontFamilyChanged(canvas, filterIncomingEvents);
   useSynchronizedPointer(
     canvas,
-    !allowPointer,
-    universalPermits,
+    pointerIsEnabled,
     filterIncomingEvents,
     userId,
     penColor,
-    laserIsActive,
-    allowPointer
+    laserIsActive
   );
   useSynchronizedSetToolbarPermissions(
     canvas,
     userId,
     filterIncomingEvents,
-    setToolbarIsEnabled
+    setToolbarIsEnabled,
+    setPointerIsEnabled
   );
   useSynchronizedFontColorChanged(
     canvas,
