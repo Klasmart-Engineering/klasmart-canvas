@@ -211,13 +211,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     canvas.getObjects().forEach((object: ICanvasObject) => {
       if ((object.id && isLocalObject(object.id, userId)) || !object.id) {
-        setObjectControlsVisibility(object, shapesAreSelectable);
         object.set({
           selectable: shapesAreSelectable,
           evented: shapesAreSelectable || shapesAreEvented,
           lockMovementX: !shapesAreSelectable,
           lockMovementY: !shapesAreSelectable,
-          hasBorders: shapesAreSelectable,
           hoverCursor: shapesAreSelectable ? 'move' : 'default',
         });
       }
@@ -244,6 +242,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             top: e.pointer?.y,
             left: e.pointer?.x,
             cursorDuration: 500,
+            lockMovementX: true,
+            lockMovementY: true,
+            hasRotatingPoint: false,
+            hoverCursor: 'default',
           });
 
           canvas.add(text);
@@ -258,6 +260,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             delete toObject.type;
             const clonedTextObj = JSON.parse(JSON.stringify(toObject));
             clonedTextObj.id = `${userId}:${uuidv4()}`;
+            clonedTextObj.lockMovementX = true;
+            clonedTextObj.lockMovementY = true;
+            clonedTextObj.hasRotatingPoint = false;
+            clonedTextObj.hoverCursor = 'default';
 
             if (typeof textCopy === 'string') {
               text = new fabric.Textbox(textCopy, clonedTextObj);
@@ -695,13 +701,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (eventedObjects) {
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
-          setObjectControlsVisibility(object, true);
           object.set({
             evented: true,
             selectable: true,
             lockMovementX: false,
             lockMovementY: false,
-            hasBorders: true,
           });
         }
       });
@@ -711,20 +715,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [actions, canvas, eventedObjects, isLocalObject, textIsActive, userId]);
 
   useEffect(() => {
-    const canEditText = eventedObjects || textIsActive;
-    canvas?.discardActiveObject();
-    canvas?.forEachObject((object) => {
-      if (object.type === 'textbox') {
-        setObjectControlsVisibility(object, canEditText);
+    if (canvas) {
+      canvas.forEachObject((object) => {
+        setObjectControlsVisibility(object, eventedObjects || textIsActive);
         (object as Textbox).set({
-          evented: canEditText,
-          selectable: canEditText,
-          hasBorders: canEditText,
-          editable: canEditText,
+          evented: eventedObjects || textIsActive,
+          selectable: eventedObjects || textIsActive,
+          hasBorders: eventedObjects || textIsActive,
+          editable: eventedObjects || textIsActive,
+          lockMovementX: !eventedObjects,
+          lockMovementY: !eventedObjects,
+          hasRotatingPoint: eventedObjects,
         });
-      }
-    });
-  }, [canvas, eventedObjects, textIsActive]);
+      });
+    }
+  }, [canvas, eventedObjects, textIsActive, shapeIsActive, brushIsActive]);
 
   /**
    * Manages the logic for Flood-fill Feature
