@@ -501,6 +501,10 @@ const reducer = (
 
     // Creates a new current state if a new event has been received by serializer from a non local canvas.
     case SET_OTHER: {
+      if (!action.payload) {
+        return state;
+      }
+
       const selfItems = action.payload?.filter(
         (object: ICanvasObject) =>
           object.id && isLocalObject(object.id, action.canvasId as string)
