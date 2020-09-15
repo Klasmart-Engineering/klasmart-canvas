@@ -101,6 +101,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   // Event serialization for synchronizing whiteboard state.
   const {
     state: { eventSerializer },
+    requestAllEvents,
   } = useSharedEventSerializer();
 
   const { dispatch: undoRedoDispatch } = UndoRedo(
@@ -173,6 +174,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (!canvas) return;
     canvas.allowTouchScrolling = !pointerEvents;
   }, [pointerEvents, canvas]);
+
+  /**
+   * Request all events to be resent after canvas is created.
+   */
+  useEffect(() => {
+    if (!canvas) return;
+
+    requestAllEvents();
+
+  }, [canvas, requestAllEvents]);
 
   /**
    * Retrieve references to elements created by fabricjs. We'll need these to
