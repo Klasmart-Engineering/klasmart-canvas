@@ -193,7 +193,7 @@ export default function ToolbarContextProvider({
         tool.id !== ELEMENTS.ADD_TEXT_TOOL &&
         tool.id !== ELEMENTS.LINE_TYPE_TOOL &&
         tool.id !== ELEMENTS.LINE_WIDTH_TOOL) ||
-      textIsActive
+      (textIsActive && tool.id !== ELEMENTS.ADD_TEXT_TOOL)
     ) {
       discardActiveObject();
     }
