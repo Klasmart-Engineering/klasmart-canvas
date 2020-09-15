@@ -92,8 +92,9 @@ const useSynchronizedReconstruct = (
           });
         } else if (object) {
           let items: TypedShape[] = [];
+          let groupObject: any;
           fabric.Group.fromObject(object, (group: fabric.Group) => {
-            debugger;
+            groupObject = group;
             const old = canvas
               ?.getObjects()
               .filter((o: TypedShape) => o.id === object.id)[0];
@@ -109,11 +110,12 @@ const useSynchronizedReconstruct = (
             group.set({ selectable: false, evented: false });
             canvas?.remove(old as fabric.Object);
             canvas?.add(group);
-            group.destroy();
+          });
 
-            items.forEach((o: TypedShape) => {
-              canvas?.add(o);
-            });
+          canvas?.remove(groupObject);
+
+          items.forEach((o: TypedShape) => {
+            canvas?.add(o);
           });
         }
 
