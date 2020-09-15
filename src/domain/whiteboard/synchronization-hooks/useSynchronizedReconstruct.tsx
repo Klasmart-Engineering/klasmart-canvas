@@ -91,21 +91,29 @@ const useSynchronizedReconstruct = (
             reset(o);
           });
         } else if (object) {
+          let items: TypedShape[] = [];
           fabric.Group.fromObject(object, (group: fabric.Group) => {
+            debugger;
             const old = canvas
               ?.getObjects()
               .filter((o: TypedShape) => o.id === object.id)[0];
-            if (group._objects) {
-              group._objects.forEach((o: TypedShape) => {
+            if (group.getObjects()) {
+              group.getObjects().forEach((o: TypedShape) => {
                 const oldO = canvas
                   ?.getObjects()
                   .filter((oldObject: TypedShape) => oldObject.id === o.id)[0];
                 canvas?.remove(oldO as fabric.Object);
+                items.push(o);
               });
             }
             group.set({ selectable: false, evented: false });
             canvas?.remove(old as fabric.Object);
             canvas?.add(group);
+            group.destroy();
+
+            items.forEach((o: TypedShape) => {
+              canvas?.add(o);
+            });
           });
         }
 

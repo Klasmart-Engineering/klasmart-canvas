@@ -56,6 +56,7 @@ import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
 import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
+import { TypedGroup } from '../../interfaces/shapes/group';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -1252,20 +1253,49 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       if (type === 'textbox') return;
 
-      const payload = {
-        type,
-        target: { stroke: obj?.stroke },
-        id: obj?.id,
-      };
+      if (obj?.type !== 'activeSelection') {
 
-      const event = { event: payload, type: 'colorChanged' };
+        const payload = {
+          type,
+          target: { stroke: obj?.stroke },
+          id: obj?.id,
+        };
 
-      undoRedoDispatch({
-        type: SET,
-        payload: canvas?.getObjects() as TypedShape[],
-        canvasId: userId,
-        event: (event as unknown) as IUndoRedoEvent,
-      });
+        const event = { event: payload, type: 'colorChanged' };
+
+
+        undoRedoDispatch({
+          type: SET,
+          payload: canvas?.getObjects() as TypedShape[],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      } else {
+        // @ts-ignore
+        const activeIds: string[] = canvas?.getActiveObject().getObjects().map((o: TypedShape) => o.id);
+        const payload = {
+          type,
+          svg: true,
+          target: null,
+          id: `${userId}:group`,
+        };
+  
+        const event = { event: payload, type: 'activeSelection', activeIds };
+        
+        let filtered = canvas?.getObjects().filter((o: any) => {
+          return !o.group;
+        });
+  
+        let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
+        active?.set({ id: `${userId}:group` });
+  
+        undoRedoDispatch({
+          type: SET_GROUP,
+          payload: [ ...filtered as any[], active ],
+          canvasId: userId,
+          event: event as unknown as IUndoRedoEvent,
+        });
+      }
     }
   }, [penColor, canvas, undoRedoDispatch, userId]);
 
