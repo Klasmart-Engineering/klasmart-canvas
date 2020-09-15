@@ -1254,7 +1254,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (type === 'textbox') return;
 
       if (obj?.type !== 'activeSelection') {
-
         const payload = {
           type,
           target: { stroke: obj?.stroke },
@@ -1263,7 +1262,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         const event = { event: payload, type: 'colorChanged' };
 
-
         undoRedoDispatch({
           type: SET,
           payload: canvas?.getObjects() as TypedShape[],
@@ -1271,29 +1269,32 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           event: (event as unknown) as IUndoRedoEvent,
         });
       } else {
-        // @ts-ignore
-        const activeIds: string[] = canvas?.getActiveObject().getObjects().map((o: TypedShape) => o.id);
+        const activeIds: string[] = canvas
+          ?.getActiveObject()
+          // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
+          .getObjects()
+          .map((o: TypedShape) => o.id);
         const payload = {
           type,
           svg: true,
           target: null,
           id: `${userId}:group`,
         };
-  
+
         const event = { event: payload, type: 'activeSelection', activeIds };
-        
+
         let filtered = canvas?.getObjects().filter((o: any) => {
           return !o.group;
         });
-  
+
         let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
         active?.set({ id: `${userId}:group` });
-  
+
         undoRedoDispatch({
           type: SET_GROUP,
-          payload: [ ...filtered as any[], active ],
+          payload: [...(filtered as any[]), active],
           canvasId: userId,
-          event: event as unknown as IUndoRedoEvent,
+          event: (event as unknown) as IUndoRedoEvent,
         });
       }
     }

@@ -139,23 +139,22 @@ const useSynchronizedRotated = (
           target: null,
           id: `${userId}:group`,
         };
-  
+
         const event = { event: payload, type: 'activeSelection', activeIds };
-        
+
         let filtered = canvas?.getObjects().filter((o: any) => {
           return !o.group;
         });
-  
+
         let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
         active?.set({ id: `${userId}:group` });
-  
+
         undoRedoDispatch({
           type: SET_GROUP,
-          payload: [ ...filtered as any[], active ],
+          payload: [...(filtered as any[]), active],
           canvasId: userId,
-          event: event as unknown as IUndoRedoEvent,
+          event: (event as unknown) as IUndoRedoEvent,
         });
-
       } else {
         if (!(e.target as ICanvasObject).id) {
           return;
@@ -186,7 +185,7 @@ const useSynchronizedRotated = (
             type: SET,
             payload: canvas.getObjects(),
             canvasId: userId,
-            event: event as unknown as IUndoRedoEvent,
+            event: (event as unknown) as IUndoRedoEvent,
           });
         }
 

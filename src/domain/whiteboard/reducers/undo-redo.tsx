@@ -190,7 +190,10 @@ const determineNewRedoIndex = (
   return events.length - 1;
 };
 
-const limitValidator = (list: IUndoRedoEvent[] | string[], limit: number): (string | IUndoRedoEvent)[] => {
+const limitValidator = (
+  list: IUndoRedoEvent[] | string[],
+  limit: number
+): (string | IUndoRedoEvent)[] => {
   const cloned = [...list];
 
   if (list.length > limit) {
@@ -216,7 +219,10 @@ const filterById = (
  * Removes future states if a new state has
  * been created after an undo.
  */
-const spliceStates = (activeStateIndex: number | null, statesList: string[]): string[] => {
+const spliceStates = (
+  activeStateIndex: number | null,
+  statesList: string[]
+): string[] => {
   let states = [...statesList];
 
   if (activeStateIndex !== null && activeStateIndex + 1 < states.length) {
@@ -232,7 +238,10 @@ const spliceStates = (activeStateIndex: number | null, statesList: string[]): st
  * Removes future events if a new event has
  * been created after an undo.
  */
-const spliceEvents = (eventIndex: number, eventsList: IUndoRedoEvent[]): IUndoRedoEvent[] => {
+const spliceEvents = (
+  eventIndex: number,
+  eventsList: IUndoRedoEvent[]
+): IUndoRedoEvent[] => {
   // Removes future events if a new event has been created after an undo.
   let events = [...eventsList];
 
