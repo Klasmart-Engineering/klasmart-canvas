@@ -90,8 +90,14 @@ export class EventPainterController extends EventEmitter
       case 'moving':
         this.moving(event.id, target);
         break;
+      case 'setToolbarPermissions':
+        this.setToolbarPermissions(event.id, target);
+        break;
       case 'fontColorChanged':
         this.fontColorChanged(event.id, event.objectType, target);
+        break;
+      case 'lineWidthChanged':
+        this.lineWidthChanged(event.id, event.objectType, target);
         break;
     }
   }
@@ -140,11 +146,23 @@ export class EventPainterController extends EventEmitter
     this.emit('moving', id, target);
   }
 
+  private setToolbarPermissions(id: string, target: ICanvasObject) {
+    this.emit('setToolbarPermissions', id, target);
+  }
+
   private fontColorChanged(
     id: string,
     objectType: string,
     target: ICanvasObject
   ) {
     this.emit('fontColorChanged', id, objectType, target);
+  }
+
+  private lineWidthChanged(
+    id: string,
+    objectType: string,
+    target: ICanvasObject
+  ) {
+    this.emit('lineWidthChanged', id, objectType, target);
   }
 }

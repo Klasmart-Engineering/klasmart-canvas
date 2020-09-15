@@ -17,18 +17,24 @@ import { useLineWidth } from './hooks/useLineWidth';
 import { useFloodFill } from './hooks/useFloodFill';
 import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 import { useLaserIsActive } from './hooks/useLaserIsActive';
+import { useToolbarPermissions } from './hooks/useToolbarPermissions';
 import ICanvasActions from './canvas-actions/ICanvasActions';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
+import AuthMenu from '../../components/AuthMenu';
+import { useClearIsActive } from './hooks/useClearIsActive';
+import { usePointerPermissions } from './hooks/usePointerPermissions';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
 export const WhiteboardProvider = ({
   children,
   clearWhiteboardPermissions,
+  userId,
 }: {
   children: React.ReactNode;
   clearWhiteboardPermissions: IClearWhiteboardPermissions;
+  userId: string;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();
@@ -49,6 +55,7 @@ export const WhiteboardProvider = ({
   const { textIsActive, updateTextIsActive } = useTextIsActive();
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
+  const { clearIsActive, updateClearIsActive } = useClearIsActive();
   const {
     shapesAreSelectable,
     updateShapesAreSelectable,
@@ -56,6 +63,8 @@ export const WhiteboardProvider = ({
   const { shapesAreEvented, updateShapesAreEvented } = useShapesAreEvented();
   const { floodFillIsActive, updateFloodFillIsActive } = useFloodFillIsActive();
   const { laserIsActive, updateLaserIsActive } = useLaserIsActive();
+  const { toolbarIsEnabled, setToolbarIsEnabled } = useToolbarPermissions();
+  const { pointerIsEnabled, setPointerIsEnabled } = usePointerPermissions();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -81,14 +90,6 @@ export const WhiteboardProvider = ({
     return object[0] === canvasId;
   };
   const [eventedObjects, updateEventedObjects] = useState(true);
-
-  // Hard coded until functionality to provide permissions to students is implemented.
-  const allowPointer = false;
-
-  // Hard coded until roles fully integrated.
-  const universalPermits = (id: string) => {
-    return id === 'teacher';
-  };
 
   // Temporary code to get undo / redo working while there are two boards
   // on the view.
@@ -133,10 +134,10 @@ export const WhiteboardProvider = ({
   );
 
   const clearWhiteboardActionClearMyself = useCallback(() => {
-    if (clearWhiteboardPermissions.allowClearMyself) {
+    if (clearWhiteboardPermissions.allowClearMyself && toolbarIsEnabled) {
       canvasActions?.clearWhiteboardClearMySelf();
     }
-  }, [canvasActions, clearWhiteboardPermissions]);
+  }, [canvasActions, clearWhiteboardPermissions, toolbarIsEnabled]);
 
   const clearWhiteboardAllowClearOthersAction = useCallback(
     (userId) => {
@@ -216,6 +217,8 @@ export const WhiteboardProvider = ({
     updateShapeIsActive,
     brushIsActive,
     updateBrushIsActive,
+    clearIsActive,
+    updateClearIsActive,
     updateFontColor,
     lineWidth,
     updateLineWidth,
@@ -259,8 +262,10 @@ export const WhiteboardProvider = ({
     setCanvasSelection: setCanvasSelectionAction,
     undo: undoAction,
     redo: redoAction,
-    allowPointer,
-    universalPermits,
+    toolbarIsEnabled,
+    setToolbarIsEnabled,
+    pointerIsEnabled,
+    setPointerIsEnabled,
   };
 
   return (
@@ -275,6 +280,9 @@ export const WhiteboardProvider = ({
       <button onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
         Clear student
       </button>
+      {/*<div>Whiteboard Context {toolbarIsEnabled.toString()}</div>*/}
+      <AuthMenu userId={userId} setToolbarIsEnabled={setToolbarIsEnabled} />
+
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />

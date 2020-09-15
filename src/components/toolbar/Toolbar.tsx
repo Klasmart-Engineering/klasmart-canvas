@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect, useMemo } from 'react';
 import ToolbarSection from './toolbar-section/ToolbarSection';
 import '../../assets/style/toolbar.css';
 import ToolbarButton from './toolbar-button/ToolbarButton';
@@ -16,6 +16,7 @@ import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elem
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
+import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -68,8 +69,8 @@ function Toolbar() {
     redo,
     updateShapesAreEvented,
     updateLaserIsActive,
-    allowPointer,
-    universalPermits,
+    toolbarIsEnabled,
+    pointerIsEnabled,
   } = useContext(WhiteboardContext);
 
   /**
@@ -78,7 +79,7 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
-    if (tool === ELEMENTS.LASER_TOOL && !allowPointer && !universalPermits) {
+    if (tool === ELEMENTS.LASER_TOOL && !pointerIsEnabled) {
       return;
     }
 
@@ -97,7 +98,7 @@ function Toolbar() {
         tool !== ELEMENTS.ADD_TEXT_TOOL &&
         tool !== ELEMENTS.LINE_TYPE_TOOL &&
         tool !== ELEMENTS.LINE_WIDTH_TOOL) ||
-      textIsActive
+      (textIsActive && tool !== ELEMENTS.ADD_TEXT_TOOL)
     ) {
       discardActiveObject();
     }
@@ -153,10 +154,17 @@ function Toolbar() {
     );
 
     // set the clicked tool like active style in Toolbar
-    setTools({
-      active: tool,
-      elements: [...tools.elements],
-    });
+    if (
+      toolbarIsEnabled ||
+      tool === ELEMENTS.ADD_TEXT_TOOL ||
+      tool === ELEMENTS.ADD_STAMP_TOOL ||
+      (pointerIsEnabled && tool === ELEMENTS.LASER_TOOL)
+    ) {
+      setTools({
+        active: tool,
+        elements: [...tools.elements],
+      });
+    }
   }
 
   /**
@@ -167,18 +175,20 @@ function Toolbar() {
   function handleActionsElementClick(tool: string) {
     discardActiveObject();
 
-    switch (tool) {
-      case ELEMENTS.CLEAR_WHITEBOARD_ACTION:
-        openClearWhiteboardModal();
-        break;
+    if (toolbarIsEnabled) {
+      switch (tool) {
+        case ELEMENTS.CLEAR_WHITEBOARD_ACTION:
+          openClearWhiteboardModal();
+          break;
 
-      case ELEMENTS.UNDO_ACTION:
-        undo();
-        break;
+        case ELEMENTS.UNDO_ACTION:
+          undo();
+          break;
 
-      case ELEMENTS.REDO_ACTION:
-        redo();
-        break;
+        case ELEMENTS.REDO_ACTION:
+          redo();
+          break;
+      }
     }
   }
 
@@ -332,6 +342,51 @@ function Toolbar() {
         return '';
     }
   }
+
+  /**
+   * If a permission element is active in Toolbar, when the permission
+   * will be revoked the active tool will change to the first one (pointers)
+   */
+  useEffect(() => {
+    if (
+      !toolbarIsEnabled &&
+      tools.active !== ELEMENTS.ADD_TEXT_TOOL &&
+      tools.active !== ELEMENTS.ADD_STAMP_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: [...tools.elements],
+      });
+    }
+    // If tools.elements and tools.active are added an infinite loop happens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolbarIsEnabled]);
+
+  /**
+   * Indicates active tool.
+   */
+  const getActiveTool = useMemo((): string => tools.active, [tools]);
+
+  /**
+   * Returns tool elements.
+   */
+  const getToolElements = useMemo(
+    (): IBasicToolbarSection['elements'] => [...tools.elements],
+    [tools]
+  );
+
+  /**
+   * Checks if laser pointer permission is set to true. If not, and pointer is selected,
+   * default pointer is automatically selected.
+   */
+  useEffect(() => {
+    if (!pointerIsEnabled && getActiveTool === ELEMENTS.LASER_TOOL) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+  }, [pointerIsEnabled, getActiveTool, getToolElements]);
 
   const toolbarContainerStyle: CSSProperties = {
     display: 'flex',

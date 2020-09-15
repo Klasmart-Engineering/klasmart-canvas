@@ -8,7 +8,7 @@ import { isFreeDrawing, isShape } from '../utils/shapes';
 import { UNDO, REDO, SET } from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
-import { IEvent, Point } from 'fabric/fabric-impl';
+import { IEvent, Point, ITextOptions } from 'fabric/fabric-impl';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasMouseEvent } from '../../../interfaces/canvas-events/canvas-mouse-event';
 import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
@@ -35,6 +35,7 @@ export const useCanvasActions = (
     penColor,
     lineWidth,
     isLocalObject,
+    updateClearIsActive,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
@@ -255,9 +256,41 @@ export const useCanvasActions = (
         }
       };
 
+      /**
+       * Removes the recent created shape and set resize variable in false
+       */
+      const cancelShapeCreation = () => {
+        if (resize) {
+          canvas?.remove(shape);
+          resize = false;
+        }
+      };
+
+      /**
+       * Return the movement hability in the current target shape
+       * @param {IEvent} event - current event, necessary to know
+       * which is the current target shape
+       */
+      const allowMovementInShape = (event: IEvent) => {
+        if (event.target) {
+          event.target.set({
+            lockMovementX: false,
+            lockMovementY: false,
+          });
+        }
+      };
+
       canvas?.on('mouse:down', (e: IEvent) => {
-        if (e.target || resize) {
+        if (resize) {
           return;
+        }
+
+        // Locking movement to avoid shapes moving
+        if (e.target) {
+          e.target.set({
+            lockMovementX: true,
+            lockMovementY: true,
+          });
         }
 
         shape = shapeSelector(shapeToAdd);
@@ -276,6 +309,24 @@ export const useCanvasActions = (
 
         canvas.add(shape);
         resize = true;
+
+        /*
+          Canceling shapes creation in object:scaling 
+          and object:rotating events
+        */
+        canvas.on({
+          'object:scaling': cancelShapeCreation,
+          'object:rotating': cancelShapeCreation,
+        });
+
+        /*
+          When the shape was resized or rotated
+          the shape's movement is allowed
+        */
+        canvas.on({
+          'object:scaled': allowMovementInShape,
+          'object:rotated': allowMovementInShape,
+        });
       });
 
       canvas?.on('mouse:move', (e: IEvent) => {
@@ -313,6 +364,16 @@ export const useCanvasActions = (
         } else {
           shape.set({ id });
           shape.setCoords();
+
+          /*
+            Setting the recent created shape like evented
+            to can be resized and rotated
+          */
+          shape.set({
+            evented: true,
+            hoverCursor: 'default',
+          });
+
           canvas.setActiveObject(shape);
           canvas.renderAll();
           let type = shape.type;
@@ -469,17 +530,19 @@ export const useCanvasActions = (
 
         const object: ICanvasObject = canvas?.getActiveObject();
 
-        const payload = {
-          type: 'textbox',
-          target: { fill: color },
-          id: object.id,
-        };
+        if (!(object as ITextOptions).isEditing) {
+          const payload = {
+            type: 'textbox',
+            target: { fill: color },
+            id: object.id,
+          };
 
-        eventSerializer?.push('fontColorChanged', payload);
+          eventSerializer?.push('fontColorChanged', payload);
+        }
         return;
       }
 
-      canvas?.getObjects().forEach((obj: ICanvasObject) => {
+      canvas?.getActiveObjects().forEach((obj: ICanvasObject) => {
         if (obj.id) {
           const type: ObjectType = obj.get('type') as ObjectType;
           if (type === 'textbox') {
@@ -512,8 +575,9 @@ export const useCanvasActions = (
   /**
    * Clears all whiteboard elements
    * */
-  const clearWhiteboardClearAll = useCallback(() => {
-    canvas?.getObjects().forEach((obj: ICanvasObject) => {
+  const clearWhiteboardClearAll = useCallback(async () => {
+    await updateClearIsActive(true);
+    await canvas?.getObjects().forEach((obj: ICanvasObject) => {
       if (obj.id) {
         const target = {
           id: obj.id,
@@ -537,13 +601,16 @@ export const useCanvasActions = (
       canvasId: userId,
       event,
     });
-  }, [canvas, eventSerializer, dispatch, userId]);
+
+    await updateClearIsActive(false);
+  }, [canvas, dispatch, userId, updateClearIsActive, eventSerializer]);
 
   /**
    * Clears all whiteboard elements
    * */
-  const clearWhiteboardClearMySelf = useCallback(() => {
-    canvas?.getObjects().forEach((obj: ICanvasObject) => {
+  const clearWhiteboardClearMySelf = useCallback(async () => {
+    await updateClearIsActive(true);
+    await canvas?.getObjects().forEach((obj: ICanvasObject) => {
       if (obj.id && isLocalObject(obj.id, userId)) {
         const target = {
           id: obj.id,
@@ -560,25 +627,30 @@ export const useCanvasActions = (
     closeModal();
 
     // Add cleared whiteboard to undo / redo state.
-    const event = { event: [], type: 'clearedWhiteboard' };
+    const event = {
+      event: { id: `${userId}:clearWhiteboard` },
+      type: 'clearWhiteboard',
+    };
 
     dispatch({
       type: SET,
-      payload: [],
+      payload: canvas?.getObjects(),
       canvasId: userId,
       event,
     });
 
+    await updateClearIsActive(false);
     // If isLocalObject is added in dependencies an infinity loop happens
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, closeModal, canvasId, eventSerializer]);
+  }, [canvas, closeModal, canvasId, eventSerializer, updateClearIsActive]);
 
   /**
    * Clears all whiteboard with allowClearOthers strategy
    * */
   const clearWhiteboardAllowClearOthers = useCallback(
-    (userId: string) => {
-      canvas?.getObjects().forEach((obj: ICanvasObject) => {
+    async (userId: string) => {
+      await updateClearIsActive(true);
+      await canvas?.getObjects().forEach((obj: ICanvasObject) => {
         if (obj.id) {
           const object = obj.id.split(':');
 
@@ -601,8 +673,9 @@ export const useCanvasActions = (
           eventSerializer?.push('removed', target as ObjectEvent);
         }
       });
+      await updateClearIsActive(false);
     },
-    [canvas, eventSerializer]
+    [canvas, eventSerializer, updateClearIsActive]
   );
 
   /**
@@ -661,6 +734,8 @@ export const useCanvasActions = (
         object.set({
           evented: true,
           hoverCursor: `url("${eraseObjectCursor}"), auto`,
+          lockMovementX: true,
+          lockMovementY: true,
         });
       } else if (object.id) {
         object.set({

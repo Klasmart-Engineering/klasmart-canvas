@@ -1,7 +1,10 @@
 import { useCallback, useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
-import { ObjectEvent, ObjectType } from '../event-serializer/PaintEventSerializer';
+import {
+  ObjectEvent,
+  ObjectType,
+} from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET, SET_OTHER, SET_GROUP } from '../reducers/undo-redo';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { TypedGroup } from '../../../interfaces/shapes/group';
@@ -29,6 +32,8 @@ const useSynchronizedMoved = (
         (e.target.id && !shouldSerializeEvent(e.target.id))
       )
         return;
+
+      e.target.bringToFront();
 
       const target = {
         angle: e.target.angle,
@@ -128,7 +133,7 @@ const useSynchronizedMoved = (
       };
 
       const event = { event: payload, type: 'activeSelection', activeIds };
-      
+
       let filtered = canvas?.getObjects().filter((o: any) => {
         return !o.group;
       });
@@ -138,9 +143,9 @@ const useSynchronizedMoved = (
 
       undoRedoDispatch({
         type: SET_GROUP,
-        payload: [ ...filtered as any[], active ],
+        payload: [...(filtered as any[]), active],
         canvasId: userId,
-        event: event as unknown as IUndoRedoEvent,
+        event: (event as unknown) as IUndoRedoEvent,
       });
     },
     [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]
@@ -153,9 +158,9 @@ const useSynchronizedMoved = (
 
       const type: ObjectType = (e.target.get('type') || 'path') as ObjectType;
       if (type === 'activeSelection') {
-        moveSelectedGroup(type, e as unknown as CanvasEvent);
+        moveSelectedGroup(type, (e as unknown) as CanvasEvent);
       } else {
-        moveSelectedObject(type, e as unknown as CanvasEvent);
+        moveSelectedObject(type, (e as unknown) as CanvasEvent);
       }
     };
 
@@ -186,6 +191,7 @@ const useSynchronizedMoved = (
               originY: 'center',
             });
             obj.set({ left: obj.left - 1 });
+            obj.bringToFront();
             obj.setCoords();
           } else {
             obj.set({
@@ -199,12 +205,13 @@ const useSynchronizedMoved = (
               originX: target.originX || 'left',
               originY: target.originY || 'top',
             });
-            obj.setCoords();   
-  
+            obj.bringToFront();
+            obj.setCoords();
+
             undoRedoDispatch({
               type: SET_OTHER,
               payload: (canvas?.getObjects() as unknown) as TypedShape[],
-              canvasId: userId
+              canvasId: userId,
             });
           }
         }
@@ -217,7 +224,13 @@ const useSynchronizedMoved = (
     return () => {
       eventController?.removeListener('moved', moved);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent, undoRedoDispatch, userId]);
+  }, [
+    canvas,
+    eventController,
+    shouldHandleRemoteEvent,
+    undoRedoDispatch,
+    userId,
+  ]);
 };
 
 export default useSynchronizedMoved;

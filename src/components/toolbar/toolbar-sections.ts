@@ -384,7 +384,7 @@ const toolsSection: IBasicToolbarSection = {
           value: 4,
           title: '4px',
           style: {
-            fontSize: 8,
+            fontSize: 6,
           },
         },
         {
@@ -392,7 +392,7 @@ const toolsSection: IBasicToolbarSection = {
           value: 8,
           title: '8px',
           style: {
-            fontSize: 16,
+            fontSize: 14,
           },
         },
         {
@@ -400,7 +400,7 @@ const toolsSection: IBasicToolbarSection = {
           value: 12,
           title: '12px',
           style: {
-            fontSize: 24,
+            fontSize: 20,
           },
         },
         {
@@ -408,7 +408,7 @@ const toolsSection: IBasicToolbarSection = {
           value: 16,
           title: '16px',
           style: {
-            fontSize: 32,
+            fontSize: 26,
           },
         },
       ],

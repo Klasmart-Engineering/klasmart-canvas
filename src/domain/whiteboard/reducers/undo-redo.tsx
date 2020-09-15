@@ -3,6 +3,7 @@ import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { STATES_LIMIT } from '../../../config/undo-redo-values';
 
 export const UNDO = 'CANVAS_UNDO';
 export const REDO = 'CANVAS_REDO';
@@ -91,8 +92,6 @@ export interface CanvasAction {
    * Event ID. Used to determine if an event is grouped.
    */
   eventId?: string | undefined;
-
-  svg?: any;
 }
 
 /**
@@ -119,7 +118,13 @@ const objectStringifier = (payload: (fabric.Object | TypedShape)[]): string => {
 
   if (payload) {
     formatted = payload.map((object: fabric.Object | TypedShape) =>
-      object.toJSON(['strokeUniform', 'id', 'selectable', 'evented'])
+      object.toJSON([
+        'strokeUniform',
+        'id',
+        'selectable',
+        'evented',
+        'shapeType',
+      ])
     );
   }
 
@@ -185,6 +190,16 @@ const determineNewRedoIndex = (
   return events.length - 1;
 };
 
+const limitValidator = (list: IUndoRedoEvent[] | string[], limit: number) => {
+  const cloned = [...list];
+
+  if (list.length > limit) {
+    cloned.shift();
+  }
+
+  return cloned;
+};
+
 /**
  * History state reducer.
  * @param state Canvas state.
@@ -233,7 +248,10 @@ const reducer = (
 
       // Formats and creates new state.
       const mappedSelfState = objectStringifier(selfItems);
-      states = [...states, mappedSelfState];
+      states = limitValidator(
+        [...states, mappedSelfState],
+        STATES_LIMIT
+      ) as string[];
 
       let stateItems = {
         ...state,
@@ -250,6 +268,8 @@ const reducer = (
       } else if (state.eventIndex < 0) {
         events = [];
       }
+
+      events = limitValidator(events, STATES_LIMIT) as IUndoRedoEvent[];
 
       if (action.event && !Array.isArray(action.event)) {
         events = [...events, action.event];
@@ -328,7 +348,10 @@ const reducer = (
 
       // Formats and creates new state.
       const mappedSelfState = JSON.stringify({ objects: selfItems });
-      states = [...states, mappedSelfState];
+      states = limitValidator(
+        [...states, mappedSelfState],
+        STATES_LIMIT
+      ) as string[];
 
       let newEvent = { ...action.event, selfState: mappedSelfState };
 
@@ -348,6 +371,8 @@ const reducer = (
         events = [];
       }
 
+      events = limitValidator(events, STATES_LIMIT) as IUndoRedoEvent[];
+
       if (Array.isArray(action.event)) {
         events = [...events, ...action.event];
       } else {
@@ -365,7 +390,10 @@ const reducer = (
 
     // Steps back to previous state.
     case UNDO: {
-      if (state.activeStateIndex === null) {
+      if (
+        state.activeStateIndex === null ||
+        (state.activeStateIndex === 0 && state.states.length === STATES_LIMIT)
+      ) {
         return state;
       }
 
@@ -384,10 +412,15 @@ const reducer = (
         );
       }
 
-      const activeStateIndex =
+      let activeStateIndex =
         state.activeStateIndex !== null && state.activeStateIndex >= 1
           ? state.activeStateIndex - 1
           : null;
+
+      if (activeStateIndex === null && state.states.length === STATES_LIMIT) {
+        activeStateIndex = 0;
+        eventIndex = 0;
+      }
 
       const activeSelfState =
         activeStateIndex !== null && activeStateIndex >= 0

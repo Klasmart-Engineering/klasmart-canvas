@@ -1,4 +1,5 @@
 import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { ITextOptions } from 'fabric/fabric-impl';
 
 /**
  * Check if the given object is a free drawing object
@@ -18,6 +19,14 @@ export const isShape = (object: fabric.Object) => {
   }
 
   return object.fill && !(object as fabric.TextOptions).text;
+};
+
+/**
+ * Check if the given object is a text object
+ * @param {fabric.Object} object - object to check
+ */
+export const isText = (object: fabric.Object) => {
+  return (object as ITextOptions).text;
 };
 
 /**

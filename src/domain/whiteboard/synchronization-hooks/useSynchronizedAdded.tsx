@@ -119,9 +119,9 @@ const useSynchronizedAdded = (
           canvasId: userId,
           event,
         });
-      }
 
-      eventSerializer?.push('added', payload);
+        eventSerializer?.push('added', payload);
+      }
     };
 
     canvas?.on('object:added', objectAdded);
