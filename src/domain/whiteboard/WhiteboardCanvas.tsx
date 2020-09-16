@@ -232,8 +232,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       lowerCanvas.style.height = heightStyle;
       upperCanvas.style.height = heightStyle;
 
-      const wrapperTransform = `translate(${left}, ${top})`;
+      const wrapperTransform = `translate(${left}px, ${top}px)`;
       wrapper.style.transform = wrapperTransform;
+
+      wrapper.style.top = "0px";
+      wrapper.style.left = "0px";
     }
   }, [wrapper, lowerCanvas, upperCanvas, width, height, left, top]);
 
