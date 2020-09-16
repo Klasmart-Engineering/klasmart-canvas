@@ -30,12 +30,15 @@ const useSynchronizedAdded = (
   /** Register and handle path:created event. */
   useEffect(() => {
     const pathCreated = (e: ICanvasDrawingEvent) => {
-      if (!e.path) {
-        return;
+      if (!e.path) throw new Error(`path:created event without path.`);
+
+      if (!e.path.id) {
+        PainterEvents.generateAndSetIdForTarget(userId, e.path);
       }
 
-      e.path.id = PainterEvents.createId(userId);
-      // if (!shouldSerializeEvent(e.path.id)) return;
+      if (!e.path.id) throw new Error(`path doesn't have any ID`);
+
+      if (!shouldSerializeEvent(e.path.id)) return;
 
       const target = {
         stroke: e.path.stroke,
@@ -69,25 +72,33 @@ const useSynchronizedAdded = (
       }
     };
 
-    canvas?.on('path:created', pathCreated);
+    if (canvas) {
+      canvas.on('path:created', pathCreated);
 
-    return () => {
-      canvas?.off('path:created', pathCreated);
-    };
+      return () => {
+        canvas.off('path:created', pathCreated);
+      };
+    }
   }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
 
   /** Register and handle object:added event. */
   useEffect(() => {
     const objectAdded = (e: any) => {
-      if (!e.target?.id) return;
+      if (!e.target) throw new Error(`object:added without any target`);
       if (e.target.fromJSON) return;
-      if (!shouldSerializeEvent(e.target.id)) return;
 
       const type: ObjectType = (e.target.get('type') || 'path') as ObjectType;
 
       if (type === 'path') {
         return;
       }
+
+      if (!e.target.id) {
+        PainterEvents.generateAndSetIdForTarget(userId, e.target);
+      }
+
+      if (!e.target.id) throw new Error(`object doesn't have any ID`);
+      if (!shouldSerializeEvent(e.target.id)) return;
 
       const target = {
         ...(type === 'textbox' && {
@@ -124,11 +135,13 @@ const useSynchronizedAdded = (
       }
     };
 
-    canvas?.on('object:added', objectAdded);
+    if (canvas) {
+      canvas.on('object:added', objectAdded);
 
-    return () => {
-      canvas?.off('object:added', objectAdded);
-    };
+      return () => {
+        canvas.off('object:added', objectAdded);
+      };
+    }
   }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
 
   /**

@@ -7,7 +7,9 @@ export class PainterEvents {
     return `${canvasId}:${uuidv4()}`;
   }
 
-  private static isLocalObject(id: string, canvasId: string) {
+  public static isCreatedWithId(id: string, canvasId: string) {
+    if (canvasId === undefined) return false;
+
     const object = id.split(':');
 
     if (!object.length) {
@@ -22,7 +24,7 @@ export class PainterEvents {
     id: string,
     canvasId: string
   ): ObjectEvent | undefined {
-    if (this.isLocalObject(id, canvasId)) {
+    if (this.isCreatedWithId(id, canvasId)) {
       return {
         type: 'path',
         target,
@@ -36,12 +38,17 @@ export class PainterEvents {
     id: string,
     canvasId: string
   ): ObjectEvent | undefined {
-    if (this.isLocalObject(id, canvasId)) {
+    if (this.isCreatedWithId(id, canvasId)) {
       return {
         type: 'path',
         target,
         id,
       };
     }
+  }
+
+  public static generateAndSetIdForTarget(userId: string, target: any): void {
+    const id = PainterEvents.createId(userId);
+    target.set({ id });
   }
 }

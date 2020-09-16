@@ -40,13 +40,7 @@ export type ObjectType =
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {
-  readonly multiplier: number;
   readonly serializedEventIDs: string[] = [];
-
-  constructor(multiplier: number) {
-    super();
-    this.multiplier = multiplier;
-  }
 
   /**
    * Push a new event to be serialized for synchronization.
