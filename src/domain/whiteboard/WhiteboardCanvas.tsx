@@ -56,15 +56,17 @@ import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
 import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
+import useFixedAspectScaling, { ScaleMode } from './utils/useFixedAspectScaling';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
  * @field userId: The user's ID, events originating from this canvas will contain this ID.
  * @field style: How the canvas should be styled.
  * @field pointerEvents: Enable or disable pointer interaction.
- * @field width: The width of this canvas.
- * @field height: The height of this canvas.
+ * @field pixelWidth: The width of this canvas buffer in pixels.
+ * @field pixelHeight: The height of this canvas buffer in pixels.
  * @field filterUsers: Only render remote events originating from userId's in this list.
+ * @field scaleMode: Determines how the canvas should scale if parent element doesn't match aspect ratio.
  */
 export type Props = {
   children?: ReactChild | ReactChildren | null;
@@ -72,12 +74,11 @@ export type Props = {
   userId: string;
   initialStyle?: CSSProperties;
   pointerEvents: boolean;
-  width?: string | number;
-  height: string | number;
-  cssWidth?: string | number;
-  cssHeight?: string | number;
+  pixelWidth: number;
+  pixelHeight: number;
   filterUsers?: string[];
   clearWhiteboardPermissions: IClearWhiteboardPermissions;
+  scaleMode?: ScaleMode;
   display?: boolean;
 };
 
@@ -87,16 +88,17 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   userId,
   initialStyle,
   pointerEvents,
-  width,
-  height,
-  cssWidth,
-  cssHeight,
+  pixelWidth,
+  pixelHeight,
+  scaleMode,
   display,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
   const [wrapper, setWrapper] = useState<HTMLElement>();
   const [lowerCanvas, setLowerCanvas] = useState<HTMLCanvasElement>();
   const [upperCanvas, setUpperCanvas] = useState<HTMLCanvasElement>();
+
+  const { width, height, top, left } = useFixedAspectScaling(wrapper?.parentElement, (pixelWidth / pixelHeight), scaleMode || "ScaleToFit");
 
   // Event serialization for synchronizing whiteboard state.
   const {
@@ -219,19 +221,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     if (wrapper && lowerCanvas && upperCanvas) {
-      if (cssWidth) {
-        wrapper.style.width = String(cssWidth);
-        lowerCanvas.style.width = String(cssWidth);
-        upperCanvas.style.width = String(cssWidth);
-      }
 
-      if (cssHeight) {
-        wrapper.style.height = String(cssHeight);
-        lowerCanvas.style.height = String(cssHeight);
-        upperCanvas.style.height = String(cssHeight);
-      }
+      const widthStyle = `${width}px`;
+      wrapper.style.width = widthStyle;
+      lowerCanvas.style.width = widthStyle;
+      upperCanvas.style.width = widthStyle;
+
+      const heightStyle = `${height}px`;
+      wrapper.style.height = heightStyle;
+      lowerCanvas.style.height = heightStyle;
+      upperCanvas.style.height = heightStyle;
+
+      const wrapperTransform = `translate(${left}, ${top})`;
+      wrapper.style.transform = wrapperTransform;
     }
-  }, [wrapper, lowerCanvas, upperCanvas, cssWidth, cssHeight]);
+  }, [wrapper, lowerCanvas, upperCanvas, width, height, left, top]);
 
   /**
    * Update the pointer events to make canvas click through.
@@ -1510,35 +1514,19 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     });
   }, [canvas, toolbarIsEnabled, isLocalObject, userId]);
 
-  // TODO: Possible to have dynamically sized canvas? With raw canvas it's
-  // possible to set the "pixel (background)" size separately from the
-  // style size. So we can have a fixed resolution draw buffer and it will
-  // be scaled based on the style size. This might be important to make
-  // the canvas size adopt to the content behind it. The content behind
-  // canvas doesn't have a fixed size and could vary between different
-  // activities etc. For now the user will have to pass in the exact
-  // width and height they want to have the canvas in.
-  // Note: Added div wrapper to execute onKeyDown. Once canvas final form
-  // takes place, this may or may not be modified.
-
   return (
-    <div
+    <canvas
+      width={pixelWidth}
+      height={pixelHeight}
+      id={instanceId}
+      style={{...initialStyle, backgroundColor: 'transparent'}}
       tabIndex={0}
       onKeyDown={keyDown}
-      style={{ backgroundColor: 'transparent ' }}
+      onClick={() => {
+        actions.addShape(shape);
+      }}
     >
-      <canvas
-        width={width}
-        height={height}
-        id={instanceId}
-        style={initialStyle}
-        tabIndex={0}
-        onClick={() => {
-          actions.addShape(shape);
-        }}
-      >
-        {children}
-      </canvas>
-    </div>
+      {children}
+    </canvas>
   );
 };
