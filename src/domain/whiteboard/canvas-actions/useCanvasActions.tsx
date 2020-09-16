@@ -588,6 +588,7 @@ export const useCanvasActions = (
 
         obj.set({ groupClear: true });
         canvas?.remove(obj);
+        console.log('clear all');
         eventSerializer?.push('removed', target as ObjectEvent);
       }
     });
@@ -621,6 +622,7 @@ export const useCanvasActions = (
 
         obj.set({ groupClear: true });
         canvas?.remove(obj);
+        console.log('clear myself');
         eventSerializer?.push('removed', target as ObjectEvent);
       }
     });
@@ -670,6 +672,7 @@ export const useCanvasActions = (
             },
           };
 
+          console.log('clear others');
           eventSerializer?.push('removed', target as ObjectEvent);
         }
       });

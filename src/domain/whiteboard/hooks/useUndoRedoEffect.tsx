@@ -165,6 +165,9 @@ export const UndoRedo = (
             type: 'reconstruct',
           };
 
+          /////////////////////////////////////////////
+          //////////////// THIS ONE! //////////////////
+          /////////////////////////////////////////////
           eventSerializer?.push('reconstruct', payload);
         } else if (state.activeStateIndex !== null) {
           let objects = JSON.parse(
