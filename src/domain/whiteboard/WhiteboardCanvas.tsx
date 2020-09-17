@@ -135,7 +135,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     laserIsActive,
     toolbarIsEnabled,
     setToolbarIsEnabled,
-    pointerIsEnabled,
     setPointerIsEnabled,
     serializerToolbarState,
     setSerializerToolbarState,
@@ -229,18 +228,34 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       return;
     }
 
+    const teacherPermission = allToolbarIsEnabled && shapesAreSelectable;
+    const studentPermission =
+      serializerToolbarState.move && shapesAreSelectable;
+
     canvas.getObjects().forEach((object: ICanvasObject) => {
       if ((object.id && isLocalObject(object.id, userId)) || !object.id) {
         object.set({
-          selectable: shapesAreSelectable,
-          evented: shapesAreSelectable || shapesAreEvented,
+          selectable: teacherPermission || studentPermission,
+          evented:
+            (allToolbarIsEnabled &&
+              (shapesAreSelectable || shapesAreEvented)) ||
+            (serializerToolbarState.move &&
+              (shapesAreSelectable || shapesAreEvented)),
         });
       }
     });
 
     canvas.selection = shapesAreSelectable;
     canvas.renderAll();
-  }, [canvas, isLocalObject, shapesAreEvented, shapesAreSelectable, userId]);
+  }, [
+    canvas,
+    isLocalObject,
+    shapesAreEvented,
+    shapesAreSelectable,
+    userId,
+    allToolbarIsEnabled,
+    serializerToolbarState.move,
+  ]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -796,13 +811,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Set the objects like evented if you select pointer or move tool
    */
   useEffect(() => {
-    if (eventedObjects) {
+    const teacherPermission = allToolbarIsEnabled && eventedObjects;
+    const studentPermission = serializerToolbarState.move && eventedObjects;
+    if (teacherPermission || studentPermission) {
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
           setObjectControlsVisibility(object, true);
           object.set({
-            evented: true,
-            selectable: true,
+            evented: allToolbarIsEnabled || serializerToolbarState.move,
+            selectable: allToolbarIsEnabled || serializerToolbarState.move,
             lockMovementX: false,
             lockMovementY: false,
             hasBorders: true,
@@ -812,7 +829,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       actions.setHoverCursorObjects('move');
     }
-  }, [actions, canvas, eventedObjects, isLocalObject, userId]);
+  }, [
+    actions,
+    canvas,
+    eventedObjects,
+    isLocalObject,
+    userId,
+    allToolbarIsEnabled,
+    serializerToolbarState.move,
+  ]);
 
   /**
    * Memoized laserIsActive prop.
@@ -1478,15 +1503,26 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
 
   useEffect(() => {
+    const studentPermission =
+      toolbarIsEnabled &&
+      (serializerToolbarState.move || serializerToolbarState.erase);
     canvas?.forEachObject((object: ICanvasObject) => {
       if (object.id && isLocalObject(object.id, userId)) {
         object.set({
-          evented: toolbarIsEnabled,
-          selectable: toolbarIsEnabled,
+          evented: allToolbarIsEnabled || studentPermission,
+          selectable: allToolbarIsEnabled || studentPermission,
         });
       }
     });
-  }, [canvas, toolbarIsEnabled, isLocalObject, userId]);
+  }, [
+    canvas,
+    toolbarIsEnabled,
+    isLocalObject,
+    userId,
+    allToolbarIsEnabled,
+    serializerToolbarState.move,
+    serializerToolbarState.erase,
+  ]);
 
   // TODO: Possible to have dynamically sized canvas? With raw canvas it's
   // possible to set the "pixel (background)" size separately from the
