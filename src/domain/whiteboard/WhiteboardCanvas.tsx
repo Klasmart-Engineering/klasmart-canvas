@@ -137,6 +137,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setToolbarIsEnabled,
     pointerIsEnabled,
     setPointerIsEnabled,
+    serializerToolbarState,
+    setSerializerToolbarState,
+    allToolbarIsEnabled,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -1131,7 +1134,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     userId,
     filterIncomingEvents,
     setToolbarIsEnabled,
-    setPointerIsEnabled
+    setPointerIsEnabled,
+    setSerializerToolbarState
   );
   useSynchronizedFontColorChanged(
     canvas,
