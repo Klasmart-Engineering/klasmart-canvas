@@ -238,7 +238,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           lockMovementY: !shapesAreSelectable,
           hoverCursor: shapesAreSelectable ? 'move' : 'default',
         });
-        console.log('se metio');
       }
     });
 
@@ -261,7 +260,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (textIsActive) {
       canvas?.on('mouse:down', (e: fabric.IEvent) => {
         if (
-          (e.target === null && e) ||
+          (e && e.target === null) ||
           (e.target?.type !== 'textbox' && e.target?.type !== 'i-text')
         ) {
           let text = new fabric.IText(' ', {
@@ -845,7 +844,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [actions, canvas, eventedObjects, isLocalObject, textIsActive, userId]);
 
   /**
-   * Manage the states for set local objects like selectable/modifible
+   * Manage the states for settting local objects like selectable/modifiable
    */
   useEffect(() => {
     if (canvas && !eraseType) {
@@ -1042,7 +1041,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             evented: false,
             perPixelTargetFind: false,
           });
-          console.log('en ele laser');
         });
       }
 
