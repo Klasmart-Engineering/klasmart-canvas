@@ -1432,7 +1432,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * necessaries to erase objects are setted or removed
    */
   useEffect(() => {
-    if (eraseType === 'object' && canvas && toolbarIsEnabled) {
+    if (
+      eraseType === 'object' &&
+      canvas &&
+      toolbarIsEnabled &&
+      (allToolbarIsEnabled || serializerToolbarState.erase)
+    ) {
       actions.eraseObject();
 
       if (canvas.getActiveObjects().length === 1) {
@@ -1448,7 +1453,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
     };
-  }, [eraseType, canvas, actions, textIsActive, toolbarIsEnabled]);
+  }, [
+    eraseType,
+    canvas,
+    actions,
+    textIsActive,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.erase,
+  ]);
 
   useEffect(() => {
     if (shape && shapeIsActive) {
