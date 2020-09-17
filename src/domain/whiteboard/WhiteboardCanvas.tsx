@@ -56,8 +56,8 @@ import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
 import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
 import useFixedAspectScaling, { ScaleMode } from './utils/useFixedAspectScaling';
 import { PainterEvents } from './event-serializer/PainterEvents';
-import { IWhiteboardPermissions } from '../../interfaces/canvas-events/whiteboard-permissions';
 import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
+import { IWhiteboardPermissions } from '../../interfaces/canvas-events/whiteboard-permissions';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -78,6 +78,7 @@ export type Props = {
   pixelWidth: number;
   pixelHeight: number;
   filterUsers?: string[];
+  filterGroups?: string[];
   permissions: IWhiteboardPermissions;
   scaleMode?: ScaleMode;
   display?: boolean;
@@ -96,12 +97,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   scaleMode,
   display,
   filterUsers,
+  filterGroups,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
   const [wrapper, setWrapper] = useState<HTMLElement>();
   const [lowerCanvas, setLowerCanvas] = useState<HTMLCanvasElement>();
   const [upperCanvas, setUpperCanvas] = useState<HTMLCanvasElement>();
-  const [generatedBy] = useState<string>(uuidv4());
+  const [generatedBy, setGeneratedBy] = useState<string>(uuidv4());
 
   const { width, height, top, left } = useFixedAspectScaling(wrapper?.parentElement, (pixelWidth / pixelHeight), scaleMode || "ScaleToFit");
 
@@ -192,6 +194,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     const reset = () => {
       canvas.clear();
+      
+      // NOTE: Regenerate generatedBy so our own events gets applied again after the clear.
+      setGeneratedBy(uuidv4());
     };
 
     eventController.on('aboutToReplayAll', reset);
@@ -1070,6 +1075,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (!eventGeneratedBy) return false;
       if (!eventSerializer) return true;
 
+      const eventGroup = PainterEvents.getEventGroup(id);
+      if (filterGroups === undefined && eventGroup !== undefined) {
+        return false;
+      }
+
+      if (filterGroups !== undefined) {
+        if (eventGroup === undefined) {
+          return false;
+        }
+
+        if (filterGroups.find(group => eventGroup === group) === undefined) {
+          return false;
+        }
+      }
+
       if (filterUsers !== undefined) {
         if (filterUsers.find(user => PainterEvents.isCreatedWithId(id, user)) === undefined) {
           return false;
@@ -1078,7 +1098,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       return eventGeneratedBy !== generatedBy;
     },
-    [eventSerializer, generatedBy, filterUsers]
+    [eventSerializer, filterGroups, filterUsers, generatedBy]
   );
 
   useSynchronizedAdded(
@@ -1525,7 +1545,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     requestAllEvents();
 
-  }, [canvas, requestAllEvents, userId]);
+  }, [canvas, requestAllEvents, userId, filterGroups, filterUsers]);
 
   return (
     <canvas
