@@ -74,6 +74,8 @@ export interface IWhiteboardContext {
     erase: boolean;
     pen: boolean;
     floodFill: boolean;
+    text: boolean;
+    shape: boolean;
   };
   setSerializerToolbarState: (enabled: {
     [p: string]: boolean;
@@ -82,6 +84,8 @@ export interface IWhiteboardContext {
     erase: boolean;
     pen: boolean;
     floodFill: boolean;
+    text: boolean;
+    shape: boolean;
   }) => void;
   allToolbarIsEnabled: boolean;
 }

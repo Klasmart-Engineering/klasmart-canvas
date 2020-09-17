@@ -261,7 +261,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Handles the logic to write text on the whiteboard
    * */
   useEffect(() => {
-    if (textIsActive) {
+    const teacherPermission = allToolbarIsEnabled && textIsActive;
+    const studentPermission =
+      toolbarIsEnabled && serializerToolbarState.text && textIsActive;
+    if (teacherPermission || studentPermission) {
       canvas?.on('mouse:down', (e: fabric.IEvent) => {
         if (e.target === null && e) {
           let text = new fabric.IText(' ', {
@@ -325,6 +328,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateFontColor,
     userId,
     eraseType,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.text,
   ]);
 
   /**
@@ -1042,6 +1048,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     undoRedoDispatch,
     toolbarIsEnabled,
     laserPointerIsActive,
+    allToolbarIsEnabled,
+    serializerToolbarState.floodFill,
   ]);
 
   /**

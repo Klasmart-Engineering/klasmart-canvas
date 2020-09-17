@@ -14,6 +14,8 @@ const useSynchronizedSetToolbarPermissions = (
     erase: boolean;
     pen: boolean;
     floodFill: boolean;
+    text: boolean;
+    shape: boolean;
   }) => void
 ) => {
   const {
