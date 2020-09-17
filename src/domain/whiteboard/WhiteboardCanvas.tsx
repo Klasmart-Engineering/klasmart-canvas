@@ -1123,7 +1123,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useSynchronizedFontFamilyChanged(canvas, filterIncomingEvents);
   useSynchronizedPointer(
     canvas,
-    pointerIsEnabled,
+    allToolbarIsEnabled || serializerToolbarState.pointer,
     filterIncomingEvents,
     userId,
     penColor,
