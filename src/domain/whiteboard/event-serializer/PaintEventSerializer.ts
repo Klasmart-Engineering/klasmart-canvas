@@ -1,6 +1,7 @@
 import { PainterEvent, PainterEventType } from './PainterEvent';
 import { EventEmitter } from 'events';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { IToolbarUI } from '../../../interfaces/toolbar/toolbar-ui';
 
 // TODO: This service should probably implement some sort of
 // event batching, especially the line drawing can generate
@@ -26,7 +27,8 @@ export interface ObjectEvent {
     | { background: string }
     | { pointer: boolean }
     | boolean
-    | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean };
+    | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean }
+    | IToolbarUI;
 }
 
 export type ObjectType =
