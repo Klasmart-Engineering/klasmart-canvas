@@ -53,11 +53,11 @@ import {
 import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
-import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
 import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
 import useFixedAspectScaling, { ScaleMode } from './utils/useFixedAspectScaling';
 import { PainterEvents } from './event-serializer/PainterEvents';
+import { IWhiteboardPermissions } from '../../interfaces/canvas-events/whiteboard-permissions';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -78,10 +78,12 @@ export type Props = {
   pixelWidth: number;
   pixelHeight: number;
   filterUsers?: string[];
-  clearWhiteboardPermissions: IClearWhiteboardPermissions;
+  permissions: IWhiteboardPermissions;
   scaleMode?: ScaleMode;
   display?: boolean;
 };
+
+export type EventFilterFunction = (id: string, generatedBy: string) => boolean;
 
 export const WhiteboardCanvas: FunctionComponent<Props> = ({
   children,
@@ -98,6 +100,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   const [wrapper, setWrapper] = useState<HTMLElement>();
   const [lowerCanvas, setLowerCanvas] = useState<HTMLCanvasElement>();
   const [upperCanvas, setUpperCanvas] = useState<HTMLCanvasElement>();
+  const [generatedBy] = useState<string>(uuidv4());
 
   const { width, height, top, left } = useFixedAspectScaling(wrapper?.parentElement, (pixelWidth / pixelHeight), scaleMode || "ScaleToFit");
 
@@ -110,6 +113,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   const { dispatch: undoRedoDispatch } = UndoRedo(
     canvas as fabric.Canvas,
     eventSerializer,
+    generatedBy,
     userId
   );
 
@@ -147,6 +151,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   const { actions, mouseDown } = useCanvasActions(
     userId,
     instanceId,
+    generatedBy,
     canvas,
     undoRedoDispatch,
     eventSerializer,
@@ -604,7 +609,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
                       id: obj.id,
                     };
 
-                    eventSerializer?.push('fontFamilyChanged', payload);
+                    eventSerializer?.push('fontFamilyChanged', generatedBy, payload);
                   }
                 }
               });
@@ -615,7 +620,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           console.log(e);
         });
     },
-    [canvas, eventSerializer, userId]
+    [canvas, eventSerializer, generatedBy, userId]
   );
 
   /**
@@ -900,7 +905,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             event: eventState,
           });
 
-          eventSerializer?.push('colorChanged', payload);
+          eventSerializer?.push('colorChanged', generatedBy, payload);
         }
 
         // Click on object shape
@@ -963,7 +968,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               event: eventState,
             });
 
-            eventSerializer?.push('colorChanged', payload);
+            eventSerializer?.push('colorChanged', generatedBy, payload);
           } else if (clickedColor === differentStroke) {
             // If user click in the border of the shape
             event.target.set({
@@ -1008,7 +1013,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         canvas?.off('mouse:down');
       }
     };
-  }, [actions, canvas, floodFill, floodFillIsActive, getColorInCoord, manageShapeOutsideClick, userId, textIsActive, eventSerializer, reorderShapes, eraseType, undoRedoDispatch, toolbarIsEnabled, laserPointerIsActive]);
+  }, [actions, canvas, floodFill, floodFillIsActive, getColorInCoord, manageShapeOutsideClick, userId, textIsActive, eventSerializer, reorderShapes, eraseType, undoRedoDispatch, toolbarIsEnabled, generatedBy, laserPointerIsActive]);
 
   /**
    * If the input field (text) has length
@@ -1034,35 +1039,38 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [fontFamily, keyDownHandler, fontFamilyLoader]);
 
   const filterOutgoingEvents = useCallback(
-    (id: string): boolean => {
-      if (!id) return false;
+    (_id: string, eventGeneratedBy: string): boolean => {
+      if (!eventGeneratedBy) return false;
 
-      return PainterEvents.isCreatedWithId(id, userId);
+      // NOTE: We only send events happening because of 
+      // changed we did ourselves by comparing the 
+      // eventGeneratedBy with the generatedBy value.
+      return eventGeneratedBy === generatedBy;
     },
-    [userId]
+    [generatedBy]
   );
 
   const filterIncomingEvents = useCallback(
-    (id: string): boolean => {
-      if (!id) return false;
+    (_id: string, eventGeneratedBy: string): boolean => {
+      if (!eventGeneratedBy) return false;
 
-      // TODO: isLocalObject will not work in case we're reloading
-      // the page and server resends all our events. They would be
-      // discarded when they shouldn't be discarded. Another solution
-      // could be to keep track of all 'local' objects we've created
-      // this session and only filter those.
+      // NOTE: No event serializer means the event must have originated
+      // from somewhere else and it should be applied.
+      if (!eventSerializer) return true;
+
       // TODO: Filter based on the filterUsers list. We should only
       // display events coming from users in that list if the list
       // isn't undefined.
 
-      return !PainterEvents.isCreatedWithId(id, userId);
+      return eventGeneratedBy !== generatedBy;
     },
-    [userId]
+    [eventSerializer, generatedBy]
   );
 
   useSynchronizedAdded(
     canvas,
     userId,
+    generatedBy,
     filterOutgoingEvents,
     filterIncomingEvents,
     undoRedoDispatch
@@ -1070,6 +1078,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useSynchronizedMoved(
     canvas,
     userId,
+    generatedBy,
     filterOutgoingEvents,
     filterIncomingEvents,
     undoRedoDispatch
@@ -1077,12 +1086,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useSynchronizedRemoved(
     canvas,
     userId,
+    generatedBy,
     filterOutgoingEvents,
     filterIncomingEvents,
     undoRedoDispatch
   );
   useSynchronizedModified(
     canvas,
+    generatedBy,
     filterOutgoingEvents,
     filterIncomingEvents,
     userId,
@@ -1091,6 +1102,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useSynchronizedRotated(
     canvas,
     userId,
+    generatedBy,
     filterOutgoingEvents,
     filterIncomingEvents,
     undoRedoDispatch
@@ -1098,16 +1110,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useSynchronizedScaled(
     canvas,
     userId,
+    generatedBy,
     filterOutgoingEvents,
     filterIncomingEvents,
     undoRedoDispatch
   );
-  useSynchronizedSkewed(canvas, filterOutgoingEvents, filterIncomingEvents);
+  useSynchronizedSkewed(canvas, generatedBy, filterOutgoingEvents, filterIncomingEvents);
   useSynchronizedReconstruct(
     canvas,
     filterIncomingEvents,
     userId,
-    undoRedoDispatch
+    undoRedoDispatch,
+    generatedBy
   );
   useSynchronizedColorChanged(
     canvas,
@@ -1122,14 +1136,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     userId,
     penColor,
-    laserIsActive
+    laserIsActive,
+    generatedBy
   );
   useSynchronizedSetToolbarPermissions(
     canvas,
     userId,
-    filterIncomingEvents,
     setToolbarIsEnabled,
-    setPointerIsEnabled
+    setPointerIsEnabled,
+    filterIncomingEvents,
   );
   useSynchronizedFontColorChanged(
     canvas,
@@ -1164,7 +1179,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             id: obj.id,
           };
 
-          eventSerializer?.push('colorChanged', payload);
+          eventSerializer?.push('colorChanged', generatedBy, payload);
         }
       });
     }
@@ -1205,7 +1220,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             id: obj.id,
           };
 
-          eventSerializer?.push('lineWidthChanged', payload);
+          eventSerializer?.push('lineWidthChanged', generatedBy, payload);
         }
       });
     }

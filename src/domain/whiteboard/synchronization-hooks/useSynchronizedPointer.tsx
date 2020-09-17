@@ -5,6 +5,7 @@ import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { Laser } from '../utils/laser';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 /**
  * Handles laser pointer events.
@@ -20,10 +21,11 @@ import { Laser } from '../utils/laser';
 const useSynchronizedPointer = (
   canvas: fabric.Canvas | undefined,
   allowPointer: boolean,
-  shouldHandleRemoteEvent: (id: string) => boolean,
+  shouldHandleRemoteEvent: EventFilterFunction,
   userId: string,
   laserColor: string,
-  laserIsActive: boolean
+  laserIsActive: boolean,
+  generatedBy: string,
 ) => {
   const {
     state: { eventSerializer, eventController },
@@ -56,7 +58,7 @@ const useSynchronizedPointer = (
           id,
         };
 
-        eventSerializer.push('moving', payload);
+        eventSerializer.push('moving', generatedBy, payload);
       } else if (trail && canvas && !trail.clear) {
         canvas.defaultCursor = 'default';
         canvas?.getObjects().forEach((o: any) => {
@@ -69,7 +71,7 @@ const useSynchronizedPointer = (
           id,
         };
 
-        eventSerializer.push('moving', payload);
+        eventSerializer.push('moving', generatedBy, payload);
         trail.clearPointer();
       }
     };
@@ -90,19 +92,12 @@ const useSynchronizedPointer = (
           id,
         };
 
-        eventSerializer.push('moving', payload);
+        eventSerializer.push('moving', generatedBy, payload);
       }
 
       canvas?.off('mouse:move', move);
     };
-  }, [
-    laserIsActive,
-    canvas,
-    allowPointer,
-    eventSerializer,
-    laserColor,
-    userId,
-  ]);
+  }, [laserIsActive, canvas, allowPointer, eventSerializer, laserColor, userId, generatedBy]);
 
   /** Register and handle remote moved event. */
   useEffect(() => {
@@ -115,9 +110,10 @@ const useSynchronizedPointer = (
      */
     const moved = (
       id: string,
+      generatedBy: string,
       target: { top: number; left: number; fill?: string }
     ) => {
-      if (!shouldHandleRemoteEvent(id)) {
+      if (!shouldHandleRemoteEvent(id, generatedBy)) {
         return;
       }
 

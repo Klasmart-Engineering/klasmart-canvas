@@ -61,6 +61,7 @@ const getPreviousBackground = (currentIndex: number, events: any): string => {
 export const UndoRedo = (
   canvas: Canvas,
   eventSerializer: PaintEventSerializer,
+  generatedBy: string,
   instanceId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
@@ -118,7 +119,7 @@ export const UndoRedo = (
       // Serialize the event for synchronization
       if (nextEvent.type === 'added') {
         // If undoing the creation of an object, remove.
-        eventSerializer?.push('removed', payload);
+        eventSerializer?.push('removed', generatedBy, payload);
       } else if (nextEvent.type !== 'activeSelection') {
         let currentEvent = state.events[state.eventIndex];
         if ((nextEvent?.event as any).type === 'background') {
@@ -129,9 +130,9 @@ export const UndoRedo = (
           let payload: ObjectEvent = {
             id: (nextEvent.event as IUndoRedoSingleEvent).id,
             target: { background: fill },
-            type: 'reconstruct',
-          };
-          eventSerializer?.push('reconstruct', payload);
+            type: 'reconstruct'
+          }
+          eventSerializer?.push('reconstruct', generatedBy, payload);
           return;
         }
 
@@ -152,7 +153,7 @@ export const UndoRedo = (
             type: 'reconstruct',
           };
 
-          eventSerializer?.push('reconstruct', payload);
+          eventSerializer?.push('reconstruct', generatedBy, payload);
         } else if (nextEvent.type === 'clearWhiteboard') {
           let id = (nextEvent.event as IUndoRedoSingleEvent).id;
           let objects = JSON.parse(
@@ -165,7 +166,7 @@ export const UndoRedo = (
             type: 'reconstruct',
           };
 
-          eventSerializer?.push('reconstruct', payload);
+          eventSerializer?.push('reconstruct', generatedBy, payload);
         } else if (state.activeStateIndex !== null) {
           let objects = JSON.parse(
             state.states[state.activeStateIndex as number]
@@ -173,9 +174,9 @@ export const UndoRedo = (
           let payload: ObjectEvent = {
             id: (nextEvent.event as IUndoRedoSingleEvent).id,
             target: { objects },
-            type: 'reconstruct',
-          };
-          eventSerializer?.push('reconstruct', payload);
+            type: 'reconstruct'
+          }
+          eventSerializer?.push('reconstruct', generatedBy, payload);
         }
       } else {
         if (
@@ -199,13 +200,10 @@ export const UndoRedo = (
             state.events[state.eventIndex + 1].type === 'activeSelection' &&
             state.events[state.eventIndex].type === 'added'
           ) {
-            eventSerializer.push('removed', {
-              id: (state.events[state.eventIndex + 1]
-                .event as IUndoRedoSingleEvent).id,
-            });
+            eventSerializer.push('removed', generatedBy, { id: (state.events[state.eventIndex + 1].event as IUndoRedoSingleEvent).id });
           }
 
-          eventSerializer?.push('reconstruct', payload);
+          eventSerializer?.push('reconstruct', generatedBy, payload);
         } else {
           let objects = JSON.parse(
             state.states[state.activeStateIndex as number]
@@ -214,9 +212,9 @@ export const UndoRedo = (
           let payload: ObjectEvent = {
             id: (nextEvent.event as IUndoRedoSingleEvent).id,
             target: { objects },
-            type: 'reconstruct',
-          };
-          eventSerializer?.push('reconstruct', payload);
+            type: 'reconstruct'
+          }
+          eventSerializer?.push('reconstruct', generatedBy, payload);
         }
       }
     } else if (state.actionType === REDO) {
@@ -230,21 +228,17 @@ export const UndoRedo = (
 
         let payload: ObjectEvent = {
           id: (event.event as IUndoRedoSingleEvent).id,
-          target: {
-            background:
-              ((event.event as IUndoRedoSingleEvent).target.fill as string) ||
-              'fff',
-          },
-          type: 'reconstruct',
-        };
-        eventSerializer?.push('reconstruct', payload);
+          target: { background: (event.event as IUndoRedoSingleEvent).target.fill as string || 'fff' },
+          type: 'reconstruct'
+        }
+        eventSerializer?.push('reconstruct', generatedBy, payload);
         return;
       }
 
       if (event.type === 'added') {
-        eventSerializer?.push('added', event.event as ObjectEvent);
+        eventSerializer?.push('added', generatedBy, event.event as ObjectEvent);
       } else if (event.type === 'removed') {
-        eventSerializer?.push('removed', {
+        eventSerializer?.push('removed', generatedBy, {
           id: (event.event as IUndoRedoSingleEvent).id,
         } as ObjectEvent);
       } else if (event.type === 'clearWhiteboard') {
@@ -253,7 +247,7 @@ export const UndoRedo = (
           target: false,
           type: 'reconstruct',
         };
-        eventSerializer?.push('reconstruct', payload);
+        eventSerializer?.push('reconstruct', generatedBy, payload);
       } else if (event && event.type !== 'activeSelection') {
         let id = (event.event as IUndoRedoSingleEvent).id;
         let objects = JSON.parse(state.states[state.activeStateIndex as number])
@@ -268,7 +262,7 @@ export const UndoRedo = (
           type: 'reconstruct',
         };
 
-        eventSerializer?.push('reconstruct', payload);
+        eventSerializer?.push('reconstruct', generatedBy, payload);
       } else {
         let id = (state.events[state.eventIndex].event as IUndoRedoSingleEvent)
           .id;
@@ -277,13 +271,13 @@ export const UndoRedo = (
         let payload: ObjectEvent = {
           id,
           target: { objects },
-          type: 'reconstruct',
-        };
+          type: 'reconstruct'
+        }
 
-        eventSerializer?.push('reconstruct', payload);
+        eventSerializer?.push('reconstruct', generatedBy, payload);
       }
     }
-  }, [state, canvas, dispatch, eventSerializer, instanceId]);
+  }, [state, canvas, dispatch, eventSerializer, instanceId, generatedBy]);
 
   return { state, dispatch };
 };

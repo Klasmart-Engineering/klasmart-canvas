@@ -9,12 +9,14 @@ import {
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 const useSynchronizedRotated = (
   canvas: fabric.Canvas | undefined,
   userId: string,
-  shouldSerializeEvent: (id: string) => boolean,
-  shouldHandleRemoteEvent: (id: string) => boolean,
+  generatedBy: string,
+  shouldSerializeEvent: EventFilterFunction,
+  shouldHandleRemoteEvent: EventFilterFunction,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
   const {
@@ -23,8 +25,8 @@ const useSynchronizedRotated = (
 
   /** Register and handle remote event. */
   useEffect(() => {
-    const objectRotated = (id: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const rotated = (id: string, generatedBy: string, target: ICanvasObject) => {
+      if (!shouldHandleRemoteEvent(id, generatedBy)) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
@@ -40,6 +42,7 @@ const useSynchronizedRotated = (
               flipY: object.flipY,
               originX: object.originX || 'left',
               originY: object.originY || 'top',
+              generatedBy,
             });
             obj.setCoords();
           }
@@ -110,7 +113,7 @@ const useSynchronizedRotated = (
         return;
       }
 
-      objectRotated(id, target);
+      rotated(id, generatedBy, target);
     };
 
     eventController?.on('rotated', rotation);
@@ -118,7 +121,7 @@ const useSynchronizedRotated = (
     return () => {
       eventController?.removeListener('rotated', rotation);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent, userId]);
+  }, [canvas, eventController, generatedBy, shouldHandleRemoteEvent, userId]);
 
   /** Register and handle local event. */
   useEffect(() => {
@@ -133,7 +136,10 @@ const useSynchronizedRotated = (
         const targetObjects = (e.target as ICanvasObject)._objects;
 
         targetObjects?.forEach((activeObject: ICanvasObject) => {
-          if (activeObject.id && !shouldSerializeEvent(activeObject.id)) return;
+          if (!activeObject.id) throw new Error('Rotated object without id');
+          if (!activeObject.generatedBy) throw new Error('Rotated object without generatedBy');
+
+          if (activeObject.id && !shouldSerializeEvent(activeObject.id, activeObject.generatedBy)) return;
 
           activeIds.push(activeObject.id as string);
         });
@@ -143,7 +149,7 @@ const useSynchronizedRotated = (
           type,
           target: { activeIds, eTarget: e.target, isGroup: true },
         };
-        eventSerializer?.push('rotated', groupPayload);
+        eventSerializer?.push('rotated', generatedBy, groupPayload);
 
         const activeObjects = canvas?.getActiveObjects();
         canvas?.discardActiveObject();
@@ -177,11 +183,14 @@ const useSynchronizedRotated = (
           event: (event as unknown) as IUndoRedoEvent,
         });
       } else {
-        if (!(e.target as ICanvasObject).id) {
-          return;
-        }
+        const canvasObject = e.target as ICanvasObject;
+        if (!canvasObject.id) throw new Error('Rotated object without id');
+        if (!canvasObject.generatedBy) throw new Error('Rotated object without generatedBy');
 
-        const id = (e.target as ICanvasObject).id;
+        if (!shouldSerializeEvent(canvasObject.id, canvasObject.generatedBy)) return;
+
+        const id = canvasObject.id;
+
         const target = {
           top: e.target.top,
           left: e.target.left,
@@ -200,7 +209,7 @@ const useSynchronizedRotated = (
           target: { eTarget: target, isGroup: false },
         };
 
-        eventSerializer?.push('rotated', payload);
+        eventSerializer?.push('rotated', generatedBy, payload);
 
         if (canvas) {
           const event = { event: payload, type: 'rotated' };
@@ -220,7 +229,7 @@ const useSynchronizedRotated = (
     return () => {
       canvas?.off('object:rotated', objectRotated);
     };
-  }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
+  }, [canvas, eventSerializer, generatedBy, shouldSerializeEvent, undoRedoDispatch, userId]);
 };
 
 export default useSynchronizedRotated;

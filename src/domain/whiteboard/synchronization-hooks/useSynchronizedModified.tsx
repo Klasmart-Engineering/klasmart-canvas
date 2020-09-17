@@ -8,11 +8,13 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET } from '../reducers/undo-redo';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 const useSynchronizedModified = (
   canvas: fabric.Canvas | undefined,
-  shouldSerializeEvent: (id: string) => boolean,
-  shouldHandleRemoteEvent: (id: string) => boolean,
+  generatedBy: string,
+  shouldSerializeEvent: EventFilterFunction,
+  shouldHandleRemoteEvent: EventFilterFunction,
   userId: string,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
@@ -24,10 +26,11 @@ const useSynchronizedModified = (
   useEffect(() => {
     const modified = (
       id: string,
+      generatedBy: string,
       objectType: string,
       target: ICanvasObject
     ) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+      if (!shouldHandleRemoteEvent(id, generatedBy)) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
@@ -39,6 +42,7 @@ const useSynchronizedModified = (
               top: target.top,
               left: target.left + 1,
               width: target.width,
+              generatedBy,
             });
             obj.set({ left: obj.left - 1 });
             obj.setCoords();
@@ -80,20 +84,22 @@ const useSynchronizedModified = (
   useEffect(() => {
     const objectModified = (e: fabric.IEvent | CanvasEvent) => {
       if (!e.target) return;
-      if (
-        (e.target as ICanvasObject).id &&
-        !shouldSerializeEvent((e.target as ICanvasObject).id as string)
-      )
+
+      const canvasObject = e.target as ICanvasObject;
+      if (!canvasObject.id) throw new Error('modified target without ID');
+      if (!canvasObject.generatedBy) throw new Error('modified target without generatedBy');
+
+      if (!shouldSerializeEvent(canvasObject.id, canvasObject.generatedBy))
         return;
 
-      const type = (e.target as ICanvasObject).get('type') as ObjectType;
+      const type = canvasObject.get('type') as ObjectType;
 
       // If text has been modified
-      if (type === 'textbox' && (e.target as ICanvasObject).id) {
+      if (type === 'textbox' && canvasObject.id) {
         const target = {
           ...(type === 'textbox' && {
-            text: (e.target as ICanvasObject).text,
-            fontFamily: (e.target as ICanvasObject).fontFamily,
+            text: canvasObject.text,
+            fontFamily: canvasObject.fontFamily,
             stroke: e.target.fill,
             top: e.target.top,
             left: e.target.left,
@@ -116,7 +122,7 @@ const useSynchronizedModified = (
           event: (event as unknown) as IUndoRedoEvent,
         });
 
-        eventSerializer?.push('modified', payload);
+        eventSerializer?.push('modified', generatedBy, payload);
       }
     };
 
@@ -125,7 +131,7 @@ const useSynchronizedModified = (
     return () => {
       canvas?.off('object:modified', objectModified);
     };
-  }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
+  }, [canvas, eventSerializer, generatedBy, shouldSerializeEvent, undoRedoDispatch, userId]);
 };
 
 export default useSynchronizedModified;

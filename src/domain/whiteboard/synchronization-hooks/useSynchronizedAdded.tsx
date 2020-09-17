@@ -14,12 +14,14 @@ import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-dr
 import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { WhiteboardContext } from '../WhiteboardContext';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
   userId: string,
-  shouldSerializeEvent: (id: string) => boolean,
-  shouldHandleRemoteEvent: (id: string) => boolean,
+  generatedBy: string,
+  shouldSerializeEvent: EventFilterFunction,
+  shouldHandleRemoteEvent: EventFilterFunction,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
   const { floodFillIsActive } = useContext(WhiteboardContext);
@@ -31,14 +33,14 @@ const useSynchronizedAdded = (
   useEffect(() => {
     const pathCreated = (e: ICanvasDrawingEvent) => {
       if (!e.path) throw new Error(`path:created event without path.`);
+      // NOTE: This object already have an ID, so it's not a newly created object. The object
+      // create event shouldn't be serialized and sent because it was created because of
+      // an incoming event from someone else.
+      if (e.path.id) return;
 
-      if (!e.path.id) {
-        PainterEvents.generateAndSetIdForTarget(userId, e.path);
-      }
+      PainterEvents.generateAndSetIdForTarget(userId, generatedBy, e.path);
 
       if (!e.path.id) throw new Error(`path doesn't have any ID`);
-
-      if (!shouldSerializeEvent(e.path.id)) return;
 
       const target = {
         stroke: e.path.stroke,
@@ -48,6 +50,7 @@ const useSynchronizedAdded = (
 
       eventSerializer?.push(
         'added',
+        generatedBy,
         PainterEvents.pathCreated(target, e.path.id, userId) as ObjectEvent
       );
 
@@ -79,7 +82,7 @@ const useSynchronizedAdded = (
         canvas.off('path:created', pathCreated);
       };
     }
-  }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
+  }, [canvas, eventSerializer, generatedBy, shouldSerializeEvent, undoRedoDispatch, userId]);
 
   /** Register and handle object:added event. */
   useEffect(() => {
@@ -89,16 +92,17 @@ const useSynchronizedAdded = (
 
       const type: ObjectType = (e.target.get('type') || 'path') as ObjectType;
 
-      if (type === 'path') {
-        return;
-      }
+      // NOTE: Path events is handled separately by the 'path:created' handler.
+      if (type === 'path') return;
 
-      if (!e.target.id) {
-        PainterEvents.generateAndSetIdForTarget(userId, e.target);
-      }
+      // NOTE: This object already have an ID, so it's not a newly created object. The object
+      // create event shouldn't be serialized and sent because it was created because of
+      // an incoming event from someone else.
+      if (e.target.id) return;
+
+      PainterEvents.generateAndSetIdForTarget(userId, generatedBy, e.target);
 
       if (!e.target.id) throw new Error(`object doesn't have any ID`);
-      if (!shouldSerializeEvent(e.target.id)) return;
 
       const target = {
         ...(type === 'textbox' && {
@@ -131,7 +135,7 @@ const useSynchronizedAdded = (
           event,
         });
 
-        eventSerializer?.push('added', payload);
+        eventSerializer?.push('added', generatedBy, payload);
       }
     };
 
@@ -142,7 +146,7 @@ const useSynchronizedAdded = (
         canvas.off('object:added', objectAdded);
       };
     }
-  }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
+  }, [canvas, eventSerializer, generatedBy, shouldSerializeEvent, undoRedoDispatch, userId]);
 
   /**
    * Generates a new shape based on shape name.
@@ -198,22 +202,12 @@ const useSynchronizedAdded = (
 
   /** Register and handle remote added event. */
   useEffect(() => {
-    const added = (id: string, objectType: string, target: ICanvasObject) => {
-      // TODO: We'll want to filter events based on the user ID. This can
-      // be done like this. Example of extracting user id from object ID:
-      // let { user } = new ShapeID(id);
-      // Help!
-      // if (eventSerializer?.didSerializeEvent(id)) return;
-
-      // TODO: We'll have to replace this with the user based filtering. Because
-      // we want to allow bi-directional events (Teacher <-> Student) as opposed
-      // to (Teacher --> Student).
-
+    const added = (id: string, generatedBy: string, objectType: string, target: ICanvasObject) => {
       // Events come from another user
       // Pass as props to user context
       // Ids of shapes + userId  uuid()
 
-      if (!shouldHandleRemoteEvent(id)) return;
+      if (!shouldHandleRemoteEvent(id, generatedBy)) return;
 
       if (objectType === 'textbox') {
         let text = new fabric.Textbox(target.text || '', {
@@ -228,8 +222,14 @@ const useSynchronizedAdded = (
           selectable: false,
         });
 
-        (text as ICanvasObject).id = id;
-        canvas?.add(text);
+
+        const canvasObject = text as ICanvasObject;
+        canvasObject.set({
+          id,
+          generatedBy
+        });
+
+        canvas?.add(canvasObject);
 
         undoRedoDispatch({
           type: SET_OTHER,
@@ -249,12 +249,17 @@ const useSynchronizedAdded = (
 
         // Convert Points to SVG Path
         const res = pencil.createPath((target.path as string) || '');
-        (res as ICanvasObject).id = id;
-        res.selectable = false;
-        res.evented = false;
-        res.strokeUniform = true;
 
-        canvas?.add(res);
+        const canvasObject = res as ICanvasObject;
+        canvasObject.set({
+          id,
+          selectable: false,
+          evented: false,
+          strokeUniform: true,
+          generatedBy,
+        });
+
+        canvas?.add(canvasObject);
         canvas?.renderAll();
       } else if (
         (objectType === 'path' || objectType === 'polygon') &&
@@ -280,9 +285,11 @@ const useSynchronizedAdded = (
       if (shape) {
         target = {
           ...target,
+          id,
           selectable: false,
           evented: floodFillIsActive,
           hoverCursor: floodFillIsActive ? 'not-allowed' : 'move',
+          generatedBy,
         } as ICanvasObject;
 
         shape.set(target as Partial<fabric.Ellipse>);

@@ -5,12 +5,14 @@ import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { fabric } from 'fabric';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 const useSynchronizedReconstruct = (
   canvas: fabric.Canvas | undefined,
-  shouldHandleRemoteEvent: (id: string) => boolean,
+  shouldHandleRemoteEvent: EventFilterFunction,
   userId: string,
-  undoRedoDispatch: React.Dispatch<CanvasAction>
+  undoRedoDispatch: React.Dispatch<CanvasAction>,
+  generatedBy: string,
 ) => {
   const {
     state: { eventController },
@@ -20,7 +22,7 @@ const useSynchronizedReconstruct = (
 
   useEffect(() => {
     const reconstruct = (id: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+      if (!shouldHandleRemoteEvent(id, generatedBy)) return;
 
       const parsed = JSON.parse(target.param as string);
       if (parsed === false) {
@@ -32,7 +34,7 @@ const useSynchronizedReconstruct = (
       }
 
       if (parsed.background && canvas) {
-        canvas?.setBackgroundColor(parsed.background, () => {});
+        canvas?.setBackgroundColor(parsed.background, () => { });
         canvas.renderAll();
         return;
       }
@@ -122,13 +124,7 @@ const useSynchronizedReconstruct = (
     return () => {
       eventController?.removeListener('reconstruct', reconstruct);
     };
-  }, [
-    canvas,
-    eventController,
-    shouldHandleRemoteEvent,
-    undoRedoDispatch,
-    userId,
-  ]);
+  }, [canvas, eventController, generatedBy, shouldHandleRemoteEvent, undoRedoDispatch, userId]);
 };
 
 export default useSynchronizedReconstruct;

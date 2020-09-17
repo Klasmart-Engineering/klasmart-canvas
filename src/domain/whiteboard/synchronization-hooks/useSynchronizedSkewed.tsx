@@ -6,11 +6,13 @@ import {
   ObjectEvent,
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
+import { EventFilterFunction } from '../WhiteboardCanvas';
 
 const useSynchronizedSkewed = (
   canvas: fabric.Canvas | undefined,
-  shouldSerializeEvent: (id: string) => boolean,
-  shouldHandleRemoteEvent: (id: string) => boolean
+  generatedBy: string,
+  shouldSerializeEvent: EventFilterFunction,
+  shouldHandleRemoteEvent: EventFilterFunction
 ) => {
   const {
     state: { eventSerializer, eventController },
@@ -18,8 +20,8 @@ const useSynchronizedSkewed = (
 
   /** Register and handle remote events. */
   useEffect(() => {
-    const skewed = (id: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const skewed = (id: string, generatedBy: string, target: ICanvasObject) => {
+      if (!shouldHandleRemoteEvent(id, generatedBy)) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
@@ -33,6 +35,7 @@ const useSynchronizedSkewed = (
             flipY: target.flipY,
             skewX: target.skewX,
             skewY: target.skewY,
+            generatedBy,
           });
         }
       });
@@ -49,11 +52,13 @@ const useSynchronizedSkewed = (
   /** Register and handle local events. */
   useEffect(() => {
     const objectSkewed = (e: CanvasEvent) => {
-      if (!e.target?.id) {
-        return;
-      }
+      if (!e.target) return;
 
-      if (!shouldSerializeEvent(e.target.id)) return;
+      const canvasObject = e.target as ICanvasObject;
+      if (!canvasObject.id) throw new Error('Skewed object without id');
+      if (!canvasObject.generatedBy) throw new Error('Skewed object without generatedBy');
+
+      if (!shouldSerializeEvent(canvasObject.id, canvasObject.generatedBy)) return;
 
       const type: ObjectType = e.target.get('type') as ObjectType;
       const target = {
@@ -69,10 +74,10 @@ const useSynchronizedSkewed = (
       const payload: ObjectEvent = {
         type,
         target,
-        id: e.target.id,
+        id: canvasObject.id,
       };
 
-      eventSerializer?.push('skewed', payload);
+      eventSerializer?.push('skewed', generatedBy, payload);
     };
 
     canvas?.on('object:skewed', objectSkewed);
@@ -80,7 +85,7 @@ const useSynchronizedSkewed = (
     return () => {
       canvas?.off('object:skewed', objectSkewed);
     };
-  }, [canvas, eventSerializer, shouldSerializeEvent]);
+  }, [canvas, eventSerializer, generatedBy, shouldSerializeEvent]);
 };
 
 export default useSynchronizedSkewed;
