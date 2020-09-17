@@ -868,7 +868,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       return shape.id && isLocalObject(shape.id, userId);
     };
 
-    if (floodFillIsActive && canvas && toolbarIsEnabled) {
+    const teacherPermission =
+      allToolbarIsEnabled && floodFillIsActive && toolbarIsEnabled;
+    const studentPermission =
+      floodFillIsActive && toolbarIsEnabled && serializerToolbarState.floodFill;
+
+    if ((canvas && teacherPermission) || (canvas && studentPermission)) {
       canvas.defaultCursor = `url("${floodFillCursor}") 2 15, default`;
       canvas.forEachObject((object: TypedShape) => {
         setObjectControlsVisibility(object as ICanvasObject, false);

@@ -115,7 +115,7 @@ export default function AuthMenu(props: {
   const [localToolbarState, setLocalToolbarState] = useState(
     serializerToolbarState
   );
-  const { pointer, move, erase, pen } = localToolbarState;
+  const { pointer, move, erase, pen, floodFill } = localToolbarState;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLocalToolbarState({
@@ -232,7 +232,7 @@ export default function AuthMenu(props: {
                     name="move"
                   />
                 }
-                label="Move objects"
+                label="Move tool"
               />
               <FormControlLabel
                 control={
@@ -242,7 +242,7 @@ export default function AuthMenu(props: {
                     name="erase"
                   />
                 }
-                label="Erase objects"
+                label="Erase tool"
               />
               <FormControlLabel
                 control={
@@ -253,6 +253,16 @@ export default function AuthMenu(props: {
                   />
                 }
                 label="Pen tool"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={floodFill}
+                    onChange={handleToolbarChange}
+                    name="floodFill"
+                  />
+                }
+                label="Flood-Fill tool"
               />
             </FormGroup>
           </FormControl>

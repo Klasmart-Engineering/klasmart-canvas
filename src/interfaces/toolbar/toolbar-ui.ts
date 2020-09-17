@@ -4,5 +4,6 @@ export interface IToolbarUI {
     move: boolean;
     erase: boolean;
     pen: boolean;
+    floodFill: boolean;
   };
 }
