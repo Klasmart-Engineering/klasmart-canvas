@@ -15,7 +15,7 @@ type LineQueued = [number, number, number, number]
 export default class FloodFiller {
   public imageData: ImageData;
   public color: any;
-  public replacedColor: any;
+  public replacedColor: ColorRGBA | undefined;
   public tolerance: number;
   public queue: any[] = [];
   public modifiedPixelsCount = 0;
@@ -36,6 +36,34 @@ export default class FloodFiller {
     this.tolerance = 0;
   }
 
+  private RGBA2Hex = () => {
+
+    if (!this.replacedColor) {
+      throw new Error('Color has not been selected!');
+    }
+
+    let partials = [
+      this.replacedColor.r.toString(16),
+      this.replacedColor.g.toString(16),
+      this.replacedColor.b.toString(16),
+      Math.round(this.replacedColor.a * 255).toString(16).substring(0,2)
+    ];
+
+    let hexList = partials.map((part: string) => {
+      if (part.length === 1) {
+        return `0${part}`;
+      } 
+
+      return part;
+    });
+
+    return `#${hexList.join('')}`;
+  }
+
+  public getReplacedColor = () => {
+    return this.RGBA2Hex();
+  }
+
   /**
    * Gets color of specific pixel.
    * @param imageData Canvas ImageData
@@ -43,20 +71,19 @@ export default class FloodFiller {
    * @param y Y coordinate
    */
   public getColorAtPixel = (
-    imageData: ImageData,
     x: number,
     y: number,
   ): ColorRGBA => {
-    const { width, data } = imageData
+    const { width, data } = this.imageData
     const startPos = 4 * (y * width + x)
     if (data[startPos + 3] === undefined) {
         throw new Error(`Invalid pixel coordinates: x=${x}; y=${y}`)
     }
     return {
-        r: data[startPos],
-        g: data[startPos + 1],
-        b: data[startPos + 2],
-        a: data[startPos + 3],
+      r: data[startPos],
+      g: data[startPos + 1],
+      b: data[startPos + 2],
+      a: data[startPos + 3],
     }
   }
 
@@ -72,13 +99,13 @@ export default class FloodFiller {
     }
     // convert 3-digit hex to 6-digits.
     if (parsedHex.length === 3) {
-        parsedHex =
-            parsedHex[0] +
-            parsedHex[0] +
-            parsedHex[1] +
-            parsedHex[1] +
-            parsedHex[2] +
-            parsedHex[2]
+      parsedHex =
+        parsedHex[0] +
+        parsedHex[0] +
+        parsedHex[1] +
+        parsedHex[1] +
+        parsedHex[2] +
+        parsedHex[2]
     }
     if (parsedHex.length !== 6 && parsedHex !== 'transparent') {
       throw new Error(`Invalid HEX color ${parsedHex}.`)
@@ -147,9 +174,9 @@ export default class FloodFiller {
       //@ts-ignore
       return
     }
-    const pixelColor = this.getColorAtPixel(this.imageData, pixel.x, pixel.y)
+    const pixelColor = this.getColorAtPixel(pixel.x, pixel.y)
     const tempTolerance = 100; // This is to prevent white spaces around paths.
-    return this.isSameColor(this.replacedColor, pixelColor, tempTolerance);
+    return this.isSameColor(this.replacedColor as ColorRGBA, pixelColor, tempTolerance);
   }
 
   /**
@@ -168,11 +195,11 @@ export default class FloodFiller {
     const { width, data } = imageData;
     const startPos = 4 * (y * width + x)
     if (data[startPos + 3] === undefined) {
-        throw new Error(
-            'Invalid pixel coordinates. Cannot set color at: x=' +
-                x +
-                '; y=' +
-                y,
+      throw new Error(
+        'Invalid pixel coordinates. Cannot set color at: x=' +
+            x +
+            '; y=' +
+            y,
         )
     }
 
@@ -311,7 +338,7 @@ export default class FloodFiller {
   public fill = async (point: {x: number, y: number}, colorHex: string, tolerance: number): Promise<any> => {
     try {  
       this.color = this.hex2RGBA(colorHex);
-      this.replacedColor = this.getColorAtPixel(this.imageData, point.x, point.y);
+      this.replacedColor = this.getColorAtPixel(point.x, point.y);
       this.tolerance = tolerance;
 
       if (this.isSameColor(this.replacedColor, this.color, this.tolerance)) {

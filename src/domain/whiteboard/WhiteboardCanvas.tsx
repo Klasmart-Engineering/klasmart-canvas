@@ -58,6 +58,8 @@ import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clea
 import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
 import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
 
+import { floodFillMouseEvent, setTemporaryCanvas, stripForeignObjects, updateTemporary } from './utils/floodFillMouseEvent';
+
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
  * @field userId: The user's ID, events originating from this canvas will contain this ID.
@@ -834,21 +836,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
 
     if (floodFillIsActive && canvas && toolbarIsEnabled) {
-      const tempCanvas = document.createElement('canvas');
-      const tempContext = tempCanvas.getContext('2d') as CanvasRenderingContext2D;
-      tempCanvas.height = canvas.getHeight() * 2;
-      tempCanvas.width = canvas.getWidth() * 2;
-
-      const palette = tempContext.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-
-
-      const context = canvas.getContext();
-      const imgData = context.getImageData(0, 0, canvas.getWidth() * 2, canvas.getHeight() * 2);
-
-      // const floodFillData = new FloodFill(imgData);
-      // const floodFiller = new FloodFiller(imgData, canvas.getWidth() * 2, canvas.getHeight() * 2);
-      const floodFiller = new FloodFiller(imgData);
-      
       canvas.defaultCursor = `url("${floodFillCursor}") 2 15, default`;
       canvas.forEachObject((object: TypedShape) => {
         setObjectControlsVisibility(object as ICanvasObject, false);
@@ -871,11 +858,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.on('mouse:down', async (event: fabric.IEvent) => {
         // Click out of any object
         if (event.target && (event.target.get('type') === 'path' || event.target.get('type') === 'image')) {
+          console.log(FloodFiller, setTemporaryCanvas, stripForeignObjects, floodFillMouseEvent);
+
+          // floodFillMouseEvent(event, canvas, userId, isLocalObject, getColorInCoord, floodFill);
+          const { tempCanvas, tempContext } = setTemporaryCanvas(canvas.getHeight() * 2, canvas.getWidth() * 2);
+    
+          // // temporary remove non local objects
+          let placeholderNonLocal = stripForeignObjects(canvas, isLocalObject, userId);    
+          const palette = tempContext.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+          const context = canvas.getContext();
+          const imgData = context.getImageData(0, 0, canvas.getWidth() * 2, canvas.getHeight() * 2);
+          const floodFiller = new FloodFiller(imgData);
           let id = event.target.get('type') !== 'path' ? (event.target as TypedShape).id : null;
-          const clickedColor = getColorInCoord(
-            Math.round((event.pointer as { x: number; y: number }).x), 
-            Math.round((event.pointer as { x: number; y: number }).y)
-          );
 
           let data = await floodFiller.fill(
             { 
@@ -890,14 +884,22 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             return;
           }
 
+          const clickedColor = floodFiller.getReplacedColor();
+
           // @ts-ignore
           palette.data.set(new Uint8ClampedArray(data.coords)); 
-          tempContext.putImageData(palette, 0, 0);
-          let newImgData = tempContext.getImageData(data.x, data.y, data.width, data.height);
+          updateTemporary(palette, tempCanvas, tempContext, data);
 
-          tempCanvas.width = data.width;
-          tempCanvas.height = data.height;
-          tempContext.putImageData(newImgData,0,0);
+          placeholderNonLocal.forEach((o: TypedShape) => {
+            canvas.add(o);
+          });
+    
+          canvas.renderAll();
+
+          // @ts-ignore
+          if (canvas.width - data.width <= 4 && canvas.height - data.height <= 4) {
+            return;
+          }
 
           const tempData = tempCanvas.toDataURL();
 
