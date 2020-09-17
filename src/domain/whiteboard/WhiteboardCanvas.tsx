@@ -722,7 +722,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       }
 
       // Text Selected
-      if (event.target && isText(event.target) && eventedObjects) {
+      if (event.target && isText(event.target)) {
         const newFont = (event.target as ITextOptions).fontFamily;
         const newFontColor = event.target.fill;
 
