@@ -71,6 +71,8 @@ function Toolbar() {
     updateLaserIsActive,
     toolbarIsEnabled,
     pointerIsEnabled,
+    serializerToolbarState,
+    allToolbarIsEnabled,
   } = useContext(WhiteboardContext);
 
   /**
@@ -79,7 +81,24 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
-    if (tool === ELEMENTS.LASER_TOOL && !pointerIsEnabled) {
+    const activePointerSelection =
+      allToolbarIsEnabled || serializerToolbarState.pointer;
+
+    if (tool === ELEMENTS.LASER_TOOL && !activePointerSelection) {
+      return;
+    }
+
+    const activeMoveSelection =
+      allToolbarIsEnabled || serializerToolbarState.move;
+
+    if (tool === ELEMENTS.MOVE_OBJECTS_TOOL && !activeMoveSelection) {
+      return;
+    }
+
+    const activeEraseSelection =
+      allToolbarIsEnabled || serializerToolbarState.erase;
+
+    if (tool === ELEMENTS.ERASE_TYPE_TOOL && !activeEraseSelection) {
       return;
     }
 
@@ -158,7 +177,7 @@ function Toolbar() {
       toolbarIsEnabled ||
       tool === ELEMENTS.ADD_TEXT_TOOL ||
       tool === ELEMENTS.ADD_STAMP_TOOL ||
-      (pointerIsEnabled && tool === ELEMENTS.LASER_TOOL)
+      (activePointerSelection && tool === ELEMENTS.LASER_TOOL)
     ) {
       setTools({
         active: tool,
@@ -380,13 +399,30 @@ function Toolbar() {
    * default pointer is automatically selected.
    */
   useEffect(() => {
-    if (!pointerIsEnabled && getActiveTool === ELEMENTS.LASER_TOOL) {
+    const toolbarIsEnabledAndSpecificToolHasPermission =
+      allToolbarIsEnabled ||
+      serializerToolbarState.pointer ||
+      serializerToolbarState.move ||
+      serializerToolbarState.erase;
+    const laserToolIsActive = getActiveTool === ELEMENTS.LASER_TOOL;
+    const moveToolIsActive = getActiveTool === ELEMENTS.MOVE_OBJECTS_TOOL;
+    const eraseToolIsActive = getActiveTool === ELEMENTS.ERASE_TYPE_TOOL;
+
+    if (
+      !toolbarIsEnabledAndSpecificToolHasPermission &&
+      (laserToolIsActive || moveToolIsActive || eraseToolIsActive)
+    ) {
       setTools({
         active: ELEMENTS.POINTERS_TOOL,
         elements: getToolElements,
       });
     }
-  }, [pointerIsEnabled, getActiveTool, getToolElements]);
+  }, [
+    allToolbarIsEnabled,
+    serializerToolbarState,
+    getActiveTool,
+    getToolElements,
+  ]);
 
   const toolbarContainerStyle: CSSProperties = {
     display: 'flex',

@@ -137,6 +137,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setToolbarIsEnabled,
     pointerIsEnabled,
     setPointerIsEnabled,
+    serializerToolbarState,
+    setSerializerToolbarState,
+    allToolbarIsEnabled,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -226,18 +229,34 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       return;
     }
 
+    const teacherPermission = allToolbarIsEnabled && shapesAreSelectable;
+    const studentPermission =
+      serializerToolbarState.move && shapesAreSelectable;
+
     canvas.getObjects().forEach((object: ICanvasObject) => {
       if ((object.id && isLocalObject(object.id, userId)) || !object.id) {
         object.set({
-          selectable: shapesAreSelectable,
-          evented: shapesAreSelectable || shapesAreEvented,
+          selectable: teacherPermission || studentPermission,
+          evented:
+            teacherPermission ||
+            shapesAreEvented ||
+            studentPermission ||
+            shapesAreEvented,
         });
       }
     });
 
-    canvas.selection = shapesAreSelectable;
+    canvas.selection = teacherPermission || studentPermission;
     canvas.renderAll();
-  }, [canvas, isLocalObject, shapesAreEvented, shapesAreSelectable, userId]);
+  }, [
+    canvas,
+    isLocalObject,
+    shapesAreEvented,
+    shapesAreSelectable,
+    userId,
+    serializerToolbarState,
+    allToolbarIsEnabled,
+  ]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -793,13 +812,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Set the objects like evented if you select pointer or move tool
    */
   useEffect(() => {
-    if (eventedObjects) {
+    const teacherPermission = allToolbarIsEnabled && eventedObjects;
+    const studentPermission = serializerToolbarState.move && eventedObjects;
+    if (teacherPermission || studentPermission) {
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
           setObjectControlsVisibility(object, true);
           object.set({
-            evented: true,
-            selectable: true,
+            evented: allToolbarIsEnabled || serializerToolbarState.move,
+            selectable: allToolbarIsEnabled || serializerToolbarState.move,
             lockMovementX: false,
             lockMovementY: false,
             hasBorders: true,
@@ -809,7 +830,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       actions.setHoverCursorObjects('move');
     }
-  }, [actions, canvas, eventedObjects, isLocalObject, userId]);
+  }, [
+    actions,
+    canvas,
+    eventedObjects,
+    isLocalObject,
+    userId,
+    serializerToolbarState,
+    allToolbarIsEnabled,
+  ]);
 
   /**
    * Memoized laserIsActive prop.
@@ -1120,7 +1149,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useSynchronizedFontFamilyChanged(canvas, filterIncomingEvents);
   useSynchronizedPointer(
     canvas,
-    pointerIsEnabled,
+    //pointerIsEnabled,
+    allToolbarIsEnabled || serializerToolbarState.pointer,
     filterIncomingEvents,
     userId,
     penColor,
@@ -1131,7 +1161,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     userId,
     filterIncomingEvents,
     setToolbarIsEnabled,
-    setPointerIsEnabled
+    setPointerIsEnabled,
+    setSerializerToolbarState
   );
   useSynchronizedFontColorChanged(
     canvas,
@@ -1403,7 +1434,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * necessaries to erase objects are setted or removed
    */
   useEffect(() => {
-    if (eraseType === 'object' && canvas && toolbarIsEnabled) {
+    if (
+      eraseType === 'object' &&
+      canvas &&
+      toolbarIsEnabled &&
+      (allToolbarIsEnabled || serializerToolbarState.erase)
+    ) {
+      console.log('ok');
       actions.eraseObject();
 
       if (canvas.getActiveObjects().length === 1) {
@@ -1419,7 +1456,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
     };
-  }, [eraseType, canvas, actions, textIsActive, toolbarIsEnabled]);
+  }, [
+    eraseType,
+    canvas,
+    actions,
+    textIsActive,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState,
+  ]);
 
   useEffect(() => {
     if (shape && shapeIsActive) {
@@ -1474,15 +1519,25 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
 
   useEffect(() => {
+    const studentPermission =
+      toolbarIsEnabled &&
+      (serializerToolbarState.move || serializerToolbarState.erase);
     canvas?.forEachObject((object: ICanvasObject) => {
       if (object.id && isLocalObject(object.id, userId)) {
         object.set({
-          evented: toolbarIsEnabled,
-          selectable: toolbarIsEnabled,
+          evented: allToolbarIsEnabled || studentPermission,
+          selectable: allToolbarIsEnabled || studentPermission,
         });
       }
     });
-  }, [canvas, toolbarIsEnabled, isLocalObject, userId]);
+  }, [
+    canvas,
+    toolbarIsEnabled,
+    isLocalObject,
+    userId,
+    serializerToolbarState,
+    allToolbarIsEnabled,
+  ]);
 
   // TODO: Possible to have dynamically sized canvas? With raw canvas it's
   // possible to set the "pixel (background)" size separately from the
