@@ -6,7 +6,14 @@ const useSynchronizedSetToolbarPermissions = (
   userId: string,
   shouldHandleRemoteEvent: (id: string) => boolean,
   setToolbarIsEnabled: (enabled: boolean) => void,
-  setPointerIsEnabled: (enabled: boolean) => void
+  setPointerIsEnabled: (enabled: boolean) => void,
+  // setSerializerToolbarState: (enabled: {
+  //   [p: string]: boolean;
+  //   pointer: boolean;
+  //   move: boolean;
+  //   erase: boolean;
+  //   pen: boolean;
+  // }) => void
 ) => {
   const {
     state: { eventController },
