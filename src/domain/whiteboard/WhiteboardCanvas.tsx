@@ -227,7 +227,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     canvas.getObjects().forEach((object: ICanvasObject) => {
-      if ((object.id && isLocalObject(object.id, userId)) || !object.id) {
+      if (
+        ((object.id && isLocalObject(object.id, userId)) || !object.id) &&
+        !eraseType
+      ) {
         object.set({
           selectable: shapesAreSelectable,
           evented: shapesAreSelectable || shapesAreEvented,
@@ -235,13 +238,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           lockMovementY: !shapesAreSelectable,
           hoverCursor: shapesAreSelectable ? 'move' : 'default',
         });
+        console.log('se metio');
       }
     });
 
     canvas.selection = shapesAreSelectable;
     canvas.preserveObjectStacking = !shapesAreSelectable;
     canvas.renderAll();
-  }, [canvas, isLocalObject, shapesAreEvented, shapesAreSelectable, userId]);
+  }, [
+    canvas,
+    eraseType,
+    isLocalObject,
+    shapesAreEvented,
+    shapesAreSelectable,
+    userId,
+  ]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -837,7 +848,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Manage the states for set local objects like selectable/modifible
    */
   useEffect(() => {
-    if (canvas) {
+    if (canvas && !eraseType) {
       canvas.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
           setObjectControlsVisibility(object, eventedObjects || textIsActive);
@@ -861,6 +872,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     brushIsActive,
     isLocalObject,
     userId,
+    eraseType,
   ]);
 
   /**
@@ -1030,6 +1042,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             evented: false,
             perPixelTargetFind: false,
           });
+          console.log('en ele laser');
         });
       }
 
