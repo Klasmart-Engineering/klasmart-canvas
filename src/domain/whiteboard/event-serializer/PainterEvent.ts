@@ -12,7 +12,8 @@ export type PainterEventType =
   | 'moving'
   | 'setToolbarPermissions'
   | 'fontColorChanged'
-  | 'lineWidthChanged';
+  | 'lineWidthChanged'
+  | 'clearWhiteboard';
 
 export interface PainterEvent {
   // The event type.
@@ -25,4 +26,6 @@ export interface PainterEvent {
 
   // Optional parameters for this event.
   param?: string | undefined;
+
+  filter?: string[];
 }

@@ -579,20 +579,13 @@ export const useCanvasActions = (
     await updateClearIsActive(true);
     await canvas?.getObjects().forEach((obj: ICanvasObject) => {
       if (obj.id) {
-        const target = {
-          id: obj.id,
-          target: {
-            strategy: 'allowClearAll',
-          },
-        };
-
         obj.set({ groupClear: true });
         canvas?.remove(obj);
-        console.log('clear all');
-        eventSerializer?.push('removed', target as ObjectEvent);
+        // eventSerializer?.push('removed', target as ObjectEvent);
       }
     });
 
+    eventSerializer?.push('clearWhiteboard', { filter: [] });
     // Add cleared whiteboard to undo / redo state.
     const event = { event: [], type: 'clearedWhiteboard' };
 
@@ -610,22 +603,20 @@ export const useCanvasActions = (
    * Clears all whiteboard elements
    * */
   const clearWhiteboardClearMySelf = useCallback(async () => {
+    let myObjects: string[] = [];
     await updateClearIsActive(true);
     await canvas?.getObjects().forEach((obj: ICanvasObject) => {
       if (obj.id && isLocalObject(obj.id, userId)) {
-        const target = {
-          id: obj.id,
-          target: {
-            strategy: 'allowClearMyself',
-          },
-        };
-
+        myObjects.push(obj.id);
         obj.set({ groupClear: true });
         canvas?.remove(obj);
-        console.log('clear myself');
-        eventSerializer?.push('removed', target as ObjectEvent);
+        // eventSerializer?.push('removed', target as ObjectEvent);
       }
     });
+
+    eventSerializer?.push('clearWhiteboard', {
+      filter: [...myObjects],
+    } as ObjectEvent);
     closeModal();
 
     // Add cleared whiteboard to undo / redo state.
@@ -651,6 +642,7 @@ export const useCanvasActions = (
    * */
   const clearWhiteboardAllowClearOthers = useCallback(
     async (userId: string) => {
+      let othersObjects: string[] = [];
       await updateClearIsActive(true);
       await canvas?.getObjects().forEach((obj: ICanvasObject) => {
         if (obj.id) {
@@ -661,21 +653,17 @@ export const useCanvasActions = (
           }
 
           if (object[0] === userId) {
+            othersObjects.push(obj.id);
             canvas?.remove(obj);
           }
 
-          const target = {
-            id: obj.id,
-            target: {
-              strategy: 'allowClearOthers',
-              userId,
-            },
-          };
-
-          console.log('clear others');
-          eventSerializer?.push('removed', target as ObjectEvent);
+          // eventSerializer?.push('removed', target as ObjectEvent);
         }
       });
+
+      eventSerializer?.push('clearWhiteboard', {
+        filter: [...othersObjects],
+      } as ObjectEvent);
       await updateClearIsActive(false);
     },
     [canvas, eventSerializer, updateClearIsActive]

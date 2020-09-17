@@ -81,6 +81,7 @@ export interface IPainterController {
     event: 'lineWidthChanged',
     listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
+  on(event: 'clearWhiteboard', listener: (objects?: string[]) => void): this;
 
   removeListener(
     event: 'added',
@@ -137,6 +138,10 @@ export interface IPainterController {
   removeListener(
     event: 'lineWidthChanged',
     listener: (id: string, objectType: string, target: ICanvasObject) => void
+  ): this;
+  removeListener(
+    event: 'clearWhiteboard',
+    listener: (objects: string[]) => void
   ): this;
 
   replayEvents(): Promise<void>;

@@ -1,12 +1,7 @@
-import { useEffect, useContext } from 'react';
-import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
-import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
+import { useEffect } from 'react';
+import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
-import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
-import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
-import { ITextOptions } from 'fabric/fabric-impl';
-import { WhiteboardContext } from '../WhiteboardContext';
 
 interface IFilter {
   filter?: string[];
@@ -15,22 +10,19 @@ interface IFilter {
 const useSynchronizedClearWhiteboard = (
   canvas: fabric.Canvas | undefined,
   userId: string,
-  shouldSerializeEvent: (id: string) => boolean,
   shouldHandleRemoteEvent: (id: string) => boolean,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
   const {
-    state: { eventSerializer, eventController },
+    state: { eventController },
   } = useSharedEventSerializer();
-
-  const { clearIsActive } = useContext(WhiteboardContext);
 
   /** Register and handle remote event. */
   useEffect(() => {
     const clear = (objects: IFilter) => {
       const whiteboardObjects = canvas?.getObjects();
 
-      if (!objects.filter) {
+      if (!objects.filter?.length) {
         whiteboardObjects?.forEach((object: ICanvasObject) => {
           canvas?.remove(object);
         });
@@ -90,13 +82,11 @@ const useSynchronizedClearWhiteboard = (
 
       canvas?.renderAll();
 
-      if (shouldHandleRemoteEvent(objectId)) {
-        undoRedoDispatch({
-          type: SET_OTHER,
-          payload: canvas?.getObjects(),
-          canvasId: userId,
-        });
-      }
+      undoRedoDispatch({
+        type: SET_OTHER,
+        payload: canvas?.getObjects(),
+        canvasId: userId,
+      });
     };
 
     eventController?.on('clearWhiteboard', clear);
@@ -113,4 +103,4 @@ const useSynchronizedClearWhiteboard = (
   ]);
 };
 
-export default useSynchronizedRemoved;
+export default useSynchronizedClearWhiteboard;

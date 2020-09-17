@@ -27,6 +27,8 @@ export interface ObjectEvent {
     | { background: string }
     | { pointer: boolean }
     | boolean;
+
+  filter?: string[];
 }
 
 export type ObjectType =
@@ -86,6 +88,7 @@ export class PaintEventSerializer extends EventEmitter
       type,
       objectType: object.type as string,
       param: JSON.stringify(object.target),
+      filter: object.filter,
     };
 
     // NOTE: The list of ID's this serialized generated is for filtering

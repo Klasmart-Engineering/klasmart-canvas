@@ -99,6 +99,8 @@ export class EventPainterController extends EventEmitter
       case 'lineWidthChanged':
         this.lineWidthChanged(event.id, event.objectType, target);
         break;
+      case 'clearWhiteboard':
+        this.clearWhiteboard(event.filter);
     }
   }
 
@@ -164,5 +166,9 @@ export class EventPainterController extends EventEmitter
     target: ICanvasObject
   ) {
     this.emit('lineWidthChanged', id, objectType, target);
+  }
+
+  private clearWhiteboard(objects?: string[]) {
+    this.emit('clearWhiteboard', { filter: objects });
   }
 }

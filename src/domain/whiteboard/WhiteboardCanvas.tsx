@@ -56,6 +56,7 @@ import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
 import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
+import useSynchronizedClearWhiteboard from './synchronization-hooks/useSynchronizedClearWhiteboard';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -1140,6 +1141,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     undoRedoDispatch
   );
   useSynchronizedLineWidthChanged(
+    canvas,
+    userId,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
+  useSynchronizedClearWhiteboard(
     canvas,
     userId,
     filterIncomingEvents,
