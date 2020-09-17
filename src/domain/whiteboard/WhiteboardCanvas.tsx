@@ -10,8 +10,8 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useState,
   useMemo,
+  useState,
 } from 'react';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { WhiteboardContext } from './WhiteboardContext';
@@ -36,15 +36,15 @@ import useSynchronizedPointer from './synchronization-hooks/useSynchronizedPoint
 import useSynchronizedSetToolbarPermissions from './synchronization-hooks/useSynchronizedSetToolbarPermissions';
 import useSynchronizedFontColorChanged from './synchronization-hooks/useSynchronizedFontColorChanged';
 
-import { SET, SET_GROUP, UNDO, REDO } from './reducers/undo-redo';
+import { REDO, SET, SET_GROUP, UNDO } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import {
-  IEvent,
-  ITextOptions,
   Canvas,
-  Textbox,
+  IEvent,
   IText,
+  ITextOptions,
+  Textbox,
 } from 'fabric/fabric-impl';
 import {
   ObjectEvent,
@@ -448,11 +448,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     if (brushIsActive && canvas) {
       canvas.freeDrawingBrush = new fabric.PencilBrush();
-
       (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
       canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
       canvas.freeDrawingBrush.width = lineWidth;
-      canvas.isDrawingMode = toolbarIsEnabled;
+      canvas.isDrawingMode =
+        allToolbarIsEnabled || (toolbarIsEnabled && serializerToolbarState.pen);
 
       canvas.on('path:created', pathCreated);
     } else if (canvas && !brushIsActive) {
@@ -462,7 +462,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     return () => {
       canvas?.off('path:created');
     };
-  }, [brushIsActive, canvas, lineWidth, penColor, toolbarIsEnabled]);
+  }, [
+    brushIsActive,
+    canvas,
+    lineWidth,
+    penColor,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.pen,
+  ]);
 
   /**
    * Disables shape canvas mouse events.
