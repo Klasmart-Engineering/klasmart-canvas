@@ -833,22 +833,35 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
   }, [actions, canvas, eventedObjects, isLocalObject, textIsActive, userId]);
 
+  /**
+   * Manage the states for set local objects like selectable/modifible
+   */
   useEffect(() => {
     if (canvas) {
-      canvas.forEachObject((object) => {
-        setObjectControlsVisibility(object, eventedObjects || textIsActive);
-        (object as Textbox).set({
-          evented: eventedObjects || textIsActive,
-          selectable: eventedObjects || textIsActive,
-          hasBorders: eventedObjects || textIsActive,
-          editable: textIsActive,
-          lockMovementX: !eventedObjects,
-          lockMovementY: !eventedObjects,
-          hasRotatingPoint: eventedObjects,
-        });
+      canvas.forEachObject((object: ICanvasObject) => {
+        if (object.id && isLocalObject(object.id, userId)) {
+          setObjectControlsVisibility(object, eventedObjects || textIsActive);
+          (object as Textbox).set({
+            evented: eventedObjects || textIsActive,
+            selectable: eventedObjects || textIsActive,
+            hasBorders: eventedObjects || textIsActive,
+            editable: textIsActive,
+            lockMovementX: !eventedObjects,
+            lockMovementY: !eventedObjects,
+            hasRotatingPoint: eventedObjects,
+          });
+        }
       });
     }
-  }, [canvas, eventedObjects, textIsActive, shapeIsActive, brushIsActive]);
+  }, [
+    canvas,
+    eventedObjects,
+    textIsActive,
+    shapeIsActive,
+    brushIsActive,
+    isLocalObject,
+    userId,
+  ]);
 
   /**
    * Memoized laserIsActive prop.
