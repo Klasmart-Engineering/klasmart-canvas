@@ -55,8 +55,6 @@ export interface IWhiteboardContext {
   eraseObject: () => void;
   undo: () => void;
   redo: () => void;
-  allowPointer: boolean;
-  universalPermits: (id: string) => boolean;
   clear: (filterUsers?: string[]) => void;
   clearSelf: () => void;
   toolbarIsEnabled: boolean;
@@ -66,4 +64,6 @@ export interface IWhiteboardContext {
   clearIsActive: boolean;
   updateClearIsActive: (active: boolean) => void;
   permissions: IWhiteboardPermissions;
+  // allowPointer: boolean;
+  // universalPermits: (id: string) => boolean;
 }

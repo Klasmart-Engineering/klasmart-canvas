@@ -3,6 +3,8 @@ import '../../assets/style/whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
 import { WhiteboardCanvas } from './WhiteboardCanvas';
+import ClearMenu from '../../components/ClearMenu';
+import AuthMenu from '../../components/AuthMenu';
 
 const teacher = {
   allowClearAll: true,
@@ -27,9 +29,9 @@ function Whiteboard() {
 
   return (
     <>
-      <WhiteboardProvider
-        permissions={teacher}
-      >
+      <WhiteboardProvider permissions={teacher}>
+        <ClearMenu />
+        <AuthMenu userId={'teacher'} />
         <div className="whiteboard">
           <Toolbar />
           <div
@@ -49,7 +51,6 @@ function Whiteboard() {
               userId="teacher"
               initialStyle={canvasStyle}
               pointerEvents={true}
-              clearWhiteboardPermissions={teacher}
               pixelWidth={740}
               pixelHeight={460}
             >
@@ -58,9 +59,7 @@ function Whiteboard() {
           </div>
         </div>
       </WhiteboardProvider>
-      <WhiteboardProvider
-        permissions={student}
-      >
+      <WhiteboardProvider permissions={student}>
         <div className="whiteboard">
           <Toolbar />
           <div
@@ -80,7 +79,6 @@ function Whiteboard() {
               userId="student"
               initialStyle={canvasStyle}
               pointerEvents={true}
-              clearWhiteboardPermissions={student}
               pixelWidth={740}
               pixelHeight={460}
             >
@@ -89,9 +87,7 @@ function Whiteboard() {
           </div>
         </div>
       </WhiteboardProvider>
-      <WhiteboardProvider
-        permissions={student}
-      >
+      <WhiteboardProvider permissions={student}>
         <div className="whiteboard">
           <Toolbar />
           <div
@@ -111,7 +107,6 @@ function Whiteboard() {
               userId="student2"
               initialStyle={canvasStyle}
               pointerEvents={true}
-              clearWhiteboardPermissions={student}
               pixelWidth={740}
               pixelHeight={460}
             >

@@ -20,7 +20,6 @@ import { useLaserIsActive } from './hooks/useLaserIsActive';
 import { useToolbarPermissions } from './hooks/useToolbarPermissions';
 import ICanvasActions from './canvas-actions/ICanvasActions';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
-import AuthMenu from '../../components/AuthMenu';
 import { IWhiteboardPermissions } from '../../interfaces/canvas-events/whiteboard-permissions';
 import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
@@ -87,14 +86,6 @@ export const WhiteboardProvider = ({
   }, []);
 
   const [eventedObjects, updateEventedObjects] = useState(true);
-
-  // Hard coded until functionality to provide permissions to students is implemented.
-  const allowPointer = false;
-
-  // Hard coded until roles fully integrated.
-  const universalPermits = (id: string) => {
-    return id === 'teacher';
-  };
 
   /**
    * Opens ClearWhiteboardModal
@@ -234,19 +225,6 @@ export const WhiteboardProvider = ({
 
   return (
     <WhiteboardContext.Provider value={value}>
-      {/*: Should work for student and teacher */}
-      <button onClick={() => clearWhiteboardActionClearMyself()}>
-        Clear My self
-      </button>
-      {/*: Should work only for teacher */}
-      <button onClick={() => clearWhiteboardActionClearAll()}>Clear All</button>
-      {/*: Should work only for teacher */}
-      <button onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
-        Clear student
-      </button>
-      {/*<div>Whiteboard Context {toolbarIsEnabled.toString()}</div>*/}
-      <AuthMenu userId={userId} setToolbarIsEnabled={setToolbarIsEnabled} />
-
       <ClearWhiteboardModal
         clearWhiteboard={() => { clearSelf(); closeModal(); }}
       />

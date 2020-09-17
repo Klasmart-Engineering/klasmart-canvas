@@ -6,6 +6,7 @@ import ListItemText from '@material-ui/core/ListItemText';
 import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
 import { useSharedEventSerializer } from '../domain/whiteboard/SharedEventSerializerProvider';
+import { v4 as uuidv4 } from 'uuid';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -23,8 +24,8 @@ const pointerOptions = [
 
 export default function AuthMenu(props: {
   userId: string;
-  setToolbarIsEnabled: (enabled: boolean) => void;
 }) {
+  const [generatedBy] = useState<string>(uuidv4());
   const { userId } = props;
   const isTeacher = userId === 'teacher';
   const classes = useStyles();
@@ -83,7 +84,7 @@ export default function AuthMenu(props: {
       index === 1
         ? { id: userId, target: { pointer: true } }
         : { id: userId, target: { pointer: false } };
-    eventSerializer?.push('setToolbarPermissions', payload);
+    eventSerializer?.push('setToolbarPermissions', generatedBy, payload);
   };
 
   const handleClose = () => {

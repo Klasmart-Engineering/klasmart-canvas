@@ -57,7 +57,6 @@ import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchron
 import useFixedAspectScaling, { ScaleMode } from './utils/useFixedAspectScaling';
 import { PainterEvents } from './event-serializer/PainterEvents';
 import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
-import { IWhiteboardPermissions } from '../../interfaces/canvas-events/whiteboard-permissions';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -79,7 +78,6 @@ export type Props = {
   pixelHeight: number;
   filterUsers?: string[];
   filterGroups?: string[];
-  permissions: IWhiteboardPermissions;
   scaleMode?: ScaleMode;
   display?: boolean;
 };
