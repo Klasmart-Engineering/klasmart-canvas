@@ -125,11 +125,14 @@ export const useCanvasActions = (
           anchor = { ...anchor, originY: 'bottom' };
         }
 
-        shape.set(anchor);
+        const canvasObject = shape as ICanvasObject;
+        canvasObject.set(anchor);
+        canvasObject.set({ generatedBy });
+
         canvas.renderAll();
       });
     },
-    [canvas]
+    [canvas, generatedBy]
   );
 
   const clearOnMouseEvent = useCallback((): void => {
@@ -171,17 +174,20 @@ export const useCanvasActions = (
           size = setPathSize(shape, coordsStart, e.pointer);
         }
 
+        const canvasObject = shape as ICanvasObject;
+        canvasObject.set({ generatedBy });
+
         if (size.width <= 2 && size.height <= 2) {
-          canvas.remove(shape);
+          canvas.remove(canvasObject);
         } else {
-          shape.setCoords();
+          canvasObject.setCoords();
           canvas.renderAll();
 
           dispatch({ type: 'CANVAS_SET', payload: canvas.getObjects() });
         }
       });
     },
-    [canvas, dispatch]
+    [canvas, dispatch, generatedBy]
   );
 
   /**
@@ -215,13 +221,19 @@ export const useCanvasActions = (
           });
         }
 
+        const canvasObject = shape as ICanvasObject;
+
+        canvasObject.set({
+          generatedBy
+        });
+
         clearOnMouseEvent();
         mouseMove(shape, e.pointer, specific);
         mouseUp(shape, e.pointer, specific);
-        canvas.add(shape);
+        canvas.add(canvasObject);
       });
     },
-    [canvas, clearOnMouseEvent, mouseMove, mouseUp, shapeColor, shapeSelector]
+    [canvas, clearOnMouseEvent, generatedBy, mouseMove, mouseUp, shapeColor, shapeSelector]
   );
 
   /**
@@ -296,6 +308,9 @@ export const useCanvasActions = (
 
         shape = shapeSelector(shapeToAdd);
 
+        const canvasObject = shape as ICanvasObject;
+        canvasObject.set({ generatedBy });
+
         if (e.pointer) {
           shape.set({
             top: e.pointer.y,
@@ -308,7 +323,7 @@ export const useCanvasActions = (
           startPoint = e.pointer;
         }
 
-        canvas.add(shape);
+        canvas.add(canvasObject);
         resize = true;
 
         /*
@@ -454,7 +469,7 @@ export const useCanvasActions = (
         }
       });
     },
-    [canvas, shapeIsActive, shapeSelector, eventSerializer, userId, dispatch]
+    [shapeIsActive, canvas, shapeSelector, generatedBy, userId, eventSerializer, dispatch]
   );
 
   /**
@@ -470,6 +485,10 @@ export const useCanvasActions = (
       if (!activeObjects) return;
 
       activeObjects.forEach((object: TypedShape) => {
+
+        const canvasObject = object as ICanvasObject;
+        canvasObject.set({ generatedBy });
+
         if (
           (isShape(object) && object.shapeType === 'shape') ||
           isFreeDrawing(object)
@@ -480,7 +499,7 @@ export const useCanvasActions = (
 
       canvas?.renderAll();
     },
-    [canvas, updatePenColor]
+    [canvas, generatedBy, updatePenColor]
   );
 
   /**
@@ -497,22 +516,18 @@ export const useCanvasActions = (
         canvas?.getActiveObject() &&
         canvas.getActiveObject().fill !== 'transparent'
       ) {
-        canvas.getActiveObject().set('fill', color);
+
+        const canvasObject = canvas.getActiveObject() as ICanvasObject;
+        canvasObject.set({ generatedBy });
+
+        canvasObject.set('fill', color);
         canvas.renderAll();
 
         // TODO: Handle Undo/Redo dispatch.
         dispatch({ type: SET, payload: canvas.getObjects() });
       }
     },
-    [
-      canvas,
-      clearMouseEvents,
-      clearOnMouseEvent,
-      mouseDown,
-      shape,
-      updateShapeColor,
-      dispatch,
-    ]
+    [updateShapeColor, clearOnMouseEvent, clearMouseEvents, mouseDown, shape, canvas, generatedBy, dispatch]
   );
 
   /**
@@ -530,6 +545,7 @@ export const useCanvasActions = (
         canvas.renderAll();
 
         const object: ICanvasObject = canvas?.getActiveObject();
+        object.set({ generatedBy });
 
         if (!(object as ITextOptions).isEditing) {
           const payload = {
@@ -557,6 +573,7 @@ export const useCanvasActions = (
 
             obj.set({
               fill: color,
+              generatedBy,
             });
 
             const payload: ObjectEvent = {
@@ -570,7 +587,7 @@ export const useCanvasActions = (
         }
       });
     },
-    [canvas, updateFontColor, eventSerializer]
+    [updateFontColor, canvas, generatedBy, eventSerializer]
   );
 
   /**
@@ -713,21 +730,16 @@ export const useCanvasActions = (
       ) {
 
         const canvasObject = e.target as ICanvasObject;
-        canvasObject.set({
-          generatedBy
-        });
+        canvasObject.set({ generatedBy });
 
-        canvas.remove(e.target);
+        canvas.remove(canvasObject);
         canvas.renderAll();
       }
 
       // if the click is made over an object group
       if (e.target?._objects) {
         e.target._objects.forEach(function (object: ICanvasObject) {
-          object.set({
-            generatedBy
-          });
-
+          object.set({ generatedBy });
           canvas.remove(object);
         });
 
@@ -750,10 +762,7 @@ export const useCanvasActions = (
       ) {
 
         const canvasObject = e.target as ICanvasObject;
-
-        canvasObject.set({
-          generatedBy
-        });
+        canvasObject.set({ generatedBy });
 
         canvas.remove(canvasObject);
         canvas.renderAll();

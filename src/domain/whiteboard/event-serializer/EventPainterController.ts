@@ -15,12 +15,16 @@ export class EventPainterController extends EventEmitter
   readonly events: PainterEvent[] = [];
 
   async replayEvents(): Promise<void> {
+    this.emit('aboutToReplayAll');
+
     for (const event of this.events) {
       this.parseAndEmitEvent(event);
     }
   }
 
-  handlePainterEvent(events: PainterEvent[]): void {
+  handlePainterEvent(events: PainterEvent[], replaying?: boolean): void {
+    if (replaying) this.emit('aboutToReplayAll');
+
     for (const event of events) {
       this.events.push(event);
 

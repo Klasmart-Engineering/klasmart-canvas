@@ -83,7 +83,7 @@ export type Props = {
   display?: boolean;
 };
 
-export type EventFilterFunction = (id: string, generatedBy: string) => boolean;
+export type EventFilterFunction = (id: string, generatedBy?: string) => boolean;
 
 export const WhiteboardCanvas: FunctionComponent<Props> = ({
   children,
@@ -106,7 +106,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // Event serialization for synchronizing whiteboard state.
   const {
-    state: { eventSerializer },
+    state: { eventSerializer, eventController },
     requestAllEvents,
   } = useSharedEventSerializer();
 
@@ -182,15 +182,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     canvas.allowTouchScrolling = !pointerEvents;
   }, [pointerEvents, canvas]);
 
-  /**
-   * Request all events to be resent after canvas is created.
+  /** 
+   * Reset the canvas state in case the event controller will replay all events.
    */
   useEffect(() => {
     if (!canvas) return;
+    if (!eventController) return;
 
-    requestAllEvents();
+    const reset = () => {
+      canvas.clear();
+    };
 
-  }, [canvas, requestAllEvents]);
+    eventController.on('aboutToReplayAll', reset);
+
+    return () => {
+      eventController.removeListener('aboutToReplayAll', reset);
+    }
+
+  }, [canvas, eventController]);
 
   /**
    * Retrieve references to elements created by fabricjs. We'll need these to
@@ -1039,19 +1048,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [fontFamily, keyDownHandler, fontFamilyLoader]);
 
   const filterOutgoingEvents = useCallback(
-    (_id: string, eventGeneratedBy: string): boolean => {
-      if (!eventGeneratedBy) return false;
+    (_id: string, eventGeneratedBy?: string): boolean => {
+      // NOTE: If there's no generatedBy it's assumed the event originated from a change made 
+      // in the local canvas, in that case the event will always be sent. This way it's just 
+      // important to make sure every remote change assigns the generatedBy value. Important
+      // to note is that objects generatedBy value will remain. So if it's set from before
+      // the event might not be sent.
 
-      // NOTE: We only send events happening because of 
-      // changed we did ourselves by comparing the 
-      // eventGeneratedBy with the generatedBy value.
+      if (!eventGeneratedBy) {
+        return true;
+      };
+
       return eventGeneratedBy === generatedBy;
     },
     [generatedBy]
   );
 
   const filterIncomingEvents = useCallback(
-    (_id: string, eventGeneratedBy: string): boolean => {
+    (_id: string, eventGeneratedBy?: string): boolean => {
       if (!eventGeneratedBy) return false;
 
       // NOTE: No event serializer means the event must have originated
@@ -1496,6 +1510,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       }
     });
   }, [canvas, toolbarIsEnabled, userId]);
+
+  /**
+   * Request all events to be resent after canvas is created.
+   */
+  useEffect(() => {
+    if (!canvas) return;
+
+    requestAllEvents();
+
+  }, [canvas, requestAllEvents, userId]);
 
   return (
     <canvas
