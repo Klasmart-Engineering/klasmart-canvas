@@ -68,4 +68,16 @@ export interface IWhiteboardContext {
   setPointerIsEnabled: (enabled: boolean) => void;
   clearIsActive: boolean;
   updateClearIsActive: (active: boolean) => void;
+  serializerToolbarState: {
+    pointer: boolean;
+    move: boolean;
+    erase: boolean;
+  };
+  setSerializerToolbarState: (enabled: {
+    [p: string]: boolean;
+    pointer: boolean;
+    move: boolean;
+    erase: boolean;
+  }) => void;
+  allToolbarIsEnabled: boolean
 }
