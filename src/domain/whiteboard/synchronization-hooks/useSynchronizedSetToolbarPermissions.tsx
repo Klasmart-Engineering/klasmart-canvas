@@ -12,6 +12,7 @@ const useSynchronizedSetToolbarPermissions = (
     pointer: boolean;
     move: boolean;
     erase: boolean;
+    pen: boolean;
   }) => void
 ) => {
   const {

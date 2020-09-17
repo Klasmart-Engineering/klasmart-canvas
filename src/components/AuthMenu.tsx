@@ -116,7 +116,7 @@ export default function AuthMenu(props: {
   const [localToolbarState, setLocalToolbarState] = useState(
     serializerToolbarState
   );
-  const { pointer, move, erase } = localToolbarState;
+  const { pointer, move, erase, pen } = localToolbarState;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setLocalToolbarState({
@@ -276,6 +276,16 @@ export default function AuthMenu(props: {
                   />
                 }
                 label="Erase objects"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={pen}
+                    onChange={handleToolbarChange}
+                    name="pen"
+                  />
+                }
+                label="Pen tool"
               />
             </FormGroup>
           </FormControl>
