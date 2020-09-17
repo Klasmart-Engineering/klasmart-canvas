@@ -31,10 +31,12 @@ export const WhiteboardProvider = ({
   children,
   clearWhiteboardPermissions,
   userId,
+  allToolbarIsEnabled,
 }: {
   children: React.ReactNode;
   clearWhiteboardPermissions: IClearWhiteboardPermissions;
   userId: string;
+  allToolbarIsEnabled: boolean;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();
@@ -63,7 +65,12 @@ export const WhiteboardProvider = ({
   const { shapesAreEvented, updateShapesAreEvented } = useShapesAreEvented();
   const { floodFillIsActive, updateFloodFillIsActive } = useFloodFillIsActive();
   const { laserIsActive, updateLaserIsActive } = useLaserIsActive();
-  const { toolbarIsEnabled, setToolbarIsEnabled } = useToolbarPermissions();
+  const {
+    toolbarIsEnabled,
+    setToolbarIsEnabled,
+    serializerToolbarState,
+    setSerializerToolbarState,
+  } = useToolbarPermissions();
   const { pointerIsEnabled, setPointerIsEnabled } = usePointerPermissions();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
@@ -266,10 +273,17 @@ export const WhiteboardProvider = ({
     setToolbarIsEnabled,
     pointerIsEnabled,
     setPointerIsEnabled,
+    serializerToolbarState,
+    setSerializerToolbarState,
+    allToolbarIsEnabled,
   };
 
   return (
     <WhiteboardContext.Provider value={value}>
+      <div>Pointer {serializerToolbarState.pointer.toString()}</div>
+      <div>Move {serializerToolbarState.move.toString()}</div>
+      <div>Erase {serializerToolbarState.erase.toString()}</div>
+      <div>Pen {serializerToolbarState.pen.toString()}</div>
       {/*: Should work for student and teacher */}
       <button onClick={() => clearWhiteboardActionClearMyself()}>
         Clear My self

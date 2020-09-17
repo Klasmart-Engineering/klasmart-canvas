@@ -30,6 +30,7 @@ function Whiteboard() {
       <WhiteboardProvider
         clearWhiteboardPermissions={teacher}
         userId={'teacher'}
+        allToolbarIsEnabled={true}
       >
         <div className="whiteboard">
           <Toolbar />
@@ -64,6 +65,7 @@ function Whiteboard() {
       <WhiteboardProvider
         clearWhiteboardPermissions={student}
         userId={'student'}
+        allToolbarIsEnabled={false}
       >
         <div className="whiteboard">
           <Toolbar />
@@ -98,6 +100,7 @@ function Whiteboard() {
       <WhiteboardProvider
         clearWhiteboardPermissions={student}
         userId={'student2'}
+        allToolbarIsEnabled={false}
       >
         <div className="whiteboard">
           <Toolbar />
