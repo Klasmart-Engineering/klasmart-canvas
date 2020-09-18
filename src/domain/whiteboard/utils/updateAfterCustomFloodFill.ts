@@ -4,6 +4,8 @@ import { findLocalObjects } from "./findLocalObjects";
 import { findTopLeftOfCollection } from "./findTopLeftOfCollection";
 import { TypedShape } from "../../../interfaces/shapes/shapes";
 import { fabric } from 'fabric';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 
 export const updateAfterCustomFloodFill = (
   itemId: string,
@@ -12,7 +14,8 @@ export const updateAfterCustomFloodFill = (
   clickedColor: string,
   canvas: fabric.Canvas, 
   userId: string, 
-  data: any
+  data: any,
+  eventSerializer: any
 ) => {
   let id = itemId;
 
@@ -43,10 +46,19 @@ export const updateAfterCustomFloodFill = (
 
   objectsAtPoint.forEach((o: TypedShape) => {
     canvas.remove(o);
+    eventSerializer.push('removed', { id: o.id });
   });
 
   singleObject.cloneAsImage((cloned: any) => {
     cloned.set({ top, left, id });
     canvas.add(cloned);
+
+    const payload: ObjectEvent = {
+      type: 'image',
+      target: cloned as ICanvasObject,
+      id,
+    };
+
+    eventSerializer.push('added', payload);
   });
 }

@@ -3,6 +3,9 @@ import FloodFiller from "./floodFiller";
 import { fabric } from 'fabric';
 import { changeBackgroundColor } from "./changeBackgroundColor";
 import { updateAfterCustomFloodFill } from "./updateAfterCustomFloodFill";
+import { SET } from "../reducers/undo-redo";
+import { IUndoRedoEvent } from "../../../interfaces/canvas-events/undo-redo-event";
+import { ObjectEvent } from "../event-serializer/PaintEventSerializer";
 
 /**
  * Sets up a temporary canvas to be used for object manipulation
@@ -50,7 +53,6 @@ const stripForeignObjects = (canvas: fabric.Canvas, isLocalObject: any, userId: 
   });
 
   canvas.renderAll();
-
   return placeholderNonLocal;
 }
 
@@ -128,13 +130,29 @@ export const floodFillMouseEvent = async (
   }
 
   const tempData = tempCanvas.toDataURL();
+  let target;
 
   fabric.Image.fromURL(tempData, (image: any) => {
-    updateAfterCustomFloodFill(id as string, image, event, clickedColor, canvas, userId, data);
+    target = image;
+    updateAfterCustomFloodFill(id as string, image, event, clickedColor, canvas, userId, data, eventSerializer);
+
+    const payload: ObjectEvent = {
+      id: id as string,
+      type: 'image',
+      target
+    };
+
+    const eventData = { event: payload, type: 'added' };
+    
+    undoRedoDispatch({
+      type: SET,
+      payload: canvas.getObjects(),
+      canvasId: userId,
+      event: (eventData as unknown) as IUndoRedoEvent,
+    });
   });
 
   addForeignObjects(canvas, placeholderNonLocal);
 
   tempCanvas.remove();
-  return;
 }

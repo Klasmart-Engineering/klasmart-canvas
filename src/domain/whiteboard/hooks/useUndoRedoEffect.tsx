@@ -116,9 +116,11 @@ export const UndoRedo = (
       } as ObjectEvent;
 
       // Serialize the event for synchronization
-      if (nextEvent.type === 'added') {
+      if (nextEvent.type === 'added' && (nextEvent.event as IUndoRedoSingleEvent).type !== 'image') {
         // If undoing the creation of an object, remove.
         eventSerializer?.push('removed', payload);
+      } else if (nextEvent.type === 'added' && (nextEvent.event as IUndoRedoSingleEvent).type === 'image') {
+
       } else if (nextEvent.type !== 'activeSelection') {
         let currentEvent = state.events[state.eventIndex];
         if ((nextEvent?.event as any).type === 'background') {
