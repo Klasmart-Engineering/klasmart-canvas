@@ -71,6 +71,8 @@ function Toolbar() {
     updateLaserIsActive,
     toolbarIsEnabled,
     pointerIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState,
   } = useContext(WhiteboardContext);
 
   /**
@@ -175,6 +177,10 @@ function Toolbar() {
   function handleActionsElementClick(tool: string) {
     discardActiveObject();
 
+    const teacherPermission = allToolbarIsEnabled;
+    const studentPermission =
+      toolbarIsEnabled && serializerToolbarState.undoRedo;
+
     if (toolbarIsEnabled) {
       switch (tool) {
         case ELEMENTS.CLEAR_WHITEBOARD_ACTION:
@@ -182,11 +188,15 @@ function Toolbar() {
           break;
 
         case ELEMENTS.UNDO_ACTION:
-          undo();
+          if (teacherPermission || studentPermission) {
+            undo();
+          }
           break;
 
         case ELEMENTS.REDO_ACTION:
-          redo();
+          if (teacherPermission || studentPermission) {
+            redo();
+          }
           break;
       }
     }

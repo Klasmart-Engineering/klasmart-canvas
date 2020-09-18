@@ -10,6 +10,7 @@ export const useToolbarPermissions = () => {
     floodFill: false,
     text: false,
     shape: false,
+    undoRedo: false,
   });
 
   return {

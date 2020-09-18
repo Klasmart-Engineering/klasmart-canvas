@@ -7,5 +7,6 @@ export interface IToolbarUI {
     floodFill: boolean;
     text: boolean;
     shape: boolean;
+    undoRedo: boolean;
   };
 }

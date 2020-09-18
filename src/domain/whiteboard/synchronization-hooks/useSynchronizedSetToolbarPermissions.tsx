@@ -16,6 +16,7 @@ const useSynchronizedSetToolbarPermissions = (
     floodFill: boolean;
     text: boolean;
     shape: boolean;
+    undoRedo: boolean;
   }) => void
 ) => {
   const {

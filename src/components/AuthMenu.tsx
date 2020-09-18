@@ -123,6 +123,7 @@ export default function AuthMenu(props: {
     floodFill,
     text,
     shape,
+    undoRedo,
   } = localToolbarState;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -291,6 +292,16 @@ export default function AuthMenu(props: {
                   />
                 }
                 label="Shape tool"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={undoRedo}
+                    onChange={handleToolbarChange}
+                    name="undoRedo"
+                  />
+                }
+                label="Undo-Redo tool"
               />
             </FormGroup>
           </FormControl>
