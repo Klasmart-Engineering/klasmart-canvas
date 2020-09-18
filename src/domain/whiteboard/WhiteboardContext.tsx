@@ -116,7 +116,9 @@ export const WhiteboardProvider = ({
    * Opens ClearWhiteboardModal
    */
   const openClearWhiteboardModal = () => {
-    openModal();
+    if (allToolbarIsEnabled || serializerToolbarState.clearWhiteboard) {
+      openModal();
+    }
   };
 
   const fillColorAction = useCallback(

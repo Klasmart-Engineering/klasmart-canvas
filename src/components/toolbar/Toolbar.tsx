@@ -75,53 +75,45 @@ function Toolbar() {
     serializerToolbarState,
   } = useContext(WhiteboardContext);
 
+  const pointerToolIsActive =
+    allToolbarIsEnabled || serializerToolbarState.pointer;
+  const moveToolIsActive = allToolbarIsEnabled || serializerToolbarState.move;
+  const eraseToolIsActive = allToolbarIsEnabled || serializerToolbarState.erase;
+  const penToolIsActive = allToolbarIsEnabled || serializerToolbarState.pen;
+  const floodFillToolIsActive =
+    allToolbarIsEnabled || serializerToolbarState.floodFill;
+  const textToolIsActive = allToolbarIsEnabled || serializerToolbarState.text;
+  const shapeToolIsActive = allToolbarIsEnabled || serializerToolbarState.shape;
+
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
    * and set the new selected button for that section
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
-    const pointerToolIsActive =
-      allToolbarIsEnabled || serializerToolbarState.pointer;
-
     if (tool === ELEMENTS.LASER_TOOL && !pointerToolIsActive) {
       return;
     }
-
-    const moveToolIsActive = allToolbarIsEnabled || serializerToolbarState.move;
 
     if (tool === ELEMENTS.MOVE_OBJECTS_TOOL && !moveToolIsActive) {
       return;
     }
 
-    const eraseToolIsActive =
-      allToolbarIsEnabled || serializerToolbarState.erase;
-
     if (tool === ELEMENTS.ERASE_TYPE_TOOL && !eraseToolIsActive) {
       return;
     }
-
-    const penToolIsActive = allToolbarIsEnabled || serializerToolbarState.pen;
 
     if (tool === ELEMENTS.LINE_TYPE_TOOL && !penToolIsActive) {
       return;
     }
 
-    const floodFillToolIsActive =
-      allToolbarIsEnabled || serializerToolbarState.floodFill;
-
     if (tool === ELEMENTS.FLOOD_FILL_TOOL && !floodFillToolIsActive) {
       return;
     }
 
-    const textToolIsActive = allToolbarIsEnabled || serializerToolbarState.text;
-
     if (tool === ELEMENTS.ADD_TEXT_TOOL && !textToolIsActive) {
       return;
     }
-
-    const shapeToolIsActive =
-      allToolbarIsEnabled || serializerToolbarState.shape;
 
     if (tool === ELEMENTS.ADD_SHAPE_TOOL && !shapeToolIsActive) {
       return;
