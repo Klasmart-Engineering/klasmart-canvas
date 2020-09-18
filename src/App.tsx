@@ -6,7 +6,7 @@ function App() {
   return (
     <div className="App">
       <div>
-        <SharedEventSerializerContextProvider simulateNetworkSynchronization={true}>
+        <SharedEventSerializerContextProvider simulateNetworkSynchronization={true} simulatePersistence={true}>
           <Whiteboard />
         </SharedEventSerializerContextProvider>
       </div>
