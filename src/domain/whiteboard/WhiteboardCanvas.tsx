@@ -490,9 +490,17 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   /**
    * Activates the mouseDown event if shape exists and shapeIsActive is true
+   * Handles logic to add shape to whiteboard
    */
   useEffect(() => {
-    if (shape && shapeIsActive && toolbarIsEnabled) {
+    const teacherPermission =
+      allToolbarIsEnabled && shape && shapeIsActive && toolbarIsEnabled;
+    const studentPermission =
+      shape &&
+      shapeIsActive &&
+      toolbarIsEnabled &&
+      serializerToolbarState.shape;
+    if (teacherPermission || studentPermission) {
       actions.discardActiveObject();
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
@@ -536,6 +544,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     isLocalObject,
     laserIsActive,
     toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.shape,
   ]);
 
   /**
