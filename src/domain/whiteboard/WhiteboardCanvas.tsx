@@ -1,6 +1,5 @@
 import { fabric } from 'fabric';
 import floodFillCursor from '../../assets/cursors/flood-fill.png';
-import FloodFiller from './utils/floodFiller';
 
 import { v4 as uuidv4 } from 'uuid';
 import React, {
@@ -58,7 +57,7 @@ import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clea
 import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
 import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
 
-import { floodFillMouseEvent, setTemporaryCanvas, stripForeignObjects, updateTemporary } from './utils/floodFillMouseEvent';
+import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -857,105 +856,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       canvas.on('mouse:down', async (event: fabric.IEvent) => {
         // Click out of any object
-        if (event.target && (event.target.get('type') === 'path' || event.target.get('type') === 'image')) {
-          console.log(FloodFiller, setTemporaryCanvas, stripForeignObjects, floodFillMouseEvent);
-
-          // floodFillMouseEvent(event, canvas, userId, isLocalObject, getColorInCoord, floodFill);
-          const { tempCanvas, tempContext } = setTemporaryCanvas(canvas.getHeight() * 2, canvas.getWidth() * 2);
-    
-          // // temporary remove non local objects
-          let placeholderNonLocal = stripForeignObjects(canvas, isLocalObject, userId);    
-          const palette = tempContext.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
-          const context = canvas.getContext();
-          const imgData = context.getImageData(0, 0, canvas.getWidth() * 2, canvas.getHeight() * 2);
-          const floodFiller = new FloodFiller(imgData);
-          let id = event.target.get('type') !== 'path' ? (event.target as TypedShape).id : null;
-
-          let data = await floodFiller.fill(
-            { 
-              x: Math.round((event.pointer as { x: number; y: number }).x) * 2,
-              y: Math.round((event.pointer as { x: number; y: number }).y) * 2,
-            },
-            floodFill,
-            0
-          );
-
-          if (!data) {
-            return;
-          }
-
-          const clickedColor = floodFiller.getReplacedColor();
-
-          // @ts-ignore
-          palette.data.set(new Uint8ClampedArray(data.coords)); 
-          updateTemporary(palette, tempCanvas, tempContext, data);
-
-          placeholderNonLocal.forEach((o: TypedShape) => {
-            canvas.add(o);
-          });
-    
-          canvas.renderAll();
-
-          // @ts-ignore
-          if (canvas.width - data.width <= 4 && canvas.height - data.height <= 4) {
-            return;
-          }
-
-          const tempData = tempCanvas.toDataURL();
-
-          fabric.Image.fromURL(tempData, (image: any) => {
-
-            if (!id || (event.target as any).color !== clickedColor) {
-              // generate new ID, which will be for the image created by the new color.
-              id = `${userId}:${uuidv4()}`;
-            } else if ((event.target as any).color === clickedColor) {
-              canvas.remove(event.target as fabric.Object);
-            }
-
-            image.set({ 
-              top: data.y / 2,
-              left: data.x / 2,
-              scaleX: 0.5,
-              scaleY: 0.5,
-              selectable: false,
-              evented: false,
-              id,
-              color: floodFill
-            });
-
-            canvas.add(image);
-            canvas.discardActiveObject();
-          });
-
-          tempCanvas.remove();
+        if (
+          !event.target || (
+          event.target && 
+          (event.target.get('type') === 'path' || 
+          event.target.get('type') === 'image'))
+        ) {
+          floodFillMouseEvent(event, canvas, userId, isLocalObject, floodFill, eventSerializer, undoRedoDispatch);
           return;
-        }
-
-
-        if (!event.target) {
-          canvas.backgroundColor = floodFill;
-
-          const payload: ObjectEvent = {
-            type: 'background',
-            target: {
-              fill: floodFill,
-            } as ICanvasObject,
-            id: '',
-          };
-
-          const eventState = {
-            event: { ...payload, id: `${userId}:background` },
-            type: 'colorChanged',
-          } as IUndoRedoEvent;
-
-          undoRedoDispatch({
-            type: SET,
-            payload: canvas.getObjects(),
-            canvasId: userId,
-            event: eventState,
-          });
-
-          eventSerializer?.push('colorChanged', payload);
         }
 
         // Click on object shape
