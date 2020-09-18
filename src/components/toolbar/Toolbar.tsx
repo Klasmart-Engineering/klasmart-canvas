@@ -199,10 +199,15 @@ function Toolbar() {
 
     // set the clicked tool like active style in Toolbar
     if (
-      toolbarIsEnabled ||
-      tool === ELEMENTS.ADD_TEXT_TOOL ||
-      tool === ELEMENTS.ADD_STAMP_TOOL ||
-      (pointerIsEnabled && tool === ELEMENTS.LASER_TOOL)
+      allToolbarIsEnabled ||
+      toolbarIsEnabled
+      // ||
+      // tool === ELEMENTS.ADD_TEXT_TOOL ||
+      // tool === ELEMENTS.ADD_STAMP_TOOL ||
+      // tool === ELEMENTS.LASER_TOOL ||
+      // tool ===  ELEMENTS.FLOOD_FILL_TOOL ||
+      //
+      // (pointerToolIsActive && tool === ELEMENTS.LASER_TOOL)
     ) {
       setTools({
         active: tool,

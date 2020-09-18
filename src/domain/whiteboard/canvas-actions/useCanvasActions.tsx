@@ -838,12 +838,36 @@ export const useCanvasActions = (
   }, [canvas]);
 
   const undo = useCallback(() => {
-    dispatch({ type: UNDO, canvasId: canvasId });
-  }, [dispatch, canvasId]);
+    const teacherHasPermission = allToolbarIsEnabled;
+    const studentHasPermission =
+      toolbarIsEnabled && serializerToolbarState.undoRedo;
+
+    if (teacherHasPermission || studentHasPermission) {
+      dispatch({ type: UNDO, canvasId: canvasId });
+    }
+  }, [
+    dispatch,
+    canvasId,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.undoRedo,
+  ]);
 
   const redo = useCallback(() => {
-    dispatch({ type: REDO, canvasId: canvasId });
-  }, [dispatch, canvasId]);
+    const teacherHasPermission = allToolbarIsEnabled;
+    const studentHasPermission =
+      toolbarIsEnabled && serializerToolbarState.undoRedo;
+
+    if (teacherHasPermission || studentHasPermission) {
+      dispatch({ type: REDO, canvasId: canvasId });
+    }
+  }, [
+    dispatch,
+    canvasId,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.undoRedo,
+  ]);
 
   const state = useMemo(() => {
     const actions = {
