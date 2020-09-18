@@ -612,10 +612,10 @@ export const useCanvasActions = (
    * Clears all whiteboard elements
    * */
   const clearWhiteboardClearMySelf = useCallback(async () => {
-    const teacherPermission = allToolbarIsEnabled;
-    const studentPermission =
+    const teacherHasPermission = allToolbarIsEnabled;
+    const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
-    if (teacherPermission || studentPermission) {
+    if (teacherHasPermission || studentHasPermission) {
       await updateClearIsActive(true);
       await canvas?.getObjects().forEach((obj: ICanvasObject) => {
         if (obj.id && isLocalObject(obj.id, userId)) {

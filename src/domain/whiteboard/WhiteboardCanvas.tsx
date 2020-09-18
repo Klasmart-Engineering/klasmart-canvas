@@ -228,14 +228,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       return;
     }
 
-    const teacherPermission = allToolbarIsEnabled && shapesAreSelectable;
-    const studentPermission =
+    const teacherHasPermission = allToolbarIsEnabled && shapesAreSelectable;
+    const studentHasPermission =
       serializerToolbarState.move && shapesAreSelectable;
 
     canvas.getObjects().forEach((object: ICanvasObject) => {
       if ((object.id && isLocalObject(object.id, userId)) || !object.id) {
         object.set({
-          selectable: teacherPermission || studentPermission,
+          selectable: teacherHasPermission || studentHasPermission,
           evented:
             (allToolbarIsEnabled &&
               (shapesAreSelectable || shapesAreEvented)) ||
@@ -261,10 +261,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Handles the logic to write text on the whiteboard
    * */
   useEffect(() => {
-    const teacherPermission = allToolbarIsEnabled && textIsActive;
-    const studentPermission =
+    const teacherHasPermission = allToolbarIsEnabled && textIsActive;
+    const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.text && textIsActive;
-    if (teacherPermission || studentPermission) {
+    if (teacherHasPermission || studentHasPermission) {
       canvas?.on('mouse:down', (e: fabric.IEvent) => {
         if (e.target === null && e) {
           let text = new fabric.IText(' ', {
@@ -493,14 +493,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Handles logic to add shape to whiteboard
    */
   useEffect(() => {
-    const teacherPermission =
+    const teacherHasPermission =
       allToolbarIsEnabled && shape && shapeIsActive && toolbarIsEnabled;
-    const studentPermission =
+    const studentHasPermission =
       shape &&
       shapeIsActive &&
       toolbarIsEnabled &&
       serializerToolbarState.shape;
-    if (teacherPermission || studentPermission) {
+    if (teacherHasPermission || studentHasPermission) {
       actions.discardActiveObject();
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
@@ -835,9 +835,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Set the objects like evented if you select pointer or move tool
    */
   useEffect(() => {
-    const teacherPermission = allToolbarIsEnabled && eventedObjects;
-    const studentPermission = serializerToolbarState.move && eventedObjects;
-    if (teacherPermission || studentPermission) {
+    const teacherHasPermission = allToolbarIsEnabled && eventedObjects;
+    const studentHasPermission = serializerToolbarState.move && eventedObjects;
+    if (teacherHasPermission || studentHasPermission) {
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
           setObjectControlsVisibility(object, true);
@@ -884,12 +884,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       return shape.id && isLocalObject(shape.id, userId);
     };
 
-    const teacherPermission =
+    const teacherHasPermission =
       allToolbarIsEnabled && floodFillIsActive && toolbarIsEnabled;
-    const studentPermission =
+    const studentHasPermission =
       floodFillIsActive && toolbarIsEnabled && serializerToolbarState.floodFill;
 
-    if ((canvas && teacherPermission) || (canvas && studentPermission)) {
+    if ((canvas && teacherHasPermission) || (canvas && studentHasPermission)) {
       canvas.defaultCursor = `url("${floodFillCursor}") 2 15, default`;
       canvas.forEachObject((object: TypedShape) => {
         setObjectControlsVisibility(object as ICanvasObject, false);
@@ -1547,14 +1547,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
 
   useEffect(() => {
-    const studentPermission =
+    const studentHasPermission =
       toolbarIsEnabled &&
       (serializerToolbarState.move || serializerToolbarState.erase);
     canvas?.forEachObject((object: ICanvasObject) => {
       if (object.id && isLocalObject(object.id, userId)) {
         object.set({
-          evented: allToolbarIsEnabled || studentPermission,
-          selectable: allToolbarIsEnabled || studentPermission,
+          evented: allToolbarIsEnabled || studentHasPermission,
+          selectable: allToolbarIsEnabled || studentHasPermission,
         });
       }
     });

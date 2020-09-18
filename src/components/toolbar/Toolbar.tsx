@@ -177,8 +177,8 @@ function Toolbar() {
   function handleActionsElementClick(tool: string) {
     discardActiveObject();
 
-    const teacherPermission = allToolbarIsEnabled;
-    const studentPermission =
+    const teacherHasPermission = allToolbarIsEnabled;
+    const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.undoRedo;
 
     if (toolbarIsEnabled) {
@@ -188,13 +188,13 @@ function Toolbar() {
           break;
 
         case ELEMENTS.UNDO_ACTION:
-          if (teacherPermission || studentPermission) {
+          if (teacherHasPermission || studentHasPermission) {
             undo();
           }
           break;
 
         case ELEMENTS.REDO_ACTION:
-          if (teacherPermission || studentPermission) {
+          if (teacherHasPermission || studentHasPermission) {
             redo();
           }
           break;

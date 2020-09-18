@@ -280,10 +280,6 @@ export const WhiteboardProvider = ({
 
   return (
     <WhiteboardContext.Provider value={value}>
-      <div>Pointer {serializerToolbarState.pointer.toString()}</div>
-      <div>Move {serializerToolbarState.move.toString()}</div>
-      <div>Erase {serializerToolbarState.erase.toString()}</div>
-      <div>Pen {serializerToolbarState.pen.toString()}</div>
       {/*: Should work for student and teacher */}
       <button onClick={() => clearWhiteboardActionClearMyself()}>
         Clear My self
