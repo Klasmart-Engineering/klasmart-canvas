@@ -124,6 +124,7 @@ export default function AuthMenu(props: {
     text,
     shape,
     undoRedo,
+    clearWhiteboard,
   } = localToolbarState;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -302,6 +303,16 @@ export default function AuthMenu(props: {
                   />
                 }
                 label="Undo-Redo tool"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={clearWhiteboard}
+                    onChange={handleToolbarChange}
+                    name="clearWhiteboard"
+                  />
+                }
+                label="Clear whiteboard tool"
               />
             </FormGroup>
           </FormControl>

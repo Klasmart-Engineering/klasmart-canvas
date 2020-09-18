@@ -36,6 +36,9 @@ export const useCanvasActions = (
     lineWidth,
     isLocalObject,
     updateClearIsActive,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
@@ -311,7 +314,7 @@ export const useCanvasActions = (
         resize = true;
 
         /*
-          Canceling shapes creation in object:scaling 
+          Canceling shapes creation in object:scaling
           and object:rotating events
         */
         canvas.on({
@@ -609,40 +612,56 @@ export const useCanvasActions = (
    * Clears all whiteboard elements
    * */
   const clearWhiteboardClearMySelf = useCallback(async () => {
-    await updateClearIsActive(true);
-    await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-      if (obj.id && isLocalObject(obj.id, userId)) {
-        const target = {
-          id: obj.id,
-          target: {
-            strategy: 'allowClearMyself',
-          },
-        };
+    const teacherPermission = allToolbarIsEnabled;
+    const studentPermission =
+      toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
+    if (teacherPermission || studentPermission) {
+      await updateClearIsActive(true);
+      await canvas?.getObjects().forEach((obj: ICanvasObject) => {
+        if (obj.id && isLocalObject(obj.id, userId)) {
+          const target = {
+            id: obj.id,
+            target: {
+              strategy: 'allowClearMyself',
+            },
+          };
 
-        obj.set({ groupClear: true });
-        canvas?.remove(obj);
-        eventSerializer?.push('removed', target as ObjectEvent);
-      }
-    });
-    closeModal();
+          obj.set({ groupClear: true });
+          canvas?.remove(obj);
+          eventSerializer?.push('removed', target as ObjectEvent);
+        }
+      });
+      closeModal();
 
-    // Add cleared whiteboard to undo / redo state.
-    const event = {
-      event: { id: `${userId}:clearWhiteboard` },
-      type: 'clearWhiteboard',
-    };
+      // Add cleared whiteboard to undo / redo state.
+      const event = {
+        event: { id: `${userId}:clearWhiteboard` },
+        type: 'clearWhiteboard',
+      };
 
-    dispatch({
-      type: SET,
-      payload: canvas?.getObjects(),
-      canvasId: userId,
-      event,
-    });
+      dispatch({
+        type: SET,
+        payload: canvas?.getObjects(),
+        canvasId: userId,
+        event,
+      });
 
-    await updateClearIsActive(false);
+      await updateClearIsActive(false);
+    }
     // If isLocalObject is added in dependencies an infinity loop happens
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, closeModal, canvasId, eventSerializer, updateClearIsActive]);
+  }, [
+    canvas,
+    closeModal,
+    canvasId,
+    eventSerializer,
+    updateClearIsActive,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.clearWhiteboard,
+    dispatch,
+    userId,
+  ]);
 
   /**
    * Clears all whiteboard with allowClearOthers strategy
@@ -809,7 +828,7 @@ export const useCanvasActions = (
     });
     // If isLocalObject is added in dependencies an infinity loop happens
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, canvasId]);
+  }, [canvas, canvasId, userId]);
 
   /**
    * Deselect the actual selected object

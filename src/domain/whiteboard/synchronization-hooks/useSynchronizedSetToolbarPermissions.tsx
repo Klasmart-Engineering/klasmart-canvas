@@ -17,6 +17,7 @@ const useSynchronizedSetToolbarPermissions = (
     text: boolean;
     shape: boolean;
     undoRedo: boolean;
+    clearWhiteboard: boolean;
   }) => void
 ) => {
   const {

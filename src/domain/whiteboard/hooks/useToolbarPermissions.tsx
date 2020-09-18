@@ -11,6 +11,7 @@ export const useToolbarPermissions = () => {
     text: false,
     shape: false,
     undoRedo: false,
+    clearWhiteboard: false,
   });
 
   return {

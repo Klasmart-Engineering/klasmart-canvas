@@ -8,5 +8,6 @@ export interface IToolbarUI {
     text: boolean;
     shape: boolean;
     undoRedo: boolean;
+    clearWhiteboard: boolean;
   };
 }
