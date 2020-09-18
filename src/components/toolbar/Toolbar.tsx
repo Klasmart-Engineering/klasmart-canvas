@@ -71,6 +71,7 @@ function Toolbar() {
     updateLaserIsActive,
     toolbarIsEnabled,
     pointerIsEnabled,
+    updateLineWidthIsActive,
   } = useContext(WhiteboardContext);
 
   /**
@@ -129,6 +130,11 @@ function Toolbar() {
      * Indicates if laser tool is active.
      */
     updateLaserIsActive(tool === ELEMENTS.LASER_TOOL);
+
+    /**
+     * Indicates if line width tool is active.
+     */
+    updateLineWidthIsActive(tool === ELEMENTS.LINE_WIDTH_TOOL);
 
     /*
       It is setted to false when you select Pointer Tool,

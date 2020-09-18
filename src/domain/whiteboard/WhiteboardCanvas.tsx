@@ -137,6 +137,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setToolbarIsEnabled,
     pointerIsEnabled,
     setPointerIsEnabled,
+    lineWidthIsActive,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -847,15 +848,20 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Manage the states for settting local objects like selectable/modifiable
    */
   useEffect(() => {
-    if (canvas && !eraseType) {
+    if (canvas && !eraseType && !brushIsActive && !lineWidthIsActive) {
       canvas.forEachObject((object: ICanvasObject) => {
+        const isTextObject = Boolean(isText(object));
+
         if (object.id && isLocalObject(object.id, userId)) {
-          setObjectControlsVisibility(object, eventedObjects || textIsActive);
+          setObjectControlsVisibility(
+            object,
+            eventedObjects || (isTextObject && textIsActive)
+          );
           (object as Textbox).set({
-            evented: eventedObjects || textIsActive,
-            selectable: eventedObjects || textIsActive,
-            hasBorders: eventedObjects || textIsActive,
-            editable: textIsActive,
+            evented: eventedObjects || (isTextObject && textIsActive),
+            selectable: eventedObjects || (isTextObject && textIsActive),
+            hasBorders: eventedObjects || (isTextObject && textIsActive),
+            editable: isTextObject && textIsActive,
             lockMovementX: !eventedObjects,
             lockMovementY: !eventedObjects,
             hasRotatingPoint: eventedObjects,
@@ -872,6 +878,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     isLocalObject,
     userId,
     eraseType,
+    lineWidth,
+    lineWidthIsActive,
   ]);
 
   /**
