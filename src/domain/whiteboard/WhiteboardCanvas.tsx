@@ -1199,7 +1199,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       const type = obj?.get('type');
 
-      if (type !== 'textbox') return;
+      if (type !== 'textbox' || obj.fill === fontColor) return;
 
       const payload = {
         type,
@@ -1226,7 +1226,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       const type = obj?.get('type');
 
-      if (type === 'textbox') return;
+      if (type === 'textbox' || obj.stroke === penColor) return;
 
       const payload = {
         type,
