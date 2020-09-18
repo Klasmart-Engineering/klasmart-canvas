@@ -464,22 +464,38 @@ export const useCanvasActions = (
   const changeStrokeColor = useCallback(
     (color: string) => {
       updatePenColor(color);
-
       const activeObjects = canvas?.getActiveObjects();
       if (!activeObjects) return;
 
       activeObjects.forEach((object: TypedShape) => {
         if (
-          (isShape(object) && object.shapeType === 'shape') ||
+          (object.stroke !== color &&
+            (object as ICanvasObject).id &&
+            isShape(object) &&
+            object.shapeType === 'shape') ||
           isFreeDrawing(object)
         ) {
+          const type = object.type as ObjectType;
           object.set('stroke', color);
+
+          const target = () => {
+            return { stroke: object.stroke };
+          };
+
+          const payload: ObjectEvent = {
+            type: type,
+            target: target() as ICanvasObject,
+            id: object.id || '',
+          };
+
+          eventSerializer?.push('colorChanged', payload);
         }
       });
 
       canvas?.renderAll();
     },
-    [canvas, updatePenColor]
+
+    [canvas, eventSerializer, updatePenColor]
   );
 
   /**
@@ -523,7 +539,8 @@ export const useCanvasActions = (
       updateFontColor(color);
       if (
         canvas?.getActiveObject() &&
-        (canvas.getActiveObject() as fabric.IText).text
+        (canvas.getActiveObject() as fabric.IText).text &&
+        canvas.getActiveObject().fill !== color
       ) {
         canvas.getActiveObject().set('fill', color);
         canvas.renderAll();
@@ -545,7 +562,7 @@ export const useCanvasActions = (
       canvas?.getActiveObjects().forEach((obj: ICanvasObject) => {
         if (obj.id) {
           const type: ObjectType = obj.get('type') as ObjectType;
-          if (type === 'textbox') {
+          if (type === 'textbox' && obj.fill !== color) {
             const target = (type: string) => {
               if (type === 'textbox') {
                 return {

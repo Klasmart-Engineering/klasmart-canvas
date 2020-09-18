@@ -556,9 +556,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       myFont
         .load()
         .then(() => {
-          if (canvas?.getActiveObject()) {
-            (canvas.getActiveObject() as fabric.IText).set('fontFamily', font);
-            canvas.requestRenderAll();
+          const activeObject:
+            | ITextOptions
+            | undefined = canvas?.getActiveObject();
+
+          if (activeObject && activeObject.fontFamily !== font) {
+            (activeObject as fabric.IText).set('fontFamily', font);
+            canvas?.requestRenderAll();
 
             const objects = canvas?.getActiveObjects();
 
@@ -1147,35 +1151,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   );
 
   /**
-   * Send synchronization event for penColor changes.
-   * */
-  useEffect(() => {
-    const objects = canvas?.getActiveObjects();
-    if (objects && objects.length) {
-      objects.forEach((obj: ICanvasObject) => {
-        const type: ObjectType = obj.get('type') as ObjectType;
-
-        if (obj.id && isLocalObject(obj.id, userId) && type !== 'textbox') {
-          const target = () => {
-            return { stroke: obj.stroke };
-          };
-
-          const payload: ObjectEvent = {
-            type,
-            target: target() as ICanvasObject,
-            id: obj.id,
-          };
-
-          eventSerializer?.push('colorChanged', payload);
-        }
-      });
-    }
-    /* If isLocalObject is added on dependencies,
-    an unecessary colorChange event is triggered */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, eventSerializer, userId, penColor, fontColor, undoRedoDispatch]);
-
-  /**
    * Send synchronization event for lineWidth changes
    */
   useEffect(() => {
@@ -1195,7 +1170,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         if (
           obj.id &&
           isLocalObject(obj.id, userId) &&
-          validTypes.includes(type)
+          validTypes.includes(type) &&
+          obj.strokeWidth !== lineWidth
         ) {
           const target = () => {
             return { strokeWidth: lineWidth };

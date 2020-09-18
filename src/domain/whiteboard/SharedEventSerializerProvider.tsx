@@ -70,7 +70,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
       // Once the events have been received, there needs to be some code
       // transforming the event data into commands for drawing or updating
       // objects on the canvas.
-
+      console.log(payload.type);
       eventController.handlePainterEvent([payload]);
     };
 
