@@ -190,17 +190,7 @@ function Toolbar() {
     );
 
     // set the clicked tool like active style in Toolbar
-    if (
-      allToolbarIsEnabled ||
-      toolbarIsEnabled
-      // ||
-      // tool === ELEMENTS.ADD_TEXT_TOOL ||
-      // tool === ELEMENTS.ADD_STAMP_TOOL ||
-      // tool === ELEMENTS.LASER_TOOL ||
-      // tool ===  ELEMENTS.FLOOD_FILL_TOOL ||
-      //
-      // (pointerToolIsActive && tool === ELEMENTS.LASER_TOOL)
-    ) {
+    if (allToolbarIsEnabled || toolbarIsEnabled) {
       setTools({
         active: tool,
         elements: [...tools.elements],
@@ -425,17 +415,98 @@ function Toolbar() {
   );
 
   /**
-   * Checks if laser pointer permission is set to true. If not, and pointer is selected,
+   * Checks if any tool permission is set to true. If not, and tool is selected,
    * default pointer is automatically selected.
    */
   useEffect(() => {
-    if (!pointerIsEnabled && getActiveTool === ELEMENTS.LASER_TOOL) {
+    if (allToolbarIsEnabled) {
+      return;
+    }
+
+    if (
+      !serializerToolbarState.pointer &&
+      getActiveTool === ELEMENTS.LASER_TOOL
+    ) {
       setTools({
         active: ELEMENTS.POINTERS_TOOL,
         elements: getToolElements,
       });
     }
-  }, [pointerIsEnabled, getActiveTool, getToolElements]);
+
+    if (
+      !serializerToolbarState.move &&
+      getActiveTool === ELEMENTS.MOVE_OBJECTS_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+
+    if (
+      !serializerToolbarState.erase &&
+      getActiveTool === ELEMENTS.ERASE_TYPE_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+
+    if (
+      !serializerToolbarState.pen &&
+      getActiveTool === ELEMENTS.LINE_TYPE_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+
+    if (
+      !serializerToolbarState.floodFill &&
+      getActiveTool === ELEMENTS.FLOOD_FILL_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+
+    if (
+      !serializerToolbarState.text &&
+      getActiveTool === ELEMENTS.ADD_TEXT_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+
+    if (
+      !serializerToolbarState.shape &&
+      getActiveTool === ELEMENTS.ADD_SHAPE_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+  }, [
+    pointerIsEnabled,
+    getActiveTool,
+    getToolElements,
+    allToolbarIsEnabled,
+    serializerToolbarState.pointer,
+    serializerToolbarState.move,
+    serializerToolbarState.erase,
+    serializerToolbarState.pen,
+    serializerToolbarState.floodFill,
+    serializerToolbarState.text,
+    serializerToolbarState.shape,
+    serializerToolbarState.undoRedo,
+    serializerToolbarState.clearWhiteboard,
+  ]);
 
   const toolbarContainerStyle: CSSProperties = {
     display: 'flex',

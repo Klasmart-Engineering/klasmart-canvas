@@ -29,18 +29,6 @@ const useSynchronizedSetToolbarPermissions = (
       //if (!shouldHandleRemoteEvent(id)) return;
       if (userId === id) return;
 
-      console.log({ id, target });
-
-      // if (typeof target === 'object' && target !== null) {
-      //   setPointerIsEnabled(target.pointer);
-      // } else if (target === true || target === false) {
-      //   canvas?.discardActiveObject();
-      //   canvas?.renderAll();
-      //   setToolbarIsEnabled(target);
-      // }
-
-      console.log('sync', target.toolbarState);
-
       setSerializerToolbarState({
         ...target.toolbarState,
         [target.toolbarState]: target.toolbarState,
