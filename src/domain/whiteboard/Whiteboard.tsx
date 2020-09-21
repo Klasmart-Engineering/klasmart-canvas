@@ -31,7 +31,10 @@ function Whiteboard() {
    */
   useEffect(() => {
     const keydownHandler = (event: Event) => {
-      if ((event as ICanvasKeyboardEvent).key === 'Backspace') {
+      if (
+        (event as ICanvasKeyboardEvent).key === 'Backspace' &&
+        (event.target as HTMLElement).nodeName !== 'TEXTAREA'
+      ) {
         event.preventDefault();
       }
     };
