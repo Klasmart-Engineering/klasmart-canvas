@@ -638,6 +638,8 @@ export const useCanvasActions = (
       obj.set({ groupClear: true, generatedBy });
     });
 
+    canvas.remove(...removeObjects);
+
     // Add cleared whiteboard to undo / redo state.
     const event = {
       event: { id: `${userId}:clearWhiteboard` },
