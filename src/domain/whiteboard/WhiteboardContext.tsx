@@ -75,15 +75,14 @@ export const WhiteboardProvider = ({
   // instance registered, but in the future we could add support for
   // multiple instances using the instanceId to choose which one to
   // apply action to.
-  const [canvasActions, updateCanvasActions] = useReducer((state: ICanvasActions[], action: { op: "add" | "remove", value: ICanvasActions}) => {
+  const [canvasActions, updateCanvasActions] = useReducer((state: Map<string, ICanvasActions>, action: { op: "add" | "remove", id: string, value: ICanvasActions}) => {
     if (action.op === "add") {
-      state.push(action.value);
+      state.set(action.id, action.value);
     } else if (action.op === "remove") {
-      let index = state.findIndex(ca => ca === action.value);
-      if (index !== -1) state.splice(index, 1);
+      state.delete(action.id);
     }
     return state;
-  }, []);
+  }, new Map<string, ICanvasActions>());
 
   const [eventedObjects, updateEventedObjects] = useState(true);
 

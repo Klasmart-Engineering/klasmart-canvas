@@ -601,11 +601,17 @@ export const useCanvasActions = (
     if (filterUsers === undefined && !permissions.allowClearAll)
       throw new Error('Insufficient permissions: Not allowed to clear all canvas shapes.');
 
+    // IMPORTANT: The ID's in filterUsers and ID's in userId might contain group as well
+    // in the format of {userId}:{group}. In these permission checks and object selection
+    // the group shouldn't matter. So the PainterEvents.getUserId is used to extract the
+    // userId without group part.
+    const myUserId = PainterEvents.getUserId(userId);
+
     if (filterUsers) {
-      if (filterUsers.includes(userId) && !permissions.allowClearMyself)
+      if ((filterUsers.includes(myUserId) || filterUsers.includes(userId)) && !permissions.allowClearMyself)
         throw new Error('Insufficient permissions: Not allowed to clear own shapes.');
 
-      if (filterUsers.find((id) => id !== userId) !== undefined && !permissions.allowClearOthers)
+      if (filterUsers.find((id) => PainterEvents.getUserId(id) !== myUserId) !== undefined && !permissions.allowClearOthers)
         throw new Error('Insufficient permissions: Not allowed to clear other shapes.');
     } else {
       if (!permissions.allowClearAll)
@@ -621,9 +627,11 @@ export const useCanvasActions = (
 
       const objectId = obj.id;
 
-      return filterUsers.find((userId) => {
+      const filter = filterUsers.find((userId) => {
         return PainterEvents.isCreatedWithId(objectId, userId);
       }) !== undefined;
+
+      return filter;
     });
 
     removeObjects.forEach((obj: ICanvasObject) => {
