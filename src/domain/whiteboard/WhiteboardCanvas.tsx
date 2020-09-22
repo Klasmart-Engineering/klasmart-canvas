@@ -1505,7 +1505,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [actions, updateCanvasActions]);
 
   // Will be modified once only one board is visible.
-  const keyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+  const keyDown = (e: KeyboardEvent<HTMLCanvasElement>) => {
     if (e.key === 'Backspace') {
       e.preventDefault();
     }
