@@ -31,6 +31,7 @@ export default class FloodFiller {
   public minX: number = -1;
   public maxY: number = -1;
   public minY: number = -1;
+  private autoTolerance: number;
 
   /**
    * Class constructor
@@ -39,6 +40,7 @@ export default class FloodFiller {
   constructor(imageData: ImageData) {
     this.imageData = imageData;
     this.tolerance = 0;
+    this.autoTolerance = 0;
   }
 
   private RGBA2Hex = () => {
@@ -176,7 +178,7 @@ export default class FloodFiller {
       return;
     }
     const pixelColor = this.getColorAtPixel(pixel.x, pixel.y);
-    const tempTolerance = 100; // This is to prevent white spaces around paths.
+    const tempTolerance = this.autoTolerance; // If set at 0, crashes when colors are too similar.
     return this.isSameColor(
       this.replacedColor as ColorRGBA,
       pixelColor,
@@ -335,6 +337,31 @@ export default class FloodFiller {
   }
 
   /**
+   * When conversion to image is done, similar colors may blend in.
+   * This is to allow some level of tolerance when detecting pixel
+   * colors and changing them from one color to another. This tends to
+   * occur in the edge of a shape.
+   * @param a Color to compare
+   * @param b Color to compare.
+   */
+  private setAutoTolerance = (a: ColorRGBA, b: ColorRGBA) => {
+    const differenceList = [
+      Math.abs(a.r - b.r),
+      Math.abs(a.g - b.g),
+      Math.abs(a.b - b.b),
+      Math.abs(a.a - b.a),
+    ];
+
+    let max = 0;
+
+    differenceList.forEach((n: number) => {
+      max = n > max ? n : max;
+    });
+
+    return max > 10 ? 10 : max;
+  };
+
+  /**
    * Executes flood fill.
    * @param point Mouse click location coordinates
    * @param colorHex Color to change to.
@@ -354,6 +381,10 @@ export default class FloodFiller {
         return null;
       }
 
+      this.autoTolerance = this.setAutoTolerance(
+        this.replacedColor,
+        this.color
+      );
       this.addToQueue([point.x, point.x, point.y, -1]);
       this.fillQueue();
 

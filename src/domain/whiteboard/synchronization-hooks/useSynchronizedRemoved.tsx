@@ -62,7 +62,7 @@ const useSynchronizedRemoved = (
           });
           break;
         default:
-          canvas?.forEachObject(function (obj: ICanvasObject) {
+          canvas?.forEachObject(function (obj: ICanvasObject | TypedShape) {
             if (obj.id && obj.id === objectId) {
               canvas?.remove(obj);
             }
@@ -125,9 +125,11 @@ const useSynchronizedRemoved = (
         )
           return;
 
-        if (!(e.target as TypedShape).skipState && !(e.target as TypedShape).fromJSON) {
+        if (
+          !(e.target as TypedShape).skipState &&
+          !(e.target as TypedShape).fromJSON
+        ) {
           const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
-
           undoRedoDispatch({
             type: SET,
             payload: canvas.getObjects(),

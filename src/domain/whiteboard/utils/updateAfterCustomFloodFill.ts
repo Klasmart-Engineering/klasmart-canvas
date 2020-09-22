@@ -76,6 +76,7 @@ export const updateAfterCustomFloodFill = async (
         joinedIds
       });
       canvas.add(cloned);
+      canvas.renderAll();
 
       const payload: ObjectEvent = {
         type: 'image',
