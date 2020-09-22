@@ -39,6 +39,10 @@ export class EventPainterController extends EventEmitter
     }
   }
 
+  requestRefetch(): void {
+    this.emit('refetch');
+  }
+
   private parseAndEmitEvent(event: PainterEvent) {
     // NOTE: Empty object if param is undefined.
     const eventParam = event.param ? event.param : '{}';

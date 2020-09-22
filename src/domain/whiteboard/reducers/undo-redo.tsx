@@ -191,7 +191,7 @@ const determineNewRedoIndex = (
 };
 
 const limitValidator = (list: IUndoRedoEvent[] | string[], limit: number) => {
-  const cloned = [ ...list ];
+  const cloned = [...list];
 
   if (list.length > limit) {
     cloned.shift();
@@ -248,7 +248,10 @@ const reducer = (
 
       // Formats and creates new state.
       const mappedSelfState = objectStringifier(selfItems);
-      states = limitValidator([...states, mappedSelfState], STATES_LIMIT) as string[];
+      states = limitValidator(
+        [...states, mappedSelfState],
+        STATES_LIMIT
+      ) as string[];
 
       let stateItems = {
         ...state,
@@ -345,7 +348,10 @@ const reducer = (
 
       // Formats and creates new state.
       const mappedSelfState = JSON.stringify({ objects: selfItems });
-      states = limitValidator([...states, mappedSelfState], STATES_LIMIT) as string[];
+      states = limitValidator(
+        [...states, mappedSelfState],
+        STATES_LIMIT
+      ) as string[];
 
       let newEvent = { ...action.event, selfState: mappedSelfState };
 
@@ -384,7 +390,10 @@ const reducer = (
 
     // Steps back to previous state.
     case UNDO: {
-      if (!state.activeStateIndex) {
+      if (
+        state.activeStateIndex === null ||
+        (state.activeStateIndex === 0 && state.states.length === STATES_LIMIT)
+      ) {
         return state;
       }
 
@@ -403,10 +412,15 @@ const reducer = (
         );
       }
 
-      const activeStateIndex =
+      let activeStateIndex =
         state.activeStateIndex !== null && state.activeStateIndex >= 1
           ? state.activeStateIndex - 1
-          : 0;
+          : null;
+
+      if (activeStateIndex === null && state.states.length === STATES_LIMIT) {
+        activeStateIndex = 0;
+        eventIndex = 0;
+      }
 
       const activeSelfState =
         activeStateIndex !== null && activeStateIndex >= 0
@@ -487,6 +501,10 @@ const reducer = (
 
     // Creates a new current state if a new event has been received by serializer from a non local canvas.
     case SET_OTHER: {
+      if (!action.payload) {
+        return state;
+      }
+
       const selfItems = action.payload?.filter(
         (object: ICanvasObject) =>
           object.id && isLocalObject(object.id, action.canvasId as string)
