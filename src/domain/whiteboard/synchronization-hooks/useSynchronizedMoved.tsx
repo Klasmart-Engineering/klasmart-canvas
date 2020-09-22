@@ -34,6 +34,8 @@ const useSynchronizedMoved = (
       )
         return;
 
+      e.target.bringToFront();
+
       const target = {
         angle: e.target.angle,
         top: e.target.top,
@@ -190,6 +192,7 @@ const useSynchronizedMoved = (
               originY: 'center',
             });
             obj.set({ left: obj.left - 1 });
+            obj.bringToFront();
             obj.setCoords();
           } else {
             obj.set({
