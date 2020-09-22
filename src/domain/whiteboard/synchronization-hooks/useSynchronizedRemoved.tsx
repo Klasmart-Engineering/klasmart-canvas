@@ -117,7 +117,12 @@ const useSynchronizedRemoved = (
         !(e.target as ICanvasObject).groupClear &&
         !clearIsActive
       ) {
-        if (!(e.target as ITextOptions).text?.length) return;
+        if (
+          e.target.type === 'textbox' &&
+          !(e.target as ICanvasObject)._textBeforeEdit &&
+          !(e.target as ITextOptions).text?.trim().length
+        )
+          return;
 
         const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
 
