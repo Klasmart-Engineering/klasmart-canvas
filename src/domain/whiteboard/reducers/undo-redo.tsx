@@ -124,7 +124,7 @@ const objectStringifier = (payload: (fabric.Object | TypedShape)[]): string => {
         'selectable',
         'evented',
         'shapeType',
-        'joinedIds'
+        'joinedIds',
       ])
     );
   }

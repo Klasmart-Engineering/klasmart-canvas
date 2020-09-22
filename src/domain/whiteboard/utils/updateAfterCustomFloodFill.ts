@@ -5,7 +5,8 @@ import { findTopLeftOfCollection } from "./findTopLeftOfCollection";
 import { TypedShape } from "../../../interfaces/shapes/shapes";
 import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
-import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
+import { ObjectEvent, PaintEventSerializer } from '../event-serializer/PaintEventSerializer';
+import { IFloodFillData } from './floodFiller';
 
 export interface ITargetObject extends ICanvasObject {
   color: string;
@@ -18,8 +19,8 @@ export const updateAfterCustomFloodFill = async (
   clickedColor: string,
   canvas: fabric.Canvas, 
   userId: string, 
-  data: any,
-  eventSerializer: any
+  data: IFloodFillData,
+  eventSerializer: PaintEventSerializer
 ): Promise<ICanvasObject> => {
   let id = itemId;
 
@@ -59,7 +60,7 @@ export const updateAfterCustomFloodFill = async (
     }
 
     canvas.remove(o);
-    eventSerializer.push('removed', { id: o.id });
+    eventSerializer.push('removed', { id: o.id as string });
   });
 
   const clonedImage: Promise<ICanvasObject> = new Promise((resolve, reject) => {

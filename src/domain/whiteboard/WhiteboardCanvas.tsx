@@ -857,12 +857,20 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.on('mouse:down', async (event: fabric.IEvent) => {
         // Click out of any object
         if (
-          !event.target || (
-          event.target && 
-          (event.target.get('type') === 'path' || 
-          event.target.get('type') === 'image'))
+          !event.target ||
+          (event.target &&
+            (event.target.get('type') === 'path' ||
+              event.target.get('type') === 'image'))
         ) {
-          floodFillMouseEvent(event, canvas, userId, isLocalObject, floodFill, eventSerializer, undoRedoDispatch);
+          floodFillMouseEvent(
+            event,
+            canvas,
+            userId,
+            isLocalObject as (p1: string, p2: string) => boolean,
+            floodFill,
+            eventSerializer,
+            undoRedoDispatch
+          );
           return;
         }
 
@@ -1334,7 +1342,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               'selectable',
               'evented',
               'shapeType',
-              'joinedIds'
+              'joinedIds',
             ]);
           }
           const matrix = object.calcTransformMatrix();
@@ -1345,7 +1353,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             'selectable',
             'evented',
             'shapeType',
-            'joinedIds'
+            'joinedIds',
           ]);
           let top = object.group.height / 2 + object.top + object.group.top;
           let left = object.group.width / 2 + object.left + object.group.left;
