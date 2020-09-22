@@ -56,7 +56,9 @@ import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
 import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
-import useFixedAspectScaling, { ScaleMode } from './utils/useFixedAspectScaling';
+import useFixedAspectScaling, {
+  ScaleMode,
+} from './utils/useFixedAspectScaling';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -98,7 +100,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   const [lowerCanvas, setLowerCanvas] = useState<HTMLCanvasElement>();
   const [upperCanvas, setUpperCanvas] = useState<HTMLCanvasElement>();
 
-  const { width, height, top, left } = useFixedAspectScaling(wrapper?.parentElement, (pixelWidth / pixelHeight), scaleMode || "ScaleToFit");
+  const { width, height, top, left } = useFixedAspectScaling(
+    wrapper?.parentElement,
+    pixelWidth / pixelHeight,
+    scaleMode || 'ScaleToFit'
+  );
 
   // Event serialization for synchronizing whiteboard state.
   const {
@@ -184,7 +190,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (!canvas) return;
 
     requestAllEvents();
-
   }, [canvas, requestAllEvents]);
 
   /**
@@ -199,39 +204,38 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const upperCanvas = wrapper?.getElementsByClassName('upper-canvas')[0];
 
     if (wrapper) {
-      setWrapper(wrapper)
+      setWrapper(wrapper);
 
       // TODO: We may want to make the position style
       // controlled by property or variable.
-      wrapper.style.position = "absolute";
+      wrapper.style.position = 'absolute';
 
       if (initialStyle && initialStyle.zIndex) {
         wrapper.style.zIndex = String(initialStyle.zIndex);
       }
-    };
+    }
     if (lowerCanvas) setLowerCanvas(lowerCanvas as HTMLCanvasElement);
     if (upperCanvas) setUpperCanvas(upperCanvas as HTMLCanvasElement);
   }, [canvas, initialStyle, instanceId]);
 
-  /** 
+  /**
    * Update wrapper display state.
    */
   useEffect(() => {
     if (!wrapper) return;
 
     if (display === false) {
-      wrapper.style.display = "none";
+      wrapper.style.display = 'none';
     } else {
-      wrapper.style.removeProperty("display")
+      wrapper.style.removeProperty('display');
     }
-  }, [wrapper, display])
+  }, [wrapper, display]);
 
   /**
    * Update the CSS Width/Height
    */
   useEffect(() => {
     if (wrapper && lowerCanvas && upperCanvas) {
-
       const widthStyle = `${width}px`;
       wrapper.style.width = widthStyle;
       lowerCanvas.style.width = widthStyle;
@@ -245,8 +249,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       const wrapperTransform = `translate(${left}px, ${top}px)`;
       wrapper.style.transform = wrapperTransform;
 
-      wrapper.style.top = "0px";
-      wrapper.style.left = "0px";
+      wrapper.style.top = '0px';
+      wrapper.style.left = '0px';
     }
   }, [wrapper, lowerCanvas, upperCanvas, width, height, left, top]);
 
@@ -603,7 +607,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             | ITextOptions
             | undefined = canvas?.getActiveObject();
 
-          if (activeObject && activeObject.fontFamily !== font) {
+          if (activeObject) {
             (activeObject as fabric.IText).set('fontFamily', font);
             canvas?.requestRenderAll();
 
@@ -1508,7 +1512,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       width={pixelWidth}
       height={pixelHeight}
       id={instanceId}
-      style={{...initialStyle, backgroundColor: 'transparent'}}
+      style={{ ...initialStyle, backgroundColor: 'transparent' }}
       tabIndex={0}
       onKeyDown={keyDown}
       onClick={() => {
