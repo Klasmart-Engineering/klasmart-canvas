@@ -56,9 +56,9 @@ const useSynchronizedReconstruct = (
       const loadImage = (object: ICanvasObject) => (new Promise((resolve) => {
         const { src, ...data } = object as ICanvasObject;
 
-        fabric.Image.fromURL(object.src as string, async (image: any) => {
+        fabric.Image.fromURL(object.src as string, async (image: fabric.Image) => {
           image.set(data);
-          reset(image);
+          reset(image as TypedShape);
 
           resolve();
         });
