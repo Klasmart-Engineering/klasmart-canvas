@@ -2,10 +2,11 @@ import { TypedShape } from "../../../interfaces/shapes/shapes";
 import FloodFiller from "./floodFiller";
 import { fabric } from 'fabric';
 import { changeBackgroundColor } from "./changeBackgroundColor";
-import { updateAfterCustomFloodFill } from "./updateAfterCustomFloodFill";
+import { updateAfterCustomFloodFill, ITargetObject } from "./updateAfterCustomFloodFill";
 import { SET } from "../reducers/undo-redo";
 import { IUndoRedoEvent } from "../../../interfaces/canvas-events/undo-redo-event";
 import { ObjectEvent } from "../event-serializer/PaintEventSerializer";
+import { ICanvasObject } from "../../../interfaces/objects/canvas-object";
 
 /**
  * Sets up a temporary canvas to be used for object manipulation
@@ -89,9 +90,19 @@ export const floodFillMouseEvent = async (
   undoRedoDispatch: any,
 ) => {
   const { tempCanvas, tempContext } = setTemporaryCanvas(canvas.getHeight() * 2, canvas.getWidth() * 2);
-    
-  // // temporary remove non local objects
+ 
+  if (!canvas) {
+    throw new Error('Canvas does not exist!');
+  }
+  
+  // Preserve object stacking while flood filling.
+  canvas.preserveObjectStacking = true;
+
+  // Remove non local object temporarly to be able to flood fill for local objects only.
   let placeholderNonLocal = stripForeignObjects(canvas, isLocalObject, userId);
+  // canvas.getObjects().forEach((o: TypedShape) => {
+  //   o.set({ selectable: false, evented: false });
+  // });
   const palette = tempContext.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
   const context = canvas.getContext();
   const imgData = context.getImageData(0, 0, canvas.getWidth() * 2, canvas.getHeight() * 2);
@@ -113,7 +124,6 @@ export const floodFillMouseEvent = async (
 
   const clickedColor = floodFiller.getReplacedColor();
 
-  // @ts-ignore
   palette.data.set(new Uint8ClampedArray(data.coords)); 
   updateTemporary(palette, tempCanvas, tempContext, data);
 
@@ -123,36 +133,40 @@ export const floodFillMouseEvent = async (
 
   canvas.renderAll();
 
-  // @ts-ignore
+  // @ts-ignore - TS is ignoring previous error throw if Canvas is undefined.
   if (canvas.width - (data.width / 2) <= 4 && canvas.height - (data.height / 2) <= 4) {
     changeBackgroundColor(canvas, eventSerializer, undoRedoDispatch, color, userId);
     return;
   }
 
   const tempData = tempCanvas.toDataURL();
-  let target;
+  let target: ICanvasObject;
 
-  fabric.Image.fromURL(tempData, (image: any) => {
-    target = image;
-    updateAfterCustomFloodFill(id as string, image, event, clickedColor, canvas, userId, data, eventSerializer);
+  fabric.Image.fromURL(tempData, async (image: any) => {
+    try {
+      target = await updateAfterCustomFloodFill(id as string, image, event.target as ITargetObject, clickedColor, canvas, userId, data, eventSerializer);
 
-    const payload: ObjectEvent = {
-      id: id as string,
-      type: 'image',
-      target
-    };
+      const payload: ObjectEvent = {
+        id: target.id as string,
+        type: 'image',
+        target: target as ICanvasObject
+      };
 
-    const eventData = { event: payload, type: 'added' };
-    
-    undoRedoDispatch({
-      type: SET,
-      payload: canvas.getObjects(),
-      canvasId: userId,
-      event: (eventData as unknown) as IUndoRedoEvent,
-    });
+      const eventData = { event: payload, type: 'added' };
+      
+      undoRedoDispatch({
+        type: SET,
+        payload: canvas.getObjects(),
+        canvasId: userId,
+        event: (eventData as unknown) as IUndoRedoEvent,
+      });
+    } catch (e) {
+      throw e;
+    }
   });
 
   addForeignObjects(canvas, placeholderNonLocal);
 
   tempCanvas.remove();
+  canvas.preserveObjectStacking = true;
 }

@@ -20,4 +20,5 @@ export interface ICanvasObject extends fabric.Object {
   eTarget?: ICanvasObject;
   isGroup?: boolean;
   src?: string;
+  joinedIds?: string[];
 }

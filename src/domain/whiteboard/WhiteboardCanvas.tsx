@@ -1334,6 +1334,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               'selectable',
               'evented',
               'shapeType',
+              'joinedIds'
             ]);
           }
           const matrix = object.calcTransformMatrix();
@@ -1344,6 +1345,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             'selectable',
             'evented',
             'shapeType',
+            'joinedIds'
           ]);
           let top = object.group.height / 2 + object.top + object.group.top;
           let left = object.group.width / 2 + object.left + object.group.left;

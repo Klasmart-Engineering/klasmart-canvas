@@ -18,6 +18,10 @@ const useSynchronizedReconstruct = (
 
   const getId = (id: string | undefined) => (id ? id.split(':')[0] : null);
 
+  if (canvas) {
+    canvas.preserveObjectStacking = true;
+  }
+
   useEffect(() => {
     const reconstruct = (id: string, target: ICanvasObject) => {
       if (!shouldHandleRemoteEvent(id)) return;
@@ -46,9 +50,21 @@ const useSynchronizedReconstruct = (
         object.set({ selectable: false, evented: false });
         canvas?.remove(old as fabric.Object);
         canvas?.add(object);
+        canvas?.bringToFront(object);
       };
 
-      objects?.forEach((object: TypedShape) => {
+      const loadImage = (object: ICanvasObject) => (new Promise((resolve) => {
+        const { src, ...data } = object as ICanvasObject;
+
+        fabric.Image.fromURL(object.src as string, async (image: any) => {
+          image.set(data);
+          reset(image);
+
+          resolve();
+        });
+      }));
+
+      objects?.forEach(async (object: TypedShape) => {
         if (object && object.type === 'path') {
           const group: TypedGroup | undefined = canvas
             ?.getObjects()
@@ -90,6 +106,16 @@ const useSynchronizedReconstruct = (
           fabric.Triangle.fromObject(object, (o: TypedShape) => {
             reset(o);
           });
+        } else if (object && object.type === 'image') {
+          if ((object as ICanvasObject).joinedIds) {
+            canvas?.getObjects().forEach((o: ICanvasObject) => {
+              if ((object as ICanvasObject).joinedIds?.indexOf(o.id as string) !== -1) {
+                canvas.remove(o);
+              }
+            });
+          }
+
+          await loadImage(object as ICanvasObject);
         } else if (object) {
           fabric.Group.fromObject(object, (group: fabric.Group) => {
             const old = canvas

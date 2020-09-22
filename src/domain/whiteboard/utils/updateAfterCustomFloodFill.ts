@@ -7,23 +7,27 @@ import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 
-export const updateAfterCustomFloodFill = (
+export interface ITargetObject extends ICanvasObject {
+  color: string;
+}
+
+export const updateAfterCustomFloodFill = async (
   itemId: string,
   image: fabric.Image,
-  event: any,
+  target: ITargetObject,
   clickedColor: string,
   canvas: fabric.Canvas, 
   userId: string, 
   data: any,
   eventSerializer: any
-) => {
+): Promise<ICanvasObject> => {
   let id = itemId;
 
-  if (!id || (event.target as any).color !== clickedColor) {
+  if (!id || target.color !== clickedColor) {
     // generate new ID, which will be for the image created by the new color.
     id = `${userId}:${uuidv4()}`;
-  } else if ((event.target as any).color === clickedColor) {
-    canvas.remove(event.target as fabric.Object);
+  } else if (target.color === clickedColor) {
+    canvas.remove(target);
   }
 
   (image as unknown as TypedShape).set({ 
@@ -43,22 +47,46 @@ export const updateAfterCustomFloodFill = (
   const { top, left } = findTopLeftOfCollection(objectsAtPoint);
 
   let singleObject = new fabric.Group(objectsAtPoint);
+  let joinedIds: string[] = [];
 
   objectsAtPoint.forEach((o: TypedShape) => {
+    o.set({
+      skipState: true
+    });
+
+    if (o.id && o.id !== id) {
+      joinedIds.push(o.id);
+    }
+
     canvas.remove(o);
     eventSerializer.push('removed', { id: o.id });
   });
 
-  singleObject.cloneAsImage((cloned: any) => {
-    cloned.set({ top, left, id });
-    canvas.add(cloned);
+  const clonedImage: Promise<ICanvasObject> = new Promise((resolve, reject) => {
+    singleObject.cloneAsImage((cloned: fabric.Object) => {
+      if (!cloned) {
+        reject();
+      }
 
-    const payload: ObjectEvent = {
-      type: 'image',
-      target: cloned as ICanvasObject,
-      id,
-    };
+      (cloned as ICanvasObject).set({ 
+        top: top as unknown as number,
+        left: left as unknown as number,
+        id,
+        joinedIds
+      });
+      canvas.add(cloned);
 
-    eventSerializer.push('added', payload);
+      const payload: ObjectEvent = {
+        type: 'image',
+        target: cloned as ICanvasObject,
+        id,
+      };
+
+      eventSerializer.push('added', payload);
+
+      resolve(cloned);
+    });
   });
+
+  return await clonedImage;
 }
