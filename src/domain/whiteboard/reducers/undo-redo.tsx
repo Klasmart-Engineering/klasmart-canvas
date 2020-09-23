@@ -214,7 +214,8 @@ const reducer = (
     case SET: {
       if (
         !action.event ||
-        (action.event.type === 'removed' && state.activeStateIndex === null)
+        (action.event.type === 'removed' && state.activeStateIndex === null) ||
+        (!action.payload?.length && !state.states.length)
       ) {
         return state;
       }
