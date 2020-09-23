@@ -32,10 +32,10 @@ export const updateAfterCustomFloodFill = async (
   }
 
   (image as unknown as TypedShape).set({ 
-    top: data.y / 2,
-    left: data.x / 2,
-    scaleX: 0.5,
-    scaleY: 0.5,
+    top: data.y / window.devicePixelRatio,
+    left: data.x / window.devicePixelRatio,
+    scaleX: .5 * (2 / window.devicePixelRatio),
+    scaleY: .5 * (2 / window.devicePixelRatio),
     selectable: false,
     evented: false,
     id,

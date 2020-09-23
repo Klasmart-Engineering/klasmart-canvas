@@ -150,8 +150,8 @@ export const floodFillMouseEvent = async (
 
   let data = await floodFiller.fill(
     {
-      x: Math.round((event.pointer as { x: number; y: number }).x) * 2,
-      y: Math.round((event.pointer as { x: number; y: number }).y) * 2,
+      x: Math.round((event.pointer as { x: number; y: number }).x) * window.devicePixelRatio,
+      y: Math.round((event.pointer as { x: number; y: number }).y) * window.devicePixelRatio,
     },
     color,
     0
