@@ -9,6 +9,7 @@ import {
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { TypedGroup } from '../../../interfaces/shapes/group';
 
 const useSynchronizedRotated = (
   canvas: fabric.Canvas | undefined,
@@ -153,13 +154,11 @@ const useSynchronizedRotated = (
         canvas?.setActiveObject(activeSelection);
         canvas?.renderAll();
 
-        let svg = canvas?.getActiveObject().toSVG();
-
         const payload = {
           type,
           svg: true,
-          target: { svg },
-          id: `${userId}:svg`,
+          target: null,
+          id: `${userId}:group`,
         };
 
         const event = { event: payload, type: 'activeSelection', activeIds };
@@ -168,7 +167,8 @@ const useSynchronizedRotated = (
           return !o.group;
         });
 
-        let active = canvas?.getActiveObject();
+        let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
+        active?.set({ id: `${userId}:group` });
 
         undoRedoDispatch({
           type: SET_GROUP,

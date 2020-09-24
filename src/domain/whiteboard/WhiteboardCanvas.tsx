@@ -56,6 +56,7 @@ import { IUndoRedoEvent } from '../../interfaces/canvas-events/undo-redo-event';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
 import useSynchronizedLineWidthChanged from './synchronization-hooks/useSynchronizedLineWidthChanged';
 import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
+import { TypedGroup } from '../../interfaces/shapes/group';
 import useFixedAspectScaling, { ScaleMode } from './utils/useFixedAspectScaling';
 
 /**
@@ -1366,20 +1367,50 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       if (type === 'textbox') return;
 
-      const payload = {
-        type,
-        target: { stroke: obj?.stroke },
-        id: obj?.id,
-      };
+      if (obj?.type !== 'activeSelection') {
+        const payload = {
+          type,
+          target: { stroke: obj?.stroke },
+          id: obj?.id,
+        };
 
-      const event = { event: payload, type: 'colorChanged' };
+        const event = { event: payload, type: 'colorChanged' };
 
-      undoRedoDispatch({
-        type: SET,
-        payload: canvas?.getObjects() as TypedShape[],
-        canvasId: userId,
-        event: (event as unknown) as IUndoRedoEvent,
-      });
+        undoRedoDispatch({
+          type: SET,
+          payload: canvas?.getObjects() as TypedShape[],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      } else {
+        const activeIds: string[] = canvas
+          ?.getActiveObject()
+          // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
+          .getObjects()
+          .map((o: TypedShape) => o.id);
+        const payload = {
+          type,
+          svg: true,
+          target: null,
+          id: `${userId}:group`,
+        };
+
+        const event = { event: payload, type: 'activeSelection', activeIds };
+
+        let filtered = canvas?.getObjects().filter((o: any) => {
+          return !o.group;
+        });
+
+        let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
+        active?.set({ id: `${userId}:group` });
+
+        undoRedoDispatch({
+          type: SET_GROUP,
+          payload: [...(filtered as any[]), active],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      }
     }
   }, [penColor, canvas, undoRedoDispatch, userId]);
 

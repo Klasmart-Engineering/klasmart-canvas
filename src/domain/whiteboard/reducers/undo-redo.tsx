@@ -190,7 +190,10 @@ const determineNewRedoIndex = (
   return events.length - 1;
 };
 
-const limitValidator = (list: IUndoRedoEvent[] | string[], limit: number) => {
+const limitValidator = (
+  list: IUndoRedoEvent[] | string[],
+  limit: number
+): (string | IUndoRedoEvent)[] => {
   const cloned = [...list];
 
   if (list.length > limit) {
@@ -198,6 +201,57 @@ const limitValidator = (list: IUndoRedoEvent[] | string[], limit: number) => {
   }
 
   return cloned;
+};
+
+const filterById = (
+  canvasId: string,
+  objects: ICanvasObject[] | undefined,
+  isLocal: boolean
+) => {
+  return objects?.filter((object: ICanvasObject) =>
+    isLocal
+      ? object.id && isLocalObject(object.id, canvasId)
+      : object.id && !isLocalObject(object.id, canvasId)
+  ) as [fabric.Object | TypedShape];
+};
+
+/**
+ * Removes future states if a new state has
+ * been created after an undo.
+ */
+const spliceStates = (
+  activeStateIndex: number | null,
+  statesList: string[]
+): string[] => {
+  let states = [...statesList];
+
+  if (activeStateIndex !== null && activeStateIndex + 1 < states.length) {
+    states.splice(activeStateIndex + 1, 9e9);
+  } else if (activeStateIndex === null) {
+    states = [];
+  }
+
+  return states;
+};
+
+/**
+ * Removes future events if a new event has
+ * been created after an undo.
+ */
+const spliceEvents = (
+  eventIndex: number,
+  eventsList: IUndoRedoEvent[]
+): IUndoRedoEvent[] => {
+  // Removes future events if a new event has been created after an undo.
+  let events = [...eventsList];
+
+  if (eventIndex >= 0 && eventIndex + 1 < events.length) {
+    events.splice(eventIndex + 1, 9e9);
+  } else if (eventIndex < 0) {
+    events = [];
+  }
+
+  return events;
 };
 
 /**
@@ -220,31 +274,23 @@ const reducer = (
       }
       let states = [...state.states];
       let events = [...state.events];
-      const selfItems = action.payload?.filter(
-        (object: ICanvasObject) =>
-          object.id && isLocalObject(object.id, action.canvasId as string)
-      ) as [fabric.Object | TypedShape];
-
-      const otherObjects = action.payload?.filter(
-        (object: ICanvasObject) =>
-          object.id && !isLocalObject(object.id, action.canvasId as string)
-      ) as [fabric.Object | TypedShape];
+      const selfItems = filterById(
+        action.canvasId as string,
+        action.payload,
+        true
+      );
+      const otherObjects = filterById(
+        action.canvasId as string,
+        action.payload,
+        false
+      );
 
       const currentState = objectStringifier(([
         ...selfItems,
         ...otherObjects,
       ] as unknown) as [fabric.Object | TypedShape]);
 
-      // This block removed future states if a new event has
-      // been created after an undo.
-      if (
-        state.activeStateIndex !== null &&
-        state.activeStateIndex + 1 < state.states.length
-      ) {
-        states.splice(state.activeStateIndex + 1, 9e9);
-      } else if (state.activeStateIndex === null) {
-        states = [];
-      }
+      states = spliceStates(state.activeStateIndex, state.states);
 
       // Formats and creates new state.
       const mappedSelfState = objectStringifier(selfItems);
@@ -262,13 +308,7 @@ const reducer = (
         otherObjects: objectStringifier(otherObjects),
       };
 
-      // Removes future events if a new event has been created after an undo.
-      if (state.eventIndex >= 0 && state.eventIndex + 1 < state.events.length) {
-        events.splice(state.eventIndex + 1, 9e9);
-      } else if (state.eventIndex < 0) {
-        events = [];
-      }
-
+      events = spliceEvents(state.eventIndex, events);
       events = limitValidator(events, STATES_LIMIT) as IUndoRedoEvent[];
 
       if (action.event && !Array.isArray(action.event)) {
@@ -304,6 +344,14 @@ const reducer = (
         }
       ) as [fabric.Object | TypedShape];
 
+      selfItems = selfItems.map((o: TypedShape | TypedGroup) => {
+        if (o.toObject) {
+          return o.toObject(['id', 'selectable']);
+        }
+
+        return o;
+      }) as [TypedShape | TypedGroup];
+
       let otherObjects = action.payload?.filter(
         (object: TypedShape | TypedGroup) => {
           return (
@@ -312,14 +360,6 @@ const reducer = (
           );
         }
       ) as [fabric.Object | TypedShape];
-
-      selfItems = selfItems.map((o: TypedShape | TypedGroup) => {
-        if (o.toObject) {
-          return o.toObject(['id', 'selectable']);
-        }
-
-        return o;
-      }) as [TypedShape | TypedGroup];
 
       otherObjects = otherObjects.map((o: TypedShape | TypedGroup) => {
         if (o.toObject) {
@@ -335,16 +375,7 @@ const reducer = (
         ],
       });
 
-      // This block removed future states if a new event has
-      // been created after an undo.
-      if (
-        state.activeStateIndex !== null &&
-        state.activeStateIndex + 1 < state.states.length
-      ) {
-        states.splice(state.activeStateIndex + 1, 9e9);
-      } else if (state.activeStateIndex === null) {
-        states = [];
-      }
+      states = spliceStates(state.activeStateIndex, state.states);
 
       // Formats and creates new state.
       const mappedSelfState = JSON.stringify({ objects: selfItems });
@@ -364,13 +395,7 @@ const reducer = (
         otherObjects: JSON.stringify({ objects: otherObjects }),
       };
 
-      // Removes future events if a new event has been created after an undo.
-      if (state.eventIndex >= 0 && state.eventIndex + 1 < state.events.length) {
-        events.splice(state.eventIndex + 1, 9e9);
-      } else if (state.eventIndex < 0) {
-        events = [];
-      }
-
+      events = spliceEvents(state.eventIndex, state.events);
       events = limitValidator(events, STATES_LIMIT) as IUndoRedoEvent[];
 
       if (Array.isArray(action.event)) {
