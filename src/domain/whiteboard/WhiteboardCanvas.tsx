@@ -1198,6 +1198,35 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   );
 
   /**
+   * Send synchronization event for penColor changes.
+   */
+  useEffect(() => {
+    const objects = canvas?.getActiveObjects();
+    if (objects && objects.length) {
+      objects.forEach((obj: ICanvasObject) => {
+        const type: ObjectType = obj.get('type') as ObjectType;
+
+        if (obj.id && isLocalObject(obj.id, userId) && type !== 'textbox') {
+          const target = () => {
+            return { stroke: obj.stroke };
+          };
+
+          const payload: ObjectEvent = {
+            type,
+            target: target() as ICanvasObject,
+            id: obj.id,
+          };
+
+          eventSerializer?.push('colorChanged', payload);
+        }
+      });
+    }
+    /* If isLocalObject is added on dependencies,
+      an unecessary colorChange event is triggered */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvas, eventSerializer, userId, penColor, fontColor, undoRedoDispatch]);
+
+  /**
    * Send synchronization event for lineWidth changes
    */
   useEffect(() => {

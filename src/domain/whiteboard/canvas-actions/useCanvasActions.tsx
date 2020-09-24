@@ -4,7 +4,7 @@ import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 import { WhiteboardContext } from '../WhiteboardContext';
 import * as shapes from '../shapes/shapes';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
-import { isFreeDrawing, isShape } from '../utils/shapes';
+import { isShape } from '../utils/shapes';
 import { UNDO, REDO, SET } from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
@@ -468,34 +468,15 @@ export const useCanvasActions = (
       if (!activeObjects) return;
 
       activeObjects.forEach((object: TypedShape) => {
-        if (
-          (object.stroke !== color &&
-            (object as ICanvasObject).id &&
-            isShape(object) &&
-            object.shapeType === 'shape') ||
-          isFreeDrawing(object)
-        ) {
-          const type = object.type as ObjectType;
+        if (isShape(object) && object.shapeType === 'shape') {
           object.set('stroke', color);
-
-          const target = () => {
-            return { stroke: object.stroke };
-          };
-
-          const payload: ObjectEvent = {
-            type: type,
-            target: target() as ICanvasObject,
-            id: object.id || '',
-          };
-
-          eventSerializer?.push('colorChanged', payload);
         }
       });
 
       canvas?.renderAll();
     },
 
-    [canvas, eventSerializer, updatePenColor]
+    [canvas, updatePenColor]
   );
 
   /**
