@@ -68,4 +68,6 @@ export interface IWhiteboardContext {
   setPointerIsEnabled: (enabled: boolean) => void;
   clearIsActive: boolean;
   updateClearIsActive: (active: boolean) => void;
+  lineWidthIsActive: boolean;
+  updateLineWidthIsActive: (active: boolean) => void;
 }

@@ -142,6 +142,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setToolbarIsEnabled,
     pointerIsEnabled,
     setPointerIsEnabled,
+    lineWidthIsActive,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -270,17 +271,31 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     canvas.getObjects().forEach((object: ICanvasObject) => {
-      if ((object.id && isLocalObject(object.id, userId)) || !object.id) {
+      if (
+        ((object.id && isLocalObject(object.id, userId)) || !object.id) &&
+        !eraseType
+      ) {
         object.set({
           selectable: shapesAreSelectable,
           evented: shapesAreSelectable || shapesAreEvented,
+          lockMovementX: !shapesAreSelectable,
+          lockMovementY: !shapesAreSelectable,
+          hoverCursor: shapesAreSelectable ? 'move' : 'default',
         });
       }
     });
 
     canvas.selection = shapesAreSelectable;
+    canvas.preserveObjectStacking = !shapesAreSelectable;
     canvas.renderAll();
-  }, [canvas, isLocalObject, shapesAreEvented, shapesAreSelectable, userId]);
+  }, [
+    canvas,
+    eraseType,
+    isLocalObject,
+    shapesAreEvented,
+    shapesAreSelectable,
+    userId,
+  ]);
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -288,7 +303,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (textIsActive) {
       canvas?.on('mouse:down', (e: fabric.IEvent) => {
-        if (e.target === null && e) {
+        if (
+          (e && e.target === null) ||
+          (e.target?.type !== 'textbox' && e.target?.type !== 'i-text')
+        ) {
           let text = new fabric.IText(' ', {
             fontFamily: fontFamily,
             fontSize: 30,
@@ -298,6 +316,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             top: e.pointer?.y,
             left: e.pointer?.x,
             cursorDuration: 500,
+            lockMovementX: true,
+            lockMovementY: true,
+            hasRotatingPoint: false,
+            hoverCursor: 'default',
           });
 
           canvas.add(text);
@@ -312,6 +334,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             delete toObject.type;
             const clonedTextObj = JSON.parse(JSON.stringify(toObject));
             clonedTextObj.id = `${userId}:${uuidv4()}`;
+            clonedTextObj.lockMovementX = true;
+            clonedTextObj.lockMovementY = true;
+            clonedTextObj.hasRotatingPoint = false;
+            clonedTextObj.hoverCursor = 'default';
 
             if (typeof textCopy === 'string') {
               text = new fabric.Textbox(textCopy, clonedTextObj);
@@ -422,7 +448,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
        * IText transformed in Textbox
        */
       canvas?.on('text:editing:exited', (e: IEvent) => {
-        const textboxWidth: number = textboxCopy.width || 0;
+        if (!textboxCopy || !textboxCopy.width) return;
+
+        const textboxWidth: number = textboxCopy.width;
 
         // Updating/showing the Textbox and hiding the IText
         if (currentTextbox && e.target?.type === 'i-text') {
@@ -715,6 +743,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (
         !shapeIsActive &&
         !brushIsActive &&
+        eventedObjects &&
         ((event.target && isFreeDrawing(event.target)) ||
           (event.target && isEmptyShape(event.target)))
       ) {
@@ -723,7 +752,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       }
 
       // Shape Selected
-      if (event.target && isShape(event.target) && !shapeIsActive) {
+      if (
+        event.target &&
+        isShape(event.target) &&
+        !shapeIsActive &&
+        eventedObjects
+      ) {
         updateShape(event.target.name || DEFAULT_VALUES.SHAPE);
 
         if (
@@ -754,6 +788,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     },
     [
       brushIsActive,
+      eventedObjects,
       reorderShapes,
       shapeIsActive,
       updateFontColor,
@@ -839,20 +874,56 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (eventedObjects) {
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
-          setObjectControlsVisibility(object, true);
           object.set({
             evented: true,
             selectable: true,
             lockMovementX: false,
             lockMovementY: false,
-            hasBorders: true,
           });
         }
       });
 
       actions.setHoverCursorObjects('move');
     }
-  }, [actions, canvas, eventedObjects, isLocalObject, userId]);
+  }, [actions, canvas, eventedObjects, isLocalObject, textIsActive, userId]);
+
+  /**
+   * Manage the states for settting local objects like selectable/modifiable
+   */
+  useEffect(() => {
+    if (canvas && !eraseType && !brushIsActive && !lineWidthIsActive) {
+      canvas.forEachObject((object: ICanvasObject) => {
+        const isTextObject = Boolean(isText(object));
+
+        if (object.id && isLocalObject(object.id, userId)) {
+          setObjectControlsVisibility(
+            object,
+            eventedObjects || (isTextObject && textIsActive)
+          );
+          (object as Textbox).set({
+            evented: eventedObjects || (isTextObject && textIsActive),
+            selectable: eventedObjects || (isTextObject && textIsActive),
+            hasBorders: eventedObjects || (isTextObject && textIsActive),
+            editable: isTextObject && textIsActive,
+            lockMovementX: !eventedObjects,
+            lockMovementY: !eventedObjects,
+            hasRotatingPoint: eventedObjects,
+          });
+        }
+      });
+    }
+  }, [
+    canvas,
+    eventedObjects,
+    textIsActive,
+    shapeIsActive,
+    brushIsActive,
+    isLocalObject,
+    userId,
+    eraseType,
+    lineWidth,
+    lineWidthIsActive,
+  ]);
 
   /**
    * Memoized laserIsActive prop.
@@ -1518,14 +1589,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useEffect(() => {
     canvas?.forEachObject((object: ICanvasObject) => {
-      if (object.id && isLocalObject(object.id, userId)) {
+      if (
+        object.id &&
+        isLocalObject(object.id, userId) &&
+        shapesAreSelectable
+      ) {
         object.set({
           evented: toolbarIsEnabled,
           selectable: toolbarIsEnabled,
         });
       }
     });
-  }, [canvas, toolbarIsEnabled, isLocalObject, userId]);
+  }, [canvas, toolbarIsEnabled, isLocalObject, userId, shapesAreSelectable]);
 
   return (
     <canvas
