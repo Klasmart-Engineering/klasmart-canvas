@@ -151,6 +151,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     universalPermits,
     toolbarIsEnabled,
     setToolbarIsEnabled,
+    clickThrough
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -276,13 +277,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     if (wrapper && lowerCanvas && upperCanvas) {
-      const pointerEventsStyle = pointerEvents ? 'auto' : 'none';
+      const pointerEventsStyle = (pointerEvents && !clickThrough) ? 'auto' : 'none';
 
       wrapper.style.pointerEvents = pointerEventsStyle;
       lowerCanvas.style.pointerEvents = pointerEventsStyle;
       upperCanvas.style.pointerEvents = pointerEventsStyle;
     }
-  }, [lowerCanvas, pointerEvents, upperCanvas, wrapper]);
+  }, [clickThrough, lowerCanvas, pointerEvents, upperCanvas, wrapper]);
 
   /** Update objects selectable/evented state. */
   useEffect(() => {

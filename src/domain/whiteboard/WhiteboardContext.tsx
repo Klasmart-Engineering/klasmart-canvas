@@ -42,6 +42,8 @@ export const WhiteboardProvider = ({
   const { floodFill, updateFloodFill } = useFloodFill();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
 
+  const [ clickThrough, setClickThrough ] = useState<boolean>(false);
+
   const {
     ClearWhiteboardModal,
     openModal,
@@ -209,6 +211,8 @@ export const WhiteboardProvider = ({
     laserIsActive,
     updateLaserIsActive,
     permissions,
+    clickThrough,
+    setClickThrough,
 
     // NOTE: Actions that will get invoked based on registered handler.
     fillColor: fillColorAction,

@@ -5,12 +5,13 @@ import React, {
   useCallback,
   useContext,
   useState,
-  useMemo,
+  useMemo, 
+  useEffect
 } from 'react';
 
 import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
 import IStyleOption from '../../interfaces/toolbar/toolbar-special-elements/style-option';
-import { colorPaletteOptions, toolsSection } from './toolbar-sections';
+import { colorPaletteOptions } from './toolbar-sections';
 import {
   IThicknessStyle,
   selectorOptionsWithId,
@@ -20,6 +21,7 @@ import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
 
 export type ToolType =
+  | 'clickthrough'
   | 'select'
   | 'pointer'
   | 'move'
@@ -73,7 +75,6 @@ export type Props = {
 export default function ToolbarContextProvider({
   children,
 }: Props): JSX.Element {
-  const [tools, setTools] = useState(toolsSection);
   const [selectedTool, setSelectedTool] = useState<ToolType | undefined>(undefined);
   const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
   const [selectedOption, setSelectedOption] = useState<IToolbarSelectorOption | undefined>(undefined);
@@ -103,10 +104,12 @@ export default function ToolbarContextProvider({
     undo,
     redo,
     clear,
+    setClickThrough,
   } = useContext(WhiteboardContext);
 
   const toolsLookup = useMemo<Record<ToolType, { id: string, options: OptionalToolOptions }>>(() => {
     return {
+      clickthrough: { id: 'clickthrough_pointer', options: selectorOptionsWithId('none') },
       select: { id: 'pointers', options: selectorOptionsWithId('pointers') },
       pointer: { id: 'laser_pointer', options: selectorOptionsWithId('laser_pointer') },
       move: { id: 'move_objects', options: selectorOptionsWithId('move_objects') },
@@ -200,6 +203,7 @@ export default function ToolbarContextProvider({
     updateFloodFillIsActive(tool.id === ELEMENTS.FLOOD_FILL_TOOL);
     updateLaserIsActive(tool.id === ELEMENTS.LASER_TOOL);
     setPointerEvents(tool.id !== ELEMENTS.POINTERS_TOOL);
+    setClickThrough(tool.id === ELEMENTS.CLICKTHROUGH_TOOL);
 
     updateEventedObjects(
       tool.id === ELEMENTS.POINTERS_TOOL || tool.id === ELEMENTS.MOVE_OBJECTS_TOOL
@@ -218,15 +222,18 @@ export default function ToolbarContextProvider({
       tool.id === ELEMENTS.FLOOD_FILL_TOOL || tool.id === ELEMENTS.ERASE_TYPE_TOOL
     );
 
-    setTools({ active: tool.id, elements: [...tools.elements] });
-
     setSelectedTool(toolType);
     setSelectedOption(option);
 
     if (option) {
       selectToolOption(tool.id, option);
     }
-  }, [discardActiveObject, selectToolOption, setPointerEvents, textIsActive, tools.elements, toolsLookup, updateBrushIsActive, updateEraseType, updateEventedObjects, updateFloodFillIsActive, updateLaserIsActive, updateShapeIsActive, updateShapesAreEvented, updateShapesAreSelectable, updateTextIsActive]);
+  }, [discardActiveObject, selectToolOption, setClickThrough, setPointerEvents, textIsActive, toolsLookup, updateBrushIsActive, updateEraseType, updateEventedObjects, updateFloodFillIsActive, updateLaserIsActive, updateShapeIsActive, updateShapesAreEvented, updateShapesAreSelectable, updateTextIsActive]);
+
+
+  useEffect(() => {
+    setClickThrough(true);
+  }, [setClickThrough]);
 
   const selectColorByValueAction = useCallback((color: string) => {
     // TODO: There might be bugs in this action, I'm not sure in which
