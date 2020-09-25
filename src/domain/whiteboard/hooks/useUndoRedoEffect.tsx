@@ -139,7 +139,7 @@ export const UndoRedo = (
           currentEvent &&
           currentEvent.type !== 'activeSelection' &&
           currentEvent.type !== 'remove' &&
-          nextEvent.type !== 'clearWhiteboard'
+          nextEvent.type !== 'clearedWhiteboard'
         ) {
           let id = (nextEvent.event as IUndoRedoSingleEvent).id;
           let objects = JSON.parse(
@@ -153,7 +153,7 @@ export const UndoRedo = (
           };
 
           eventSerializer?.push('reconstruct', payload);
-        } else if (nextEvent.type === 'clearWhiteboard') {
+        } else if (nextEvent.type === 'clearedWhiteboard') {
           let id = (nextEvent.event as IUndoRedoSingleEvent).id;
           let objects = JSON.parse(
             state.states[state.activeStateIndex as number]
@@ -247,7 +247,7 @@ export const UndoRedo = (
         eventSerializer?.push('removed', {
           id: (event.event as IUndoRedoSingleEvent).id,
         } as ObjectEvent);
-      } else if (event.type === 'clearWhiteboard') {
+      } else if (event.type === 'clearedWhiteboard') {
         let payload: ObjectEvent = {
           id: (event.event as IUndoRedoSingleEvent).id,
           target: false,

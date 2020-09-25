@@ -579,31 +579,36 @@ export const useCanvasActions = (
     await updateClearIsActive(true);
     await canvas?.getObjects().forEach((obj: ICanvasObject) => {
       if (obj.id) {
-        const target = {
-          id: obj.id,
-          target: {
-            strategy: 'allowClearAll',
-          },
-        };
-
         obj.set({ groupClear: true });
         canvas?.remove(obj);
-        eventSerializer?.push('removed', target as ObjectEvent);
       }
     });
 
+    const target = {
+      target: {
+        strategy: 'allowClearAll',
+      },
+    };
+
+    eventSerializer?.push('removed', target as ObjectEvent);
+
     // Add cleared whiteboard to undo / redo state.
-    const event = { event: [], type: 'clearedWhiteboard' };
+    const event = {
+      event: { id: `${userId}:clearWhiteboard` },
+      type: 'clearedWhiteboard',
+    };
+
+    // Add cleared whiteboard to undo / redo state.
 
     dispatch({
       type: SET,
-      payload: [],
+      payload: canvas?.getObjects(),
       canvasId: userId,
       event,
     });
 
     await updateClearIsActive(false);
-  }, [canvas, dispatch, userId, updateClearIsActive, eventSerializer]);
+  }, [updateClearIsActive, canvas, dispatch, userId, eventSerializer]);
 
   /**
    * Clears all whiteboard elements
@@ -626,12 +631,12 @@ export const useCanvasActions = (
     });
     closeModal();
 
-    // Add cleared whiteboard to undo / redo state.
     const event = {
       event: { id: `${userId}:clearWhiteboard` },
-      type: 'clearWhiteboard',
+      type: 'clearedWhiteboard',
     };
 
+    // Add cleared whiteboard to undo / redo state.
     dispatch({
       type: SET,
       payload: canvas?.getObjects(),
