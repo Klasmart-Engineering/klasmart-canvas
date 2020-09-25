@@ -1718,6 +1718,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     allToolbarIsEnabled,
     serializerToolbarState.move,
     serializerToolbarState.erase,
+    shapesAreSelectable,
   ]);
 
   return (
