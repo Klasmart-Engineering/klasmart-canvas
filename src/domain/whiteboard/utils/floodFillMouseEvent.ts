@@ -199,7 +199,6 @@ export const floodFillMouseEvent = async (
         userId,
         data as IFloodFillData,
         eventSerializer,
-        data?.edgeCoordinates
       );
 
       const payload: ObjectEvent = {
