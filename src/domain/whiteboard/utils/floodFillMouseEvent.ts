@@ -126,9 +126,6 @@ export const floodFillMouseEvent = async (
 
   // Remove non local object temporarly to be able to flood fill for local objects only.
   let placeholderNonLocal = stripForeignObjects(canvas, isLocalObject, userId);
-  // canvas.getObjects().forEach((o: TypedShape) => {
-  //   o.set({ selectable: false, evented: false });
-  // });
   const palette = tempContext.getImageData(
     0,
     0,
@@ -201,7 +198,8 @@ export const floodFillMouseEvent = async (
         canvas,
         userId,
         data as IFloodFillData,
-        eventSerializer
+        eventSerializer,
+        data?.edgeCoordinates
       );
 
       const payload: ObjectEvent = {

@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import { findIntersectedObjects } from "./findIntersectedObjects";
 import { findLocalObjects } from "./findLocalObjects";
 import { findTopLeftOfCollection } from "./findTopLeftOfCollection";
 import { TypedShape } from "../../../interfaces/shapes/shapes";
@@ -7,6 +6,7 @@ import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ObjectEvent, PaintEventSerializer } from '../event-serializer/PaintEventSerializer';
 import { IFloodFillData } from './floodFiller';
+import { findObjectsByCoordinates } from './findObjectsByCoordinates';
 
 export interface ITargetObject extends ICanvasObject {
   color: string;
@@ -20,7 +20,8 @@ export const updateAfterCustomFloodFill = async (
   canvas: fabric.Canvas, 
   userId: string, 
   data: IFloodFillData,
-  eventSerializer: PaintEventSerializer
+  eventSerializer: PaintEventSerializer,
+  dataEdgeCoords: any
 ): Promise<ICanvasObject> => {
   let id = itemId;
 
@@ -43,8 +44,25 @@ export const updateAfterCustomFloodFill = async (
 
   canvas.add(image);
   canvas.discardActiveObject();
+  let objectsInPathAreaAll: any[] = [];
 
-  const objectsAtPoint = findIntersectedObjects(image as TypedShape, findLocalObjects(userId, canvas.getObjects()));            
+
+  dataEdgeCoords.forEach((o: any) => {
+    objectsInPathAreaAll.push(findObjectsByCoordinates(o[0], findLocalObjects(userId, canvas.getObjects())));
+  });
+
+  objectsInPathAreaAll = objectsInPathAreaAll.flat();
+
+  let objectsAtPoint = objectsInPathAreaAll.reduce((acc: TypedShape[], current: TypedShape) => {
+    const found = acc.find((item: TypedShape) => item.id === current.id);
+
+    if (!found) {
+      return [ ...acc, current ];
+    } else {
+      return acc;
+    }
+  }, []);
+
   const { top, left } = findTopLeftOfCollection(objectsAtPoint);
 
   let singleObject = new fabric.Group(objectsAtPoint);

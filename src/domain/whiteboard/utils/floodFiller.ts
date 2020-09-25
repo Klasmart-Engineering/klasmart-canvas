@@ -18,6 +18,7 @@ export interface IFloodFillData {
   y: number;
   width: number;
   height: number;
+  edgeCoordinates: { x: number; y: number; }[][]
 }
 
 export default class FloodFiller {
@@ -31,7 +32,8 @@ export default class FloodFiller {
   public minX: number = -1;
   public maxY: number = -1;
   public minY: number = -1;
-  private autoTolerance: number;
+  public autoTolerance: number;
+  public coordsFilled: [number, number, number, number][] = [];
 
   /**
    * Class constructor
@@ -140,12 +142,12 @@ export default class FloodFiller {
    * @param b Color to compare
    * @param tolerance Color tolerance. If not 0, will return true to slight variations.
    */
-  public isSameColor = (a: ColorRGBA, b: ColorRGBA, tolerance = 0): boolean => {
+  public isSameColor = (a: ColorRGBA, b: ColorRGBA, tolerance: number = 0): boolean => {
     return !(
       Math.abs(a.r - b.r) > tolerance ||
       Math.abs(a.g - b.g) > tolerance ||
       Math.abs(a.b - b.b) > tolerance ||
-      Math.abs(a.a - b.a) > tolerance
+      Math.abs(a.a - b.a) > 150
     );
   };
 
@@ -178,7 +180,8 @@ export default class FloodFiller {
       return;
     }
     const pixelColor = this.getColorAtPixel(pixel.x, pixel.y);
-    const tempTolerance = this.autoTolerance; // If set at 0, crashes when colors are too similar.
+    const tempTolerance = 60;// this.autoTolerance; // If set at 0, crashes when colors are too similar.
+
     return this.isSameColor(
       this.replacedColor as ColorRGBA,
       pixelColor,
@@ -310,6 +313,8 @@ export default class FloodFiller {
       while (currX !== -1 && currX <= end) {
         const [lineStart, lineEnd] = this.fillLineAt(currX, y);
         if (lineStart !== -1) {
+          this.coordsFilled.push([lineStart, lineEnd, y, y]);
+
           if (lineStart >= start && lineEnd <= end && parentY !== -1) {
             if (parentY < y && y + 1 < this.imageData.height) {
               this.addToQueue([lineStart, lineEnd, y + 1, y]);
@@ -388,12 +393,23 @@ export default class FloodFiller {
       this.addToQueue([point.x, point.x, point.y, -1]);
       this.fillQueue();
 
+      // Only get coordinates of every tenth line to improve performance.
+      const edges = this.coordsFilled.filter((line: any, i: number) => {
+        return line && (i === 0 || i % 10 === 0);
+      });
+
+      // Map coordinates
+      const edgeCoordinates = edges.map((item: any) => {
+        return [{ x: item[0], y: item[2] }, { x: item[1], y: item[3] }]
+      });
+
       return {
         coords: this.coords,
         x: this.minX,
         y: this.minY,
         width: this.maxX - this.minX,
         height: this.maxY - this.minY,
+        edgeCoordinates
       };
     } catch (e) {
       throw e;
