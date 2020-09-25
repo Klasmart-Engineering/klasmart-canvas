@@ -92,4 +92,6 @@ export interface IWhiteboardContext {
     clearWhiteboard: boolean;
   }) => void;
   allToolbarIsEnabled: boolean;
+  lineWidthIsActive: boolean;
+  updateLineWidthIsActive: (active: boolean) => void;
 }

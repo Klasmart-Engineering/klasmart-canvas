@@ -73,6 +73,7 @@ function Toolbar() {
     pointerIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState,
+    updateLineWidthIsActive,
   } = useContext(WhiteboardContext);
 
   const pointerToolIsActive =
@@ -166,20 +167,20 @@ function Toolbar() {
      */
     updateLaserIsActive(tool === ELEMENTS.LASER_TOOL);
 
+    /**
+     * Indicates if line width tool is active.
+     */
+    updateLineWidthIsActive(tool === ELEMENTS.LINE_WIDTH_TOOL);
+
     /*
       It is setted to false when you select Pointer Tool,
       otherwise will be setted in true
     */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
-    updateEventedObjects(
-      tool === ELEMENTS.POINTERS_TOOL || tool === ELEMENTS.MOVE_OBJECTS_TOOL
-    );
+    updateEventedObjects(tool === ELEMENTS.MOVE_OBJECTS_TOOL);
 
-    if (
-      tool === ELEMENTS.POINTERS_TOOL ||
-      tool === ELEMENTS.MOVE_OBJECTS_TOOL
-    ) {
+    if (tool === ELEMENTS.MOVE_OBJECTS_TOOL) {
       updateShapesAreSelectable(true);
     } else {
       updateShapesAreSelectable(false);

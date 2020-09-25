@@ -24,6 +24,7 @@ import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clea
 import AuthMenu from '../../components/AuthMenu';
 import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
+import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -58,6 +59,8 @@ export const WhiteboardProvider = ({
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
   const { clearIsActive, updateClearIsActive } = useClearIsActive();
+  const { lineWidthIsActive, updateLineWidthIsActive } = useLineWidthIsActive();
+
   const {
     shapesAreSelectable,
     updateShapesAreSelectable,
@@ -256,6 +259,8 @@ export const WhiteboardProvider = ({
     updateCanvasActions,
     laserIsActive,
     updateLaserIsActive,
+    lineWidthIsActive,
+    updateLineWidthIsActive,
     isLocalObject,
 
     // NOTE: Actions that will get invoked based on registered handler.

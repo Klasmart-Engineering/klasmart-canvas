@@ -1,8 +1,9 @@
-import React, { CSSProperties } from 'react';
+import React, { CSSProperties, useEffect } from 'react';
 import '../../assets/style/whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
 import { WhiteboardCanvas } from './WhiteboardCanvas';
+import { ICanvasKeyboardEvent } from '../../interfaces/canvas-events/canvas-keyboard-event';
 
 const teacher = {
   allowClearAll: true,
@@ -24,6 +25,27 @@ function Whiteboard() {
     left: '0px',
     width: '100%',
   };
+
+  /**
+   * Blocks the Firefox previous page action triggered when the Backspace key is pressed
+   */
+  useEffect(() => {
+    const keydownHandler = (event: Event) => {
+      if (
+        (event as ICanvasKeyboardEvent).key === 'Backspace' &&
+        (event.target as HTMLElement).nodeName !== 'TEXTAREA'
+      ) {
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', keydownHandler);
+
+    // Remove event listeners on cleanup
+    return () => {
+      window.removeEventListener('keydown', keydownHandler);
+    };
+  }, []);
 
   return (
     <>
