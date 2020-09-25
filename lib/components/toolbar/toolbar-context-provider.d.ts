@@ -2,7 +2,7 @@ import React, { ReactChild, ReactChildren } from 'react';
 import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
 import IStyleOption from '../../interfaces/toolbar/toolbar-special-elements/style-option';
 import { IThicknessStyle } from './toolbar-utils';
-export declare type ToolType = 'select' | 'pointer' | 'move' | 'eraser' | 'line' | 'fill' | 'text' | 'shape' | 'stamp';
+export declare type ToolType = 'clickthrough' | 'select' | 'pointer' | 'move' | 'eraser' | 'line' | 'fill' | 'text' | 'shape' | 'stamp';
 declare type OptionalToolOptions = IToolbarSelectorOption[] | undefined;
 export interface IToolbarActions {
     selectTool: (toolType: ToolType, options?: IToolbarSelectorOption) => void;

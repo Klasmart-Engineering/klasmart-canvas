@@ -68,4 +68,6 @@ export interface IWhiteboardContext {
     clearIsActive: boolean;
     updateClearIsActive: (active: boolean) => void;
     permissions: IWhiteboardPermissions;
+    clickThrough: boolean;
+    setClickThrough: (active: boolean) => void;
 }
