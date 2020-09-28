@@ -123,14 +123,16 @@ const useSynchronizedRemoved = (
         )
           return;
 
-        const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
+        if ((e.target as ICanvasObject)?.text?.trim().length) {
+          const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
 
-        undoRedoDispatch({
-          type: SET,
-          payload: canvas.getObjects(),
-          canvasId: userId,
-          event,
-        });
+          undoRedoDispatch({
+            type: SET,
+            payload: canvas.getObjects(),
+            canvasId: userId,
+            event,
+          });
+        }
 
         eventSerializer?.push('removed', payload as ObjectEvent);
       }

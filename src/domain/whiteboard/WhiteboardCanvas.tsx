@@ -1425,26 +1425,60 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       if (!obj) return;
 
-      const type = obj?.get('type');
+      if (
+        !(obj as fabric.Group).getObjects ||
+        !(obj as fabric.Group).getObjects().length
+      ) {
+        const type = obj?.get('type');
 
-      if (type === 'textbox') return;
+        if (type === 'textbox') return;
 
-      if (obj?.strokeWidth === lineWidth) return;
+        if (obj?.strokeWidth === lineWidth) return;
 
-      const payload = {
-        type,
-        target: { strokeWidth: obj?.strokeWidth },
-        id: obj?.id,
-      };
+        const payload = {
+          type,
+          target: { strokeWidth: obj?.strokeWidth },
+          id: obj?.id,
+        };
 
-      const event = { event: payload, type: 'lineWidthChanged' };
+        const event = { event: payload, type: 'lineWidthChanged' };
 
-      undoRedoDispatch({
-        type: SET,
-        payload: canvas?.getObjects() as TypedShape[],
-        canvasId: userId,
-        event: (event as unknown) as IUndoRedoEvent,
-      });
+        undoRedoDispatch({
+          type: SET,
+          payload: canvas?.getObjects() as TypedShape[],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      } else {
+        const type = obj?.get('type');
+        const activeIds: string[] = canvas
+          ?.getActiveObject()
+          // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
+          .getObjects()
+          .map((o: TypedShape) => o.id);
+        const payload = {
+          type,
+          svg: true,
+          target: null,
+          id: `${userId}:group`,
+        };
+
+        const event = { event: payload, type: 'activeSelection', activeIds };
+
+        let filtered = canvas?.getObjects().filter((o: any) => {
+          return !o.group;
+        });
+
+        let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
+        active?.set({ id: `${userId}:group` });
+
+        undoRedoDispatch({
+          type: SET_GROUP,
+          payload: [...(filtered as any[]), active],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      }
     }
   }, [lineWidth, canvas, undoRedoDispatch, userId]);
 
