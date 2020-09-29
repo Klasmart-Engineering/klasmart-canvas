@@ -264,6 +264,20 @@ const useSynchronizedAdded = (
         shape = new fabric.Ellipse();
       }
 
+      if (objectType === 'image') {
+        fabric.Image.fromURL(target.src as string, (data: fabric.Image) => {
+          (data as TypedShape).set({ id, top: target.top, left: target.left });
+          canvas?.add(data);
+          canvas?.renderAll();
+
+          undoRedoDispatch({
+            type: SET_OTHER,
+            payload: (canvas?.getObjects() as unknown) as TypedShape[],
+            canvasId: userId,
+          });
+        });
+      }
+
       if (shape) {
         target = {
           ...target,

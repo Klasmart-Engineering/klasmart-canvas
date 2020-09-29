@@ -32,10 +32,12 @@ export const WhiteboardProvider = ({
   children,
   clearWhiteboardPermissions,
   userId,
+  allToolbarIsEnabled,
 }: {
   children: React.ReactNode;
   clearWhiteboardPermissions: IClearWhiteboardPermissions;
   userId: string;
+  allToolbarIsEnabled: boolean;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();
@@ -66,7 +68,12 @@ export const WhiteboardProvider = ({
   const { shapesAreEvented, updateShapesAreEvented } = useShapesAreEvented();
   const { floodFillIsActive, updateFloodFillIsActive } = useFloodFillIsActive();
   const { laserIsActive, updateLaserIsActive } = useLaserIsActive();
-  const { toolbarIsEnabled, setToolbarIsEnabled } = useToolbarPermissions();
+  const {
+    toolbarIsEnabled,
+    setToolbarIsEnabled,
+    serializerToolbarState,
+    setSerializerToolbarState,
+  } = useToolbarPermissions();
   const { pointerIsEnabled, setPointerIsEnabled } = usePointerPermissions();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
@@ -112,7 +119,9 @@ export const WhiteboardProvider = ({
    * Opens ClearWhiteboardModal
    */
   const openClearWhiteboardModal = () => {
-    openModal();
+    if (allToolbarIsEnabled || serializerToolbarState.clearWhiteboard) {
+      openModal();
+    }
   };
 
   const fillColorAction = useCallback(
@@ -271,6 +280,9 @@ export const WhiteboardProvider = ({
     setToolbarIsEnabled,
     pointerIsEnabled,
     setPointerIsEnabled,
+    serializerToolbarState,
+    setSerializerToolbarState,
+    allToolbarIsEnabled,
   };
 
   return (
