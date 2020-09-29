@@ -63,6 +63,8 @@ import useFixedAspectScaling, {
 } from './utils/useFixedAspectScaling';
 import { TypedGroup } from '../../interfaces/shapes/group';
 
+import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
+
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
  * @field userId: The user's ID, events originating from this canvas will contain this ID.
@@ -1008,14 +1010,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.forEachObject((object: TypedShape) => {
         setObjectControlsVisibility(object as ICanvasObject, false);
         object.set({
-          selectable: false,
           evented: true,
+          selectable: object.get('type') !== 'image' ? true : false,
           lockMovementX: true,
           lockMovementY: true,
           hasBorders: false,
           hoverCursor: isLocalShape(object)
             ? `url("${floodFillCursor}") 2 15, default`
-            : 'not-allowed',
+            : `url("${floodFillCursor}") 2 15, default`,
           perPixelTargetFind: isShape(object) ? false : true,
         });
       });
@@ -1023,32 +1025,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       reorderShapes();
       canvas.renderAll();
 
-      canvas.on('mouse:down', (event: fabric.IEvent) => {
+      canvas.on('mouse:down', async (event: fabric.IEvent) => {
         // Click out of any object
-        if (!event.target) {
-          canvas.backgroundColor = floodFill;
-
-          const payload: ObjectEvent = {
-            type: 'background',
-            target: {
-              fill: floodFill,
-            } as ICanvasObject,
-            id: '',
-          };
-
-          const eventState = {
-            event: { ...payload, id: `${userId}:background` },
-            type: 'colorChanged',
-          } as IUndoRedoEvent;
-
-          undoRedoDispatch({
-            type: SET,
-            payload: canvas.getObjects(),
-            canvasId: userId,
-            event: eventState,
-          });
-
-          eventSerializer?.push('colorChanged', payload);
+        if (
+          !event.target ||
+          (event.target &&
+            (event.target.get('type') === 'path' ||
+              event.target.get('type') === 'image'))
+        ) {
+          floodFillMouseEvent(
+            event,
+            canvas,
+            userId,
+            isLocalObject as (p1: string, p2: string) => boolean,
+            floodFill,
+            eventSerializer,
+            undoRedoDispatch
+          );
+          return;
         }
 
         // Click on object shape
@@ -1552,6 +1546,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               'selectable',
               'evented',
               'shapeType',
+              'joinedIds',
             ]);
           }
           const matrix = object.calcTransformMatrix();
@@ -1562,6 +1557,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             'selectable',
             'evented',
             'shapeType',
+            'joinedIds',
           ]);
           let top = object.group.height / 2 + object.top + object.group.top;
           let left = object.group.width / 2 + object.left + object.group.left;
