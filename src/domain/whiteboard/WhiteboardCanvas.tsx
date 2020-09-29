@@ -10,8 +10,8 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useState,
   useMemo,
+  useState,
   KeyboardEvent,
 } from 'react';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
@@ -37,15 +37,15 @@ import useSynchronizedPointer from './synchronization-hooks/useSynchronizedPoint
 import useSynchronizedSetToolbarPermissions from './synchronization-hooks/useSynchronizedSetToolbarPermissions';
 import useSynchronizedFontColorChanged from './synchronization-hooks/useSynchronizedFontColorChanged';
 
-import { SET, SET_GROUP, UNDO, REDO } from './reducers/undo-redo';
+import { REDO, SET, SET_GROUP, UNDO } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import {
-  IEvent,
-  ITextOptions,
   Canvas,
-  Textbox,
+  IEvent,
   IText,
+  ITextOptions,
+  Textbox,
 } from 'fabric/fabric-impl';
 import {
   ObjectEvent,
@@ -62,6 +62,8 @@ import useFixedAspectScaling, {
   ScaleMode,
 } from './utils/useFixedAspectScaling';
 import { TypedGroup } from '../../interfaces/shapes/group';
+
+import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -149,8 +151,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     laserIsActive,
     toolbarIsEnabled,
     setToolbarIsEnabled,
-    pointerIsEnabled,
     setPointerIsEnabled,
+    serializerToolbarState,
+    setSerializerToolbarState,
+    allToolbarIsEnabled,
     lineWidthIsActive,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
@@ -277,14 +281,22 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       return;
     }
 
+    const teacherHasPermission = allToolbarIsEnabled && shapesAreSelectable;
+    const studentHasPermission =
+      serializerToolbarState.move && shapesAreSelectable;
+
     canvas.getObjects().forEach((object: ICanvasObject) => {
       if (
         ((object.id && isLocalObject(object.id, userId)) || !object.id) &&
         !eraseType
       ) {
         object.set({
-          selectable: shapesAreSelectable,
-          evented: shapesAreSelectable || shapesAreEvented,
+          selectable: teacherHasPermission || studentHasPermission,
+          evented:
+            (allToolbarIsEnabled &&
+              (shapesAreSelectable || shapesAreEvented)) ||
+            (serializerToolbarState.move &&
+              (shapesAreSelectable || shapesAreEvented)),
           lockMovementX: !shapesAreSelectable,
           lockMovementY: !shapesAreSelectable,
           hoverCursor: shapesAreSelectable ? 'move' : 'default',
@@ -302,13 +314,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     shapesAreEvented,
     shapesAreSelectable,
     userId,
+    allToolbarIsEnabled,
+    serializerToolbarState.move,
   ]);
 
   /**
    * Handles the logic to write text on the whiteboard
    * */
   useEffect(() => {
-    if (textIsActive) {
+    const teacherHasPermission = allToolbarIsEnabled && textIsActive;
+    const studentHasPermission =
+      toolbarIsEnabled && serializerToolbarState.text && textIsActive;
+    if (teacherHasPermission || studentHasPermission) {
       canvas?.on('mouse:down', (e: fabric.IEvent) => {
         if (
           (e && e.target === null) ||
@@ -383,6 +400,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateFontColor,
     userId,
     eraseType,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.text,
   ]);
 
   /**
@@ -508,11 +528,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     if (brushIsActive && canvas) {
       canvas.freeDrawingBrush = new fabric.PencilBrush();
-
       (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
       canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
       canvas.freeDrawingBrush.width = lineWidth;
-      canvas.isDrawingMode = toolbarIsEnabled;
+      canvas.isDrawingMode =
+        allToolbarIsEnabled || (toolbarIsEnabled && serializerToolbarState.pen);
 
       canvas.on('path:created', pathCreated);
     } else if (canvas && !brushIsActive) {
@@ -522,7 +542,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     return () => {
       canvas?.off('path:created');
     };
-  }, [brushIsActive, canvas, lineWidth, penColor, toolbarIsEnabled]);
+  }, [
+    brushIsActive,
+    canvas,
+    lineWidth,
+    penColor,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.pen,
+  ]);
 
   /**
    * Disables shape canvas mouse events.
@@ -536,9 +564,17 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   /**
    * Activates the mouseDown event if shape exists and shapeIsActive is true
+   * Handles logic to add shape to whiteboard
    */
   useEffect(() => {
-    if (shape && shapeIsActive && toolbarIsEnabled) {
+    const teacherHasPermission =
+      allToolbarIsEnabled && shape && shapeIsActive && toolbarIsEnabled;
+    const studentHasPermission =
+      shape &&
+      shapeIsActive &&
+      toolbarIsEnabled &&
+      serializerToolbarState.shape;
+    if (teacherHasPermission || studentHasPermission) {
       actions.discardActiveObject();
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
@@ -582,6 +618,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     isLocalObject,
     laserIsActive,
     toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.shape,
   ]);
 
   /**
@@ -877,12 +915,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Set the objects like evented if you select pointer or move tool
    */
   useEffect(() => {
-    if (eventedObjects) {
+    const teacherHasPermission = allToolbarIsEnabled && eventedObjects;
+    const studentHasPermission = serializerToolbarState.move && eventedObjects;
+    if (teacherHasPermission || studentHasPermission) {
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
           object.set({
-            evented: true,
-            selectable: true,
+            evented: allToolbarIsEnabled || serializerToolbarState.move,
+            selectable: allToolbarIsEnabled || serializerToolbarState.move,
             lockMovementX: false,
             lockMovementY: false,
           });
@@ -891,7 +931,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       actions.setHoverCursorObjects('move');
     }
-  }, [actions, canvas, eventedObjects, isLocalObject, textIsActive, userId]);
+  }, [
+    actions,
+    canvas,
+    eventedObjects,
+    isLocalObject,
+    userId,
+    allToolbarIsEnabled,
+    serializerToolbarState.move,
+  ]);
 
   /**
    * Manage the states for settting local objects like selectable/modifiable
@@ -952,19 +1000,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       return shape.id && isLocalObject(shape.id, userId);
     };
 
-    if (floodFillIsActive && canvas && toolbarIsEnabled) {
+    const teacherHasPermission =
+      allToolbarIsEnabled && floodFillIsActive && toolbarIsEnabled;
+    const studentHasPermission =
+      floodFillIsActive && toolbarIsEnabled && serializerToolbarState.floodFill;
+
+    if ((canvas && teacherHasPermission) || (canvas && studentHasPermission)) {
       canvas.defaultCursor = `url("${floodFillCursor}") 2 15, default`;
       canvas.forEachObject((object: TypedShape) => {
         setObjectControlsVisibility(object as ICanvasObject, false);
         object.set({
-          selectable: false,
           evented: true,
+          selectable: object.get('type') !== 'image' ? true : false,
           lockMovementX: true,
           lockMovementY: true,
           hasBorders: false,
           hoverCursor: isLocalShape(object)
             ? `url("${floodFillCursor}") 2 15, default`
-            : 'not-allowed',
+            : `url("${floodFillCursor}") 2 15, default`,
           perPixelTargetFind: isShape(object) ? false : true,
         });
       });
@@ -972,32 +1025,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       reorderShapes();
       canvas.renderAll();
 
-      canvas.on('mouse:down', (event: fabric.IEvent) => {
+      canvas.on('mouse:down', async (event: fabric.IEvent) => {
         // Click out of any object
-        if (!event.target) {
-          canvas.backgroundColor = floodFill;
-
-          const payload: ObjectEvent = {
-            type: 'background',
-            target: {
-              fill: floodFill,
-            } as ICanvasObject,
-            id: '',
-          };
-
-          const eventState = {
-            event: { ...payload, id: `${userId}:background` },
-            type: 'colorChanged',
-          } as IUndoRedoEvent;
-
-          undoRedoDispatch({
-            type: SET,
-            payload: canvas.getObjects(),
-            canvasId: userId,
-            event: eventState,
-          });
-
-          eventSerializer?.push('colorChanged', payload);
+        if (
+          !event.target ||
+          (event.target &&
+            (event.target.get('type') === 'path' ||
+              event.target.get('type') === 'image'))
+        ) {
+          floodFillMouseEvent(
+            event,
+            canvas,
+            userId,
+            isLocalObject as (p1: string, p2: string) => boolean,
+            floodFill,
+            eventSerializer,
+            undoRedoDispatch
+          );
+          return;
         }
 
         // Click on object shape
@@ -1121,6 +1166,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     undoRedoDispatch,
     toolbarIsEnabled,
     laserPointerIsActive,
+    allToolbarIsEnabled,
+    serializerToolbarState.floodFill,
   ]);
 
   /**
@@ -1240,7 +1287,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useSynchronizedFontFamilyChanged(canvas, filterIncomingEvents);
   useSynchronizedPointer(
     canvas,
-    pointerIsEnabled,
+    allToolbarIsEnabled || serializerToolbarState.pointer,
     filterIncomingEvents,
     userId,
     penColor,
@@ -1251,7 +1298,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     userId,
     filterIncomingEvents,
     setToolbarIsEnabled,
-    setPointerIsEnabled
+    setPointerIsEnabled,
+    setSerializerToolbarState
   );
   useSynchronizedFontColorChanged(
     canvas,
@@ -1498,6 +1546,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               'selectable',
               'evented',
               'shapeType',
+              'joinedIds',
             ]);
           }
           const matrix = object.calcTransformMatrix();
@@ -1508,6 +1557,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             'selectable',
             'evented',
             'shapeType',
+            'joinedIds',
           ]);
           let top = object.group.height / 2 + object.top + object.group.top;
           let left = object.group.width / 2 + object.left + object.group.left;
@@ -1553,7 +1603,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * necessaries to erase objects are setted or removed
    */
   useEffect(() => {
-    if (eraseType === 'object' && canvas && toolbarIsEnabled) {
+    if (
+      eraseType === 'object' &&
+      canvas &&
+      toolbarIsEnabled &&
+      (allToolbarIsEnabled || serializerToolbarState.erase)
+    ) {
       actions.eraseObject();
 
       if (canvas.getActiveObjects().length === 1) {
@@ -1569,7 +1624,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
     };
-  }, [eraseType, canvas, actions, textIsActive, toolbarIsEnabled]);
+  }, [
+    eraseType,
+    canvas,
+    actions,
+    textIsActive,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.erase,
+  ]);
 
   useEffect(() => {
     if (shape && shapeIsActive) {
@@ -1628,6 +1691,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
 
   useEffect(() => {
+    const studentHasPermission =
+      toolbarIsEnabled &&
+      (serializerToolbarState.move || serializerToolbarState.erase);
     canvas?.forEachObject((object: ICanvasObject) => {
       if (
         object.id &&
@@ -1635,12 +1701,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         shapesAreSelectable
       ) {
         object.set({
-          evented: toolbarIsEnabled,
-          selectable: toolbarIsEnabled,
+          evented: allToolbarIsEnabled || studentHasPermission,
+          selectable: allToolbarIsEnabled || studentHasPermission,
         });
       }
     });
-  }, [canvas, toolbarIsEnabled, isLocalObject, userId, shapesAreSelectable]);
+  }, [
+    canvas,
+    toolbarIsEnabled,
+    isLocalObject,
+    userId,
+    allToolbarIsEnabled,
+    serializerToolbarState.move,
+    serializerToolbarState.erase,
+    shapesAreSelectable,
+  ]);
 
   return (
     <canvas

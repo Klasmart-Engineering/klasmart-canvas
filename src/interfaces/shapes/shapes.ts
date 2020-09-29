@@ -8,6 +8,7 @@ export interface TypedShape extends fabric.Object {
   mimicBackground?: boolean;
   id?: string;
   fromJSON?: boolean;
+  skipState?: boolean;
 }
 
 /**
@@ -18,4 +19,5 @@ export interface TypedPolygon extends fabric.Polygon {
   mimicBackground?: boolean;
   id?: string;
   fromJSON?: boolean;
+  skipState?: boolean;
 }

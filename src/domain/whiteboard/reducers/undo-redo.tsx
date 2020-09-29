@@ -124,6 +124,7 @@ const objectStringifier = (payload: (fabric.Object | TypedShape)[]): string => {
         'selectable',
         'evented',
         'shapeType',
+        'joinedIds',
       ])
     );
   }
@@ -273,6 +274,7 @@ const reducer = (
       ) {
         return state;
       }
+
       let states = [...state.states];
       let events = [...state.events];
       const selfItems = filterById(

@@ -68,6 +68,30 @@ export interface IWhiteboardContext {
   setPointerIsEnabled: (enabled: boolean) => void;
   clearIsActive: boolean;
   updateClearIsActive: (active: boolean) => void;
+  serializerToolbarState: {
+    pointer: boolean;
+    move: boolean;
+    erase: boolean;
+    pen: boolean;
+    floodFill: boolean;
+    text: boolean;
+    shape: boolean;
+    undoRedo: boolean;
+    clearWhiteboard: boolean;
+  };
+  setSerializerToolbarState: (enabled: {
+    [p: string]: boolean;
+    pointer: boolean;
+    move: boolean;
+    erase: boolean;
+    pen: boolean;
+    floodFill: boolean;
+    text: boolean;
+    shape: boolean;
+    undoRedo: boolean;
+    clearWhiteboard: boolean;
+  }) => void;
+  allToolbarIsEnabled: boolean;
   lineWidthIsActive: boolean;
   updateLineWidthIsActive: (active: boolean) => void;
 }

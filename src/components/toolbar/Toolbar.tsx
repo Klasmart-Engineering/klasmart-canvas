@@ -71,8 +71,20 @@ function Toolbar() {
     updateLaserIsActive,
     toolbarIsEnabled,
     pointerIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState,
     updateLineWidthIsActive,
   } = useContext(WhiteboardContext);
+
+  const pointerToolIsActive =
+    allToolbarIsEnabled || serializerToolbarState.pointer;
+  const moveToolIsActive = allToolbarIsEnabled || serializerToolbarState.move;
+  const eraseToolIsActive = allToolbarIsEnabled || serializerToolbarState.erase;
+  const penToolIsActive = allToolbarIsEnabled || serializerToolbarState.pen;
+  const floodFillToolIsActive =
+    allToolbarIsEnabled || serializerToolbarState.floodFill;
+  const textToolIsActive = allToolbarIsEnabled || serializerToolbarState.text;
+  const shapeToolIsActive = allToolbarIsEnabled || serializerToolbarState.shape;
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -80,7 +92,31 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
-    if (tool === ELEMENTS.LASER_TOOL && !pointerIsEnabled) {
+    if (tool === ELEMENTS.LASER_TOOL && !pointerToolIsActive) {
+      return;
+    }
+
+    if (tool === ELEMENTS.MOVE_OBJECTS_TOOL && !moveToolIsActive) {
+      return;
+    }
+
+    if (tool === ELEMENTS.ERASE_TYPE_TOOL && !eraseToolIsActive) {
+      return;
+    }
+
+    if (tool === ELEMENTS.LINE_TYPE_TOOL && !penToolIsActive) {
+      return;
+    }
+
+    if (tool === ELEMENTS.FLOOD_FILL_TOOL && !floodFillToolIsActive) {
+      return;
+    }
+
+    if (tool === ELEMENTS.ADD_TEXT_TOOL && !textToolIsActive) {
+      return;
+    }
+
+    if (tool === ELEMENTS.ADD_SHAPE_TOOL && !shapeToolIsActive) {
       return;
     }
 
@@ -155,12 +191,7 @@ function Toolbar() {
     );
 
     // set the clicked tool like active style in Toolbar
-    if (
-      toolbarIsEnabled ||
-      tool === ELEMENTS.ADD_TEXT_TOOL ||
-      tool === ELEMENTS.ADD_STAMP_TOOL ||
-      (pointerIsEnabled && tool === ELEMENTS.LASER_TOOL)
-    ) {
+    if (allToolbarIsEnabled || toolbarIsEnabled) {
       setTools({
         active: tool,
         elements: [...tools.elements],
@@ -176,6 +207,10 @@ function Toolbar() {
   function handleActionsElementClick(tool: string) {
     discardActiveObject();
 
+    const teacherHasPermission = allToolbarIsEnabled;
+    const studentHasPermission =
+      toolbarIsEnabled && serializerToolbarState.undoRedo;
+
     if (toolbarIsEnabled) {
       switch (tool) {
         case ELEMENTS.CLEAR_WHITEBOARD_ACTION:
@@ -183,11 +218,15 @@ function Toolbar() {
           break;
 
         case ELEMENTS.UNDO_ACTION:
-          undo();
+          if (teacherHasPermission || studentHasPermission) {
+            undo();
+          }
           break;
 
         case ELEMENTS.REDO_ACTION:
-          redo();
+          if (teacherHasPermission || studentHasPermission) {
+            redo();
+          }
           break;
       }
     }
@@ -377,17 +416,98 @@ function Toolbar() {
   );
 
   /**
-   * Checks if laser pointer permission is set to true. If not, and pointer is selected,
+   * Checks if any tool permission is set to true. If not, and tool is selected,
    * default pointer is automatically selected.
    */
   useEffect(() => {
-    if (!pointerIsEnabled && getActiveTool === ELEMENTS.LASER_TOOL) {
+    if (allToolbarIsEnabled) {
+      return;
+    }
+
+    if (
+      !serializerToolbarState.pointer &&
+      getActiveTool === ELEMENTS.LASER_TOOL
+    ) {
       setTools({
         active: ELEMENTS.POINTERS_TOOL,
         elements: getToolElements,
       });
     }
-  }, [pointerIsEnabled, getActiveTool, getToolElements]);
+
+    if (
+      !serializerToolbarState.move &&
+      getActiveTool === ELEMENTS.MOVE_OBJECTS_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+
+    if (
+      !serializerToolbarState.erase &&
+      getActiveTool === ELEMENTS.ERASE_TYPE_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+
+    if (
+      !serializerToolbarState.pen &&
+      getActiveTool === ELEMENTS.LINE_TYPE_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+
+    if (
+      !serializerToolbarState.floodFill &&
+      getActiveTool === ELEMENTS.FLOOD_FILL_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+
+    if (
+      !serializerToolbarState.text &&
+      getActiveTool === ELEMENTS.ADD_TEXT_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+
+    if (
+      !serializerToolbarState.shape &&
+      getActiveTool === ELEMENTS.ADD_SHAPE_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+  }, [
+    pointerIsEnabled,
+    getActiveTool,
+    getToolElements,
+    allToolbarIsEnabled,
+    serializerToolbarState.pointer,
+    serializerToolbarState.move,
+    serializerToolbarState.erase,
+    serializerToolbarState.pen,
+    serializerToolbarState.floodFill,
+    serializerToolbarState.text,
+    serializerToolbarState.shape,
+    serializerToolbarState.undoRedo,
+    serializerToolbarState.clearWhiteboard,
+  ]);
 
   const toolbarContainerStyle: CSSProperties = {
     display: 'flex',

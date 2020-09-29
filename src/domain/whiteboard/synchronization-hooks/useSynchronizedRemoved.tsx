@@ -7,6 +7,7 @@ import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { ITextOptions } from 'fabric/fabric-impl';
 import { WhiteboardContext } from '../WhiteboardContext';
+import { TypedShape } from '../../../interfaces/shapes/shapes';
 
 interface ITarget {
   strategy: string;
@@ -61,7 +62,7 @@ const useSynchronizedRemoved = (
           });
           break;
         default:
-          canvas?.forEachObject(function (obj: ICanvasObject) {
+          canvas?.forEachObject(function (obj: ICanvasObject | TypedShape) {
             if (obj.id && obj.id === objectId) {
               canvas?.remove(obj);
             }
@@ -100,8 +101,9 @@ const useSynchronizedRemoved = (
         !(e.target as ICanvasObject).id ||
         ((e.target as ICanvasObject).id &&
           !shouldSerializeEvent((e.target as ICanvasObject).id as string))
-      )
+      ) {
         return;
+      }
 
       const payload = {
         id: (e.target as ICanvasObject).id as string,
@@ -123,14 +125,18 @@ const useSynchronizedRemoved = (
         )
           return;
 
-        const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
-
-        undoRedoDispatch({
-          type: SET,
-          payload: canvas.getObjects(),
-          canvasId: userId,
-          event,
-        });
+        if (
+          !(e.target as TypedShape).skipState &&
+          !(e.target as TypedShape).fromJSON
+        ) {
+          const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
+          undoRedoDispatch({
+            type: SET,
+            payload: canvas.getObjects(),
+            canvasId: userId,
+            event,
+          });
+        }
 
         eventSerializer?.push('removed', payload as ObjectEvent);
       }

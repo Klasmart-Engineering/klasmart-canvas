@@ -74,6 +74,13 @@ export const UndoRedo = (
 
     // Rerenders local canvas when an undo or redo event has been executed.
     if (state.actionType === UNDO || state.actionType === REDO) {
+      // To prevent fabricjs observers from updating state on rerender.
+      canvas.getObjects().forEach((o: TypedShape) => {
+        if (isLocalObject(o.id as string, instanceId)) {
+          o.set({ fromJSON: true });
+        }
+      });
+
       const mapped = JSON.parse(state.activeState as string).objects.map(
         (object: TypedShape | TypedGroup) => {
           if ((object as TypedGroup).objects) {
@@ -116,9 +123,43 @@ export const UndoRedo = (
       } as ObjectEvent;
 
       // Serialize the event for synchronization
-      if (nextEvent.type === 'added') {
+      if (
+        nextEvent.type === 'added' &&
+        (nextEvent.event as IUndoRedoSingleEvent).type !== 'image'
+      ) {
         // If undoing the creation of an object, remove.
         eventSerializer?.push('removed', payload);
+      } else if (
+        nextEvent.type === 'added' &&
+        (nextEvent.event as IUndoRedoSingleEvent).type === 'image'
+      ) {
+        eventSerializer?.push('removed', payload);
+        let id = (nextEvent.event as IUndoRedoSingleEvent).id;
+        let joinedIds = (nextEvent.event as IUndoRedoSingleEvent).target
+          ?.joinedIds as string[];
+        let event = state.events[state.eventIndex];
+
+        if ((event?.event as IUndoRedoSingleEvent).target?.joinedIds) {
+          const currentIds = (event?.event as IUndoRedoSingleEvent).target
+            ?.joinedIds;
+          joinedIds = [...joinedIds, ...(currentIds as string[])];
+        }
+
+        let objects = JSON.parse(state.states[state.activeStateIndex as number])
+          .objects;
+        const filteredObjects = objects.filter(
+          (o: ObjectEvent) =>
+            // @ts-ignore  - TS ignoring optional chaining.
+            joinedIds.indexOf(o.id) !== -1
+        );
+
+        let newPayload: ObjectEvent = {
+          id,
+          target: { objects: filteredObjects },
+          type: 'reconstruct',
+        };
+
+        eventSerializer?.push('reconstruct', newPayload);
       } else if (nextEvent.type !== 'activeSelection') {
         let currentEvent = state.events[state.eventIndex];
         if ((nextEvent?.event as any).type === 'background') {
@@ -241,7 +282,10 @@ export const UndoRedo = (
         return;
       }
 
-      if (event.type === 'added') {
+      if (
+        event.type === 'added' &&
+        (event.event as IUndoRedoSingleEvent).type !== 'image'
+      ) {
         eventSerializer?.push('added', event.event as ObjectEvent);
       } else if (event.type === 'removed') {
         eventSerializer?.push('removed', {

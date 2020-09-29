@@ -6,27 +6,33 @@ const useSynchronizedSetToolbarPermissions = (
   userId: string,
   shouldHandleRemoteEvent: (id: string) => boolean,
   setToolbarIsEnabled: (enabled: boolean) => void,
-  setPointerIsEnabled: (enabled: boolean) => void
+  setPointerIsEnabled: (enabled: boolean) => void,
+  setSerializerToolbarState: (enabled: {
+    [p: string]: boolean;
+    pointer: boolean;
+    move: boolean;
+    erase: boolean;
+    pen: boolean;
+    floodFill: boolean;
+    text: boolean;
+    shape: boolean;
+    undoRedo: boolean;
+    clearWhiteboard: boolean;
+  }) => void
 ) => {
   const {
     state: { eventController },
   } = useSharedEventSerializer();
 
   useEffect(() => {
-    const setToolbarPermissions = (
-      id: string,
-      target: boolean | { pointer: boolean }
-    ) => {
+    const setToolbarPermissions = (id: string, target: any) => {
       //if (!shouldHandleRemoteEvent(id)) return;
       if (userId === id) return;
 
-      if (typeof target === 'object' && target !== null) {
-        setPointerIsEnabled(target.pointer);
-      } else if (target === true || target === false) {
-        canvas?.discardActiveObject();
-        canvas?.renderAll();
-        setToolbarIsEnabled(target);
-      }
+      setSerializerToolbarState({
+        ...target.toolbarState,
+        [target.toolbarState]: target.toolbarState,
+      });
     };
 
     eventController?.on('setToolbarPermissions', setToolbarPermissions);
@@ -44,6 +50,7 @@ const useSynchronizedSetToolbarPermissions = (
     setPointerIsEnabled,
     shouldHandleRemoteEvent,
     userId,
+    setSerializerToolbarState,
   ]);
 };
 

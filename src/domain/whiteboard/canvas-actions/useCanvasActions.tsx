@@ -36,6 +36,9 @@ export const useCanvasActions = (
     lineWidth,
     isLocalObject,
     updateClearIsActive,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
@@ -311,7 +314,7 @@ export const useCanvasActions = (
         resize = true;
 
         /*
-          Canceling shapes creation in object:scaling 
+          Canceling shapes creation in object:scaling
           and object:rotating events
         */
         canvas.on({
@@ -614,40 +617,56 @@ export const useCanvasActions = (
    * Clears all whiteboard elements
    * */
   const clearWhiteboardClearMySelf = useCallback(async () => {
-    await updateClearIsActive(true);
-    await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-      if (obj.id && isLocalObject(obj.id, userId)) {
-        const target = {
-          id: obj.id,
-          target: {
-            strategy: 'allowClearMyself',
-          },
-        };
+    const teacherHasPermission = allToolbarIsEnabled;
+    const studentHasPermission =
+      toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
+    if (teacherHasPermission || studentHasPermission) {
+      await updateClearIsActive(true);
+      await canvas?.getObjects().forEach((obj: ICanvasObject) => {
+        if (obj.id && isLocalObject(obj.id, userId)) {
+          const target = {
+            id: obj.id,
+            target: {
+              strategy: 'allowClearMyself',
+            },
+          };
 
-        obj.set({ groupClear: true });
-        canvas?.remove(obj);
-        eventSerializer?.push('removed', target as ObjectEvent);
-      }
-    });
-    closeModal();
+          obj.set({ groupClear: true });
+          canvas?.remove(obj);
+          eventSerializer?.push('removed', target as ObjectEvent);
+        }
+      });
+      closeModal();
 
-    const event = {
-      event: { id: `${userId}:clearWhiteboard` },
-      type: 'clearedWhiteboard',
-    };
+      const event = {
+        event: { id: `${userId}:clearWhiteboard` },
+        type: 'clearedWhiteboard',
+      };
 
-    // Add cleared whiteboard to undo / redo state.
-    dispatch({
-      type: SET,
-      payload: canvas?.getObjects(),
-      canvasId: userId,
-      event,
-    });
+      // Add cleared whiteboard to undo / redo state.
+      dispatch({
+        type: SET,
+        payload: canvas?.getObjects(),
+        canvasId: userId,
+        event,
+      });
 
-    await updateClearIsActive(false);
+      await updateClearIsActive(false);
+    }
     // If isLocalObject is added in dependencies an infinity loop happens
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, closeModal, canvasId, eventSerializer, updateClearIsActive]);
+  }, [
+    canvas,
+    closeModal,
+    canvasId,
+    eventSerializer,
+    updateClearIsActive,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.clearWhiteboard,
+    dispatch,
+    userId,
+  ]);
 
   /**
    * Clears all whiteboard with allowClearOthers strategy
@@ -814,7 +833,7 @@ export const useCanvasActions = (
     });
     // If isLocalObject is added in dependencies an infinity loop happens
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, canvasId]);
+  }, [canvas, canvasId, userId]);
 
   /**
    * Deselect the actual selected object
@@ -824,12 +843,36 @@ export const useCanvasActions = (
   }, [canvas]);
 
   const undo = useCallback(() => {
-    dispatch({ type: UNDO, canvasId: canvasId });
-  }, [dispatch, canvasId]);
+    const teacherHasPermission = allToolbarIsEnabled;
+    const studentHasPermission =
+      toolbarIsEnabled && serializerToolbarState.undoRedo;
+
+    if (teacherHasPermission || studentHasPermission) {
+      dispatch({ type: UNDO, canvasId: canvasId });
+    }
+  }, [
+    dispatch,
+    canvasId,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.undoRedo,
+  ]);
 
   const redo = useCallback(() => {
-    dispatch({ type: REDO, canvasId: canvasId });
-  }, [dispatch, canvasId]);
+    const teacherHasPermission = allToolbarIsEnabled;
+    const studentHasPermission =
+      toolbarIsEnabled && serializerToolbarState.undoRedo;
+
+    if (teacherHasPermission || studentHasPermission) {
+      dispatch({ type: REDO, canvasId: canvasId });
+    }
+  }, [
+    dispatch,
+    canvasId,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.undoRedo,
+  ]);
 
   const state = useMemo(() => {
     const actions = {
