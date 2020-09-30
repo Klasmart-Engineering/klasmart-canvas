@@ -122,11 +122,12 @@ const useSynchronizedScaled = (
 
   useEffect(() => {
     const objectScaled = (e: fabric.IEvent | CanvasEvent) => {
+      console.log('scaled', e.target);
       if (!e.target) return;
 
       const type = (e.target as ICanvasObject).get('type');
       const activeIds: string[] = [];
-
+      console.log(type);
       if (type === 'activeSelection' && (e.target as ICanvasObject)._objects) {
         const groupObjects = (e.target as ICanvasObject)._objects || [];
 

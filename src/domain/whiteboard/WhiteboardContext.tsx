@@ -25,6 +25,7 @@ import AuthMenu from '../../components/AuthMenu';
 import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
+import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -60,6 +61,10 @@ export const WhiteboardProvider = ({
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
   const { clearIsActive, updateClearIsActive } = useClearIsActive();
   const { lineWidthIsActive, updateLineWidthIsActive } = useLineWidthIsActive();
+  const {
+    perfectShapeIsActive,
+    updatePerfectShapeIsActive,
+  } = usePerfectShapeIsActive();
 
   const {
     shapesAreSelectable,
@@ -261,6 +266,8 @@ export const WhiteboardProvider = ({
     updateLaserIsActive,
     lineWidthIsActive,
     updateLineWidthIsActive,
+    perfectShapeIsActive,
+    updatePerfectShapeIsActive,
     isLocalObject,
 
     // NOTE: Actions that will get invoked based on registered handler.

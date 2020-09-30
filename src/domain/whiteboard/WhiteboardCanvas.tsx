@@ -156,6 +156,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setSerializerToolbarState,
     allToolbarIsEnabled,
     lineWidthIsActive,
+    perfectShapeIsActive,
+    updatePerfectShapeIsActive,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -623,9 +625,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   ]);
 
   /**
-   * General handler for keyboard events
-   * 'Backspace' event for removing selected element from whiteboard
-   * 'Escape' event for deselect active objects
+   * General handler for keydown keyboard events
+   * 'Backspace' event for removing selected element from whiteboard.
+   * 'Escape' event for deselect active objects.
+   * 'Shift' event for active the perfect shapes creation.
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
@@ -657,8 +660,25 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         canvas.discardActiveObject();
         canvas.renderAll();
       }
+
+      if ((e as ICanvasKeyboardEvent).key === 'Shift' && canvas) {
+        updatePerfectShapeIsActive(true);
+      }
     },
-    [canvas]
+    [canvas, updatePerfectShapeIsActive]
+  );
+
+  /**
+   * General handler for keyup keyboard events
+   * 'Shift' event for deactive the perfect shapes creation
+   */
+  const keyUpHandler = useCallback(
+    (e: Event) => {
+      if ((e as ICanvasKeyboardEvent).key === 'Shift' && canvas) {
+        updatePerfectShapeIsActive(false);
+      }
+    },
+    [canvas, updatePerfectShapeIsActive]
   );
 
   /**
@@ -1186,12 +1206,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
   useEffect(() => {
     document.addEventListener('keydown', keyDownHandler, false);
+    document.addEventListener('keyup', keyUpHandler, false);
     fontFamilyLoader(fontFamily);
 
     return () => {
       document.removeEventListener('keydown', keyDownHandler);
+      document.removeEventListener('keyup', keyUpHandler);
     };
-  }, [fontFamily, keyDownHandler, fontFamilyLoader]);
+  }, [fontFamily, keyDownHandler, fontFamilyLoader, keyUpHandler]);
 
   const filterOutgoingEvents = useCallback(
     (id: string): boolean => {
@@ -1716,6 +1738,53 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     serializerToolbarState.erase,
     shapesAreSelectable,
   ]);
+
+  /**
+   * Set a selected shape like perfect if perfectShapeIsActive
+   */
+  useEffect(() => {
+    canvas?.forEachObject((object: ICanvasObject) => {
+      if (isShape(object) && object.id && isLocalObject(object.id, userId)) {
+        object.set('lockUniScaling', perfectShapeIsActive);
+      }
+    });
+
+    if (canvas?.getActiveObject() && perfectShapeIsActive) {
+      if (
+        Number(canvas.getActiveObject().width) >
+        Number(canvas.getActiveObject().height)
+      ) {
+        canvas
+          .getActiveObject()
+          .set(
+            'scaleY',
+            Number(canvas.getActiveObject().width) /
+              Number(canvas.getActiveObject().height)
+          );
+
+        canvas.trigger('object:scaled', {
+          target: canvas.getActiveObject(),
+        });
+      } else if (
+        Number(canvas.getActiveObject().height) >
+        Number(canvas.getActiveObject().width)
+      ) {
+        canvas
+          .getActiveObject()
+          .set(
+            'scaleX',
+            Number(canvas.getActiveObject().height) /
+              Number(canvas.getActiveObject().width)
+          );
+        canvas.trigger('object:scaled', {
+          target: canvas.getActiveObject(),
+        });
+      }
+    }
+    /* If isLocalObject is added on dependencies
+    an unexpected event is triggered */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvas, perfectShapeIsActive, userId]);
 
   return (
     <canvas

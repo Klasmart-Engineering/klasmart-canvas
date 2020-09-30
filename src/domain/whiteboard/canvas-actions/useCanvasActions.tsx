@@ -39,6 +39,7 @@ export const useCanvasActions = (
     toolbarIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState,
+    perfectShapeIsActive,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
@@ -250,13 +251,41 @@ export const useCanvasActions = (
       const setShapeSize = (shape: TypedShape, e: IEvent) => {
         if (!e.pointer) return;
 
-        if (shapeToAdd === 'circle') {
-          return setCircleSize(shape as fabric.Ellipse, startPoint, e.pointer);
-        } else if (shapeToAdd === 'rectangle' || shapeToAdd === 'triangle') {
-          return setSize(shape, startPoint, e.pointer);
+        let pointer: Point = e.pointer;
+        let biggerDifference: number = 0;
+
+        if (perfectShapeIsActive) {
+          console.log('down');
+          biggerDifference = getBiggerDifference(pointer);
+
+          pointer.x = startPoint.x + biggerDifference;
+          pointer.y = startPoint.y + biggerDifference;
+          console.log(pointer.x - startPoint.x, pointer.y - startPoint.y);
         } else {
-          return setPathSize(shape, startPoint, e.pointer);
+          console.log('up');
+          pointer = e.pointer;
         }
+
+        console.log(e.pointer);
+        if (shapeToAdd === 'circle') {
+          return setCircleSize(shape as fabric.Ellipse, startPoint, pointer);
+        } else if (shapeToAdd === 'rectangle' || shapeToAdd === 'triangle') {
+          return setSize(shape, startPoint, pointer);
+        } else {
+          return setPathSize(shape, startPoint, pointer);
+        }
+      };
+
+      /**
+       * Get the big difference
+       * between startPoint.x - point.x and startPoint.y - point.y
+       * @param {Point} point - Point to find the difference with startPoint
+       */
+      const getBiggerDifference = (point: Point) => {
+        return Math.abs(point.x - startPoint.x) >
+          Math.abs(point.y - startPoint.y)
+          ? point.x - startPoint.x
+          : point.y - startPoint.y;
       };
 
       /**
@@ -339,6 +368,7 @@ export const useCanvasActions = (
 
         canvas.selection = false;
         setShapeSize(shape, e);
+        console.log(e);
         let anchor = { ...startPoint, originX: 'left', originY: 'top' };
 
         if (startPoint && e.pointer && startPoint.x > e.pointer.x) {
@@ -456,7 +486,15 @@ export const useCanvasActions = (
         }
       });
     },
-    [canvas, shapeIsActive, shapeSelector, eventSerializer, userId, dispatch]
+    [
+      shapeIsActive,
+      canvas,
+      perfectShapeIsActive,
+      shapeSelector,
+      userId,
+      eventSerializer,
+      dispatch,
+    ]
   );
 
   /**
