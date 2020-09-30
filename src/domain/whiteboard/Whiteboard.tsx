@@ -1,9 +1,10 @@
-import React, { CSSProperties, useEffect } from 'react';
+import React, { CSSProperties, useEffect, useRef } from 'react';
 import '../../assets/style/whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
 import { WhiteboardCanvas } from './WhiteboardCanvas';
 import { ICanvasKeyboardEvent } from '../../interfaces/canvas-events/canvas-keyboard-event';
+// import { lastActiveCanvas } from './hooks/lastActiveCanvas';
 
 const teacher = {
   allowClearAll: true,
@@ -25,6 +26,8 @@ function Whiteboard() {
     left: '0px',
     width: '100%',
   };
+
+  const activeCanvas = useRef<null | string>(null);
 
   /**
    * Blocks the Firefox previous page action triggered when the Backspace key is pressed
@@ -53,8 +56,14 @@ function Whiteboard() {
         clearWhiteboardPermissions={teacher}
         userId={'teacher'}
         allToolbarIsEnabled={true}
+        activeCanvas={activeCanvas}
       >
-        <div className="whiteboard">
+        <div
+          className="whiteboard"
+          onClick={() => {
+            activeCanvas.current = 'canvas1';
+          }}
+        >
           <Toolbar />
           <div
             style={{
@@ -86,8 +95,14 @@ function Whiteboard() {
         clearWhiteboardPermissions={student}
         userId={'student'}
         allToolbarIsEnabled={false}
+        activeCanvas={activeCanvas}
       >
-        <div className="whiteboard">
+        <div
+          className="whiteboard"
+          onClick={() => {
+            activeCanvas.current = 'canvas2';
+          }}
+        >
           <Toolbar />
           <div
             style={{
@@ -119,8 +134,14 @@ function Whiteboard() {
         clearWhiteboardPermissions={student}
         userId={'student2'}
         allToolbarIsEnabled={false}
+        activeCanvas={activeCanvas}
       >
-        <div className="whiteboard">
+        <div
+          className="whiteboard"
+          onClick={() => {
+            activeCanvas.current = 'canvas3';
+          }}
+        >
           <Toolbar />
           <div
             style={{

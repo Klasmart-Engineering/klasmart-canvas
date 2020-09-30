@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useState } from 'react';
+import React, { createContext, MutableRefObject, useCallback, useState } from 'react';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
@@ -33,11 +33,13 @@ export const WhiteboardProvider = ({
   clearWhiteboardPermissions,
   userId,
   allToolbarIsEnabled,
+  activeCanvas,
 }: {
   children: React.ReactNode;
   clearWhiteboardPermissions: IClearWhiteboardPermissions;
   userId: string;
   allToolbarIsEnabled: boolean;
+  activeCanvas: MutableRefObject<string | null>;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();
@@ -100,20 +102,6 @@ export const WhiteboardProvider = ({
     return object[0] === canvasId;
   };
   const [eventedObjects, updateEventedObjects] = useState(true);
-
-  // Temporary code to get undo / redo working while there are two boards
-  // on the view.
-  /* const tempKeyDown = (e: any) => {
-    if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
-      dispatch({ type: UNDO, canvasId });
-      return;
-    }
-
-    if (e.which === 89 && e.ctrlKey) {
-      dispatch({ type: REDO, canvasId });
-      return;
-    }
-  }; */
 
   /**
    * Opens ClearWhiteboardModal
@@ -283,6 +271,7 @@ export const WhiteboardProvider = ({
     serializerToolbarState,
     setSerializerToolbarState,
     allToolbarIsEnabled,
+    activeCanvas,
   };
 
   return (

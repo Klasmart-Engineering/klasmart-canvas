@@ -1,3 +1,4 @@
+import { MutableRefObject } from 'react';
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
 
 export interface IWhiteboardContext {
@@ -94,4 +95,5 @@ export interface IWhiteboardContext {
   allToolbarIsEnabled: boolean;
   lineWidthIsActive: boolean;
   updateLineWidthIsActive: (active: boolean) => void;
+  activeCanvas: MutableRefObject<string | null>;
 }

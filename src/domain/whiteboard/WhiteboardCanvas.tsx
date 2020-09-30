@@ -156,6 +156,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setSerializerToolbarState,
     allToolbarIsEnabled,
     lineWidthIsActive,
+    activeCanvas,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -629,17 +630,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
-      // The following two blocks, used for undo and redo, can not
-      // be integrated while there are two boards in the canvas.
-      // if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
-      //   dispatch({ type: UNDO, canvasId });
-      //   return;
-      // }
+      if (
+        ((e as unknown) as KeyboardEvent).keyCode === 90 &&
+        (e as any).ctrlKey &&
+        !(e as any).shiftKey &&
+        activeCanvas.current === instanceId
+      ) {
+        undoRedoDispatch({ type: UNDO, canvasId: instanceId });
+        return;
+      }
 
-      // if (e.which === 89 && e.ctrlKey) {
-      //   dispatch({ type: REDO, canvasId });
-      //   return;
-      // }
+      if (
+        ((e as unknown) as KeyboardEvent).keyCode === 89 &&
+        (e as any).ctrlKey &&
+        activeCanvas.current === instanceId
+      ) {
+        undoRedoDispatch({ type: REDO, canvasId: instanceId });
+        return;
+      }
 
       if ((e as ICanvasKeyboardEvent).key === 'Backspace' && canvas) {
         const objects = canvas.getActiveObjects();
@@ -658,7 +666,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         canvas.renderAll();
       }
     },
-    [canvas]
+    [canvas, undoRedoDispatch, activeCanvas, instanceId]
   );
 
   /**
