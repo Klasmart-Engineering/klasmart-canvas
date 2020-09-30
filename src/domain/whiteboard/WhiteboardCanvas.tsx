@@ -64,7 +64,6 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
-import pug from '../../assets/pug.jpg';
 import eraseObjectCursor from '../../assets/cursors/erase-object.png';
 
 /**
@@ -1607,22 +1606,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * will be unselected
    */
   useEffect(() => {
-    fabric.Image.fromURL(pug, function (img) {
-      const oImg = img
-        .set({
-          left: 0,
-          top: 0,
-          // @ts-ignore
-          isPartialErased: false,
-          // evented: false,
-          // selectable: false
-        })
-        .scale(0.25);
-      setTimeout(() => {
-        canvas?.add(oImg);
-      }, 1000);
-    });
-
     if (!pointerEvents && canvas) {
       canvas.discardActiveObject().renderAll();
     }
@@ -1811,20 +1794,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   );
 
   return (
-    <>
-      <canvas
-        width={pixelWidth}
-        height={pixelHeight}
-        id={instanceId}
-        style={{ ...initialStyle, backgroundColor: 'transparent' }}
-        tabIndex={0}
-        onKeyDown={keyDown}
-        onClick={() => {
-          actions.addShape(shape);
-        }}
-      >
-        {children}
-      </canvas>
-    </>
+    <canvas
+      width={pixelWidth}
+      height={pixelHeight}
+      id={instanceId}
+      style={{ ...initialStyle, backgroundColor: 'transparent' }}
+      tabIndex={0}
+      onKeyDown={keyDown}
+      onClick={() => {
+        actions.addShape(shape);
+      }}
+    >
+      {children}
+    </canvas>
   );
 };

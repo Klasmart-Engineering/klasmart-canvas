@@ -294,7 +294,6 @@ export const WhiteboardProvider = ({
 
   return (
     <WhiteboardContext.Provider value={value}>
-      <div>partial is active {partialEraseIsActive.toString()}</div>
       {/*: Should work for student and teacher */}
       <button onClick={() => clearWhiteboardActionClearMyself()}>
         Clear My self
