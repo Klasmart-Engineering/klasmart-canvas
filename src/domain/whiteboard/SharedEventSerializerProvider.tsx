@@ -95,12 +95,12 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     if (!eventSerializer || !eventController) return;
     if (!simulateNetworkSynchronization) return;
 
-    // const stored = window.localStorage.getItem('canvas:simulated:events');
-    // if (stored !== null) {
-    //   const persistentEvents = JSON.parse(stored);
-    //   console.log(`resubmitting persistent events: ${persistentEvents.length}`);
-    //   eventController.handlePainterEvent(persistentEvents);
-    // }
+    const stored = window.localStorage.getItem('canvas:simulated:events');
+    if (stored !== null) {
+      const persistentEvents = JSON.parse(stored);
+      console.log(`resubmitting persistent events: ${persistentEvents.length}`);
+      eventController.handlePainterEvent(persistentEvents);
+    }
   }, [eventController, eventSerializer, simulateNetworkSynchronization]);
 
   // NOTE: Request fetching all events.
@@ -134,12 +134,12 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     if (!eventSerializer || !eventController) return;
     if (!simulateNetworkSynchronization) return;
 
-    // const stored = window.localStorage.getItem('canvas:simulated:events');
-    // if (stored !== null) {
-    //   const persistentEvents = JSON.parse(stored);
-    //   console.log(`applying simulated persistent events: ${persistentEvents.length}`);
-    //   eventController.handlePainterEvent(persistentEvents);
-    // }
+    const stored = window.localStorage.getItem('canvas:simulated:events');
+    if (stored !== null) {
+      const persistentEvents = JSON.parse(stored);
+      console.log(`applying simulated persistent events: ${persistentEvents.length}`);
+      eventController.handlePainterEvent(persistentEvents);
+    }
 
     let remoteEvents: PainterEvent[] = []
     const storeRemoteEvent = (payload: PainterEvent) => {
