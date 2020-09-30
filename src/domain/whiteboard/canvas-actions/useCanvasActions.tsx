@@ -16,6 +16,8 @@ import {
   ObjectEvent,
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
+import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-drawing-event';
+import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -39,6 +41,8 @@ export const useCanvasActions = (
     toolbarIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState,
+    updatePartialEraseIsActive,
+    partialEraseIsActive,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
@@ -838,6 +842,60 @@ export const useCanvasActions = (
   }, [canvas, canvasId, userId]);
 
   /**
+   * Creates the listeners to partial erase objects from the whiteboard
+   */
+  const partialEraseObject = useCallback(() => {
+    const pathCreated = (e: ICanvasDrawingEvent) => {
+      if (e.path) {
+        e.path.strokeUniform = true;
+        e.path.globalCompositeOperation = 'destination-out';
+        e.path.evented = false;
+        e.path.selectable = false;
+        e.path.isPartialErased = true;
+        e.path?.bringToFront();
+
+        canvas?.forEachObject(function (obj: ICanvasObject) {
+          const intersect = obj.intersectsWithObject(
+            (e.path as unknown) as TypedShape,
+            true,
+            true
+          );
+
+          if (intersect) {
+            obj.set({
+              isPartialErased: true,
+              evented: false,
+              selectable: false,
+            });
+          }
+        });
+        canvas?.renderAll();
+      }
+    };
+
+    updatePartialEraseIsActive(true);
+
+    if (canvas) {
+      canvas.freeDrawingBrush = new fabric.PencilBrush();
+      (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
+      canvas.freeDrawingBrush.color = 'white';
+      canvas.freeDrawingBrush.width = 20;
+      canvas.freeDrawingCursor = `url("${eraseObjectCursor}"), auto`;
+      canvas.isDrawingMode = allToolbarIsEnabled || partialEraseIsActive;
+      canvas.on('path:created', pathCreated);
+
+      if (canvas.getActiveObjects().length === 1) {
+        canvas.discardActiveObject().renderAll();
+      }
+    }
+  }, [
+    canvas,
+    allToolbarIsEnabled,
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
+  ]);
+
+  /**
    * Deselect the actual selected object
    */
   const discardActiveObject = useCallback(() => {
@@ -891,6 +949,7 @@ export const useCanvasActions = (
       redo,
       clearWhiteboardAllowClearOthers,
       clearWhiteboardClearMySelf,
+      partialEraseObject,
     };
 
     return { actions, mouseDown };
@@ -909,6 +968,7 @@ export const useCanvasActions = (
     redo,
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
+    partialEraseObject,
   ]);
 
   return state;

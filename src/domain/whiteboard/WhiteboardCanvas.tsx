@@ -64,7 +64,6 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
-import eraseObjectCursor from '../../assets/cursors/erase-object.png';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -1617,47 +1616,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     if (eraseType === 'partial' && canvas && !brushIsActive) {
-      const pathCreated = (e: ICanvasDrawingEvent) => {
-        if (e.path) {
-          e.path.strokeUniform = true;
-          e.path.globalCompositeOperation = 'destination-out';
-          e.path.evented = false;
-          e.path.selectable = false;
-          e.path.isPartialErased = true;
-          e.path?.bringToFront();
-
-          canvas?.forEachObject(function (obj: ICanvasObject) {
-            const intersect = obj.intersectsWithObject(
-              (e.path as unknown) as TypedShape,
-              true,
-              true
-            );
-
-            if (intersect) {
-              obj.set({
-                isPartialErased: true,
-                evented: false,
-                selectable: false,
-              });
-            }
-          });
-          canvas?.renderAll();
-        }
-      };
-
-      updatePartialEraseIsActive(true);
-
-      canvas.freeDrawingBrush = new fabric.PencilBrush();
-      (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
-      canvas.freeDrawingBrush.color = 'white';
-      canvas.freeDrawingBrush.width = 20;
-      canvas.freeDrawingCursor = `url("${eraseObjectCursor}"), auto`;
-      canvas.isDrawingMode = allToolbarIsEnabled || partialEraseIsActive;
-      canvas.on('path:created', pathCreated);
-
-      if (canvas.getActiveObjects().length === 1) {
-        canvas.discardActiveObject().renderAll();
-      }
+      actions.partialEraseObject();
 
       return;
     } else if (canvas && !partialEraseIsActive && !brushIsActive) {
