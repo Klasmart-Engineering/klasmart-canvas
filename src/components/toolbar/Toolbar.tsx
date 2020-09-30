@@ -283,7 +283,6 @@ function Toolbar() {
     switch (tool) {
       case ELEMENTS.ERASE_TYPE_TOOL:
         updateEraseType(specific);
-        //updatePartialEraseIsActive(specific === 'partial')
         break;
 
       case ELEMENTS.ADD_TEXT_TOOL:

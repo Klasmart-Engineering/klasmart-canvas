@@ -11,11 +11,11 @@ const teacher = {
   allowClearMyself: true,
 };
 
-// const student = {
-//   allowClearAll: false,
-//   allowClearOthers: false,
-//   allowClearMyself: true,
-// };
+const student = {
+  allowClearAll: false,
+  allowClearOthers: false,
+  allowClearMyself: true,
+};
 
 function Whiteboard() {
   const canvasStyle: CSSProperties = {
@@ -83,72 +83,74 @@ function Whiteboard() {
           </div>
         </div>
       </WhiteboardProvider>
-      {/*<WhiteboardProvider*/}
-      {/*  clearWhiteboardPermissions={student}*/}
-      {/*  userId={'student'}*/}
-      {/*  allToolbarIsEnabled={false}*/}
-      {/*>*/}
-      {/*  <div className="whiteboard">*/}
-      {/*    <Toolbar />*/}
-      {/*    <div*/}
-      {/*      style={{*/}
-      {/*        border: '1px solid black',*/}
-      {/*        width: '740px',*/}
-      {/*        height: '460px',*/}
-      {/*        display: 'flex',*/}
-      {/*        alignItems: 'center',*/}
-      {/*        justifyContent: 'center',*/}
-      {/*        position: 'relative',*/}
-      {/*        backgroundColor: 'white',*/}
-      {/*      }}*/}
-      {/*    >*/}
-      {/*      <WhiteboardCanvas*/}
-      {/*        instanceId="canvas2"*/}
-      {/*        userId="student"*/}
-      {/*        initialStyle={canvasStyle}*/}
-      {/*        pointerEvents={true}*/}
-      {/*        clearWhiteboardPermissions={student}*/}
-      {/*        pixelWidth={740}*/}
-      {/*        pixelHeight={460}*/}
-      {/*      >*/}
-      {/*        <button>Student</button>*/}
-      {/*      </WhiteboardCanvas>*/}
-      {/*    </div>*/}
-      {/*  </div>*/}
-      {/*</WhiteboardProvider>*/}
-      {/*<WhiteboardProvider*/}
-      {/*  clearWhiteboardPermissions={student}*/}
-      {/*  userId={'student2'}*/}
-      {/*  allToolbarIsEnabled={false}*/}
-      {/*>*/}
-      {/*  <div className="whiteboard">*/}
-      {/*    <Toolbar />*/}
-      {/*    <div*/}
-      {/*      style={{*/}
-      {/*        border: '1px solid black',*/}
-      {/*        width: '740px',*/}
-      {/*        height: '460px',*/}
-      {/*        display: 'flex',*/}
-      {/*        alignItems: 'center',*/}
-      {/*        justifyContent: 'center',*/}
-      {/*        position: 'relative',*/}
-      {/*        backgroundColor: 'white',*/}
-      {/*      }}*/}
-      {/*    >*/}
-      {/*      <WhiteboardCanvas*/}
-      {/*        instanceId="canvas3"*/}
-      {/*        userId="student2"*/}
-      {/*        initialStyle={canvasStyle}*/}
-      {/*        pointerEvents={true}*/}
-      {/*        clearWhiteboardPermissions={student}*/}
-      {/*        pixelWidth={740}*/}
-      {/*        pixelHeight={460}*/}
-      {/*      >*/}
-      {/*        <button>Student</button>*/}
-      {/*      </WhiteboardCanvas>*/}
-      {/*    </div>*/}
-      {/*  </div>*/}
-      {/*</WhiteboardProvider>*/}
+      <WhiteboardProvider
+        clearWhiteboardPermissions={student}
+        userId={'student'}
+        allToolbarIsEnabled={false}
+      >
+        <div className="whiteboard">
+          <Toolbar />
+          <div
+            style={{
+              border: '1px solid black',
+              width: '740px',
+              height: '460px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              backgroundColor: 'white',
+            }}
+          >
+            <WhiteboardCanvas
+              instanceId="canvas2"
+              userId="student"
+              initialStyle={canvasStyle}
+              pointerEvents={true}
+              clearWhiteboardPermissions={student}
+              pixelWidth={740}
+              pixelHeight={460}
+            >
+              <button>Student</button>
+            </WhiteboardCanvas>
+            <button>Student</button>
+          </div>
+        </div>
+      </WhiteboardProvider>
+      <WhiteboardProvider
+        clearWhiteboardPermissions={student}
+        userId={'student2'}
+        allToolbarIsEnabled={false}
+      >
+        <div className="whiteboard">
+          <Toolbar />
+          <div
+            style={{
+              border: '1px solid black',
+              width: '740px',
+              height: '460px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              backgroundColor: 'white',
+            }}
+          >
+            <WhiteboardCanvas
+              instanceId="canvas3"
+              userId="student2"
+              initialStyle={canvasStyle}
+              pointerEvents={true}
+              clearWhiteboardPermissions={student}
+              pixelWidth={740}
+              pixelHeight={460}
+            >
+              <button>Student</button>
+            </WhiteboardCanvas>
+            <button>Student</button>
+          </div>
+        </div>
+      </WhiteboardProvider>
     </>
   );
 }

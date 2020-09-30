@@ -66,7 +66,6 @@ import { TypedGroup } from '../../interfaces/shapes/group';
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
 import pug from '../../assets/pug.jpg';
 import eraseObjectCursor from '../../assets/cursors/erase-object.png';
-// import backgroundImage from '../../assets/background2.jpg';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -295,7 +294,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         ((object.id && isLocalObject(object.id, userId)) || !object.id) &&
         !eraseType
       ) {
-        console.log('isPartialErased', object.isPartialErased);
         if (object.isPartialErased) {
           object.set({
             selectable: false,
@@ -939,8 +937,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           isLocalObject(object.id, userId) &&
           !object.isPartialErased
         ) {
-          console.log('isPartialErased', object.isPartialErased);
-
           object.set({
             evented: allToolbarIsEnabled || serializerToolbarState.move,
             selectable: allToolbarIsEnabled || serializerToolbarState.move,
@@ -1254,13 +1250,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     [isLocalObject, userId]
   );
 
-  useSynchronizedAdded(
-    canvas,
-    userId,
-    filterOutgoingEvents,
-    filterIncomingEvents,
-    undoRedoDispatch
-  );
   useSynchronizedMoved(
     canvas,
     userId,
@@ -1652,7 +1641,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           e.path.evented = false;
           e.path.selectable = false;
           e.path.isPartialErased = true;
-          //e.path.isErasedPath = true;
           e.path?.bringToFront();
 
           canvas?.forEachObject(function (obj: ICanvasObject) {
@@ -1681,7 +1669,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.freeDrawingBrush.color = 'white';
       canvas.freeDrawingBrush.width = 20;
       canvas.freeDrawingCursor = `url("${eraseObjectCursor}"), auto`;
-      canvas.isDrawingMode = allToolbarIsEnabled && partialEraseIsActive; //|| (toolbarIsEnabled && serializerToolbarState.pen);
+      canvas.isDrawingMode = allToolbarIsEnabled || partialEraseIsActive;
       canvas.on('path:created', pathCreated);
 
       if (canvas.getActiveObjects().length === 1) {
@@ -1715,6 +1703,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
+      canvas?.off('path:created');
     };
   }, [
     eraseType,
@@ -1796,7 +1785,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         shapesAreSelectable &&
         !object.isPartialErased
       ) {
-        console.log('isPartialErased', object.isPartialErased);
         object.set({
           evented: allToolbarIsEnabled || studentHasPermission,
           selectable: allToolbarIsEnabled || studentHasPermission,
@@ -1814,19 +1802,29 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     shapesAreSelectable,
   ]);
 
+  useSynchronizedAdded(
+    canvas,
+    userId,
+    filterOutgoingEvents,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
+
   return (
-    <canvas
-      width={pixelWidth}
-      height={pixelHeight}
-      id={instanceId}
-      style={{ ...initialStyle, backgroundColor: 'transparent' }}
-      tabIndex={0}
-      onKeyDown={keyDown}
-      onClick={() => {
-        actions.addShape(shape);
-      }}
-    >
-      {children}
-    </canvas>
+    <>
+      <canvas
+        width={pixelWidth}
+        height={pixelHeight}
+        id={instanceId}
+        style={{ ...initialStyle, backgroundColor: 'transparent' }}
+        tabIndex={0}
+        onKeyDown={keyDown}
+        onClick={() => {
+          actions.addShape(shape);
+        }}
+      >
+        {children}
+      </canvas>
+    </>
   );
 };
