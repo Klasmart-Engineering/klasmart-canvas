@@ -64,6 +64,9 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
+import pug from '../../assets/pug.jpg';
+import eraseObjectCursor from '../../assets/cursors/erase-object.png';
+// import backgroundImage from '../../assets/background2.jpg';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -156,6 +159,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setSerializerToolbarState,
     allToolbarIsEnabled,
     lineWidthIsActive,
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -290,17 +295,25 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         ((object.id && isLocalObject(object.id, userId)) || !object.id) &&
         !eraseType
       ) {
-        object.set({
-          selectable: teacherHasPermission || studentHasPermission,
-          evented:
-            (allToolbarIsEnabled &&
-              (shapesAreSelectable || shapesAreEvented)) ||
-            (serializerToolbarState.move &&
-              (shapesAreSelectable || shapesAreEvented)),
-          lockMovementX: !shapesAreSelectable,
-          lockMovementY: !shapesAreSelectable,
-          hoverCursor: shapesAreSelectable ? 'move' : 'default',
-        });
+        console.log('isPartialErased', object.isPartialErased);
+        if (object.isPartialErased) {
+          object.set({
+            selectable: false,
+            evented: false,
+          });
+        } else {
+          object.set({
+            selectable: teacherHasPermission || studentHasPermission,
+            evented:
+              (allToolbarIsEnabled &&
+                (shapesAreSelectable || shapesAreEvented)) ||
+              (serializerToolbarState.move &&
+                (shapesAreSelectable || shapesAreEvented)),
+            lockMovementX: !shapesAreSelectable,
+            lockMovementY: !shapesAreSelectable,
+            hoverCursor: shapesAreSelectable ? 'move' : 'default',
+          });
+        }
       }
     });
 
@@ -531,11 +544,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
       canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
       canvas.freeDrawingBrush.width = lineWidth;
+      canvas.freeDrawingCursor = 'crosshair';
       canvas.isDrawingMode =
         allToolbarIsEnabled || (toolbarIsEnabled && serializerToolbarState.pen);
 
       canvas.on('path:created', pathCreated);
-    } else if (canvas && !brushIsActive) {
+    } else if (canvas && !brushIsActive && !partialEraseIsActive) {
       canvas.isDrawingMode = false;
     }
 
@@ -550,6 +564,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     toolbarIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState.pen,
+    partialEraseIsActive,
   ]);
 
   /**
@@ -919,7 +934,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const studentHasPermission = serializerToolbarState.move && eventedObjects;
     if (teacherHasPermission || studentHasPermission) {
       canvas?.forEachObject((object: ICanvasObject) => {
-        if (object.id && isLocalObject(object.id, userId)) {
+        if (
+          object.id &&
+          isLocalObject(object.id, userId) &&
+          !object.isPartialErased
+        ) {
+          console.log('isPartialErased', object.isPartialErased);
+
           object.set({
             evented: allToolbarIsEnabled || serializerToolbarState.move,
             selectable: allToolbarIsEnabled || serializerToolbarState.move,
@@ -949,7 +970,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.forEachObject((object: ICanvasObject) => {
         const isTextObject = Boolean(isText(object));
 
-        if (object.id && isLocalObject(object.id, userId)) {
+        if (
+          object.id &&
+          isLocalObject(object.id, userId) &&
+          !object.isPartialErased
+        ) {
           setObjectControlsVisibility(
             object,
             eventedObjects || (isTextObject && textIsActive)
@@ -1593,6 +1618,22 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * will be unselected
    */
   useEffect(() => {
+    fabric.Image.fromURL(pug, function (img) {
+      const oImg = img
+        .set({
+          left: 0,
+          top: 0,
+          // @ts-ignore
+          isPartialErased: false,
+          // evented: false,
+          // selectable: false
+        })
+        .scale(0.25);
+      setTimeout(() => {
+        canvas?.add(oImg);
+      }, 1000);
+    });
+
     if (!pointerEvents && canvas) {
       canvas.discardActiveObject().renderAll();
     }
@@ -1603,6 +1644,57 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * necessaries to erase objects are setted or removed
    */
   useEffect(() => {
+    if (eraseType === 'partial' && canvas && !brushIsActive) {
+      const pathCreated = (e: ICanvasDrawingEvent) => {
+        if (e.path) {
+          e.path.strokeUniform = true;
+          e.path.globalCompositeOperation = 'destination-out';
+          e.path.evented = false;
+          e.path.selectable = false;
+          e.path.isPartialErased = true;
+          //e.path.isErasedPath = true;
+          e.path?.bringToFront();
+
+          canvas?.forEachObject(function (obj: ICanvasObject) {
+            const intersect = obj.intersectsWithObject(
+              (e.path as unknown) as TypedShape,
+              true,
+              true
+            );
+
+            if (intersect) {
+              obj.set({
+                isPartialErased: true,
+                evented: false,
+                selectable: false,
+              });
+            }
+          });
+          canvas?.renderAll();
+        }
+      };
+
+      updatePartialEraseIsActive(true);
+
+      canvas.freeDrawingBrush = new fabric.PencilBrush();
+      (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
+      canvas.freeDrawingBrush.color = 'white';
+      canvas.freeDrawingBrush.width = 20;
+      canvas.freeDrawingCursor = `url("${eraseObjectCursor}"), auto`;
+      canvas.isDrawingMode = allToolbarIsEnabled && partialEraseIsActive; //|| (toolbarIsEnabled && serializerToolbarState.pen);
+      canvas.on('path:created', pathCreated);
+
+      if (canvas.getActiveObjects().length === 1) {
+        canvas.discardActiveObject().renderAll();
+      }
+
+      return;
+    } else if (canvas && !partialEraseIsActive && !brushIsActive) {
+      canvas.isDrawingMode = false;
+    }
+
+    updatePartialEraseIsActive(false);
+
     if (
       eraseType === 'object' &&
       canvas &&
@@ -1632,6 +1724,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     toolbarIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState.erase,
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
+    brushIsActive,
   ]);
 
   useEffect(() => {
@@ -1698,8 +1793,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (
         object.id &&
         isLocalObject(object.id, userId) &&
-        shapesAreSelectable
+        shapesAreSelectable &&
+        !object.isPartialErased
       ) {
+        console.log('isPartialErased', object.isPartialErased);
         object.set({
           evented: allToolbarIsEnabled || studentHasPermission,
           selectable: allToolbarIsEnabled || studentHasPermission,

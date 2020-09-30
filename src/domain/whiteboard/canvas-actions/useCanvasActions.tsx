@@ -787,6 +787,7 @@ export const useCanvasActions = (
       if (
         e.target &&
         !e.target._objects &&
+        !e.target.isPartialErased &&
         ((e.target.id && isLocalObject(e.target.id, userId as string)) ||
           !e.target.id)
       ) {
@@ -814,6 +815,7 @@ export const useCanvasActions = (
       if (
         (e.target &&
           e.target.id &&
+          !e.target.isPartialErased &&
           isLocalObject(e.target.id, userId as string)) ||
         (e.target && !e.target.id)
       ) {

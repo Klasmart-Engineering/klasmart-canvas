@@ -25,6 +25,7 @@ import AuthMenu from '../../components/AuthMenu';
 import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
+import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -59,6 +60,10 @@ export const WhiteboardProvider = ({
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
   const { clearIsActive, updateClearIsActive } = useClearIsActive();
+  const {
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
+  } = usePartialEraseIsActive();
   const { lineWidthIsActive, updateLineWidthIsActive } = useLineWidthIsActive();
 
   const {
@@ -283,10 +288,13 @@ export const WhiteboardProvider = ({
     serializerToolbarState,
     setSerializerToolbarState,
     allToolbarIsEnabled,
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
   };
 
   return (
     <WhiteboardContext.Provider value={value}>
+      <div>partial is active {partialEraseIsActive.toString()}</div>
       {/*: Should work for student and teacher */}
       <button onClick={() => clearWhiteboardActionClearMyself()}>
         Clear My self

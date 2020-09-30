@@ -74,6 +74,7 @@ function Toolbar() {
     allToolbarIsEnabled,
     serializerToolbarState,
     updateLineWidthIsActive,
+    updatePartialEraseIsActive,
   } = useContext(WhiteboardContext);
 
   const pointerToolIsActive =
@@ -122,6 +123,8 @@ function Toolbar() {
 
     // Set Erase Type in initial value
     updateEraseType(null);
+
+    updatePartialEraseIsActive(false);
 
     /*
       If you click on another button different than
@@ -280,6 +283,7 @@ function Toolbar() {
     switch (tool) {
       case ELEMENTS.ERASE_TYPE_TOOL:
         updateEraseType(specific);
+        //updatePartialEraseIsActive(specific === 'partial')
         break;
 
       case ELEMENTS.ADD_TEXT_TOOL:
