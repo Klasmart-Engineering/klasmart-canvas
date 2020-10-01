@@ -879,7 +879,7 @@ export const useCanvasActions = (
       canvas.freeDrawingBrush = new fabric.PencilBrush();
       (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
       canvas.freeDrawingBrush.color = 'white';
-      canvas.freeDrawingBrush.width = 20;
+      canvas.freeDrawingBrush.width = lineWidth;
       canvas.freeDrawingCursor = `url("${eraseObjectCursor}"), auto`;
       canvas.isDrawingMode = allToolbarIsEnabled || partialEraseIsActive;
       canvas.on('path:created', pathCreated);
