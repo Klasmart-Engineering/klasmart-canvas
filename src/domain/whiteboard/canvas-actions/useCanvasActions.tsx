@@ -893,6 +893,7 @@ export const useCanvasActions = (
     allToolbarIsEnabled,
     partialEraseIsActive,
     updatePartialEraseIsActive,
+    lineWidth,
   ]);
 
   /**
