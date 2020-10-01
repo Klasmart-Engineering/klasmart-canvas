@@ -577,7 +577,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       toolbarIsEnabled &&
       serializerToolbarState.shape;
     if (teacherHasPermission || studentHasPermission) {
-      actions.discardActiveObject();
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
           object.set({
@@ -661,11 +660,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         canvas.renderAll();
       }
 
-      if ((e as ICanvasKeyboardEvent).key === 'Shift' && canvas) {
+      if (
+        (e as ICanvasKeyboardEvent).key === 'Shift' &&
+        canvas &&
+        !perfectShapeIsActive
+      ) {
         updatePerfectShapeIsActive(true);
       }
     },
-    [canvas, updatePerfectShapeIsActive]
+    [canvas, perfectShapeIsActive, updatePerfectShapeIsActive]
   );
 
   /**
@@ -674,11 +677,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   const keyUpHandler = useCallback(
     (e: Event) => {
-      if ((e as ICanvasKeyboardEvent).key === 'Shift' && canvas) {
+      if (
+        (e as ICanvasKeyboardEvent).key === 'Shift' &&
+        canvas &&
+        perfectShapeIsActive
+      ) {
         updatePerfectShapeIsActive(false);
       }
     },
-    [canvas, updatePerfectShapeIsActive]
+    [canvas, perfectShapeIsActive, updatePerfectShapeIsActive]
   );
 
   /**
@@ -965,7 +972,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Manage the states for settting local objects like selectable/modifiable
    */
   useEffect(() => {
-    if (canvas && !eraseType && !brushIsActive && !lineWidthIsActive) {
+    if (
+      canvas &&
+      !eraseType &&
+      !brushIsActive &&
+      !lineWidthIsActive &&
+      !shapeIsActive
+    ) {
       canvas.forEachObject((object: ICanvasObject) => {
         const isTextObject = Boolean(isText(object));
 
@@ -1749,37 +1762,35 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       }
     });
 
-    if (canvas?.getActiveObject() && perfectShapeIsActive) {
-      if (
-        Number(canvas.getActiveObject().width) >
-        Number(canvas.getActiveObject().height)
-      ) {
-        canvas
-          .getActiveObject()
-          .set(
-            'scaleY',
-            Number(canvas.getActiveObject().width) /
-              Number(canvas.getActiveObject().height)
-          );
+    if (
+      canvas?.getActiveObject() &&
+      perfectShapeIsActive &&
+      isShape(canvas.getActiveObject())
+    ) {
+      const shapeToFix = canvas.getActiveObject();
+      if (Number(shapeToFix.width) > Number(shapeToFix.height)) {
+        shapeToFix.set(
+          'scaleY',
+          (Number(shapeToFix.width) * Number(shapeToFix.scaleX)) /
+            Number(shapeToFix.height)
+        );
 
         canvas.trigger('object:scaled', {
-          target: canvas.getActiveObject(),
+          target: shapeToFix,
         });
-      } else if (
-        Number(canvas.getActiveObject().height) >
-        Number(canvas.getActiveObject().width)
-      ) {
-        canvas
-          .getActiveObject()
-          .set(
-            'scaleX',
-            Number(canvas.getActiveObject().height) /
-              Number(canvas.getActiveObject().width)
-          );
+      } else if (Number(shapeToFix.height) > Number(shapeToFix.width)) {
+        shapeToFix.set(
+          'scaleX',
+          (Number(shapeToFix.height) * Number(shapeToFix.scaleY)) /
+            Number(shapeToFix.width)
+        );
+
         canvas.trigger('object:scaled', {
-          target: canvas.getActiveObject(),
+          target: shapeToFix,
         });
       }
+
+      shapeToFix.setCoords();
     }
     /* If isLocalObject is added on dependencies
     an unexpected event is triggered */

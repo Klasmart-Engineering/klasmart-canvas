@@ -241,6 +241,11 @@ export const useCanvasActions = (
       let resize: boolean = false;
       let startPoint: fabric.Point;
       let shape: TypedShape;
+      const activeObject = canvas?.getActiveObject();
+
+      if (activeObject && isShape(activeObject)) {
+        activeObject.set('evented', true);
+      }
 
       /**
        * Set the new size of a recently created shape
@@ -255,18 +260,14 @@ export const useCanvasActions = (
         let biggerDifference: number = 0;
 
         if (perfectShapeIsActive) {
-          console.log('down');
           biggerDifference = getBiggerDifference(pointer);
 
           pointer.x = startPoint.x + biggerDifference;
           pointer.y = startPoint.y + biggerDifference;
-          console.log(pointer.x - startPoint.x, pointer.y - startPoint.y);
         } else {
-          console.log('up');
           pointer = e.pointer;
         }
 
-        console.log(e.pointer);
         if (shapeToAdd === 'circle') {
           return setCircleSize(shape as fabric.Ellipse, startPoint, pointer);
         } else if (shapeToAdd === 'rectangle' || shapeToAdd === 'triangle') {
@@ -277,7 +278,7 @@ export const useCanvasActions = (
       };
 
       /**
-       * Get the big difference
+       * Get the bigger difference
        * between startPoint.x - point.x and startPoint.y - point.y
        * @param {Point} point - Point to find the difference with startPoint
        */
@@ -368,7 +369,7 @@ export const useCanvasActions = (
 
         canvas.selection = false;
         setShapeSize(shape, e);
-        console.log(e);
+
         let anchor = { ...startPoint, originX: 'left', originY: 'top' };
 
         if (startPoint && e.pointer && startPoint.x > e.pointer.x) {
@@ -405,6 +406,7 @@ export const useCanvasActions = (
           shape.set({
             evented: true,
             hoverCursor: 'default',
+            lockUniScaling: perfectShapeIsActive,
           });
 
           canvas.setActiveObject(shape);
