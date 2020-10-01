@@ -4,7 +4,6 @@ import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
 import { WhiteboardCanvas } from './WhiteboardCanvas';
 import { ICanvasKeyboardEvent } from '../../interfaces/canvas-events/canvas-keyboard-event';
-// import { lastActiveCanvas } from './hooks/lastActiveCanvas';
 
 const teacher = {
   allowClearAll: true,
