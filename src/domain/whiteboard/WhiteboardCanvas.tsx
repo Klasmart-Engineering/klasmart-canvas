@@ -663,7 +663,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (
         (e as ICanvasKeyboardEvent).key === 'Shift' &&
         canvas &&
-        !perfectShapeIsActive
+        !perfectShapeIsActive &&
+        window.innerWidth > 768
       ) {
         updatePerfectShapeIsActive(true);
       }
@@ -680,7 +681,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (
         (e as ICanvasKeyboardEvent).key === 'Shift' &&
         canvas &&
-        perfectShapeIsActive
+        perfectShapeIsActive &&
+        window.innerWidth > 768
       ) {
         updatePerfectShapeIsActive(false);
       }

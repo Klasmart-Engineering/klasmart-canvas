@@ -26,6 +26,7 @@ import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
 import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
+import WhiteboardToggle from '../../components/WhiteboardToogle';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -304,9 +305,15 @@ export const WhiteboardProvider = ({
       <button onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
         Clear student
       </button>
+      {window.innerWidth <= 768 || window.innerHeight <= 768 ? (
+        <WhiteboardToggle
+          label="Perfect Shape Creation"
+          initialState={perfectShapeIsActive}
+          onStateChange={updatePerfectShapeIsActive}
+        />
+      ) : null}
       {/*<div>Whiteboard Context {toolbarIsEnabled.toString()}</div>*/}
       <AuthMenu userId={userId} setToolbarIsEnabled={setToolbarIsEnabled} />
-
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />
