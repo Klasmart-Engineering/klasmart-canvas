@@ -6,6 +6,7 @@ export const useToolbarPermissions = () => {
     pointer: false,
     move: false,
     erase: false,
+    partialErase: false,
     pen: false,
     floodFill: false,
     text: false,
