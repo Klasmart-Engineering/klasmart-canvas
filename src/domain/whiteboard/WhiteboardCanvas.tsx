@@ -158,6 +158,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     lineWidthIsActive,
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
+    perfectShapeIsAvailable,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -664,12 +665,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         (e as ICanvasKeyboardEvent).key === 'Shift' &&
         canvas &&
         !perfectShapeIsActive &&
-        window.innerWidth > 768
+        window.innerWidth > 768 &&
+        perfectShapeIsAvailable()
       ) {
         updatePerfectShapeIsActive(true);
       }
     },
-    [canvas, perfectShapeIsActive, updatePerfectShapeIsActive]
+    [
+      canvas,
+      perfectShapeIsActive,
+      perfectShapeIsAvailable,
+      updatePerfectShapeIsActive,
+    ]
   );
 
   /**
@@ -1759,7 +1766,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     canvas?.forEachObject((object: ICanvasObject) => {
-      if (isShape(object) && object.id && isLocalObject(object.id, userId)) {
+      if (
+        isEmptyShape(object as TypedShape) &&
+        object.id &&
+        isLocalObject(object.id, userId)
+      ) {
         object.set('lockUniScaling', perfectShapeIsActive);
       }
     });
@@ -1767,7 +1778,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (
       canvas?.getActiveObject() &&
       perfectShapeIsActive &&
-      isShape(canvas.getActiveObject())
+      isEmptyShape(canvas.getActiveObject())
     ) {
       const shapeToFix = canvas.getActiveObject();
       if (Number(shapeToFix.width) > Number(shapeToFix.height)) {
@@ -1798,6 +1809,23 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     an unexpected event is triggered */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvas, perfectShapeIsActive, userId]);
+
+  /**
+   * Reset perfectShapeIsActive to false when the shape or move tool permissions are revoked
+   */
+  useEffect(() => {
+    if (!perfectShapeIsAvailable()) {
+      updatePerfectShapeIsActive(false);
+    }
+  }, [
+    perfectShapeIsActive,
+    serializerToolbarState.shape,
+    allToolbarIsEnabled,
+    userId,
+    updatePerfectShapeIsActive,
+    serializerToolbarState.move,
+    perfectShapeIsAvailable,
+  ]);
 
   return (
     <canvas

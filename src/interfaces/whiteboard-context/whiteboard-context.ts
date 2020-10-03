@@ -96,4 +96,5 @@ export interface IWhiteboardContext {
   updateLineWidthIsActive: (active: boolean) => void;
   perfectShapeIsActive: boolean;
   updatePerfectShapeIsActive: (active: boolean) => void;
+  perfectShapeIsAvailable: () => boolean;
 }

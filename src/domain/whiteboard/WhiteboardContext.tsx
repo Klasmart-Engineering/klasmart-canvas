@@ -202,6 +202,13 @@ export const WhiteboardProvider = ({
     canvasActions?.redo();
   }, [canvasActions]);
 
+  const perfectShapeIsAvailable = () => {
+    return (
+      allToolbarIsEnabled ||
+      serializerToolbarState.shape ||
+      serializerToolbarState.move
+    );
+  };
   /**
    * List of available colors in toolbar
    * */
@@ -291,6 +298,7 @@ export const WhiteboardProvider = ({
     serializerToolbarState,
     setSerializerToolbarState,
     allToolbarIsEnabled,
+    perfectShapeIsAvailable,
   };
 
   return (
@@ -305,11 +313,16 @@ export const WhiteboardProvider = ({
       <button onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
         Clear student
       </button>
-      {window.innerWidth <= 768 || window.innerHeight <= 768 ? (
+      {(window.innerWidth <= 768 || window.innerHeight <= 768) &&
+      perfectShapeIsAvailable() ? (
         <WhiteboardToggle
           label="Perfect Shape Creation"
-          initialState={perfectShapeIsActive}
-          onStateChange={updatePerfectShapeIsActive}
+          state={perfectShapeIsActive}
+          onStateChange={(value: boolean) => {
+            if (perfectShapeIsAvailable()) {
+              updatePerfectShapeIsActive(value);
+            }
+          }}
         />
       ) : null}
       {/*<div>Whiteboard Context {toolbarIsEnabled.toString()}</div>*/}
