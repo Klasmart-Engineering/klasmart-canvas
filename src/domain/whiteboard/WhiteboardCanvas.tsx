@@ -64,6 +64,7 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
+import { CANVAS_OBJECT_PROPS } from '../../config/undo-redo-values';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -1552,25 +1553,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         let mappedObjects = canvas?.getObjects().map((object: any) => {
           if (!object.group) {
-            return object.toJSON([
-              'strokeUniform',
-              'id',
-              'selectable',
-              'evented',
-              'shapeType',
-              'joinedIds',
-            ]);
+            return object.toJSON(CANVAS_OBJECT_PROPS);
           }
           const matrix = object.calcTransformMatrix();
           const options = fabric.util.qrDecompose(matrix);
-          const transformed = object.toJSON([
-            'strokeUniform',
-            'id',
-            'selectable',
-            'evented',
-            'shapeType',
-            'joinedIds',
-          ]);
+          const transformed = object.toJSON(CANVAS_OBJECT_PROPS);
           let top = object.group.height / 2 + object.top + object.group.top;
           let left = object.group.width / 2 + object.left + object.group.left;
 
