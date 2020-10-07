@@ -64,6 +64,7 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
+import { CanvasDownloadConfirm } from '../../modals/canvasDownload';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -156,6 +157,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setSerializerToolbarState,
     allToolbarIsEnabled,
     lineWidthIsActive,
+    imagePopupIsOpen,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -165,6 +167,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     eventSerializer,
     userId
   );
+
+  useEffect(() => {
+    console.log('popupIsOpen!: ', imagePopupIsOpen);
+  }, [imagePopupIsOpen]);
 
   /**
    * Creates Canvas/Whiteboard instance
@@ -1717,19 +1723,26 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     shapesAreSelectable,
   ]);
 
+  useEffect(() => {
+    console.log('OPEN:?', imagePopupIsOpen);
+  }, [imagePopupIsOpen]);
+
   return (
-    <canvas
-      width={pixelWidth}
-      height={pixelHeight}
-      id={instanceId}
-      style={{ ...initialStyle, backgroundColor: 'transparent' }}
-      tabIndex={0}
-      onKeyDown={keyDown}
-      onClick={() => {
-        actions.addShape(shape);
-      }}
-    >
-      {children}
-    </canvas>
+    <>
+      <CanvasDownloadConfirm></CanvasDownloadConfirm>
+      <canvas
+        width={pixelWidth}
+        height={pixelHeight}
+        id={instanceId}
+        style={{ ...initialStyle, backgroundColor: 'transparent' }}
+        tabIndex={0}
+        onKeyDown={keyDown}
+        onClick={() => {
+          actions.addShape(shape);
+        }}
+      >
+        {children}
+      </canvas>
+    </>
   );
 };

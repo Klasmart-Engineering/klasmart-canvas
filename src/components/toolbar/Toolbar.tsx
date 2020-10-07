@@ -74,6 +74,7 @@ function Toolbar() {
     allToolbarIsEnabled,
     serializerToolbarState,
     updateLineWidthIsActive,
+    updateImagePopupIsOpen,
   } = useContext(WhiteboardContext);
 
   const pointerToolIsActive =
@@ -228,6 +229,8 @@ function Toolbar() {
             redo();
           }
           break;
+        case ELEMENTS.WHITEBOARD_SCREENSHOT_ACTION:
+          updateImagePopupIsOpen(true);
       }
     }
   }

@@ -25,6 +25,7 @@ import AuthMenu from '../../components/AuthMenu';
 import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
+import { canvasImagePopup } from './hooks/canvasImagePopup';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -48,6 +49,7 @@ export const WhiteboardProvider = ({
   const { lineWidth, updateLineWidth } = useLineWidth();
   const { floodFill, updateFloodFill } = useFloodFill();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
+  const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
 
   const {
     ClearWhiteboardModal,
@@ -283,6 +285,8 @@ export const WhiteboardProvider = ({
     serializerToolbarState,
     setSerializerToolbarState,
     allToolbarIsEnabled,
+    imagePopupIsOpen,
+    updateImagePopupIsOpen,
   };
 
   return (

@@ -94,4 +94,6 @@ export interface IWhiteboardContext {
   allToolbarIsEnabled: boolean;
   lineWidthIsActive: boolean;
   updateLineWidthIsActive: (active: boolean) => void;
+  imagePopupIsOpen: boolean;
+  updateImagePopupIsOpen: (open: boolean) => void;
 }
