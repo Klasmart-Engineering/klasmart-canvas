@@ -8,6 +8,7 @@ import {
   ObjectEvent,
 } from '../event-serializer/PaintEventSerializer';
 import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
+import { IPathTarget } from '../../../interfaces/canvas-events/path-target';
 
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
@@ -100,16 +101,20 @@ export const UndoRedo = (
       canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
         canvas
           .getObjects()
-          .forEach((o: TypedShape | TypedPolygon | TypedGroup) => {
-            if (isLocalObject(o.id as string, instanceId)) {
-              (o as TypedShape).set({ selectable: true, evented: true });
+          .forEach(
+            (o: TypedShape | TypedPolygon | TypedGroup | IPathTarget) => {
+              if (isLocalObject(o.id as string, instanceId)) {
+                if (!(o as IPathTarget).isPartialErased) {
+                  (o as TypedShape).set({ selectable: true, evented: true });
+                }
 
-              if ((o as TypedGroup)._objects) {
-                (o as TypedGroup).toActiveSelection();
-                canvas.discardActiveObject();
+                if ((o as TypedGroup)._objects) {
+                  (o as TypedGroup).toActiveSelection();
+                  canvas.discardActiveObject();
+                }
               }
             }
-          });
+          );
 
         const fill = getPreviousBackground(state.eventIndex, state.events);
         canvas.backgroundColor = fill;
