@@ -19,7 +19,6 @@ const student = {
 
 function Whiteboard() {
   const canvasStyle: CSSProperties = {
-    border: '2px blue solid',
     position: 'absolute',
     top: '0px',
     left: '0px',
@@ -66,7 +65,7 @@ function Whiteboard() {
           >
             <div
               style={{
-                border: '1px solid black',
+                border: '2px solid blue',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -105,7 +104,7 @@ function Whiteboard() {
           >
             <div
               style={{
-                border: '1px solid black',
+                border: '2px solid blue',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -144,7 +143,7 @@ function Whiteboard() {
           >
             <div
               style={{
-                border: '1px solid black',
+                border: '2px solid blue',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
