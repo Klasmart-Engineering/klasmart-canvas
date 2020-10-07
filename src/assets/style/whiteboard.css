@@ -30,12 +30,12 @@
   flex-direction: row;
   margin-bottom: 8px;
   background-color: #79beff;
+  padding-left: 8px;
 }
 
 @font-face {
   font-family: 'Crayon';
-  src: local('Crayon'),
-    url(../../assets/fonts/Crayon2.ttf) format('truetype');
+  src: local('Crayon'), url(../../assets/fonts/Crayon2.ttf) format('truetype');
 }
 
 @font-face {

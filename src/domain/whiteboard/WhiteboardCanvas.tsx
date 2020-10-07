@@ -208,7 +208,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (!canvas) return;
 
     const lowerCanvas = document.getElementById(instanceId);
-    const wrapper = lowerCanvas?.parentElement;
+    const wrapper = lowerCanvas?.parentElement?.parentElement;
     const upperCanvas = wrapper?.getElementsByClassName('upper-canvas')[0];
 
     if (wrapper) {
