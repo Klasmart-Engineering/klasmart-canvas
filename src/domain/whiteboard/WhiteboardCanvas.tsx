@@ -156,6 +156,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setSerializerToolbarState,
     allToolbarIsEnabled,
     lineWidthIsActive,
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -290,17 +292,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         ((object.id && isLocalObject(object.id, userId)) || !object.id) &&
         !eraseType
       ) {
-        object.set({
-          selectable: teacherHasPermission || studentHasPermission,
-          evented:
-            (allToolbarIsEnabled &&
-              (shapesAreSelectable || shapesAreEvented)) ||
-            (serializerToolbarState.move &&
-              (shapesAreSelectable || shapesAreEvented)),
-          lockMovementX: !shapesAreSelectable,
-          lockMovementY: !shapesAreSelectable,
-          hoverCursor: shapesAreSelectable ? 'move' : 'default',
-        });
+        if (object.isPartialErased) {
+          object.set({
+            selectable: false,
+            evented: false,
+          });
+        } else {
+          object.set({
+            selectable: teacherHasPermission || studentHasPermission,
+            evented:
+              (allToolbarIsEnabled &&
+                (shapesAreSelectable || shapesAreEvented)) ||
+              (serializerToolbarState.move &&
+                (shapesAreSelectable || shapesAreEvented)),
+            lockMovementX: !shapesAreSelectable,
+            lockMovementY: !shapesAreSelectable,
+            hoverCursor: shapesAreSelectable ? 'move' : 'default',
+          });
+        }
       }
     });
 
@@ -531,11 +540,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
       canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
       canvas.freeDrawingBrush.width = lineWidth;
+      canvas.freeDrawingCursor = 'crosshair';
       canvas.isDrawingMode =
         allToolbarIsEnabled || (toolbarIsEnabled && serializerToolbarState.pen);
 
       canvas.on('path:created', pathCreated);
-    } else if (canvas && !brushIsActive) {
+    } else if (canvas && !brushIsActive && !partialEraseIsActive) {
       canvas.isDrawingMode = false;
     }
 
@@ -550,6 +560,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     toolbarIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState.pen,
+    partialEraseIsActive,
   ]);
 
   /**
@@ -919,7 +930,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const studentHasPermission = serializerToolbarState.move && eventedObjects;
     if (teacherHasPermission || studentHasPermission) {
       canvas?.forEachObject((object: ICanvasObject) => {
-        if (object.id && isLocalObject(object.id, userId)) {
+        if (
+          object.id &&
+          isLocalObject(object.id, userId) &&
+          !object.isPartialErased
+        ) {
           object.set({
             evented: allToolbarIsEnabled || serializerToolbarState.move,
             selectable: allToolbarIsEnabled || serializerToolbarState.move,
@@ -949,7 +964,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.forEachObject((object: ICanvasObject) => {
         const isTextObject = Boolean(isText(object));
 
-        if (object.id && isLocalObject(object.id, userId)) {
+        if (
+          object.id &&
+          isLocalObject(object.id, userId) &&
+          !object.isPartialErased
+        ) {
           setObjectControlsVisibility(
             object,
             eventedObjects || (isTextObject && textIsActive)
@@ -1229,13 +1248,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     [isLocalObject, userId]
   );
 
-  useSynchronizedAdded(
-    canvas,
-    userId,
-    filterOutgoingEvents,
-    filterIncomingEvents,
-    undoRedoDispatch
-  );
   useSynchronizedMoved(
     canvas,
     userId,
@@ -1637,6 +1649,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * necessaries to erase objects are setted or removed
    */
   useEffect(() => {
+    if (eraseType === 'partial' && canvas && !brushIsActive) {
+      actions.partialEraseObject();
+
+      return;
+    } else if (canvas && !partialEraseIsActive && !brushIsActive) {
+      canvas.isDrawingMode = false;
+    }
+
+    updatePartialEraseIsActive(false);
+
     if (
       eraseType === 'object' &&
       canvas &&
@@ -1657,6 +1679,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
+      canvas?.off('path:created');
     };
   }, [
     eraseType,
@@ -1666,6 +1689,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     toolbarIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState.erase,
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
+    brushIsActive,
   ]);
 
   useEffect(() => {
@@ -1732,7 +1758,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (
         object.id &&
         isLocalObject(object.id, userId) &&
-        shapesAreSelectable
+        shapesAreSelectable &&
+        !object.isPartialErased
       ) {
         object.set({
           evented: allToolbarIsEnabled || studentHasPermission,
@@ -1750,6 +1777,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     serializerToolbarState.erase,
     shapesAreSelectable,
   ]);
+
+  useSynchronizedAdded(
+    canvas,
+    userId,
+    filterOutgoingEvents,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
 
   return (
     <canvas
