@@ -10,4 +10,7 @@ export interface IPathTarget {
   strokeUniform?: boolean;
   top?: number;
   left?: number;
+  globalCompositeOperation: string;
+  bringToFront: () => void;
+  isPartialErased: boolean;
 }

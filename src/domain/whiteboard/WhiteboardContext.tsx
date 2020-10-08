@@ -27,6 +27,7 @@ import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
 import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
 import WhiteboardToggle from '../../components/WhiteboardToogle';
+import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -61,6 +62,10 @@ export const WhiteboardProvider = ({
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
   const { clearIsActive, updateClearIsActive } = useClearIsActive();
+  const {
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
+  } = usePartialEraseIsActive();
   const { lineWidthIsActive, updateLineWidthIsActive } = useLineWidthIsActive();
   const {
     perfectShapeIsActive,
@@ -299,6 +304,8 @@ export const WhiteboardProvider = ({
     setSerializerToolbarState,
     allToolbarIsEnabled,
     perfectShapeIsAvailable,
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
   };
 
   return (

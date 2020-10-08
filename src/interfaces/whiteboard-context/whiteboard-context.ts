@@ -72,6 +72,7 @@ export interface IWhiteboardContext {
     pointer: boolean;
     move: boolean;
     erase: boolean;
+    partialErase: boolean;
     pen: boolean;
     floodFill: boolean;
     text: boolean;
@@ -84,6 +85,7 @@ export interface IWhiteboardContext {
     pointer: boolean;
     move: boolean;
     erase: boolean;
+    partialErase: boolean;
     pen: boolean;
     floodFill: boolean;
     text: boolean;
@@ -97,4 +99,6 @@ export interface IWhiteboardContext {
   perfectShapeIsActive: boolean;
   updatePerfectShapeIsActive: (active: boolean) => void;
   perfectShapeIsAvailable: () => boolean;
+  partialEraseIsActive: boolean;
+  updatePartialEraseIsActive: (status: boolean) => void;
 }
