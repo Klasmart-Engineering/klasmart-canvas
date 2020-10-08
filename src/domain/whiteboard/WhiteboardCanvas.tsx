@@ -158,6 +158,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     allToolbarIsEnabled,
     lineWidthIsActive,
     imagePopupIsOpen,
+    updateImagePopupIsOpen
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -1729,7 +1730,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   return (
     <>
-      <CanvasDownloadConfirm></CanvasDownloadConfirm>
+      <CanvasDownloadConfirm 
+        open={imagePopupIsOpen}
+        onClose={updateImagePopupIsOpen}
+        canvas={canvas as fabric.Canvas}
+      ></CanvasDownloadConfirm>
       <canvas
         width={pixelWidth}
         height={pixelHeight}

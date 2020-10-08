@@ -2,6 +2,9 @@ import React from 'react';
 import { Modal, Button } from '@material-ui/core';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 
+/**
+ * Modal styles
+ */
 const useStyles = makeStyles((theme) => ({
   confirm: {
     position: 'absolute',
@@ -12,37 +15,107 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(2, 4, 3),
     top: '100px',
     left: 'calc(50% - 200px)',
-    textAlign: 'center'
+    textAlign: 'center',
   },
   button: {
     border: '1px solid black',
     borderRadius: '5px',
-    margin: '0 5px'
+    margin: '0 5px',
   },
   cancel: {
     border: '2px solid red',
     borderRadius: '5px',
-    margin: '0 5px'
-  }
+    margin: '0 5px',
+  },
+  a: {
+    visibility: 'hidden',
+  },
 }));
 
-export const CanvasDownloadConfirm = () => {
+/**
+ * Modal props.
+ */
+type Props = {
+  open: boolean;
+  onClose: (open: boolean) => void;
+  canvas: fabric.Canvas;
+};
+
+/**
+ * Modal component to confirm download.
+ * @param props Component props.
+ */
+export const CanvasDownloadConfirm = (props: Props) => {
+  /**
+   * Modal styles
+   */
   const css = useStyles();
+
+  /**
+   * Download method for canvas.
+   * @param type Type of image, either png or jpg.
+   */
+  const downloadCanvas = (type: string) => {
+    const ext = type === 'image/png' ? 'png' : 'jpg';
+    const img = ((props.canvas as unknown) as HTMLCanvasElement).toDataURL(
+      type,
+      1
+    );
+    const link = document.getElementById('canvasDownloader');
+    const date = new Date();
+
+    (link as HTMLElement).setAttribute(
+      'download',
+      `canvas${date.getTime()}.${ext}`
+    );
+    (link as HTMLElement).setAttribute(
+      'href',
+      img.replace(type, 'image/octet-stream')
+    );
+    (link as HTMLElement).click();
+    props.onClose(false);
+  };
+
+  /**
+   * Click event to download png image.
+   */
+  const downloadCanvasPNG = () => {
+    downloadCanvas('image/png');
+  };
+
+  /**
+   * Click event to downloag jpg image.
+   */
+  const downloadCanvasJPG = () => {
+    downloadCanvas('image/jpeg');
+  };
 
   return (
     <Modal
-      open={true}
+      open={props.open}
       aria-labelledby="simple-modal-title"
       aria-describedby="simple-modal-description"
     >
       <div className={css.confirm}>
         <h2>Select Format</h2>
-        <Button className={css.button}>PNG</Button>
-        <Button className={css.button}>JPEG</Button>
-        <Button className={css.cancel}>Cancel</Button>
+        <Button className={css.button} onClick={downloadCanvasPNG}>
+          PNG
+        </Button>
+        <Button className={css.button} onClick={downloadCanvasJPG}>
+          JPG
+        </Button>
+        <a className={css.a} href="#/" id="canvasDownloader">
+          download
+        </a>
+        <Button
+          className={css.cancel}
+          onClick={() => {
+            props.onClose(false);
+          }}
+        >
+          Cancel
+        </Button>
       </div>
     </Modal>
-    
   );
 };
-
