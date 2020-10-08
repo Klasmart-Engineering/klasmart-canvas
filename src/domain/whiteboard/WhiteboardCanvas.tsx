@@ -1649,7 +1649,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * necessaries to erase objects are setted or removed
    */
   useEffect(() => {
-    if (eraseType === 'partial' && canvas && !brushIsActive) {
+    if (
+      eraseType === 'partial' &&
+      canvas &&
+      !brushIsActive &&
+      toolbarIsEnabled &&
+      (allToolbarIsEnabled || serializerToolbarState.partialErase)
+    ) {
       actions.partialEraseObject();
 
       return;
@@ -1689,6 +1695,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     toolbarIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState.erase,
+    serializerToolbarState.partialErase,
     partialEraseIsActive,
     updatePartialEraseIsActive,
     brushIsActive,
@@ -1786,19 +1793,30 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     undoRedoDispatch
   );
 
+  useSynchronizedSetToolbarPermissions(
+    canvas,
+    userId,
+    filterIncomingEvents,
+    setToolbarIsEnabled,
+    setPointerIsEnabled,
+    setSerializerToolbarState
+  );
+
   return (
-    <canvas
-      width={pixelWidth}
-      height={pixelHeight}
-      id={instanceId}
-      style={{ ...initialStyle, backgroundColor: 'transparent' }}
-      tabIndex={0}
-      onKeyDown={keyDown}
-      onClick={() => {
-        actions.addShape(shape);
-      }}
-    >
-      {children}
-    </canvas>
+    <>
+      <canvas
+        width={pixelWidth}
+        height={pixelHeight}
+        id={instanceId}
+        style={{ ...initialStyle, backgroundColor: 'transparent' }}
+        tabIndex={0}
+        onKeyDown={keyDown}
+        onClick={() => {
+          actions.addShape(shape);
+        }}
+      >
+        {children}
+      </canvas>
+    </>
   );
 };

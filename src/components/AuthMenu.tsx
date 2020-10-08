@@ -50,6 +50,7 @@ export default function AuthMenu(props: {
     pointer,
     move,
     erase,
+    partialErase,
     pen,
     floodFill,
     text,
@@ -91,6 +92,11 @@ export default function AuthMenu(props: {
       checked: erase,
       name: 'erase',
       label: 'Erase tool',
+    },
+    {
+      checked: partialErase,
+      name: 'partialErase',
+      label: 'Partial Erase tool',
     },
     {
       checked: pen,
