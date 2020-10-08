@@ -26,6 +26,7 @@ import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
 import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
+import { useUploadFileModal } from './hooks/useUploadFileModal';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -80,6 +81,11 @@ export const WhiteboardProvider = ({
     setSerializerToolbarState,
   } = useToolbarPermissions();
   const { pointerIsEnabled, setPointerIsEnabled } = usePointerPermissions();
+  const {
+    UploadFileModal,
+    openUploadFileModal,
+    closeUploadFileModal,
+  } = useUploadFileModal();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -94,6 +100,8 @@ export const WhiteboardProvider = ({
   // multiple instances using the instanceId to choose which one to
   // apply action to.
   const [canvasActions, updateCanvasActions] = useState<ICanvasActions>();
+  const [image, setImage] = useState('');
+  const [isGif, setIsGif] = useState(false);
 
   const isLocalObject = (id: string, canvasId: string | undefined) => {
     const object = id.split(':');
@@ -267,7 +275,6 @@ export const WhiteboardProvider = ({
     lineWidthIsActive,
     updateLineWidthIsActive,
     isLocalObject,
-
     // NOTE: Actions that will get invoked based on registered handler.
     fillColor: fillColorAction,
     textColor: textColorAction,
@@ -290,6 +297,12 @@ export const WhiteboardProvider = ({
     allToolbarIsEnabled,
     partialEraseIsActive,
     updatePartialEraseIsActive,
+    openUploadFileModal,
+    closeUploadFileModal,
+    image,
+    setImage,
+    isGif,
+    setIsGif,
   };
 
   return (
@@ -310,6 +323,8 @@ export const WhiteboardProvider = ({
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />
+
+      <UploadFileModal setImage={setImage} setIsGif={setIsGif} />
       {children}
     </WhiteboardContext.Provider>
   );

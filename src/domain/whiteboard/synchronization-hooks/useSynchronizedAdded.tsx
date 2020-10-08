@@ -14,6 +14,7 @@ import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-dr
 import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { WhiteboardContext } from '../WhiteboardContext';
+import { fabricGif } from '../gifs-actions/fabricGif';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -22,7 +23,7 @@ const useSynchronizedAdded = (
   shouldHandleRemoteEvent: (id: string) => boolean,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
-  const { floodFillIsActive } = useContext(WhiteboardContext);
+  const { floodFillIsActive, isGif, image } = useContext(WhiteboardContext);
   const {
     state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
@@ -123,6 +124,29 @@ const useSynchronizedAdded = (
 
         eventSerializer?.push('added', payload);
       }
+
+      if (isGif) {
+        const payload: ObjectEvent = {
+          type: 'gif',
+          target: URL.createObjectURL(image),
+          id: e.target.id,
+        };
+
+        console.log('two gif', payload);
+        eventSerializer?.push('added', payload);
+
+        return;
+      }
+
+      if (type === 'image') {
+        const payload: ObjectEvent = {
+          type,
+          target: e.target,
+          id: e.target.id,
+        };
+        console.log('two Image', payload);
+        eventSerializer?.push('added', payload);
+      }
     };
 
     canvas?.on('object:added', objectAdded);
@@ -130,7 +154,15 @@ const useSynchronizedAdded = (
     return () => {
       canvas?.off('object:added', objectAdded);
     };
-  }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
+  }, [
+    canvas,
+    eventSerializer,
+    shouldSerializeEvent,
+    undoRedoDispatch,
+    userId,
+    isGif,
+    image,
+  ]);
 
   /**
    * Generates a new shape based on shape name.
@@ -200,7 +232,6 @@ const useSynchronizedAdded = (
       // Events come from another user
       // Pass as props to user context
       // Ids of shapes + userId  uuid()
-
       if (!shouldHandleRemoteEvent(id)) return;
 
       if (objectType === 'textbox') {
@@ -269,8 +300,15 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'image') {
+        console.log('three createImg', target);
         fabric.Image.fromURL(target.src as string, (data: fabric.Image) => {
-          (data as TypedShape).set({ id, top: target.top, left: target.left });
+          (data as TypedShape).set({
+            id,
+            top: target.top,
+            left: target.left,
+            scaleX: target.scaleX,
+            scaleY: target.scaleY,
+          });
           canvas?.add(data);
           canvas?.renderAll();
 
@@ -280,6 +318,26 @@ const useSynchronizedAdded = (
             canvasId: userId,
           });
         });
+      }
+
+      if (objectType === 'gif') {
+        console.log('three createGif', target);
+
+        (async function () {
+          try {
+            const gif = await fabricGif(target + '', 200, 200, 2000);
+            gif.set({ top: 0, left: 0, selectable: false, evented: false });
+            gif.id = id;
+            canvas?.add(gif);
+
+            fabric.util.requestAnimFrame(function render() {
+              canvas?.renderAll();
+              fabric.util.requestAnimFrame(render);
+            });
+          } catch (e) {
+            console.error(e);
+          }
+        })();
       }
 
       if (shape) {

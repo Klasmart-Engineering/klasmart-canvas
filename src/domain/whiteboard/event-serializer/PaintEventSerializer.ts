@@ -28,7 +28,8 @@ export interface ObjectEvent {
     | { pointer: boolean }
     | boolean
     | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean }
-    | IToolbarUI;
+    | IToolbarUI
+    | string;
 }
 
 export type ObjectType =
@@ -39,7 +40,8 @@ export type ObjectType =
   | 'shape'
   | 'background'
   | 'image'
-  | 'pointer';
+  | 'pointer'
+  | 'gif';
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {

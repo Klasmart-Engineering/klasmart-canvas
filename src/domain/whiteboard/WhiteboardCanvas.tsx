@@ -64,6 +64,9 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
+import backgroundImage from '../../assets/background2.jpg';
+// import pug from '../../assets/pug.jpg';
+import { fabricGif } from './gifs-actions/fabricGif';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -158,6 +161,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     lineWidthIsActive,
     partialEraseIsActive,
     updatePartialEraseIsActive,
+    image,
+    isGif,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -1611,6 +1616,48 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [pointerEvents, canvas]);
 
   /**
+   * Handles the logic to add image and background images to the whiteboard
+   */
+  useEffect(() => {
+    async function createGif() {
+      try {
+        const gif = await fabricGif(URL.createObjectURL(image), 200, 200, 2000);
+        gif.set({ top: 0, left: 0 });
+        gif.id = `${userId}:${uuidv4()}`;
+        canvas?.add(gif);
+
+        fabric.util.requestAnimFrame(function render() {
+          canvas?.renderAll();
+          fabric.util.requestAnimFrame(render);
+        });
+
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    if (isGif) {
+      createGif();
+      console.log('one gif')
+      return;
+    }
+
+    fabric.Image.fromURL(image, function (img) {
+      console.log('one image')
+      console.log({ image });
+      const oImg: ICanvasObject = img
+        .set({
+          left: 0,
+          top: 0,
+        })
+        .scale(0.25);
+
+      oImg.id = `${userId}:${uuidv4()}`;
+      canvas?.add(oImg);
+    });
+  }, [canvas, image, userId, isGif]);
+
+  /**
    * When eraseType value changes, listeners and states
    * necessaries to erase objects are setted or removed
    */
@@ -1783,6 +1830,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       >
         {children}
       </canvas>
+      <img
+        style={{
+          height: '100%',
+          width: '100%',
+          // objectFit: 'contain'
+        }}
+        alt="background"
+        src={backgroundImage}
+      />
     </>
   );
 };

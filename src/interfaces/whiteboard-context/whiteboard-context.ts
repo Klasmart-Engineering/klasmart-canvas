@@ -98,4 +98,10 @@ export interface IWhiteboardContext {
   updateLineWidthIsActive: (active: boolean) => void;
   partialEraseIsActive: boolean;
   updatePartialEraseIsActive: (status: boolean) => void;
+  openUploadFileModal: () => void;
+  closeUploadFileModal: () => void;
+  image: string;
+  setImage: (image: string) => void;
+  isGif: boolean;
+  setIsGif: (status: boolean) => void;
 }

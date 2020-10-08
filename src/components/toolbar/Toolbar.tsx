@@ -75,6 +75,7 @@ function Toolbar() {
     serializerToolbarState,
     updateLineWidthIsActive,
     updatePartialEraseIsActive,
+    openUploadFileModal,
   } = useContext(WhiteboardContext);
 
   const pointerToolIsActive =
@@ -215,6 +216,7 @@ function Toolbar() {
       toolbarIsEnabled && serializerToolbarState.undoRedo;
 
     if (toolbarIsEnabled) {
+      console.log(tool)
       switch (tool) {
         case ELEMENTS.CLEAR_WHITEBOARD_ACTION:
           openClearWhiteboardModal();
@@ -229,6 +231,12 @@ function Toolbar() {
         case ELEMENTS.REDO_ACTION:
           if (teacherHasPermission || studentHasPermission) {
             redo();
+          }
+          break;
+
+        case ELEMENTS.ADD_IMAGE_ACTION:
+          if (teacherHasPermission || studentHasPermission) {
+            openUploadFileModal();
           }
           break;
       }
