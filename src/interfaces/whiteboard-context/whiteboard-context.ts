@@ -72,6 +72,7 @@ export interface IWhiteboardContext {
     pointer: boolean;
     move: boolean;
     erase: boolean;
+    partialErase: boolean;
     pen: boolean;
     floodFill: boolean;
     text: boolean;
@@ -84,6 +85,7 @@ export interface IWhiteboardContext {
     pointer: boolean;
     move: boolean;
     erase: boolean;
+    partialErase: boolean;
     pen: boolean;
     floodFill: boolean;
     text: boolean;
@@ -94,4 +96,6 @@ export interface IWhiteboardContext {
   allToolbarIsEnabled: boolean;
   lineWidthIsActive: boolean;
   updateLineWidthIsActive: (active: boolean) => void;
+  partialEraseIsActive: boolean;
+  updatePartialEraseIsActive: (status: boolean) => void;
 }
