@@ -41,6 +41,7 @@ const useSynchronizedAdded = (
         stroke: e.path.stroke,
         strokeWidth: e.path.strokeWidth,
         path: e.path.path,
+        isPartialErased: e.path.isPartialErased,
       } as ICanvasObject;
 
       eventSerializer?.push(
@@ -240,6 +241,9 @@ const useSynchronizedAdded = (
         res.selectable = false;
         res.evented = false;
         res.strokeUniform = true;
+        if (target.isPartialErased) {
+          res.globalCompositeOperation = 'destination-out';
+        }
 
         canvas?.add(res);
         canvas?.renderAll();
