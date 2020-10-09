@@ -267,6 +267,7 @@ const reducer = (
   switch (action.type) {
     // Sets state when new object is created.
     case SET: {
+      console.log('action: ', action);
       if (
         !action.event ||
         (action.event.type === 'removed' && state.activeStateIndex === null) ||

@@ -52,6 +52,43 @@ const getPreviousBackground = (currentIndex: number, events: any): string => {
   return '#fff';
 };
 
+const mapActiveState = (activeState: any) => (JSON.parse(activeState as string).objects.map(
+  (object: TypedShape | TypedGroup) => {
+    if ((object as TypedGroup).objects) {
+      let _objects = (object as TypedGroup).objects;
+      let mappedObjects = (_objects as TypedShape[]).map(
+        (o: TypedShape) => {
+          return { ...o, fromJSON: true };
+        }
+      );
+
+      return { ...object, fromJSON: true, objects: mappedObjects };
+    }
+    return { ...object, fromJSON: true };
+  }
+));
+
+const loadFromJSON = (canvas: fabric.Canvas, mapped: any, instanceId: string, state: any) => {
+  canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
+    canvas
+      .getObjects()
+      .forEach((o: TypedShape | TypedPolygon | TypedGroup) => {
+        if (isLocalObject(o.id as string, instanceId)) {
+          (o as TypedShape).set({ selectable: true, evented: true });
+
+          if ((o as TypedGroup)._objects) {
+            (o as TypedGroup).toActiveSelection();
+            canvas.discardActiveObject();
+          }
+        }
+      });
+
+    const fill = getPreviousBackground(state.eventIndex, state.events);
+    canvas.backgroundColor = fill;
+    canvas.renderAll();
+  });
+}
+
 /**
  * Custom hook to track canvas history.
  * @param canvas Canvas being manipulated
@@ -81,40 +118,8 @@ export const UndoRedo = (
         }
       });
 
-      const mapped = JSON.parse(state.activeState as string).objects.map(
-        (object: TypedShape | TypedGroup) => {
-          if ((object as TypedGroup).objects) {
-            let _objects = (object as TypedGroup).objects;
-            let mappedObjects = (_objects as TypedShape[]).map(
-              (o: TypedShape) => {
-                return { ...o, fromJSON: true };
-              }
-            );
-
-            return { ...object, fromJSON: true, objects: mappedObjects };
-          }
-          return { ...object, fromJSON: true };
-        }
-      );
-
-      canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
-        canvas
-          .getObjects()
-          .forEach((o: TypedShape | TypedPolygon | TypedGroup) => {
-            if (isLocalObject(o.id as string, instanceId)) {
-              (o as TypedShape).set({ selectable: true, evented: true });
-
-              if ((o as TypedGroup)._objects) {
-                (o as TypedGroup).toActiveSelection();
-                canvas.discardActiveObject();
-              }
-            }
-          });
-
-        const fill = getPreviousBackground(state.eventIndex, state.events);
-        canvas.backgroundColor = fill;
-        canvas.renderAll();
-      });
+      const mapped = mapActiveState(state.activeState);
+      loadFromJSON(canvas, mapped, instanceId, state);
     }
 
     if (state.actionType === UNDO) {
