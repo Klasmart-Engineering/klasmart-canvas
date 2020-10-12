@@ -25,6 +25,9 @@ import AuthMenu from '../../components/AuthMenu';
 import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
+import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
+import WhiteboardToggle from '../../components/WhiteboardToogle';
+import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -61,7 +64,15 @@ export const WhiteboardProvider = ({
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
   const { clearIsActive, updateClearIsActive } = useClearIsActive();
+  const {
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
+  } = usePartialEraseIsActive();
   const { lineWidthIsActive, updateLineWidthIsActive } = useLineWidthIsActive();
+  const {
+    perfectShapeIsActive,
+    updatePerfectShapeIsActive,
+  } = usePerfectShapeIsActive();
 
   const {
     shapesAreSelectable,
@@ -184,6 +195,13 @@ export const WhiteboardProvider = ({
     canvasActions?.redo();
   }, [canvasActions]);
 
+  const perfectShapeIsAvailable = () => {
+    return (
+      allToolbarIsEnabled ||
+      serializerToolbarState.shape ||
+      serializerToolbarState.move
+    );
+  };
   /**
    * List of available colors in toolbar
    * */
@@ -249,6 +267,8 @@ export const WhiteboardProvider = ({
     updateLaserIsActive,
     lineWidthIsActive,
     updateLineWidthIsActive,
+    perfectShapeIsActive,
+    updatePerfectShapeIsActive,
     isLocalObject,
 
     // NOTE: Actions that will get invoked based on registered handler.
@@ -272,6 +292,9 @@ export const WhiteboardProvider = ({
     setSerializerToolbarState,
     allToolbarIsEnabled,
     activeCanvas,
+    perfectShapeIsAvailable,
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
   };
 
   return (
@@ -286,9 +309,20 @@ export const WhiteboardProvider = ({
       <button onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
         Clear student
       </button>
+      {(window.innerWidth <= 768 || window.innerHeight <= 768) &&
+      perfectShapeIsAvailable() ? (
+        <WhiteboardToggle
+          label="Perfect Shape Creation"
+          state={perfectShapeIsActive}
+          onStateChange={(value: boolean) => {
+            if (perfectShapeIsAvailable()) {
+              updatePerfectShapeIsActive(value);
+            }
+          }}
+        />
+      ) : null}
       {/*<div>Whiteboard Context {toolbarIsEnabled.toString()}</div>*/}
       <AuthMenu userId={userId} setToolbarIsEnabled={setToolbarIsEnabled} />
-
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />
