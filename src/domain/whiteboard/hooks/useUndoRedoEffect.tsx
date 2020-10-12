@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
+import { useUndoRedo, UNDO, REDO, CanvasHistoryState } from '../reducers/undo-redo';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { TypedShape, TypedPolygon } from '../../../interfaces/shapes/shapes';
 import { Canvas } from 'fabric/fabric-impl';
@@ -8,6 +8,7 @@ import {
   ObjectEvent,
 } from '../event-serializer/PaintEventSerializer';
 import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
@@ -36,7 +37,7 @@ const isLocalObject = (id: string, canvasId: string): boolean => {
  * @param currentIndex Current event index.
  * @param events List of events.
  */
-const getPreviousBackground = (currentIndex: number, events: any): string => {
+const getPreviousBackground = (currentIndex: number, events: IUndoRedoEvent[]): string => {
   let i = currentIndex;
 
   if (i < 0) {
@@ -44,15 +45,15 @@ const getPreviousBackground = (currentIndex: number, events: any): string => {
   }
 
   for (i; i >= 0; i--) {
-    if (events[i].event.type === 'background') {
-      return events[i].event.target.fill;
+    if ((events[i].event as IUndoRedoSingleEvent).type === 'background') {
+      return (events[i].event as IUndoRedoSingleEvent).target.fill as string;
     }
   }
 
   return '#fff';
 };
 
-const mapActiveState = (activeState: any) => (JSON.parse(activeState as string).objects.map(
+const mapActiveState = (activeState: string) => (JSON.parse(activeState).objects.map(
   (object: TypedShape | TypedGroup) => {
     if ((object as TypedGroup).objects) {
       let _objects = (object as TypedGroup).objects;
@@ -68,7 +69,7 @@ const mapActiveState = (activeState: any) => (JSON.parse(activeState as string).
   }
 ));
 
-const loadFromJSON = (canvas: fabric.Canvas, mapped: any, instanceId: string, state: any) => {
+const loadFromJSON = (canvas: fabric.Canvas, mapped: { [key: string]: any }, instanceId: string, state: CanvasHistoryState) => {
   canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
     canvas
       .getObjects()
@@ -118,7 +119,7 @@ export const UndoRedo = (
         }
       });
 
-      const mapped = mapActiveState(state.activeState);
+      const mapped: { [key: string]: any } = mapActiveState(state.activeState as string);
       loadFromJSON(canvas, mapped, instanceId, state);
     }
 

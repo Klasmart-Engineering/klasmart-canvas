@@ -31,7 +31,7 @@ const useSynchronizedColorChanged = (
             obj.set({
               fill: target.fill,
             });
-          } else if (obj.stroke !== target.stroke) {
+          } else {
             obj.set({
               stroke: target.stroke,
             });
