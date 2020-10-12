@@ -4,6 +4,7 @@ import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
 import { WhiteboardCanvas } from './WhiteboardCanvas';
 import { ICanvasKeyboardEvent } from '../../interfaces/canvas-events/canvas-keyboard-event';
+import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardContainer';
 
 const teacher = {
   allowClearAll: true,
@@ -18,8 +19,10 @@ const student = {
 };
 
 function Whiteboard() {
+  const whiteboardWidth = 740;
+  const whiteboardHeight = 460;
+
   const canvasStyle: CSSProperties = {
-    border: '2px blue solid',
     position: 'absolute',
     top: '0px',
     left: '0px',
@@ -56,17 +59,9 @@ function Whiteboard() {
       >
         <div className="whiteboard">
           <Toolbar />
-          <div
-            style={{
-              border: '1px solid black',
-              width: '740px',
-              height: '460px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              backgroundColor: 'white',
-            }}
+          <WhiteboardContainer
+            width={whiteboardWidth}
+            height={whiteboardHeight}
           >
             <WhiteboardCanvas
               instanceId="canvas1"
@@ -74,13 +69,13 @@ function Whiteboard() {
               initialStyle={canvasStyle}
               pointerEvents={true}
               clearWhiteboardPermissions={teacher}
-              pixelWidth={740}
-              pixelHeight={460}
+              pixelWidth={whiteboardWidth}
+              pixelHeight={whiteboardHeight}
             >
               <button>Teacher</button>
             </WhiteboardCanvas>
             <button>Teacher</button>
-          </div>
+          </WhiteboardContainer>
         </div>
       </WhiteboardProvider>
       <WhiteboardProvider
@@ -90,17 +85,9 @@ function Whiteboard() {
       >
         <div className="whiteboard">
           <Toolbar />
-          <div
-            style={{
-              border: '1px solid black',
-              width: '740px',
-              height: '460px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              backgroundColor: 'white',
-            }}
+          <WhiteboardContainer
+            width={whiteboardWidth}
+            height={whiteboardHeight}
           >
             <WhiteboardCanvas
               instanceId="canvas2"
@@ -108,13 +95,13 @@ function Whiteboard() {
               initialStyle={canvasStyle}
               pointerEvents={true}
               clearWhiteboardPermissions={student}
-              pixelWidth={740}
-              pixelHeight={460}
+              pixelWidth={whiteboardWidth}
+              pixelHeight={whiteboardHeight}
             >
               <button>Student</button>
             </WhiteboardCanvas>
             <button>Student</button>
-          </div>
+          </WhiteboardContainer>
         </div>
       </WhiteboardProvider>
       <WhiteboardProvider
@@ -124,17 +111,9 @@ function Whiteboard() {
       >
         <div className="whiteboard">
           <Toolbar />
-          <div
-            style={{
-              border: '1px solid black',
-              width: '740px',
-              height: '460px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              backgroundColor: 'white',
-            }}
+          <WhiteboardContainer
+            width={whiteboardWidth}
+            height={whiteboardHeight}
           >
             <WhiteboardCanvas
               instanceId="canvas3"
@@ -142,13 +121,13 @@ function Whiteboard() {
               initialStyle={canvasStyle}
               pointerEvents={true}
               clearWhiteboardPermissions={student}
-              pixelWidth={740}
-              pixelHeight={460}
+              pixelWidth={whiteboardWidth}
+              pixelHeight={whiteboardHeight}
             >
               <button>Student</button>
             </WhiteboardCanvas>
             <button>Student</button>
-          </div>
+          </WhiteboardContainer>
         </div>
       </WhiteboardProvider>
     </>
