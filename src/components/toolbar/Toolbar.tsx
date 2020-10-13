@@ -74,6 +74,7 @@ function Toolbar() {
     allToolbarIsEnabled,
     serializerToolbarState,
     updateLineWidthIsActive,
+    updateBrushType,
   } = useContext(WhiteboardContext);
 
   const pointerToolIsActive =
@@ -284,6 +285,10 @@ function Toolbar() {
 
       case ELEMENTS.ADD_TEXT_TOOL:
         updateFontFamily(specific);
+        break;
+
+      case ELEMENTS.LINE_TYPE_TOOL:
+        updateBrushType(specific);
         break;
     }
   }

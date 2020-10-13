@@ -64,6 +64,7 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
+import { PenBrush } from '../../assets/brushes/penBrush';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -156,6 +157,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setSerializerToolbarState,
     allToolbarIsEnabled,
     lineWidthIsActive,
+    brushType,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -527,14 +529,29 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
 
     if (brushIsActive && canvas) {
-      canvas.freeDrawingBrush = new fabric.PencilBrush();
-      (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
-      canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
-      canvas.freeDrawingBrush.width = lineWidth;
-      canvas.isDrawingMode =
-        allToolbarIsEnabled || (toolbarIsEnabled && serializerToolbarState.pen);
+      if (brushType === 'pen') {
+        canvas.freeDrawingBrush = new PenBrush(canvas, lineWidth, penColor);
 
-      canvas.on('path:created', pathCreated);
+        (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
+        canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
+        canvas.freeDrawingBrush.width = lineWidth;
+        canvas.isDrawingMode =
+          allToolbarIsEnabled ||
+          (toolbarIsEnabled && serializerToolbarState.pen);
+
+        canvas.on('path:created', pathCreated);
+      } else {
+        canvas.freeDrawingBrush = new fabric.PencilBrush();
+
+        (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
+        canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
+        canvas.freeDrawingBrush.width = lineWidth;
+        canvas.isDrawingMode =
+          allToolbarIsEnabled ||
+          (toolbarIsEnabled && serializerToolbarState.pen);
+
+        canvas.on('path:created', pathCreated);
+      }
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
     }
@@ -550,6 +567,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     toolbarIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState.pen,
+    brushType,
   ]);
 
   /**
@@ -589,15 +607,20 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      if (!textIsActive && !floodFillIsActive && !shapesAreEvented) {
+      if (
+        !textIsActive &&
+        !floodFillIsActive &&
+        !shapesAreEvented &&
+        !brushIsActive
+      ) {
         canvas?.off('mouse:down');
       }
 
-      if (eraseType !== 'object') {
+      if (eraseType !== 'object' && !brushIsActive) {
         canvas?.off('mouse:up');
       }
 
-      if (!laserIsActive) {
+      if (!laserIsActive && !brushIsActive) {
         canvas?.off('mouse:move');
       }
     };
@@ -620,6 +643,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     toolbarIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState.shape,
+    brushIsActive,
   ]);
 
   /**
@@ -1146,7 +1170,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         });
       }
 
-      if (!textIsActive && eraseType !== 'object') {
+      if (!textIsActive && eraseType !== 'object' && !brushIsActive) {
         canvas?.off('mouse:down');
       }
     };
@@ -1168,6 +1192,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     laserPointerIsActive,
     allToolbarIsEnabled,
     serializerToolbarState.floodFill,
+    brushIsActive,
   ]);
 
   /**
@@ -1617,7 +1642,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      if (!textIsActive) {
+      if (!textIsActive && !brushIsActive) {
         canvas?.off('mouse:down');
       }
 
@@ -1632,6 +1657,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     toolbarIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState.erase,
+    brushIsActive,
   ]);
 
   useEffect(() => {
@@ -1640,13 +1666,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
 
     return () => {
-      if (!textIsActive) {
+      if (!textIsActive && !brushIsActive) {
         canvas?.off('mouse:down');
       }
       canvas?.off('mouse:move');
       canvas?.off('mouse:up');
     };
-  }, [canvas, shape, shapeIsActive, mouseDown, shapeColor, textIsActive]);
+  }, [
+    canvas,
+    shape,
+    shapeIsActive,
+    mouseDown,
+    shapeColor,
+    textIsActive,
+    brushIsActive,
+  ]);
 
   /**
    * If lineWidth variable changes and a free line drawing is selected

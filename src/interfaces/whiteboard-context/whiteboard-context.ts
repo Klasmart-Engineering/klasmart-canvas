@@ -94,4 +94,6 @@ export interface IWhiteboardContext {
   allToolbarIsEnabled: boolean;
   lineWidthIsActive: boolean;
   updateLineWidthIsActive: (active: boolean) => void;
+  brushType: string;
+  updateBrushType: (type: string) => void;
 }

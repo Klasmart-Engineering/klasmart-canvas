@@ -25,6 +25,7 @@ import AuthMenu from '../../components/AuthMenu';
 import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
+import { useBrushType } from './hooks/useBrushType';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -48,6 +49,7 @@ export const WhiteboardProvider = ({
   const { lineWidth, updateLineWidth } = useLineWidth();
   const { floodFill, updateFloodFill } = useFloodFill();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
+  const { brushType, updateBrushType } = useBrushType();
 
   const {
     ClearWhiteboardModal,
@@ -262,6 +264,8 @@ export const WhiteboardProvider = ({
     lineWidthIsActive,
     updateLineWidthIsActive,
     isLocalObject,
+    brushType,
+    updateBrushType,
 
     // NOTE: Actions that will get invoked based on registered handler.
     fillColor: fillColorAction,
