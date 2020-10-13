@@ -13,6 +13,7 @@ export const useToolbarPermissions = () => {
     shape: false,
     undoRedo: false,
     clearWhiteboard: false,
+    downloadCanvas: false,
   });
 
   return {

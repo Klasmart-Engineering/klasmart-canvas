@@ -57,6 +57,7 @@ export default function AuthMenu(props: {
     shape,
     undoRedo,
     clearWhiteboard,
+    downloadCanvas
   } = localToolbarState;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,6 +128,11 @@ export default function AuthMenu(props: {
       checked: clearWhiteboard,
       name: 'clearWhiteboard',
       label: 'Clear whiteboard tool',
+    },
+    {
+      checked: downloadCanvas,
+      name: 'downloadCanvas',
+      label: 'Save Canvas As Image',
     },
   ];
 

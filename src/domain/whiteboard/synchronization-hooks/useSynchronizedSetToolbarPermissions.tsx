@@ -19,6 +19,7 @@ const useSynchronizedSetToolbarPermissions = (
     shape: boolean;
     undoRedo: boolean;
     clearWhiteboard: boolean;
+    downloadCanvas: boolean;
   }) => void
 ) => {
   const {

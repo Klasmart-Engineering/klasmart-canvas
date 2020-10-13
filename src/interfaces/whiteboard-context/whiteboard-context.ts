@@ -79,6 +79,7 @@ export interface IWhiteboardContext {
     shape: boolean;
     undoRedo: boolean;
     clearWhiteboard: boolean;
+    downloadCanvas: boolean;
   };
   setSerializerToolbarState: (enabled: {
     [p: string]: boolean;
@@ -92,6 +93,7 @@ export interface IWhiteboardContext {
     shape: boolean;
     undoRedo: boolean;
     clearWhiteboard: boolean;
+    downloadCanvas: boolean;
   }) => void;
   allToolbarIsEnabled: boolean;
   lineWidthIsActive: boolean;
