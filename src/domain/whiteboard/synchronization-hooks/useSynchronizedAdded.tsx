@@ -83,7 +83,6 @@ const useSynchronizedAdded = (
   /** Register and handle object:added event. */
   useEffect(() => {
     const objectAdded = (e: any) => {
-      console.log('objectAdded', e);
       if (!e.target?.id) return;
       if (e.target.fromJSON) return;
       if (!shouldSerializeEvent(e.target.id)) return;
@@ -94,7 +93,6 @@ const useSynchronizedAdded = (
           target: e.target,
           id: e.target.id,
         };
-        console.log('two localImage', payload);
         eventSerializer?.push('added', payload);
 
         return;
@@ -147,7 +145,6 @@ const useSynchronizedAdded = (
           id: e.target.id,
         };
 
-        console.log('two gif', payload);
         eventSerializer?.push('added', payload);
 
         return;
@@ -159,7 +156,6 @@ const useSynchronizedAdded = (
           target: e.target,
           id: e.target.id,
         };
-        console.log('two backgroundImage', payload);
         eventSerializer?.push('added', payload);
 
         return;
@@ -171,7 +167,6 @@ const useSynchronizedAdded = (
           target: e.target,
           id: e.target.id,
         };
-        console.log('two Image', payload);
         eventSerializer?.push('added', payload);
       }
     };
@@ -327,7 +322,6 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'image') {
-        console.log('three createImg', target);
         fabric.Image.fromURL(target.src as string, (data: fabric.Image) => {
           (data as TypedShape).set({
             id,
@@ -348,8 +342,6 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'gif') {
-        console.log('three createGif', target);
-
         (async function () {
           try {
             const gif = await fabricGif(target + '', 200, 200, 2000);
@@ -368,8 +360,6 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'backgroundImage') {
-        console.log('three backgroundImage', target);
-
         fabric.Image.fromURL(target.src as string, function (img) {
           canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
             scaleX: (canvas.width || 0) / (img.width || 0),
@@ -385,8 +375,6 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'localImage') {
-        console.log('three localImage', target);
-
         if (target.backgroundImage) setLocalImage(target.backgroundImage);
 
         return;

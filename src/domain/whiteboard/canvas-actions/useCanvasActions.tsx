@@ -703,7 +703,6 @@ export const useCanvasActions = (
       toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
     if (teacherHasPermission || studentHasPermission) {
       if (typeof localImage === 'string' && localImage.length) {
-        console.log('good');
         const target = {
           id: '',
           target: {
