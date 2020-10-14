@@ -37,7 +37,6 @@ const useSynchronizedRemoved = (
   useEffect(() => {
     const removed = (objectId: string, target: ITarget) => {
       if (target.isLocalImage) {
-        console.log('YEAAAAHHH');
         setLocalImage('');
         setBackgroundImage('');
         return;

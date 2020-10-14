@@ -10,5 +10,6 @@ export interface IToolbarUI {
     shape: boolean;
     undoRedo: boolean;
     clearWhiteboard: boolean;
+    uploadImage: boolean;
   };
 }

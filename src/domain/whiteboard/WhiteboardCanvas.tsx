@@ -43,7 +43,6 @@ import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import {
   Canvas,
   IEvent,
-  IImageOptions,
   IStaticCanvasOptions,
   IText,
   ITextOptions,

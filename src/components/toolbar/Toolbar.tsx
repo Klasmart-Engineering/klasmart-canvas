@@ -216,7 +216,6 @@ function Toolbar() {
       toolbarIsEnabled && serializerToolbarState.undoRedo;
 
     if (toolbarIsEnabled) {
-      console.log(tool)
       switch (tool) {
         case ELEMENTS.CLEAR_WHITEBOARD_ACTION:
           openClearWhiteboardModal();
@@ -235,10 +234,12 @@ function Toolbar() {
           break;
 
         case ELEMENTS.ADD_IMAGE_ACTION:
-          openUploadFileModal();
-          // if (teacherHasPermission || studentHasPermission) {
-          //   openUploadFileModal();
-          // }
+          if (
+            teacherHasPermission ||
+            (toolbarIsEnabled && serializerToolbarState.uploadImage)
+          ) {
+            openUploadFileModal();
+          }
           break;
       }
     }

@@ -57,6 +57,7 @@ export default function AuthMenu(props: {
     shape,
     undoRedo,
     clearWhiteboard,
+    uploadImage
   } = localToolbarState;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,6 +128,11 @@ export default function AuthMenu(props: {
       checked: clearWhiteboard,
       name: 'clearWhiteboard',
       label: 'Clear whiteboard tool',
+    },
+    {
+      checked: uploadImage,
+      name: 'uploadImage',
+      label: 'Upload Image tool',
     },
   ];
 
