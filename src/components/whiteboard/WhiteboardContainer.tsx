@@ -1,6 +1,14 @@
 import React from 'react';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
+/**
+ * Container for WhiteboardCanvas used to resize
+ * proportionally the canvas background
+ * @param props - Properties needed to render the component:
+ * @field {number} width: initial width for the container
+ * @field {number} height: initial heigth for the container
+ * @field {React.ReactNode} children: container's content
+ */
 export function WhiteboardContainer(props: {
   width: number;
   height: number;
@@ -8,6 +16,9 @@ export function WhiteboardContainer(props: {
 }) {
   const { width, height, children } = props;
 
+  /**
+   * Calculates the padding in the container to resize it proportionally
+   */
   const calcProportionalPadding = () => {
     return ((height / width) * 100) / 2;
   };
