@@ -169,6 +169,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setSerializerToolbarState,
     allToolbarIsEnabled,
     lineWidthIsActive,
+    perfectShapeIsActive,
+    updatePerfectShapeIsActive,
+    perfectShapeIsAvailable,
     partialEraseIsActive,
     updatePartialEraseIsActive,
     image,
@@ -606,7 +609,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       toolbarIsEnabled &&
       serializerToolbarState.shape;
     if (teacherHasPermission || studentHasPermission) {
-      actions.discardActiveObject();
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
           object.set({
@@ -654,9 +656,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   ]);
 
   /**
-   * General handler for keyboard events
-   * 'Backspace' event for removing selected element from whiteboard
-   * 'Escape' event for deselect active objects
+   * General handler for keydown keyboard events
+   * 'Backspace' event for removing selected element from whiteboard.
+   * 'Escape' event for deselect active objects.
+   * 'Shift' event for active the perfect shapes creation.
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
@@ -688,8 +691,41 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         canvas.discardActiveObject();
         canvas.renderAll();
       }
+
+      if (
+        (e as ICanvasKeyboardEvent).key === 'Shift' &&
+        canvas &&
+        !perfectShapeIsActive &&
+        window.innerWidth > 768 &&
+        perfectShapeIsAvailable()
+      ) {
+        updatePerfectShapeIsActive(true);
+      }
     },
-    [canvas]
+    [
+      canvas,
+      perfectShapeIsActive,
+      perfectShapeIsAvailable,
+      updatePerfectShapeIsActive,
+    ]
+  );
+
+  /**
+   * General handler for keyup keyboard events
+   * 'Shift' event for deactive the perfect shapes creation
+   */
+  const keyUpHandler = useCallback(
+    (e: Event) => {
+      if (
+        (e as ICanvasKeyboardEvent).key === 'Shift' &&
+        canvas &&
+        perfectShapeIsActive &&
+        window.innerWidth > 768
+      ) {
+        updatePerfectShapeIsActive(false);
+      }
+    },
+    [canvas, perfectShapeIsActive, updatePerfectShapeIsActive]
   );
 
   /**
@@ -980,7 +1016,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Manage the states for settting local objects like selectable/modifiable
    */
   useEffect(() => {
-    if (canvas && !eraseType && !brushIsActive && !lineWidthIsActive) {
+    if (
+      canvas &&
+      !eraseType &&
+      !brushIsActive &&
+      !lineWidthIsActive &&
+      !shapeIsActive
+    ) {
       canvas.forEachObject((object: ICanvasObject) => {
         const isTextObject = Boolean(isText(object));
 
@@ -1225,12 +1267,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
   useEffect(() => {
     document.addEventListener('keydown', keyDownHandler, false);
+    document.addEventListener('keyup', keyUpHandler, false);
     fontFamilyLoader(fontFamily);
 
     return () => {
       document.removeEventListener('keydown', keyDownHandler);
+      document.removeEventListener('keyup', keyUpHandler);
     };
-  }, [fontFamily, keyDownHandler, fontFamilyLoader]);
+  }, [fontFamily, keyDownHandler, fontFamilyLoader, keyUpHandler]);
 
   const filterOutgoingEvents = useCallback(
     (id: string): boolean => {
@@ -1505,26 +1549,60 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       if (!obj) return;
 
-      const type = obj?.get('type');
+      if (
+        !(obj as fabric.Group).getObjects ||
+        !(obj as fabric.Group).getObjects().length
+      ) {
+        const type = obj?.get('type');
 
-      if (type === 'textbox') return;
+        if (type === 'textbox') return;
 
-      if (obj?.strokeWidth === lineWidth) return;
+        if (obj?.strokeWidth === lineWidth) return;
 
-      const payload = {
-        type,
-        target: { strokeWidth: obj?.strokeWidth },
-        id: obj?.id,
-      };
+        const payload = {
+          type,
+          target: { strokeWidth: obj?.strokeWidth },
+          id: obj?.id,
+        };
 
-      const event = { event: payload, type: 'lineWidthChanged' };
+        const event = { event: payload, type: 'lineWidthChanged' };
 
-      undoRedoDispatch({
-        type: SET,
-        payload: canvas?.getObjects() as TypedShape[],
-        canvasId: userId,
-        event: (event as unknown) as IUndoRedoEvent,
-      });
+        undoRedoDispatch({
+          type: SET,
+          payload: canvas?.getObjects() as TypedShape[],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      } else {
+        const type = obj?.get('type');
+        const activeIds: string[] = canvas
+          ?.getActiveObject()
+          // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
+          .getObjects()
+          .map((o: TypedShape) => o.id);
+        const payload = {
+          type,
+          svg: true,
+          target: null,
+          id: `${userId}:group`,
+        };
+
+        const event = { event: payload, type: 'activeSelection', activeIds };
+
+        let filtered = canvas?.getObjects().filter((o: any) => {
+          return !o.group;
+        });
+
+        let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
+        active?.set({ id: `${userId}:group` });
+
+        undoRedoDispatch({
+          type: SET_GROUP,
+          payload: [...(filtered as any[]), active],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      }
     }
   }, [lineWidth, canvas, undoRedoDispatch, userId]);
 
@@ -1833,6 +1911,71 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     shapesAreSelectable,
   ]);
 
+  /**
+   * Set a selected shape like perfect if perfectShapeIsActive
+   */
+  useEffect(() => {
+    canvas?.forEachObject((object: ICanvasObject) => {
+      if (
+        isEmptyShape(object as TypedShape) &&
+        object.id &&
+        isLocalObject(object.id, userId)
+      ) {
+        object.set('lockUniScaling', perfectShapeIsActive);
+      }
+    });
+
+    if (
+      canvas?.getActiveObject() &&
+      perfectShapeIsActive &&
+      isEmptyShape(canvas.getActiveObject())
+    ) {
+      const shapeToFix = canvas.getActiveObject();
+      if (Number(shapeToFix.width) > Number(shapeToFix.height)) {
+        shapeToFix.set(
+          'scaleY',
+          (Number(shapeToFix.width) * Number(shapeToFix.scaleX)) /
+            Number(shapeToFix.height)
+        );
+
+        canvas.trigger('object:scaled', {
+          target: shapeToFix,
+        });
+      } else if (Number(shapeToFix.height) > Number(shapeToFix.width)) {
+        shapeToFix.set(
+          'scaleX',
+          (Number(shapeToFix.height) * Number(shapeToFix.scaleY)) /
+            Number(shapeToFix.width)
+        );
+
+        canvas.trigger('object:scaled', {
+          target: shapeToFix,
+        });
+      }
+
+      shapeToFix.setCoords();
+    }
+    /* If isLocalObject is added on dependencies
+    an unexpected event is triggered */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvas, perfectShapeIsActive, userId]);
+
+  /**
+   * Reset perfectShapeIsActive to false when the shape or move tool permissions are revoked
+   */
+  useEffect(() => {
+    if (!perfectShapeIsAvailable()) {
+      updatePerfectShapeIsActive(false);
+    }
+  }, [
+    perfectShapeIsActive,
+    serializerToolbarState.shape,
+    allToolbarIsEnabled,
+    userId,
+    updatePerfectShapeIsActive,
+    serializerToolbarState.move,
+    perfectShapeIsAvailable,
+  ]);
   useSynchronizedAdded(
     canvas,
     userId,

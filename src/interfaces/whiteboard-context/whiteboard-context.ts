@@ -96,6 +96,9 @@ export interface IWhiteboardContext {
   allToolbarIsEnabled: boolean;
   lineWidthIsActive: boolean;
   updateLineWidthIsActive: (active: boolean) => void;
+  perfectShapeIsActive: boolean;
+  updatePerfectShapeIsActive: (active: boolean) => void;
+  perfectShapeIsAvailable: () => boolean;
   partialEraseIsActive: boolean;
   updatePartialEraseIsActive: (status: boolean) => void;
   openUploadFileModal: () => void;

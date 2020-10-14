@@ -151,7 +151,8 @@ const useSynchronizedRemoved = (
 
         if (
           !(e.target as TypedShape).skipState &&
-          !(e.target as TypedShape).fromJSON
+          !(e.target as TypedShape).fromJSON &&
+          (e.target as ICanvasObject)?.text?.trim().length
         ) {
           const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
           undoRedoDispatch({

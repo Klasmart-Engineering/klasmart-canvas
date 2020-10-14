@@ -180,7 +180,7 @@ export default class FloodFiller {
       return;
     }
     const pixelColor = this.getColorAtPixel(pixel.x, pixel.y);
-    const tempTolerance = 60;// this.autoTolerance; // If set at 0, crashes when colors are too similar.
+    const tempTolerance = 60; // If set at 0, crashes when colors are too similar.
 
     return this.isSameColor(
       this.replacedColor as ColorRGBA,
