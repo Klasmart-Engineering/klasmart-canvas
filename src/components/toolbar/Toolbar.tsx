@@ -235,9 +235,10 @@ function Toolbar() {
           break;
 
         case ELEMENTS.ADD_IMAGE_ACTION:
-          if (teacherHasPermission || studentHasPermission) {
-            openUploadFileModal();
-          }
+          openUploadFileModal();
+          // if (teacherHasPermission || studentHasPermission) {
+          //   openUploadFileModal();
+          // }
           break;
       }
     }

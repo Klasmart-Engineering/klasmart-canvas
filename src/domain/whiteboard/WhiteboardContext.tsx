@@ -100,8 +100,15 @@ export const WhiteboardProvider = ({
   // multiple instances using the instanceId to choose which one to
   // apply action to.
   const [canvasActions, updateCanvasActions] = useState<ICanvasActions>();
-  const [image, setImage] = useState('');
+  const [image, setImage] = useState<string | File>('');
   const [isGif, setIsGif] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState<string | File>('');
+  const [isBackgroundImage, setIsBackgroundImage] = useState(false);
+  const [localImage, setLocalImage] = useState<string | File>('');
+  const [
+    backgroundImageIsPartialErasable,
+    setBackgroundImageIsPartialErasable,
+  ] = useState(false);
 
   const isLocalObject = (id: string, canvasId: string | undefined) => {
     const object = id.split(':');
@@ -303,6 +310,14 @@ export const WhiteboardProvider = ({
     setImage,
     isGif,
     setIsGif,
+    backgroundImage,
+    setBackgroundImage,
+    backgroundImageIsPartialErasable,
+    setBackgroundImageIsPartialErasable,
+    isBackgroundImage,
+    setIsBackgroundImage,
+    localImage,
+    setLocalImage,
   };
 
   return (
@@ -324,7 +339,16 @@ export const WhiteboardProvider = ({
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />
 
-      <UploadFileModal setImage={setImage} setIsGif={setIsGif} />
+      <UploadFileModal
+        setImage={setImage}
+        setIsGif={setIsGif}
+        setBackgroundImage={setBackgroundImage}
+        setBackgroundImageIsPartialErasable={
+          setBackgroundImageIsPartialErasable
+        }
+        isBackgroundImage={isBackgroundImage}
+        setIsBackgroundImage={setIsBackgroundImage}
+      />
       {children}
     </WhiteboardContext.Provider>
   );

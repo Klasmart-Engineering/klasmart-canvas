@@ -5,13 +5,19 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogActions from '@material-ui/core/DialogActions';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
 import FormControl from '@material-ui/core/FormControl';
+import FormGroup from '@material-ui/core/FormGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Checkbox from '@material-ui/core/Checkbox';
+import { FormLabel } from '@material-ui/core';
 
-export interface IClearWhiteboardModal {
-  clearWhiteboard(): void;
-  setImage(): any;
-  setIsGif(): boolean;
+export interface IUploadFileModal {
+  setImage: (image: string | File) => void;
+  setIsGif: (status: boolean) => void;
+  setBackgroundImage: (image: string | File) => void;
+  setBackgroundImageIsPartialErasable: (status: boolean) => void;
+  isBackgroundImage: boolean;
+  setIsBackgroundImage: (status: boolean) => void;
 }
 
 export const useUploadFileModal = () => {
@@ -24,27 +30,67 @@ export const useUploadFileModal = () => {
     setOpen(false);
   }, []);
 
-  const [value, setValue] = useState('element');
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setValue((event.target as HTMLInputElement).value);
-  };
+  const UploadFileModal = (props: IUploadFileModal) => {
+    const [value, setValue] = useState('element');
+    const [error, setError] = useState(false);
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      setValue((event.target as HTMLInputElement).value);
+    };
+    const [
+      backgroundImageIsPartialErasable,
+      setBackgroundPartialErasable,
+    ] = useState(false);
 
-  const UploadFileModal = (props: any) => {
+    const handleChangeCheckbox = (
+      event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+      setBackgroundPartialErasable(event.target.checked);
+    };
+
     const onImageChange = (event: ChangeEvent<HTMLInputElement>) => {
       if (event.target.files && event.target.files[0]) {
+        const {
+          setBackgroundImageIsPartialErasable,
+          setIsBackgroundImage,
+          setBackgroundImage,
+          setImage,
+          setIsGif,
+        } = props;
         const fileType = event.target.files[0].type;
         const img = event.target.files[0];
-        props.setImage(URL.createObjectURL(img));
+        const imageSize = img.size;
+        const totalSize = imageSize / 1024;
+
+        if (totalSize >= 5000) {
+          setError(true);
+
+          return;
+        }
+
+        if (value === 'background') {
+          setIsBackgroundImage(true);
+          setBackgroundImage(URL.createObjectURL(img));
+          setBackgroundImageIsPartialErasable(backgroundImageIsPartialErasable);
+          setOpen(false);
+          setError(false);
+
+          return;
+        }
 
         if (fileType === 'image/gif') {
-          props.setImage(img);
-          props.setIsGif(true);
+          setImage(img);
+          setIsGif(true);
+          setIsBackgroundImage(false);
+          setBackgroundImageIsPartialErasable(false);
         } else {
-          props.setImage(URL.createObjectURL(img));
-          props.setIsGif(false);
+          setImage(URL.createObjectURL(img));
+          setIsGif(false);
+          setIsBackgroundImage(false);
+          setBackgroundImageIsPartialErasable(false);
         }
 
         setOpen(false);
+        setError(false);
       }
     };
 
@@ -59,15 +105,14 @@ export const useUploadFileModal = () => {
           <DialogTitle id="alert-dialog-title">{'Upload image'}</DialogTitle>
           <div
             style={{
-              //border: '1px solid blue',
               padding: '20px',
-              // width: '140px',
-              // height: '160px',
-              // display: 'flex',
-              // alignItems: 'center',
-              // justifyContent: 'center',
             }}
           >
+            {error && (
+              <FormLabel component="legend">
+                File should be less than 5mb
+              </FormLabel>
+            )}
             <FormControl component="fieldset">
               <RadioGroup
                 aria-label="gender"
@@ -86,6 +131,20 @@ export const useUploadFileModal = () => {
                   label="Set as background image"
                 />
               </RadioGroup>
+              {value === 'background' && (
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={backgroundImageIsPartialErasable}
+                        onChange={handleChangeCheckbox}
+                        name="gilad"
+                      />
+                    }
+                    label="Set background image partial erasable"
+                  />
+                </FormGroup>
+              )}
             </FormControl>
           </div>
           <DialogActions>

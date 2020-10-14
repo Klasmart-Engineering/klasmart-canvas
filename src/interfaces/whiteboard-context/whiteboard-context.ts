@@ -100,8 +100,17 @@ export interface IWhiteboardContext {
   updatePartialEraseIsActive: (status: boolean) => void;
   openUploadFileModal: () => void;
   closeUploadFileModal: () => void;
-  image: string;
-  setImage: (image: string) => void;
+  image: string | File;
+  setImage: (image: string | File) => void;
   isGif: boolean;
   setIsGif: (status: boolean) => void;
+  backgroundImage: string | File;
+  setBackgroundImage: (image: string | File) => void;
+  backgroundImageIsPartialErasable: boolean;
+  setBackgroundImageIsPartialErasable: (status: boolean) => void;
+  isBackgroundImage: boolean;
+  setIsBackgroundImage: (status: boolean) => void;
+  localImage: string | File;
+  setLocalImage: (image: string | File) => void;
+
 }

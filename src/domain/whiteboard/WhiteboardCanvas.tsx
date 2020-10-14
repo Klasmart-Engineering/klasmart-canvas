@@ -43,6 +43,8 @@ import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import {
   Canvas,
   IEvent,
+  IImageOptions,
+  IStaticCanvasOptions,
   IText,
   ITextOptions,
   Textbox,
@@ -50,6 +52,7 @@ import {
 import {
   ObjectEvent,
   ObjectType,
+  IBackgroundImageEvent,
 } from './event-serializer/PaintEventSerializer';
 import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
@@ -64,9 +67,16 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
-import backgroundImage from '../../assets/background2.jpg';
+// import backgroundImage from '../../assets/background2.jpg';
 // import pug from '../../assets/pug.jpg';
-import { fabricGif } from './gifs-actions/fabricGif';
+import {
+  createBackgroundImage,
+  createGif,
+  createImageAsObject,
+} from './gifs-actions/util';
+interface IBackgroundImage extends IStaticCanvasOptions {
+  id?: string;
+}
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -163,6 +173,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updatePartialEraseIsActive,
     image,
     isGif,
+    isBackgroundImage,
+    backgroundImage,
+    backgroundImageIsPartialErasable,
+    localImage,
+    setLocalImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -1619,43 +1634,63 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Handles the logic to add image and background images to the whiteboard
    */
   useEffect(() => {
-    async function createGif() {
-      try {
-        const gif = await fabricGif(URL.createObjectURL(image), 200, 200, 2000);
-        gif.set({ top: 0, left: 0 });
-        gif.id = `${userId}:${uuidv4()}`;
-        canvas?.add(gif);
+    if (isBackgroundImage && canvas) {
+      if (backgroundImageIsPartialErasable) {
+        createBackgroundImage(backgroundImage.toString(), userId, canvas).then(
+          () => {
+            if (canvas.backgroundImage) {
+              const payload: IBackgroundImageEvent = {
+                id: (canvas.backgroundImage as IBackgroundImage).id,
+                type: 'backgroundImage',
+                target: canvas.backgroundImage,
+              };
 
-        fabric.util.requestAnimFrame(function render() {
-          canvas?.renderAll();
-          fabric.util.requestAnimFrame(render);
-        });
-
-      } catch (e) {
-        console.error(e);
+              canvas.trigger('object:added', payload);
+            }
+          }
+        );
+        return;
       }
-    }
 
-    if (isGif) {
-      createGif();
-      console.log('one gif')
+      (async function () {
+        try {
+          await setLocalImage(backgroundImage);
+          const id = `${userId}:${uuidv4()}`;
+          const payload: IBackgroundImageEvent = {
+            type: 'localImage',
+            target: { backgroundImage, id },
+            id,
+          };
+          canvas.trigger('object:added', payload);
+        } catch (e) {
+          console.error(e);
+        }
+      })();
+
       return;
     }
 
-    fabric.Image.fromURL(image, function (img) {
-      console.log('one image')
-      console.log({ image });
-      const oImg: ICanvasObject = img
-        .set({
-          left: 0,
-          top: 0,
-        })
-        .scale(0.25);
+    if (isGif && canvas) {
+      // We use then to avoid inspector warning about ignoring the promise returned
+      createGif(image, userId, canvas).then();
+      return;
+    }
 
-      oImg.id = `${userId}:${uuidv4()}`;
-      canvas?.add(oImg);
-    });
-  }, [canvas, image, userId, isGif]);
+    if (canvas) {
+      createImageAsObject(image.toString(), userId, canvas);
+    }
+  }, [
+    canvas,
+    image,
+    userId,
+    isGif,
+    isBackgroundImage,
+    backgroundImage,
+    backgroundImageIsPartialErasable,
+    setLocalImage,
+    eventSerializer,
+    localImage,
+  ]);
 
   /**
    * When eraseType value changes, listeners and states
@@ -1830,15 +1865,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       >
         {children}
       </canvas>
-      <img
-        style={{
-          height: '100%',
-          width: '100%',
-          // objectFit: 'contain'
-        }}
-        alt="background"
-        src={backgroundImage}
-      />
+      {!backgroundImageIsPartialErasable && localImage && (
+        <img
+          style={{
+            height: '100%',
+            width: '100%',
+          }}
+          alt="background"
+          src={localImage.toString()}
+        />
+      )}
     </>
   );
 };

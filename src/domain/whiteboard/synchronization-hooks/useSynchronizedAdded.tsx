@@ -23,7 +23,9 @@ const useSynchronizedAdded = (
   shouldHandleRemoteEvent: (id: string) => boolean,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
-  const { floodFillIsActive, isGif, image } = useContext(WhiteboardContext);
+  const { floodFillIsActive, isGif, image, setLocalImage } = useContext(
+    WhiteboardContext
+  );
   const {
     state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
@@ -81,9 +83,22 @@ const useSynchronizedAdded = (
   /** Register and handle object:added event. */
   useEffect(() => {
     const objectAdded = (e: any) => {
+      console.log('objectAdded', e);
       if (!e.target?.id) return;
       if (e.target.fromJSON) return;
       if (!shouldSerializeEvent(e.target.id)) return;
+
+      if (e.type === 'localImage') {
+        const payload: ObjectEvent = {
+          type: e.type,
+          target: e.target,
+          id: e.target.id,
+        };
+        console.log('two localImage', payload);
+        eventSerializer?.push('added', payload);
+
+        return;
+      }
 
       const type: ObjectType = (e.target.get('type') || 'path') as ObjectType;
 
@@ -133,6 +148,18 @@ const useSynchronizedAdded = (
         };
 
         console.log('two gif', payload);
+        eventSerializer?.push('added', payload);
+
+        return;
+      }
+
+      if (e.type === 'backgroundImage') {
+        const payload: ObjectEvent = {
+          type: e.type,
+          target: e.target,
+          id: e.target.id,
+        };
+        console.log('two backgroundImage', payload);
         eventSerializer?.push('added', payload);
 
         return;
@@ -340,6 +367,31 @@ const useSynchronizedAdded = (
         })();
       }
 
+      if (objectType === 'backgroundImage') {
+        console.log('three backgroundImage', target);
+
+        fabric.Image.fromURL(target.src as string, function (img) {
+          canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+            scaleX: (canvas.width || 0) / (img.width || 0),
+            scaleY: (canvas.height || 0) / (img.height || 0),
+            originX: 'left',
+            originY: 'top',
+            // @ts-ignore
+            id,
+          });
+        });
+
+        return;
+      }
+
+      if (objectType === 'localImage') {
+        console.log('three localImage', target);
+
+        if (target.backgroundImage) setLocalImage(target.backgroundImage);
+
+        return;
+      }
+
       if (shape) {
         target = {
           ...target,
@@ -372,6 +424,7 @@ const useSynchronizedAdded = (
     shouldHandleRemoteEvent,
     undoRedoDispatch,
     userId,
+    setLocalImage,
   ]);
 };
 
