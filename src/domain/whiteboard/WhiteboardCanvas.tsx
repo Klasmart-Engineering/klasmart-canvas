@@ -65,6 +65,7 @@ import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
 import { PenBrush } from '../../assets/brushes/penBrush';
+import { MarkerBrush } from '../../assets/brushes/markerBrush';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -529,29 +530,25 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
 
     if (brushIsActive && canvas) {
-      if (brushType === 'pen') {
-        canvas.freeDrawingBrush = new PenBrush(canvas, lineWidth, penColor);
-
-        (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
-        canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
-        canvas.freeDrawingBrush.width = lineWidth;
-        canvas.isDrawingMode =
-          allToolbarIsEnabled ||
-          (toolbarIsEnabled && serializerToolbarState.pen);
-
-        canvas.on('path:created', pathCreated);
-      } else {
-        canvas.freeDrawingBrush = new fabric.PencilBrush();
-
-        (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
-        canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
-        canvas.freeDrawingBrush.width = lineWidth;
-        canvas.isDrawingMode =
-          allToolbarIsEnabled ||
-          (toolbarIsEnabled && serializerToolbarState.pen);
-
-        canvas.on('path:created', pathCreated);
+      switch (brushType) {
+        case 'pen':
+          canvas.freeDrawingBrush = new PenBrush(canvas);
+          break;
+        case 'marker':
+          canvas.freeDrawingBrush = new MarkerBrush(canvas);
+          break;
+        default:
+          canvas.freeDrawingBrush = new fabric.PencilBrush();
+          break;
       }
+
+      (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
+      canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
+      canvas.freeDrawingBrush.width = lineWidth;
+      canvas.isDrawingMode =
+        allToolbarIsEnabled || (toolbarIsEnabled && serializerToolbarState.pen);
+
+      canvas.on('path:created', pathCreated);
     } else if (canvas && !brushIsActive) {
       canvas.isDrawingMode = false;
     }
