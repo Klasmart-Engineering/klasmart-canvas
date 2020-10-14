@@ -1708,7 +1708,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [pointerEvents, canvas]);
 
   /**
-   * Handles the logic to add image and background images to the whiteboard
+   * Handles the logic to add images and gifs as objects
+   * and background images to the whiteboard.
    */
   useEffect(() => {
     if (isBackgroundImage && canvas) {

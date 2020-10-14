@@ -32,7 +32,7 @@ export async function createGif(
 }
 
 /**
- * Function to create image object
+ * Function to create an image object
  *
  * @param image Image to upload
  * @param userId User id
@@ -61,7 +61,7 @@ interface IBackgroundImage extends IImageOptions {
 }
 
 /**
- * Function to create Background Image
+ * Function to create a Background Image
  *
  * @param image Image to upload
  * @param userId User id

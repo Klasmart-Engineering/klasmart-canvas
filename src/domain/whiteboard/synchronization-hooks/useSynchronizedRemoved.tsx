@@ -31,8 +31,6 @@ const useSynchronizedRemoved = (
     WhiteboardContext
   );
 
-
-
   /** Register and handle remote event. */
   useEffect(() => {
     const removed = (objectId: string, target: ITarget) => {

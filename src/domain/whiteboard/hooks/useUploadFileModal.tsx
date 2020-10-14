@@ -20,6 +20,13 @@ export interface IUploadFileModal {
   setIsBackgroundImage: (status: boolean) => void;
 }
 
+/**
+ Modal component to upload image files.
+ This component handles the logic to set the type of file(png, svg, giff, img)
+ the user is uploading.
+ The file size limit is 5mb.
+ */
+
 export const useUploadFileModal = () => {
   const [uploadFileModal, setOpen] = useState(false);
   const openUploadFileModal = useCallback(() => {

@@ -4,8 +4,7 @@ import { gifToSprite } from './gifToSprite';
 const [PLAY, PAUSE, STOP] = [0, 1, 2];
 
 /**
- * fabricGif "async"
- * Mainly a wrapper for gifToSprite
+ * Function that generates a valid gif for fabric.js
  * @param {string|File} gif can be a URL, dataURL or an "input File"
  * @param {number} maxWidth Optional, scale to maximum width
  * @param {number} maxHeight Optional, scale to maximum height

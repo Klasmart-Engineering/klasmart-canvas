@@ -1,8 +1,8 @@
 import { parseGIF, decompressFrames } from 'gifuct-js';
 
 /**
- * gifToSprite "async"
- * @param {string|input File} gif can be a URL, dataURL or an "input File"
+ * Function that converts a valid sprite to render in fabric.js
+ * @param {string | input File} gif can be a URL, dataURL or an "input File"
  * @param {number} maxWidth Optional, scale to maximum width
  * @param {number} maxHeight Optional, scale to maximum height
  * @param {number} maxDuration Optional, in milliseconds reduce the gif frames to a maximum duration, ex: 2000 for 2 seconds
