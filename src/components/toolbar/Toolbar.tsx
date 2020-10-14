@@ -529,6 +529,16 @@ function Toolbar() {
     borderRadius: '8px',
   };
 
+  const mappedActionElements = actions.elements.map((elmnt: any) => {
+    if (elmnt.id === 'whiteboard_screenshot') {
+      const enabled =
+        allToolbarIsEnabled || serializerToolbarState.downloadCanvas;
+      return { ...elmnt, enabled };
+    }
+
+    return { ...elmnt, enabled: true };
+  });
+
   return (
     <div style={toolbarContainerStyle}>
       <div style={toolbarStyle}>
@@ -569,7 +579,7 @@ function Toolbar() {
         </ToolbarSection>
 
         <ToolbarSection>
-          {actions.elements.map((action) =>
+          {mappedActionElements.map((action) =>
             determineIfIsToolbarButton(action)
               ? createToolbarButton(
                   action.id,
@@ -577,7 +587,8 @@ function Toolbar() {
                   action.iconSrc,
                   action.iconName,
                   actions.active === action.id,
-                  handleActionsElementClick
+                  handleActionsElementClick,
+                  action.enabled
                 )
               : null
           )}
@@ -601,7 +612,8 @@ function createToolbarButton(
   iconSrc: string,
   iconName: string,
   active: boolean,
-  onClick: (tool: string) => void
+  onClick: (tool: string) => void,
+  enabled?: boolean | undefined
 ): JSX.Element {
   return (
     <ToolbarButton
@@ -611,6 +623,7 @@ function createToolbarButton(
       iconSrc={iconSrc}
       iconName={iconName}
       active={active}
+      enabled={enabled === false ? false : true}
       onClick={onClick}
     />
   );
