@@ -66,7 +66,7 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
-import { CanvasDownloadConfirm } from '../../modals/canvasDownload';
+import { CanvasDownloadConfirm } from '../../modals/canvas-download/canvasDownload';
 import {
   createBackgroundImage,
   createGif,
@@ -2008,6 +2008,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         open={imagePopupIsOpen}
         onClose={updateImagePopupIsOpen}
         canvas={canvas as fabric.Canvas}
+        backgroundImage={backgroundImage}
+        width={width}
+        height={height}
       ></CanvasDownloadConfirm>
       <canvas
         width={pixelWidth}

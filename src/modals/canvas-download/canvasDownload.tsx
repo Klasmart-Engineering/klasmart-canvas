@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Button } from '@material-ui/core';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import { downloadCanvas } from './utils';
 
 /**
  * Modal styles
@@ -39,6 +40,9 @@ type Props = {
   open: boolean;
   onClose: (open: boolean) => void;
   canvas: fabric.Canvas;
+  backgroundImage?: string | File | undefined;
+  width: number;
+  height: number;
 };
 
 /**
@@ -52,42 +56,17 @@ export const CanvasDownloadConfirm = (props: Props) => {
   const css = useStyles();
 
   /**
-   * Download method for canvas.
-   * @param type Type of image, either png or jpg.
-   */
-  const downloadCanvas = (type: string) => {
-    const ext = type === 'image/png' ? 'png' : 'jpg';
-    const img = ((props.canvas as unknown) as HTMLCanvasElement).toDataURL(
-      type,
-      1
-    );
-    const link = document.getElementById('canvasDownloader');
-    const date = new Date();
-
-    (link as HTMLElement).setAttribute(
-      'download',
-      `canvas${date.getTime()}.${ext}`
-    );
-    (link as HTMLElement).setAttribute(
-      'href',
-      img.replace(type, 'image/octet-stream')
-    );
-    (link as HTMLElement).click();
-    props.onClose(false);
-  };
-
-  /**
    * Click event to download png image.
    */
   const downloadCanvasPNG = () => {
-    downloadCanvas('image/png');
+    downloadCanvas(props, 'image/png');
   };
 
   /**
    * Click event to downloag jpg image.
    */
   const downloadCanvasJPG = () => {
-    downloadCanvas('image/jpeg');
+    downloadCanvas(props, 'image/jpeg');
   };
 
   return (
