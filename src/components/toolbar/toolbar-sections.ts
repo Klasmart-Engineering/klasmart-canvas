@@ -43,6 +43,7 @@ import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRo
 import FormatColorFillRoundedIcon from '@material-ui/icons/FormatColorFillRounded';
 import BorderColorRoundedIcon from '@material-ui/icons/BorderColorRounded';
 import FormatColorTextRoundedIcon from '@material-ui/icons/FormatColorTextRounded';
+import PaletteIcon from '@material-ui/icons/Palette';
 import IStyleOption from '../../interfaces/toolbar/toolbar-special-elements/style-option';
 
 const colorPaletteOptions: IStyleOption[] = [
@@ -508,6 +509,12 @@ const toolsSection: IBasicToolbarSection = {
           iconName: 'Chat Bubble',
         },
       ],
+    },
+    // Background Color - SpecialToolbarSelector
+    {
+      id: 'background_color',
+      icon: PaletteIcon,
+      styleOptions: colorPaletteOptions,
     },
     // Stamps - ToolbarSelector
     {

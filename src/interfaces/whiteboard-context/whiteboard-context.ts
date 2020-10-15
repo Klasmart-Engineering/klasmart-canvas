@@ -81,6 +81,7 @@ export interface IWhiteboardContext {
     undoRedo: boolean;
     clearWhiteboard: boolean;
     uploadImage: boolean;
+    backgroundColor: boolean;
   };
   setSerializerToolbarState: (enabled: {
     [p: string]: boolean;
@@ -95,6 +96,7 @@ export interface IWhiteboardContext {
     undoRedo: boolean;
     clearWhiteboard: boolean;
     uploadImage: boolean;
+    backgroundColor: boolean;
   }) => void;
   allToolbarIsEnabled: boolean;
   lineWidthIsActive: boolean;
@@ -119,4 +121,7 @@ export interface IWhiteboardContext {
   setIsBackgroundImage: (status: boolean) => void;
   localImage: string | File;
   setLocalImage: (image: string | File) => void;
+  backgroundColor: string;
+  updateBackgroundColor: (color: string) => void;
+  fillBackgroundColor: (color: string) => void;
 }

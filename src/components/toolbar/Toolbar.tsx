@@ -76,6 +76,8 @@ function Toolbar() {
     updateLineWidthIsActive,
     updatePartialEraseIsActive,
     openUploadFileModal,
+    fillBackgroundColor,
+    backgroundColor,
   } = useContext(WhiteboardContext);
 
   const pointerToolIsActive =
@@ -87,6 +89,8 @@ function Toolbar() {
     allToolbarIsEnabled || serializerToolbarState.floodFill;
   const textToolIsActive = allToolbarIsEnabled || serializerToolbarState.text;
   const shapeToolIsActive = allToolbarIsEnabled || serializerToolbarState.shape;
+  const backgroundColorToolIsActive =
+    allToolbarIsEnabled || serializerToolbarState.backgroundColor;
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -119,6 +123,10 @@ function Toolbar() {
     }
 
     if (tool === ELEMENTS.ADD_SHAPE_TOOL && !shapeToolIsActive) {
+      return;
+    }
+
+    if (tool === ELEMENTS.BACKGROUND_COLOR && !backgroundColorToolIsActive) {
       return;
     }
 
@@ -276,6 +284,10 @@ function Toolbar() {
         updateShape(option);
         break;
 
+      case ELEMENTS.BACKGROUND_COLOR:
+        if (backgroundColorToolIsActive) fillBackgroundColor(option);
+        break;
+
       case ELEMENTS.ADD_STAMP_TOOL:
         updateStamp(option);
         break;
@@ -349,6 +361,10 @@ function Toolbar() {
         selected = shapeColor;
         break;
 
+      case ELEMENTS.BACKGROUND_COLOR:
+        selected = backgroundColor;
+        break;
+
       default:
         selected = '';
         break;
@@ -390,6 +406,9 @@ function Toolbar() {
 
       case ELEMENTS.ADD_STAMP_TOOL:
         return stamp;
+
+      case ELEMENTS.BACKGROUND_COLOR:
+        return backgroundColor;
 
       default:
         return '';
@@ -506,6 +525,16 @@ function Toolbar() {
         elements: getToolElements,
       });
     }
+
+    if (
+      !serializerToolbarState.backgroundColor &&
+      getActiveTool === ELEMENTS.BACKGROUND_COLOR
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
   }, [
     pointerIsEnabled,
     getActiveTool,
@@ -520,6 +549,7 @@ function Toolbar() {
     serializerToolbarState.shape,
     serializerToolbarState.undoRedo,
     serializerToolbarState.clearWhiteboard,
+    serializerToolbarState.backgroundColor,
   ]);
 
   const toolbarContainerStyle: CSSProperties = {

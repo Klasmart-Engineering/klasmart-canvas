@@ -36,6 +36,7 @@ import useSynchronizedReconstruct from './synchronization-hooks/useSynchronizedR
 import useSynchronizedPointer from './synchronization-hooks/useSynchronizedPointer';
 import useSynchronizedSetToolbarPermissions from './synchronization-hooks/useSynchronizedSetToolbarPermissions';
 import useSynchronizedFontColorChanged from './synchronization-hooks/useSynchronizedFontColorChanged';
+import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
 
 import { REDO, SET, SET_GROUP, UNDO } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
@@ -1945,6 +1946,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setToolbarIsEnabled,
     setPointerIsEnabled,
     setSerializerToolbarState
+  );
+
+  useSynchronizedBackgroundColorChanged(
+    canvas,
+    userId,
+    filterIncomingEvents,
   );
 
   return (
