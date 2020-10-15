@@ -103,6 +103,9 @@ export class EventPainterController extends EventEmitter
       case 'lineWidthChanged':
         this.lineWidthChanged(event.id, event.objectType, target);
         break;
+      case 'backgroundColorChanged':
+        this.backgroundColorChanged(event.id, target);
+        break;
     }
   }
 
@@ -168,5 +171,9 @@ export class EventPainterController extends EventEmitter
     target: ICanvasObject
   ) {
     this.emit('lineWidthChanged', id, objectType, target);
+  }
+
+  private backgroundColorChanged(id: string, target: ICanvasObject) {
+    this.emit('backgroundColorChanged', id, target);
   }
 }
