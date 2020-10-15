@@ -537,6 +537,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         case 'marker':
           canvas.freeDrawingBrush = new MarkerBrush(canvas);
           break;
+        case 'dashed':
+          canvas.freeDrawingBrush = new fabric.PencilBrush();
+          (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).strokeDashArray = [
+            lineWidth * 2,
+          ];
+          break;
         default:
           canvas.freeDrawingBrush = new fabric.PencilBrush();
           break;

@@ -14,6 +14,7 @@ import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-dr
 import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { WhiteboardContext } from '../WhiteboardContext';
+import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -41,6 +42,8 @@ const useSynchronizedAdded = (
         stroke: e.path.stroke,
         strokeWidth: e.path.strokeWidth,
         path: e.path.path,
+        strokeDashArray: ((e.path as unknown) as ICanvasFreeDrawingBrush)
+          .strokeDashArray,
       } as ICanvasObject;
 
       eventSerializer?.push(
@@ -233,6 +236,7 @@ const useSynchronizedAdded = (
         const pencil = new fabric.PencilBrush();
         pencil.color = target.stroke || '#000';
         pencil.width = target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH;
+        pencil.strokeDashArray = target.strokeDashArray || [];
 
         // Convert Points to SVG Path
         const res = pencil.createPath((target.path as string) || '');

@@ -3,7 +3,7 @@ import { useBrushType } from './useBrushType';
 
 test('should set brushType initial value', () => {
   const { result } = renderHook(() => useBrushType());
-  expect(result.current.brushType).toBe('pen');
+  expect(result.current.brushType).toBe('pencil');
   expect(typeof result.current.updateBrushType).toBe('function');
 });
 

@@ -49,7 +49,6 @@ export const WhiteboardProvider = ({
   const { lineWidth, updateLineWidth } = useLineWidth();
   const { floodFill, updateFloodFill } = useFloodFill();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
-  const { brushType, updateBrushType } = useBrushType();
 
   const {
     ClearWhiteboardModal,
@@ -62,6 +61,7 @@ export const WhiteboardProvider = ({
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
   const { clearIsActive, updateClearIsActive } = useClearIsActive();
   const { lineWidthIsActive, updateLineWidthIsActive } = useLineWidthIsActive();
+  const { brushType, updateBrushType } = useBrushType();
 
   const {
     shapesAreSelectable,
@@ -80,7 +80,6 @@ export const WhiteboardProvider = ({
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
-  const [penLine, updatePenLine] = useState(DEFAULT_VALUES.PEN_LINE);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
 
@@ -245,8 +244,6 @@ export const WhiteboardProvider = ({
     // Just for control selectors' value they can be modified in the future
     pointer,
     updatePointer,
-    penLine,
-    updatePenLine,
     penColor,
     updatePenColor,
     stamp,

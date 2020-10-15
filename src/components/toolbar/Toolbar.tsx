@@ -58,8 +58,6 @@ function Toolbar() {
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
-    penLine,
-    updatePenLine,
     penColor,
     changeStrokeColor,
     stamp,
@@ -74,6 +72,7 @@ function Toolbar() {
     allToolbarIsEnabled,
     serializerToolbarState,
     updateLineWidthIsActive,
+    brushType,
     updateBrushType,
   } = useContext(WhiteboardContext);
 
@@ -245,7 +244,7 @@ function Toolbar() {
         break;
 
       case ELEMENTS.LINE_TYPE_TOOL:
-        updatePenLine(option);
+        updateBrushType(option);
         break;
 
       case ELEMENTS.LINE_WIDTH_TOOL:
@@ -285,10 +284,6 @@ function Toolbar() {
 
       case ELEMENTS.ADD_TEXT_TOOL:
         updateFontFamily(specific);
-        break;
-
-      case ELEMENTS.LINE_TYPE_TOOL:
-        updateBrushType(specific);
         break;
     }
   }
@@ -366,7 +361,7 @@ function Toolbar() {
         return eraseType;
 
       case ELEMENTS.LINE_TYPE_TOOL:
-        return penLine;
+        return brushType;
 
       case ELEMENTS.LINE_WIDTH_TOOL:
         return lineWidth;

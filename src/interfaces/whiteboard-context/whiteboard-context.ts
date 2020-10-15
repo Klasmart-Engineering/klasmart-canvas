@@ -20,8 +20,6 @@ export interface IWhiteboardContext {
   textColor: (color: string) => void;
   openClearWhiteboardModal: () => void;
   closeModal: () => void;
-  penLine: string;
-  updatePenLine: (pen: string) => void;
   penColor: string;
   updatePenColor: (color: string) => void;
   lineWidth: number;

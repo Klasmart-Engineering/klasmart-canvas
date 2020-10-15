@@ -1,7 +1,7 @@
 export const DEFAULT_VALUES = {
   POINTER: 'arrow',
   ERASE_TYPE: null,
-  PEN_LINE: 'pen',
+  PEN_LINE: 'pencil',
   PEN_COLOR: '#000000',
   LINE_WIDTH: 2,
   FLOOD_FILL: '#000000',
