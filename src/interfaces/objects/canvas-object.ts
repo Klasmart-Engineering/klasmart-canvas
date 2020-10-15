@@ -22,4 +22,5 @@ export interface ICanvasObject extends fabric.Object {
   src?: string;
   joinedIds?: string[];
   isPartialErased?: boolean;
+  backgroundImage?: string | File;
 }

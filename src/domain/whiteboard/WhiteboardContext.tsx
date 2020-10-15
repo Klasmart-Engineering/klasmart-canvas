@@ -29,6 +29,7 @@ import { canvasImagePopup } from './hooks/canvasImagePopup';
 import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
 import WhiteboardToggle from '../../components/WhiteboardToogle';
 import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
+import { useUploadFileModal } from './hooks/useUploadFileModal';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -88,6 +89,11 @@ export const WhiteboardProvider = ({
     setSerializerToolbarState,
   } = useToolbarPermissions();
   const { pointerIsEnabled, setPointerIsEnabled } = usePointerPermissions();
+  const {
+    UploadFileModal,
+    openUploadFileModal,
+    closeUploadFileModal,
+  } = useUploadFileModal();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -102,6 +108,15 @@ export const WhiteboardProvider = ({
   // multiple instances using the instanceId to choose which one to
   // apply action to.
   const [canvasActions, updateCanvasActions] = useState<ICanvasActions>();
+  const [image, setImage] = useState<string | File>('');
+  const [isGif, setIsGif] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState<string | File>('');
+  const [isBackgroundImage, setIsBackgroundImage] = useState(false);
+  const [localImage, setLocalImage] = useState<string | File>('');
+  const [
+    backgroundImageIsPartialErasable,
+    setBackgroundImageIsPartialErasable,
+  ] = useState(false);
 
   const isLocalObject = (id: string, canvasId: string | undefined) => {
     const object = id.split(':');
@@ -284,7 +299,6 @@ export const WhiteboardProvider = ({
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
     isLocalObject,
-
     // NOTE: Actions that will get invoked based on registered handler.
     fillColor: fillColorAction,
     textColor: textColorAction,
@@ -310,6 +324,20 @@ export const WhiteboardProvider = ({
     perfectShapeIsAvailable,
     partialEraseIsActive,
     updatePartialEraseIsActive,
+    openUploadFileModal,
+    closeUploadFileModal,
+    image,
+    setImage,
+    isGif,
+    setIsGif,
+    backgroundImage,
+    setBackgroundImage,
+    backgroundImageIsPartialErasable,
+    setBackgroundImageIsPartialErasable,
+    isBackgroundImage,
+    setIsBackgroundImage,
+    localImage,
+    setLocalImage,
   };
 
   return (
@@ -340,6 +368,17 @@ export const WhiteboardProvider = ({
       <AuthMenu userId={userId} setToolbarIsEnabled={setToolbarIsEnabled} />
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
+      />
+
+      <UploadFileModal
+        setImage={setImage}
+        setIsGif={setIsGif}
+        setBackgroundImage={setBackgroundImage}
+        setBackgroundImageIsPartialErasable={
+          setBackgroundImageIsPartialErasable
+        }
+        isBackgroundImage={isBackgroundImage}
+        setIsBackgroundImage={setIsBackgroundImage}
       />
       {children}
     </WhiteboardContext.Provider>

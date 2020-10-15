@@ -77,6 +77,7 @@ function Toolbar() {
     updateLineWidthIsActive,
     updateImagePopupIsOpen,
     updatePartialEraseIsActive,
+    openUploadFileModal,
   } = useContext(WhiteboardContext);
 
   const pointerToolIsActive =
@@ -235,6 +236,15 @@ function Toolbar() {
           break;
         case ELEMENTS.WHITEBOARD_SCREENSHOT_ACTION:
           updateImagePopupIsOpen(true);
+          break;
+        case ELEMENTS.ADD_IMAGE_ACTION:
+          if (
+            teacherHasPermission ||
+            (toolbarIsEnabled && serializerToolbarState.uploadImage)
+          ) {
+            openUploadFileModal();
+          }
+          break;
       }
     }
   }

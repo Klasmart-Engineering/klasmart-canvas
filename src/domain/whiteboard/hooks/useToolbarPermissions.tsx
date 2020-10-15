@@ -14,6 +14,7 @@ export const useToolbarPermissions = () => {
     undoRedo: false,
     clearWhiteboard: false,
     downloadCanvas: false,
+    uploadImage: false,
   });
 
   return {

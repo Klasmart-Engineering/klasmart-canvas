@@ -57,7 +57,8 @@ export default function AuthMenu(props: {
     shape,
     undoRedo,
     clearWhiteboard,
-    downloadCanvas
+    downloadCanvas,
+    uploadImage
   } = localToolbarState;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,6 +134,11 @@ export default function AuthMenu(props: {
       checked: downloadCanvas,
       name: 'downloadCanvas',
       label: 'Save Canvas As Image',
+    },
+    {
+      checked: uploadImage,
+      name: 'uploadImage',
+      label: 'Upload Image tool',
     },
   ];
 

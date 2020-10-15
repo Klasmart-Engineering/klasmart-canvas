@@ -12,6 +12,8 @@ import { TypedShape } from '../../../interfaces/shapes/shapes';
 interface ITarget {
   strategy: string;
   userId: string;
+  isBackgroundImage: boolean;
+  isLocalImage: boolean;
 }
 
 const useSynchronizedRemoved = (
@@ -25,11 +27,19 @@ const useSynchronizedRemoved = (
     state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
 
-  const { clearIsActive } = useContext(WhiteboardContext);
+  const { clearIsActive, setBackgroundImage, setLocalImage } = useContext(
+    WhiteboardContext
+  );
 
   /** Register and handle remote event. */
   useEffect(() => {
     const removed = (objectId: string, target: ITarget) => {
+      if (target.isLocalImage) {
+        setLocalImage('');
+        setBackgroundImage('');
+        return;
+      }
+
       switch (target.strategy) {
         case 'allowClearMyself':
           if (!shouldHandleRemoteEvent(objectId)) return;
@@ -38,6 +48,15 @@ const useSynchronizedRemoved = (
               canvas?.remove(obj);
             }
           });
+
+          if (target.isBackgroundImage) {
+            // In order to remove background you need to add 0 to the first argument.
+            // An empty string unfortunately doesnt work.
+            // https://stackoverflow.com/a/14171884
+            // @ts-ignore
+            canvas?.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+          }
+
           break;
         case 'allowClearAll':
           if (shouldHandleRemoteEvent(objectId)) return;
@@ -91,6 +110,8 @@ const useSynchronizedRemoved = (
     shouldHandleRemoteEvent,
     undoRedoDispatch,
     userId,
+    setLocalImage,
+    setBackgroundImage,
   ]);
 
   /** Register and handle local event. */
