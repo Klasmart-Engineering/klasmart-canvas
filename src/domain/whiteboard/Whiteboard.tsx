@@ -1,9 +1,10 @@
-import React, { CSSProperties, useEffect } from 'react';
+import React, { CSSProperties, useEffect, useRef } from 'react';
 import '../../assets/style/whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
 import { WhiteboardCanvas } from './WhiteboardCanvas';
 import { ICanvasKeyboardEvent } from '../../interfaces/canvas-events/canvas-keyboard-event';
+import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardContainer';
 
 const teacher = {
   allowClearAll: true,
@@ -18,13 +19,17 @@ const student = {
 };
 
 function Whiteboard() {
+  const whiteboardWidth = 740;
+  const whiteboardHeight = 460;
+
   const canvasStyle: CSSProperties = {
-    border: '2px blue solid',
     position: 'absolute',
     top: '0px',
     left: '0px',
     width: '100%',
   };
+
+  const activeCanvas = useRef<null | string>(null);
 
   /**
    * Blocks the Firefox previous page action triggered when the Backspace key is pressed
@@ -53,20 +58,18 @@ function Whiteboard() {
         clearWhiteboardPermissions={teacher}
         userId={'teacher'}
         allToolbarIsEnabled={true}
+        activeCanvas={activeCanvas}
       >
-        <div className="whiteboard">
+        <div
+          className="whiteboard"
+          onClick={() => {
+            activeCanvas.current = 'canvas1';
+          }}
+        >
           <Toolbar />
-          <div
-            style={{
-              border: '1px solid black',
-              width: '740px',
-              height: '460px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              backgroundColor: 'white',
-            }}
+          <WhiteboardContainer
+            width={whiteboardWidth}
+            height={whiteboardHeight}
           >
             <WhiteboardCanvas
               instanceId="canvas1"
@@ -74,33 +77,31 @@ function Whiteboard() {
               initialStyle={canvasStyle}
               pointerEvents={true}
               clearWhiteboardPermissions={teacher}
-              pixelWidth={740}
-              pixelHeight={460}
+              pixelWidth={whiteboardWidth}
+              pixelHeight={whiteboardHeight}
             >
               <button>Teacher</button>
             </WhiteboardCanvas>
-            {/*<button>Teacher</button>*/}
-          </div>
+            <button>Teacher</button>
+          </WhiteboardContainer>
         </div>
       </WhiteboardProvider>
       <WhiteboardProvider
         clearWhiteboardPermissions={student}
         userId={'student'}
         allToolbarIsEnabled={false}
+        activeCanvas={activeCanvas}
       >
-        <div className="whiteboard">
+        <div
+          className="whiteboard"
+          onClick={() => {
+            activeCanvas.current = 'canvas2';
+          }}
+        >
           <Toolbar />
-          <div
-            style={{
-              border: '1px solid black',
-              width: '740px',
-              height: '460px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              backgroundColor: 'white',
-            }}
+          <WhiteboardContainer
+            width={whiteboardWidth}
+            height={whiteboardHeight}
           >
             <WhiteboardCanvas
               instanceId="canvas2"
@@ -108,33 +109,31 @@ function Whiteboard() {
               initialStyle={canvasStyle}
               pointerEvents={true}
               clearWhiteboardPermissions={student}
-              pixelWidth={740}
-              pixelHeight={460}
+              pixelWidth={whiteboardWidth}
+              pixelHeight={whiteboardHeight}
             >
               <button>Student</button>
             </WhiteboardCanvas>
-            {/*<button>Student</button>*/}
-          </div>
+            <button>Student</button>
+          </WhiteboardContainer>
         </div>
       </WhiteboardProvider>
       <WhiteboardProvider
         clearWhiteboardPermissions={student}
         userId={'student2'}
         allToolbarIsEnabled={false}
+        activeCanvas={activeCanvas}
       >
-        <div className="whiteboard">
+        <div
+          className="whiteboard"
+          onClick={() => {
+            activeCanvas.current = 'canvas3';
+          }}
+        >
           <Toolbar />
-          <div
-            style={{
-              border: '1px solid black',
-              width: '740px',
-              height: '460px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              backgroundColor: 'white',
-            }}
+          <WhiteboardContainer
+            width={whiteboardWidth}
+            height={whiteboardHeight}
           >
             <WhiteboardCanvas
               instanceId="canvas3"
@@ -142,13 +141,13 @@ function Whiteboard() {
               initialStyle={canvasStyle}
               pointerEvents={true}
               clearWhiteboardPermissions={student}
-              pixelWidth={740}
-              pixelHeight={460}
+              pixelWidth={whiteboardWidth}
+              pixelHeight={whiteboardHeight}
             >
               <button>Student</button>
             </WhiteboardCanvas>
-            {/*<button>Student</button>*/}
-          </div>
+            <button>Student</button>
+          </WhiteboardContainer>
         </div>
       </WhiteboardProvider>
     </>

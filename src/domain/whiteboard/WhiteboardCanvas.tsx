@@ -168,6 +168,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setSerializerToolbarState,
     allToolbarIsEnabled,
     lineWidthIsActive,
+    activeCanvas,
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
     perfectShapeIsAvailable,
@@ -662,17 +663,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
-      // The following two blocks, used for undo and redo, can not
-      // be integrated while there are two boards in the canvas.
-      // if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
-      //   dispatch({ type: UNDO, canvasId });
-      //   return;
-      // }
+      if (
+        ((e as unknown) as KeyboardEvent).keyCode === 90 &&
+        (e as any).ctrlKey &&
+        !(e as any).shiftKey &&
+        activeCanvas.current === instanceId
+      ) {
+        undoRedoDispatch({ type: UNDO, canvasId: instanceId });
+        return;
+      }
 
-      // if (e.which === 89 && e.ctrlKey) {
-      //   dispatch({ type: REDO, canvasId });
-      //   return;
-      // }
+      if (
+        ((e as unknown) as KeyboardEvent).keyCode === 89 &&
+        (e as any).ctrlKey &&
+        activeCanvas.current === instanceId
+      ) {
+        undoRedoDispatch({ type: REDO, canvasId: instanceId });
+        return;
+      }
 
       if ((e as ICanvasKeyboardEvent).key === 'Backspace' && canvas) {
         const objects = canvas.getActiveObjects();
@@ -703,6 +711,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     },
     [
       canvas,
+      undoRedoDispatch,
+      activeCanvas,
+      instanceId,
       perfectShapeIsActive,
       perfectShapeIsAvailable,
       updatePerfectShapeIsActive,
@@ -1484,63 +1495,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       });
     }
   }, [fontColor, canvas, undoRedoDispatch, userId]);
-
-  useEffect(() => {
-    if (penColor && canvas) {
-      const obj = canvas.getActiveObject() as any;
-
-      if (!obj) return;
-
-      const type = obj?.get('type');
-
-      if (type === 'textbox') return;
-
-      if (obj?.type !== 'activeSelection') {
-        const payload = {
-          type,
-          target: { stroke: obj?.stroke },
-          id: obj?.id,
-        };
-
-        const event = { event: payload, type: 'colorChanged' };
-
-        undoRedoDispatch({
-          type: SET,
-          payload: canvas?.getObjects() as TypedShape[],
-          canvasId: userId,
-          event: (event as unknown) as IUndoRedoEvent,
-        });
-      } else {
-        const activeIds: string[] = canvas
-          ?.getActiveObject()
-          // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
-          .getObjects()
-          .map((o: TypedShape) => o.id);
-        const payload = {
-          type,
-          svg: true,
-          target: null,
-          id: `${userId}:group`,
-        };
-
-        const event = { event: payload, type: 'activeSelection', activeIds };
-
-        let filtered = canvas?.getObjects().filter((o: any) => {
-          return !o.group;
-        });
-
-        let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
-        active?.set({ id: `${userId}:group` });
-
-        undoRedoDispatch({
-          type: SET_GROUP,
-          payload: [...(filtered as any[]), active],
-          canvasId: userId,
-          event: (event as unknown) as IUndoRedoEvent,
-        });
-      }
-    }
-  }, [penColor, canvas, undoRedoDispatch, userId]);
 
   useEffect(() => {
     if (lineWidth && canvas) {
