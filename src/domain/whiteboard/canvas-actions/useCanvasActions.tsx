@@ -561,14 +561,13 @@ export const useCanvasActions = (
         }
       });
 
-
       const obj = canvas?.getActiveObject() as any;
       if (!obj) return;
 
       const type = obj?.get('type');
 
       if (type === 'textbox') return;
-  
+
       if (obj?.type !== 'activeSelection') {
         const payload = {
           type,
