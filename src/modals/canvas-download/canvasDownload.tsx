@@ -83,9 +83,6 @@ export const CanvasDownloadConfirm = (props: Props) => {
         <Button className={css.button} onClick={downloadCanvasJPG}>
           JPG
         </Button>
-        <a className={css.a} href="#/" id="canvasDownloader">
-          download
-        </a>
         <Button
           className={css.cancel}
           onClick={() => {

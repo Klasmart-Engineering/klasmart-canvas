@@ -13,7 +13,7 @@ interface IProps {
  * @param type Image type
  */
 const generateLink = (img: string, ext: string, type: string): void => {
-  const link = document.getElementById('canvasDownloader');
+  const link = document.createElement('a'); // document.getElementById('canvasDownloader');
   const date = new Date();
 
   (link as HTMLElement).setAttribute(
