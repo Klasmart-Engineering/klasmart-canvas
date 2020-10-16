@@ -31,6 +31,11 @@ export const mappedActionElements = (
             allToolbarIsEnabled || serializerToolbarState.clearWhiteboard;
           return { ...elmnt, enabled };
         }
+        case 'add_image': {
+          const enabled =
+            allToolbarIsEnabled || serializerToolbarState.uploadImage;
+          return { ...elmnt, enabled };
+        }
         case 'undo':
         case 'redo': {
           const enabled =
