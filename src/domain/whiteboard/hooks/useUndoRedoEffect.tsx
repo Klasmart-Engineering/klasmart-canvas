@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useUndoRedo, UNDO, REDO } from '../reducers/undo-redo';
+import { useUndoRedo, UNDO, REDO, CanvasHistoryState } from '../reducers/undo-redo';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { TypedShape, TypedPolygon } from '../../../interfaces/shapes/shapes';
 import { Canvas } from 'fabric/fabric-impl';
@@ -9,6 +9,7 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
 import { IPathTarget } from '../../../interfaces/canvas-events/path-target';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
@@ -37,7 +38,7 @@ const isLocalObject = (id: string, canvasId: string): boolean => {
  * @param currentIndex Current event index.
  * @param events List of events.
  */
-const getPreviousBackground = (currentIndex: number, events: any): string => {
+const getPreviousBackground = (currentIndex: number, events: IUndoRedoEvent[]): string => {
   let i = currentIndex;
 
   if (i < 0) {
@@ -45,13 +46,54 @@ const getPreviousBackground = (currentIndex: number, events: any): string => {
   }
 
   for (i; i >= 0; i--) {
-    if (events[i].event.type === 'background') {
-      return events[i].event.target.fill;
+    if ((events[i].event as IUndoRedoSingleEvent).type === 'background') {
+      return (events[i].event as IUndoRedoSingleEvent).target.fill as string;
     }
   }
 
   return '#fff';
 };
+
+const mapActiveState = (activeState: string) => (JSON.parse(activeState).objects.map(
+  (object: TypedShape | TypedGroup) => {
+    if ((object as TypedGroup).objects) {
+      let _objects = (object as TypedGroup).objects;
+      let mappedObjects = (_objects as TypedShape[]).map(
+        (o: TypedShape) => {
+          return { ...o, fromJSON: true };
+        }
+      );
+
+      return { ...object, fromJSON: true, objects: mappedObjects };
+    }
+    return { ...object, fromJSON: true };
+  }
+));
+
+const loadFromJSON = (canvas: fabric.Canvas, mapped: { [key: string]: any }, instanceId: string, state: CanvasHistoryState) => {
+  canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
+    canvas
+      .getObjects()
+      .forEach(
+        (o: TypedShape | TypedPolygon | TypedGroup | IPathTarget) => {
+          if (isLocalObject(o.id as string, instanceId)) {
+            if (!(o as IPathTarget).isPartialErased) {
+              (o as TypedShape).set({ selectable: true, evented: true });
+            }
+
+            if ((o as TypedGroup)._objects) {
+              (o as TypedGroup).toActiveSelection();
+              canvas.discardActiveObject();
+            }
+          }
+        }
+      );
+
+    const fill = getPreviousBackground(state.eventIndex, state.events);
+    canvas.backgroundColor = fill;
+    canvas.renderAll();
+  });
+}
 
 /**
  * Custom hook to track canvas history.
@@ -82,44 +124,8 @@ export const UndoRedo = (
         }
       });
 
-      const mapped = JSON.parse(state.activeState as string).objects.map(
-        (object: TypedShape | TypedGroup) => {
-          if ((object as TypedGroup).objects) {
-            let _objects = (object as TypedGroup).objects;
-            let mappedObjects = (_objects as TypedShape[]).map(
-              (o: TypedShape) => {
-                return { ...o, fromJSON: true };
-              }
-            );
-
-            return { ...object, fromJSON: true, objects: mappedObjects };
-          }
-          return { ...object, fromJSON: true };
-        }
-      );
-
-      canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
-        canvas
-          .getObjects()
-          .forEach(
-            (o: TypedShape | TypedPolygon | TypedGroup | IPathTarget) => {
-              if (isLocalObject(o.id as string, instanceId)) {
-                if (!(o as IPathTarget).isPartialErased) {
-                  (o as TypedShape).set({ selectable: true, evented: true });
-                }
-
-                if ((o as TypedGroup)._objects) {
-                  (o as TypedGroup).toActiveSelection();
-                  canvas.discardActiveObject();
-                }
-              }
-            }
-          );
-
-        const fill = getPreviousBackground(state.eventIndex, state.events);
-        canvas.backgroundColor = fill;
-        canvas.renderAll();
-      });
+      const mapped: { [key: string]: any } = mapActiveState(state.activeState as string);
+      loadFromJSON(canvas, mapped, instanceId, state);
     }
 
     if (state.actionType === UNDO) {

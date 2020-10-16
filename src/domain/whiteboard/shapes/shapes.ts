@@ -69,6 +69,8 @@ export const triangle = (
     evented: false,
     padding: 15,
     strokeUniform: true,
+    strokeMiterLimit: 50,
+    strokeLineJoin: 'miter',
   });
 
   return fabric.util.object.extend(shape, {
@@ -142,6 +144,8 @@ export const pentagon = (
     evented: false,
     strokeUniform: true,
     padding: 15,
+    strokeMiterLimit: 50,
+    strokeLineJoin: 'miter',
   });
 };
 
@@ -175,6 +179,8 @@ export const hexagon = (
     evented: false,
     strokeUniform: true,
     padding: 15,
+    strokeMiterLimit: 50,
+    strokeLineJoin: 'miter',
   });
 
   return shape;
@@ -215,6 +221,8 @@ export const generic = (
     evented: false,
     strokeUniform: true,
     padding: 15,
+    strokeMiterLimit: 50,
+    strokeLineJoin: 'miter',
   });
 };
 

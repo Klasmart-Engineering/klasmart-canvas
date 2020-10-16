@@ -1,3 +1,4 @@
+import { MutableRefObject } from 'react';
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
 
 export interface IWhiteboardContext {
@@ -72,6 +73,7 @@ export interface IWhiteboardContext {
     pointer: boolean;
     move: boolean;
     erase: boolean;
+    partialErase: boolean;
     pen: boolean;
     floodFill: boolean;
     text: boolean;
@@ -84,6 +86,7 @@ export interface IWhiteboardContext {
     pointer: boolean;
     move: boolean;
     erase: boolean;
+    partialErase: boolean;
     pen: boolean;
     floodFill: boolean;
     text: boolean;
@@ -94,6 +97,10 @@ export interface IWhiteboardContext {
   allToolbarIsEnabled: boolean;
   lineWidthIsActive: boolean;
   updateLineWidthIsActive: (active: boolean) => void;
+  activeCanvas: MutableRefObject<string | null>;
+  perfectShapeIsActive: boolean;
+  updatePerfectShapeIsActive: (active: boolean) => void;
+  perfectShapeIsAvailable: () => boolean;
   partialEraseIsActive: boolean;
   updatePartialEraseIsActive: (status: boolean) => void;
 }
