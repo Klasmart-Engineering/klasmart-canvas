@@ -6,53 +6,50 @@ export const findIntersectedObjects = (
   objectsList: TypedShape[],
   canvas: Canvas
 ) => {
-  let originalStroke;
+  /* Color to set in the stroke of the current compared object
+    to could difference it in the mainObject color data */
   const differentStroke = '#ababab';
 
+  /**
+   * Check if really the given object is intersecting the mainObject
+   * @param {TypedShape} object - object to check
+   */
   const isTouchingMainObject = (object: TypedShape) => {
+    /* If comparation is with same object,
+      this will be pass directly like intersectedObject */
     if (object === mainObject) return true;
 
     if (mainObject.intersectsWithObject(object)) {
-      if (object.type === 'image') return true;
+      if (object.type === 'image') {
+        showOtherObjects(false, object);
+        canvas.renderAll();
 
-      console.log();
-      originalStroke = object.stroke;
-      object.set({
-        stroke: differentStroke,
-      });
-      canvas.renderAll();
+        let data = getMainObjectColorData();
 
-      let data = canvas
-        .getContext()
-        .getImageData(
-          Number(mainObject.oCoords?.tl.x) - 10,
-          Number(mainObject.oCoords?.tl.y) - 10,
-          Number(mainObject.width) + 10,
-          Number(mainObject.height) + 10
-        ).data;
+        return imageIsTouching(data, object);
+      } else {
+        if (!object.stroke) return;
 
-      for (let i = 0; i < data.length; i += 4) {
-        let currentColor = [data[i], data[i + 1], data[i + 2], data[i + 3]];
+        let originalStroke = object.stroke;
 
-        if (rgbaDataToHexadecimalColor(currentColor) === differentStroke) {
-          object.set({
-            stroke: originalStroke,
-          });
-          canvas.renderAll();
+        object.set({
+          stroke: differentStroke,
+        });
+        canvas.renderAll();
 
-          return true;
-        }
+        let data = getMainObjectColorData();
+
+        return commonObjectIsTouching(data, object, originalStroke);
       }
-
-      object.set({
-        stroke: originalStroke,
-      });
-      canvas.renderAll();
     }
 
     return false;
   };
 
+  /**
+   * Coverts the given colorData to Hexadecimal Code
+   * @param {number[]} colorData - RGB color values
+   */
   const rgbaDataToHexadecimalColor = (colorData: number[]) => {
     return `#${(
       (1 << 24) +
@@ -62,6 +59,107 @@ export const findIntersectedObjects = (
     )
       .toString(16)
       .slice(1)}`;
+  };
+
+  /**
+   * Executes the necessary evaluations to check
+   * if the given image object is really touching the mainObject
+   * @param {Uint8ClampedArray} colorData - color data to review
+   * @param {TypedShape} currentObject - actual compared object
+   */
+  const imageIsTouching = (
+    colorData: Uint8ClampedArray,
+    currentObject: TypedShape
+  ) => {
+    for (let i = 0; i < colorData.length; i += 4) {
+      let currentColor = [
+        colorData[i],
+        colorData[i + 1],
+        colorData[i + 2],
+        colorData[i + 3],
+      ];
+
+      if (
+        rgbaDataToHexadecimalColor(currentColor) !== canvas.backgroundColor &&
+        colorData[i + 3] !== 0
+      ) {
+        showOtherObjects(true, currentObject);
+        canvas.renderAll();
+        return true;
+      }
+    }
+
+    showOtherObjects(true, currentObject);
+    canvas.renderAll();
+    return false;
+  };
+
+  /**
+   * Executes the necessary evaluations to check
+   * if the given object is really touching the mainObject
+   * @param {Uint8ClampedArray} colorData - color data to review
+   * @param {TypedShape} currentObject - actual compared object
+   * @param {string} originalStroke - original stroke color
+   * for the currentObject
+   */
+  const commonObjectIsTouching = (
+    colorData: Uint8ClampedArray,
+    currentObject: TypedShape,
+    originalStroke: string
+  ) => {
+    for (let i = 0; i < colorData.length; i += 4) {
+      let currentColor = [
+        colorData[i],
+        colorData[i + 1],
+        colorData[i + 2],
+        colorData[i + 3],
+      ];
+
+      if (rgbaDataToHexadecimalColor(currentColor) === differentStroke) {
+        currentObject.set({
+          stroke: originalStroke,
+        });
+        canvas.renderAll();
+
+        return true;
+      }
+    }
+
+    currentObject.set({
+      stroke: originalStroke,
+    });
+    canvas.renderAll();
+    return false;
+  };
+
+  /**
+   * Show/hide the rest of elements that currently are not compared,
+   * but are intersecting the mainObject
+   * @param {boolean} status - status (true for show, false for hide)
+   * @param {TypedShape} currentObject - current compared object with mainObject
+   */
+  const showOtherObjects = (status: boolean, currentObject: TypedShape) => {
+    objectsList.forEach((obj) => {
+      if (mainObject.intersectsWithObject(obj) && currentObject !== obj) {
+        obj.set({
+          opacity: status ? 1 : 0,
+        });
+      }
+    });
+  };
+
+  /**
+   * Get the current mainObject color data
+   */
+  const getMainObjectColorData = () => {
+    return canvas
+      .getContext()
+      .getImageData(
+        Number(mainObject.oCoords?.tl.x) - 10,
+        Number(mainObject.oCoords?.tl.y) - 10,
+        Number(mainObject.width) + 70,
+        Number(mainObject.height) + 70
+      ).data;
   };
 
   return objectsList.filter((o: TypedShape) => isTouchingMainObject(o));
