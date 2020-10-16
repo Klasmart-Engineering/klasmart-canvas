@@ -13,7 +13,7 @@ const props = {
 }
 
 describe('Download canvas as image.', () => {
-  it("should download the file", () => {
+  it('should download the file', () => {
     const link = {
       click: jest.fn(),
       setAttribute: jest.fn()
