@@ -39,8 +39,6 @@ export const downloadCanvas = (props: IProps, type: string) => {
     canvas.width = props.width;
     canvas.height = props.height;
 
-    document.body.appendChild(canvas);
-
     var background = new Image();
     background.src = props.backgroundImage as string;
 
