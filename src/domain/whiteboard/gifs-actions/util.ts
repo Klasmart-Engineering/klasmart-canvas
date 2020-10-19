@@ -2,7 +2,7 @@ import { fabricGif } from './fabricGif';
 import { v4 as uuidv4 } from 'uuid';
 import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
-import { IImageOptions } from "fabric/fabric-impl";
+import { IImageOptions } from 'fabric/fabric-impl';
 
 /**
  * Function to create gif as object
@@ -44,12 +44,13 @@ export function createImageAsObject(
   canvas: fabric.Canvas
 ) {
   return fabric.Image.fromURL(image, function (img) {
-    const objectImage: ICanvasObject = img
-      .set({
-        left: 0,
-        top: 0,
-      })
-      .scale(0.25);
+    const objectImage: ICanvasObject = img.set({
+      left: 0,
+      top: 0,
+    });
+
+    img.scaleToHeight(250);
+    img.scaleToWidth(250);
 
     objectImage.id = `${userId}:${uuidv4()}`;
     canvas?.add(objectImage);
@@ -57,7 +58,7 @@ export function createImageAsObject(
 }
 
 interface IBackgroundImage extends IImageOptions {
-  id?: string
+  id?: string;
 }
 
 /**
