@@ -162,6 +162,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     perfectShapeIsAvailable,
     partialEraseIsActive,
     updatePartialEraseIsActive,
+    undoRedoIsAvailable,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -644,6 +645,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
+      if (!undoRedoIsAvailable()) {
+        return;
+      }
+
       if (
         ((e as unknown) as KeyboardEvent).keyCode === 90 &&
         (e as any).ctrlKey &&

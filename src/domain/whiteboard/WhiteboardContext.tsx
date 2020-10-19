@@ -1,4 +1,9 @@
-import React, { createContext, MutableRefObject, useCallback, useState } from 'react';
+import React, {
+  createContext,
+  MutableRefObject,
+  useCallback,
+  useState,
+} from 'react';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
@@ -202,6 +207,13 @@ export const WhiteboardProvider = ({
       serializerToolbarState.move
     );
   };
+
+  /**
+   * Returns boolean indicating if undo / redo feature is available.
+   */
+  const undoRedoIsAvailable = (): boolean => {
+    return allToolbarIsEnabled || serializerToolbarState.undoRedo;
+  };
   /**
    * List of available colors in toolbar
    * */
@@ -295,6 +307,7 @@ export const WhiteboardProvider = ({
     perfectShapeIsAvailable,
     partialEraseIsActive,
     updatePartialEraseIsActive,
+    undoRedoIsAvailable,
   };
 
   return (
