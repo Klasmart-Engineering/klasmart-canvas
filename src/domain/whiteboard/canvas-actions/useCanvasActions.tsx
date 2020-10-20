@@ -20,6 +20,7 @@ import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-dr
 import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { TypedGroup } from '../../../interfaces/shapes/group';
+import { PartialErase } from '../partial-erase/partialErase';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -908,12 +909,17 @@ export const useCanvasActions = (
       });
     }
 
+    canvas?.on('mouse:move', (e: ICanvasMouseEvent) => {
+      console.log('e::::', e);
+    });
+
     // When mouse down eraser is able to remove objects
     canvas?.on('mouse:down', (e: ICanvasMouseEvent) => {
       if (eraser) {
         return false;
       }
 
+      console.log('test:', e);
       canvas.defaultCursor = `url("${eraseObjectCursor}"), auto`;
       eraser = true;
 
@@ -974,50 +980,66 @@ export const useCanvasActions = (
   /**
    * Creates the listeners to partial erase objects from the whiteboard
    */
+
   const partialEraseObject = useCallback(() => {
-    const pathCreated = (e: ICanvasDrawingEvent) => {
-      if (e.path) {
-        e.path.strokeUniform = true;
-        e.path.globalCompositeOperation = 'destination-out';
-        e.path.evented = false;
-        e.path.selectable = false;
-        e.path.isPartialErased = true;
-        e.path?.bringToFront();
 
-        canvas?.forEachObject(function (obj: ICanvasObject) {
-          const intersect = obj.intersectsWithObject(
-            (e.path as unknown) as TypedShape,
-            true,
-            true
-          );
+    const erase = new PartialErase(
+      userId as string,
+      canvas as fabric.Canvas,
+      lineWidth,
+      eraseObjectCursor,
+      allToolbarIsEnabled,
+      partialEraseIsActive
+    );
 
-          if (intersect) {
-            obj.set({
-              isPartialErased: true,
-              evented: false,
-              selectable: false,
-            });
-          }
-        });
-        canvas?.renderAll();
-      }
-    };
+    console.log('ERASE: ', erase);
 
-    updatePartialEraseIsActive(true);
 
-    if (canvas) {
-      canvas.freeDrawingBrush = new fabric.PencilBrush();
-      (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
-      canvas.freeDrawingBrush.color = 'white';
-      canvas.freeDrawingBrush.width = lineWidth;
-      canvas.freeDrawingCursor = `url("${eraseObjectCursor}"), auto`;
-      canvas.isDrawingMode = allToolbarIsEnabled || partialEraseIsActive;
-      canvas.on('path:created', pathCreated);
 
-      if (canvas.getActiveObjects().length === 1) {
-        canvas.discardActiveObject().renderAll();
-      }
-    }
+
+    // const pathCreated = (e: ICanvasDrawingEvent) => {
+    //   if (e.path) {
+    //     e.path.strokeUniform = true;
+    //     e.path.globalCompositeOperation = 'destination-out';
+    //     e.path.evented = false;
+    //     e.path.selectable = false;
+    //     e.path.isPartialErased = true;
+    //     e.path?.bringToFront();
+
+    //     canvas?.forEachObject(function (obj: ICanvasObject) {
+    //       const intersect = obj.intersectsWithObject(
+    //         (e.path as unknown) as TypedShape,
+    //         true,
+    //         true
+    //       );
+
+    //       if (intersect) {
+    //         obj.set({
+    //           isPartialErased: true,
+    //           evented: false,
+    //           selectable: false,
+    //         });
+    //       }
+    //     });
+    //     canvas?.renderAll();
+    //   }
+    // };
+
+    // updatePartialEraseIsActive(true);
+
+    // if (canvas) {
+    //   canvas.freeDrawingBrush = new fabric.PencilBrush();
+    //   (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
+    //   canvas.freeDrawingBrush.color = 'white';
+    //   canvas.freeDrawingBrush.width = lineWidth;
+    //   canvas.freeDrawingCursor = `url("${eraseObjectCursor}"), auto`;
+    //   canvas.isDrawingMode = allToolbarIsEnabled || partialEraseIsActive;
+    //   canvas.on('path:created', pathCreated);
+
+    //   if (canvas.getActiveObjects().length === 1) {
+    //     canvas.discardActiveObject().renderAll();
+    //   }
+    // }
   }, [
     canvas,
     allToolbarIsEnabled,
