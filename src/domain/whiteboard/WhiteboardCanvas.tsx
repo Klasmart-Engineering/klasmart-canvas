@@ -1787,6 +1787,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Set a selected shape like perfect if perfectShapeIsActive
    */
   useEffect(() => {
+    /**
+     * Multiplies the width by scaleX of the given shape
+     * to obtain the real current width
+     * @param {TypedShape} shape - Shape to calculate its real width
+     */
+    const getShapeRealWidth = (shape: TypedShape) => {
+      return Number(shape.width) * Number(shape.scaleX);
+    };
+
+    /**
+     * Multiplies the height by scaleY of the given shape
+     * to obtain the real current height
+     * @param {TypedShape} shape - Shape to calculate its real height
+     */
+    const getShapeRealHeight = (shape: TypedShape) => {
+      return Number(shape.height) * Number(shape.scaleY);
+    };
+
     canvas?.forEachObject((object: ICanvasObject) => {
       if (
         isEmptyShape(object as TypedShape) &&
@@ -1803,21 +1821,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       isEmptyShape(canvas.getActiveObject())
     ) {
       const shapeToFix = canvas.getActiveObject();
-      if (Number(shapeToFix.width) > Number(shapeToFix.height)) {
+      if (getShapeRealWidth(shapeToFix) > getShapeRealHeight(shapeToFix)) {
         shapeToFix.set(
           'scaleY',
-          (Number(shapeToFix.width) * Number(shapeToFix.scaleX)) /
-            Number(shapeToFix.height)
+          getShapeRealWidth(shapeToFix) / Number(shapeToFix.height)
         );
 
         canvas.trigger('object:scaled', {
           target: shapeToFix,
         });
-      } else if (Number(shapeToFix.height) > Number(shapeToFix.width)) {
+      } else if (
+        getShapeRealHeight(shapeToFix) > getShapeRealWidth(shapeToFix)
+      ) {
         shapeToFix.set(
           'scaleX',
-          (Number(shapeToFix.height) * Number(shapeToFix.scaleY)) /
-            Number(shapeToFix.width)
+          getShapeRealHeight(shapeToFix) / Number(shapeToFix.width)
         );
 
         canvas.trigger('object:scaled', {
