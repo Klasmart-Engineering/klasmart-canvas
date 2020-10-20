@@ -175,10 +175,10 @@ export const findIntersectedObjects = (
     return canvas
       .getContext()
       .getImageData(
-        Number(mainObject.oCoords?.tl.x) - 1,
-        Number(mainObject.oCoords?.tl.y) - 1,
-        Number(mainObject.width) + 1,
-        Number(mainObject.height) + 2
+        (Number(mainObject.oCoords?.tl.x) - 1) * window.devicePixelRatio,
+        (Number(mainObject.oCoords?.tl.y) - 1) * window.devicePixelRatio,
+        (Number(mainObject.width) + 1) * window.devicePixelRatio,
+        (Number(mainObject.height) + 2) * window.devicePixelRatio
       ).data;
   };
 
