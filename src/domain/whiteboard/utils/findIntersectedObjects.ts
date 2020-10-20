@@ -178,7 +178,7 @@ export const findIntersectedObjects = (
         Number(mainObject.oCoords?.tl.x) - 1,
         Number(mainObject.oCoords?.tl.y) - 1,
         Number(mainObject.width) + 1,
-        Number(mainObject.height) + 1
+        Number(mainObject.height) + 2
       ).data;
   };
 
