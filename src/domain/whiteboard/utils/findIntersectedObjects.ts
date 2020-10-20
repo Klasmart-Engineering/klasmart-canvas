@@ -11,6 +11,13 @@ export const findIntersectedObjects = (
   const differentStroke = '#ababab';
 
   /**
+   * Color to set in the mainObject's background to better the algorithm
+   * and exclude that objects that are in the mainObject's area but are not
+   * in the mainObject's fill
+   */
+  const differentBackground = '#acacac';
+
+  /**
    * Check if really the given object is intersecting the mainObject
    * @param {TypedShape} object - object to check
    */
@@ -31,6 +38,10 @@ export const findIntersectedObjects = (
         if (!object.stroke) return;
 
         let originalStroke = object.stroke;
+
+        mainObject.set({
+          backgroundColor: differentBackground,
+        });
 
         object.set({
           stroke: differentStroke,
@@ -116,6 +127,10 @@ export const findIntersectedObjects = (
       ];
 
       if (rgbaDataToHexadecimalColor(currentColor) === differentStroke) {
+        mainObject.set({
+          backgroundColor: 'transparent',
+        });
+
         currentObject.set({
           stroke: originalStroke,
         });
@@ -125,9 +140,14 @@ export const findIntersectedObjects = (
       }
     }
 
+    mainObject.set({
+      backgroundColor: 'transparent',
+    });
+
     currentObject.set({
       stroke: originalStroke,
     });
+
     canvas.renderAll();
     return false;
   };
@@ -142,7 +162,7 @@ export const findIntersectedObjects = (
     objectsList.forEach((obj) => {
       if (mainObject.intersectsWithObject(obj) && currentObject !== obj) {
         obj.set({
-          opacity: status ? 1 : 0,
+          visible: status,
         });
       }
     });

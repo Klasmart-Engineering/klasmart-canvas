@@ -10,6 +10,7 @@ import {
   PaintEventSerializer,
 } from '../event-serializer/PaintEventSerializer';
 import { IFloodFillData } from './floodFiller';
+import floodFillCursor from '../../../assets/cursors/flood-fill.png';
 
 export interface ITargetObject extends ICanvasObject {
   color: string;
@@ -79,6 +80,10 @@ export const updateAfterCustomFloodFill = async (
       (cloned as ICanvasObject).set({
         top: (top as unknown) as number,
         left: (left as unknown) as number,
+        lockMovementX: true,
+        lockMovementY: true,
+        hoverCursor: `url("${floodFillCursor}") 2 15, default`,
+        selectable: false,
         id,
         joinedIds,
       });
