@@ -10,5 +10,4 @@ export const DEFAULT_VALUES = {
   SHAPE: 'rectangle',
   SHAPE_COLOR: '#000000',
   STAMP: 'yellowStar',
-  BACKGROUND_COLOR: '#000000',
 };

@@ -48,7 +48,6 @@ export const useCanvasActions = (
     partialEraseIsActive,
     backgroundImage,
     localImage,
-    updateBackgroundColor,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
@@ -564,13 +563,14 @@ export const useCanvasActions = (
         }
       });
 
+
       const obj = canvas?.getActiveObject() as any;
       if (!obj) return;
 
       const type = obj?.get('type');
 
       if (type === 'textbox') return;
-
+  
       if (obj?.type !== 'activeSelection') {
         const payload = {
           type,
@@ -709,26 +709,6 @@ export const useCanvasActions = (
       });
     },
     [canvas, updateFontColor, eventSerializer]
-  );
-
-  /**
-   * Add specific color to the whiteboard background
-   * @param {string} color - color to set
-   */
-  const backgroundColor = useCallback(
-    (color: string) => {
-      updateBackgroundColor(color);
-      canvas?.setBackgroundColor(color, canvas.renderAll.bind(canvas));
-
-      const payload = {
-        id: userId,
-        target: color,
-      };
-
-      console.log({ payload });
-      eventSerializer?.push('backgroundColorChanged', payload);
-    },
-    [updateBackgroundColor, canvas, eventSerializer, userId]
   );
 
   /**
@@ -1136,7 +1116,6 @@ export const useCanvasActions = (
       clearWhiteboardAllowClearOthers,
       clearWhiteboardClearMySelf,
       partialEraseObject,
-      backgroundColor,
     };
 
     return { actions, mouseDown };
@@ -1156,7 +1135,6 @@ export const useCanvasActions = (
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
     partialEraseObject,
-    backgroundColor,
   ]);
 
   return state;

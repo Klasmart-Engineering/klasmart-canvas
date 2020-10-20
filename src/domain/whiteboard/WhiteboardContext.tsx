@@ -1,9 +1,4 @@
-import React, {
-  createContext,
-  MutableRefObject,
-  useCallback,
-  useState,
-} from 'react';
+import React, { createContext, MutableRefObject, useCallback, useState } from 'react';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
@@ -34,7 +29,6 @@ import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
 import WhiteboardToggle from '../../components/WhiteboardToogle';
 import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 import { useUploadFileModal } from './hooks/useUploadFileModal';
-import { useBackgroundColor } from './hooks/useBackgroundColor';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -60,7 +54,6 @@ export const WhiteboardProvider = ({
   const { lineWidth, updateLineWidth } = useLineWidth();
   const { floodFill, updateFloodFill } = useFloodFill();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
-  const { backgroundColor, updateBackgroundColor } = useBackgroundColor();
 
   const {
     ClearWhiteboardModal,
@@ -162,13 +155,6 @@ export const WhiteboardProvider = ({
   const textColorAction = useCallback(
     (color: string) => {
       canvasActions?.textColor(color);
-    },
-    [canvasActions]
-  );
-
-  const backgroundColorAction = useCallback(
-    (color: string) => {
-      canvasActions?.backgroundColor(color);
     },
     [canvasActions]
   );
@@ -337,9 +323,6 @@ export const WhiteboardProvider = ({
     setIsBackgroundImage,
     localImage,
     setLocalImage,
-    backgroundColor,
-    updateBackgroundColor,
-    fillBackgroundColor: backgroundColorAction,
   };
 
   return (
