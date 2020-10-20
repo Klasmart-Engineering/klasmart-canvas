@@ -120,6 +120,7 @@ export const WhiteboardProvider = ({
   const [backgroundImage, setBackgroundImage] = useState<string | File>('');
   const [isBackgroundImage, setIsBackgroundImage] = useState(false);
   const [localImage, setLocalImage] = useState<string | File>('');
+  const [localBackground, setLocalBackground] = useState(false);
   const [
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
@@ -340,6 +341,8 @@ export const WhiteboardProvider = ({
     backgroundColor,
     updateBackgroundColor,
     fillBackgroundColor: backgroundColorAction,
+    localBackground,
+    setLocalBackground,
   };
 
   return (

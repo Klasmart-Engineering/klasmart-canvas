@@ -182,6 +182,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     backgroundImageIsPartialErasable,
     localImage,
     setLocalImage,
+    backgroundColor,
+    localBackground,
+    updateBackgroundColor,
+    setLocalBackground,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -1668,6 +1672,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     if (isBackgroundImage && canvas) {
+      updateBackgroundColor('#000000');
+      setLocalBackground(false);
       if (backgroundImageIsPartialErasable) {
         createBackgroundImage(backgroundImage.toString(), userId, canvas).then(
           () => {
@@ -1723,6 +1729,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setLocalImage,
     eventSerializer,
     localImage,
+    updateBackgroundColor,
+    setLocalBackground,
   ]);
 
   /**
@@ -1948,11 +1956,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setSerializerToolbarState
   );
 
-  useSynchronizedBackgroundColorChanged(
-    canvas,
-    userId,
-    filterIncomingEvents,
-  );
+  useSynchronizedBackgroundColorChanged(canvas, userId, filterIncomingEvents);
 
   return (
     <>
@@ -1977,6 +1981,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           }}
           alt="background"
           src={localImage.toString()}
+        />
+      )}
+      {!localImage && localBackground && (
+        <div
+          style={{
+            height: '100%',
+            width: '100%',
+            backgroundColor: backgroundColor,
+          }}
         />
       )}
     </>

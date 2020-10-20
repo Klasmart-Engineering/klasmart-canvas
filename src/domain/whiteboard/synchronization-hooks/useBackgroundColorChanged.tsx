@@ -1,5 +1,7 @@
-import { useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
+import { WhiteboardContext } from '../WhiteboardContext';
+import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
 
 const useSynchronizedBackgroundColorChanged = (
   canvas: fabric.Canvas | undefined,
@@ -10,11 +12,25 @@ const useSynchronizedBackgroundColorChanged = (
     state: { eventController },
   } = useSharedEventSerializer();
 
+  const {
+    updateBackgroundColor,
+    setLocalBackground,
+    setIsBackgroundImage,
+    setBackgroundImageIsPartialErasable,
+    setLocalImage,
+  } = useContext(WhiteboardContext) as IWhiteboardContext;
+
   useEffect(() => {
     const backgroundColorChanged = (id: string, target: string) => {
       if (id && !shouldHandleRemoteEvent(id)) return;
 
-      canvas?.setBackgroundColor(target, canvas.renderAll.bind(canvas));
+      updateBackgroundColor(target);
+      setLocalBackground(true);
+      setIsBackgroundImage(false);
+      setBackgroundImageIsPartialErasable(false);
+      setLocalImage('');
+      // @ts-ignore
+      canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
     };
 
     eventController?.on('backgroundColorChanged', backgroundColorChanged);
@@ -25,7 +41,17 @@ const useSynchronizedBackgroundColorChanged = (
         backgroundColorChanged
       );
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent, userId]);
+  }, [
+    canvas,
+    eventController,
+    shouldHandleRemoteEvent,
+    userId,
+    updateBackgroundColor,
+    setLocalBackground,
+    setIsBackgroundImage,
+    setBackgroundImageIsPartialErasable,
+    setLocalImage,
+  ]);
 };
 
 export default useSynchronizedBackgroundColorChanged;
