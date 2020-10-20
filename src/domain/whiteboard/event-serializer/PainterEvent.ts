@@ -12,8 +12,7 @@ export type PainterEventType =
   | 'moving'
   | 'setToolbarPermissions'
   | 'fontColorChanged'
-  | 'lineWidthChanged'
-  | 'backgroundColorChanged';
+  | 'lineWidthChanged';
 
 export interface PainterEvent {
   // The event type.

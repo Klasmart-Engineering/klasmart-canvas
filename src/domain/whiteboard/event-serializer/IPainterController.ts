@@ -79,14 +79,12 @@ export interface IPainterController {
   ): this;
   on(
     event: 'lineWidthChanged',
-    listener: (id: string, objectType: string, target: ICanvasObject) => void
-  ): this;
-  on(
-    event: 'backgroundColorChanged',
-    listener: (id: string, objectType: string, target: ICanvasObject) => void
-  ): this;
+    listener: (id: string, objectType: string, target: ICanvasObject) => void): this;
 
-  on(event: 'refetch', listener: () => void): this;
+  on(
+    event: 'refetch',
+    listener: () => void
+  ): this;
 
   removeListener(
     event: 'added',
@@ -142,13 +140,11 @@ export interface IPainterController {
   ): this;
   removeListener(
     event: 'lineWidthChanged',
-    listener: (id: string, objectType: string, target: ICanvasObject) => void
-  ): this;
+    listener: (id: string, objectType: string, target: ICanvasObject) => void): this;
   removeListener(
-    event: 'backgroundColorChanged',
-    listener: (id: string, target: ICanvasObject) => void
+    event: 'refetch',
+    listener: () => void
   ): this;
-  removeListener(event: 'refetch', listener: () => void): this;
 
   replayEvents(): Promise<void>;
 }
