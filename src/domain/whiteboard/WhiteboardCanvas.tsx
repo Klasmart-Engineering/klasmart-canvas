@@ -66,8 +66,6 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
-// import backgroundImage from '../../assets/background2.jpg';
-// import pug from '../../assets/pug.jpg';
 import {
   createBackgroundImage,
   createGif,
