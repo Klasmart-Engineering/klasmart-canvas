@@ -57,8 +57,7 @@ export default function AuthMenu(props: {
     shape,
     undoRedo,
     clearWhiteboard,
-    uploadImage,
-    backgroundColor,
+    uploadImage
   } = localToolbarState;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -134,11 +133,6 @@ export default function AuthMenu(props: {
       checked: uploadImage,
       name: 'uploadImage',
       label: 'Upload Image tool',
-    },
-    {
-      checked: backgroundColor,
-      name: 'backgroundColor',
-      label: 'Background Color tool',
     },
   ];
 

@@ -20,7 +20,6 @@ const useSynchronizedSetToolbarPermissions = (
     undoRedo: boolean;
     clearWhiteboard: boolean;
     uploadImage: boolean;
-    backgroundColor: boolean;
   }) => void
 ) => {
   const {
