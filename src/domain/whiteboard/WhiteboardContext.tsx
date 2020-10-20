@@ -1,4 +1,9 @@
-import React, { createContext, useCallback, useState } from 'react';
+import React, {
+  createContext,
+  MutableRefObject,
+  useCallback,
+  useState,
+} from 'react';
 import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
@@ -26,6 +31,9 @@ import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
 import { useBrushType } from './hooks/useBrushType';
+import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
+import WhiteboardToggle from '../../components/WhiteboardToogle';
+import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -34,11 +42,13 @@ export const WhiteboardProvider = ({
   clearWhiteboardPermissions,
   userId,
   allToolbarIsEnabled,
+  activeCanvas,
 }: {
   children: React.ReactNode;
   clearWhiteboardPermissions: IClearWhiteboardPermissions;
   userId: string;
   allToolbarIsEnabled: boolean;
+  activeCanvas: MutableRefObject<string | null>;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();
@@ -60,8 +70,16 @@ export const WhiteboardProvider = ({
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
   const { clearIsActive, updateClearIsActive } = useClearIsActive();
+  const {
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
+  } = usePartialEraseIsActive();
   const { lineWidthIsActive, updateLineWidthIsActive } = useLineWidthIsActive();
   const { brushType, updateBrushType } = useBrushType();
+  const {
+    perfectShapeIsActive,
+    updatePerfectShapeIsActive,
+  } = usePerfectShapeIsActive();
 
   const {
     shapesAreSelectable,
@@ -101,20 +119,6 @@ export const WhiteboardProvider = ({
     return object[0] === canvasId;
   };
   const [eventedObjects, updateEventedObjects] = useState(true);
-
-  // Temporary code to get undo / redo working while there are two boards
-  // on the view.
-  /* const tempKeyDown = (e: any) => {
-    if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
-      dispatch({ type: UNDO, canvasId });
-      return;
-    }
-
-    if (e.which === 89 && e.ctrlKey) {
-      dispatch({ type: REDO, canvasId });
-      return;
-    }
-  }; */
 
   /**
    * Opens ClearWhiteboardModal
@@ -197,6 +201,13 @@ export const WhiteboardProvider = ({
     canvasActions?.redo();
   }, [canvasActions]);
 
+  const perfectShapeIsAvailable = () => {
+    return (
+      allToolbarIsEnabled ||
+      serializerToolbarState.shape ||
+      serializerToolbarState.move
+    );
+  };
   /**
    * List of available colors in toolbar
    * */
@@ -260,6 +271,8 @@ export const WhiteboardProvider = ({
     updateLaserIsActive,
     lineWidthIsActive,
     updateLineWidthIsActive,
+    perfectShapeIsActive,
+    updatePerfectShapeIsActive,
     isLocalObject,
     brushType,
     updateBrushType,
@@ -284,6 +297,10 @@ export const WhiteboardProvider = ({
     serializerToolbarState,
     setSerializerToolbarState,
     allToolbarIsEnabled,
+    activeCanvas,
+    perfectShapeIsAvailable,
+    partialEraseIsActive,
+    updatePartialEraseIsActive,
   };
 
   return (
@@ -298,9 +315,20 @@ export const WhiteboardProvider = ({
       <button onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
         Clear student
       </button>
+      {(window.innerWidth <= 768 || window.innerHeight <= 768) &&
+      perfectShapeIsAvailable() ? (
+        <WhiteboardToggle
+          label="Perfect Shape Creation"
+          state={perfectShapeIsActive}
+          onStateChange={(value: boolean) => {
+            if (perfectShapeIsAvailable()) {
+              updatePerfectShapeIsActive(value);
+            }
+          }}
+        />
+      ) : null}
       {/*<div>Whiteboard Context {toolbarIsEnabled.toString()}</div>*/}
       <AuthMenu userId={userId} setToolbarIsEnabled={setToolbarIsEnabled} />
-
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />

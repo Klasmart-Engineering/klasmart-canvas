@@ -74,6 +74,7 @@ function Toolbar() {
     updateLineWidthIsActive,
     brushType,
     updateBrushType,
+    updatePartialEraseIsActive,
   } = useContext(WhiteboardContext);
 
   const pointerToolIsActive =
@@ -122,6 +123,8 @@ function Toolbar() {
 
     // Set Erase Type in initial value
     updateEraseType(null);
+
+    updatePartialEraseIsActive(false);
 
     /*
       If you click on another button different than
