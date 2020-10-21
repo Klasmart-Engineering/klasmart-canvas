@@ -8,17 +8,11 @@ import { isFreeDrawing, isShape } from '../utils/shapes';
 import { UNDO, REDO, SET, SET_GROUP } from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
-import {
-  IEvent,
-  Point,
-  ITextOptions,
-  IStaticCanvasOptions,
-} from 'fabric/fabric-impl';
+import { IEvent, Point, ITextOptions } from 'fabric/fabric-impl';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasMouseEvent } from '../../../interfaces/canvas-events/canvas-mouse-event';
 import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
 import {
-  IBackgroundImageEvent,
   ObjectEvent,
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
@@ -26,10 +20,6 @@ import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-dr
 import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { TypedGroup } from '../../../interfaces/shapes/group';
-import { createBackgroundImage } from '../gifs-actions/util';
-interface IBackgroundImage extends IStaticCanvasOptions {
-  id?: string;
-}
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -58,8 +48,6 @@ export const useCanvasActions = (
     partialEraseIsActive,
     backgroundImage,
     localImage,
-    backgroundImageIsPartialErasable,
-    setLocalImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
@@ -575,13 +563,14 @@ export const useCanvasActions = (
         }
       });
 
+
       const obj = canvas?.getActiveObject() as any;
       if (!obj) return;
 
       const type = obj?.get('type');
 
       if (type === 'textbox') return;
-
+  
       if (obj?.type !== 'activeSelection') {
         const payload = {
           type,
@@ -1073,49 +1062,6 @@ export const useCanvasActions = (
   ]);
 
   /**
-   * Creates the listeners to create background image to the whiteboard
-   */
-  const backgroundImageHandler = useCallback(() => {
-    if (backgroundImageIsPartialErasable && userId && canvas) {
-      createBackgroundImage(backgroundImage.toString(), userId, canvas).then(
-        () => {
-          if (canvas.backgroundImage) {
-            const payload: IBackgroundImageEvent = {
-              id: (canvas.backgroundImage as IBackgroundImage).id,
-              type: 'backgroundImage',
-              target: canvas.backgroundImage,
-            };
-
-            canvas.trigger('object:added', payload);
-          }
-        }
-      );
-      return;
-    }
-
-    (async function () {
-      try {
-        await setLocalImage(backgroundImage);
-        const id = `${userId}:${uuidv4()}`;
-        const payload: IBackgroundImageEvent = {
-          type: 'localImage',
-          target: { backgroundImage, id },
-          id,
-        };
-        canvas?.trigger('object:added', payload);
-      } catch (e) {
-        console.error(e);
-      }
-    })();
-  }, [
-    canvas,
-    backgroundImage,
-    backgroundImageIsPartialErasable,
-    userId,
-    setLocalImage,
-  ]);
-
-  /**
    * Deselect the actual selected object
    */
   const discardActiveObject = useCallback(() => {
@@ -1170,7 +1116,6 @@ export const useCanvasActions = (
       clearWhiteboardAllowClearOthers,
       clearWhiteboardClearMySelf,
       partialEraseObject,
-      backgroundImageHandler,
     };
 
     return { actions, mouseDown };
@@ -1190,7 +1135,6 @@ export const useCanvasActions = (
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
     partialEraseObject,
-    backgroundImageHandler,
   ]);
 
   return state;

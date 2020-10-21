@@ -43,6 +43,7 @@ import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import {
   Canvas,
   IEvent,
+  IStaticCanvasOptions,
   IText,
   ITextOptions,
   Textbox,
@@ -50,6 +51,7 @@ import {
 import {
   ObjectEvent,
   ObjectType,
+  IBackgroundImageEvent,
 } from './event-serializer/PaintEventSerializer';
 import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
@@ -64,7 +66,14 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
-import { createGif, createImageAsObject } from './gifs-actions/util';
+import {
+  createBackgroundImage,
+  createGif,
+  createImageAsObject,
+} from './gifs-actions/util';
+interface IBackgroundImage extends IStaticCanvasOptions {
+  id?: string;
+}
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -1651,6 +1660,69 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [pointerEvents, canvas]);
 
   /**
+   * Handles the logic to add images and gifs as objects
+   * and background images to the whiteboard.
+   */
+  useEffect(() => {
+    if (isBackgroundImage && canvas) {
+      if (backgroundImageIsPartialErasable) {
+        createBackgroundImage(backgroundImage.toString(), userId, canvas).then(
+          () => {
+            if (canvas.backgroundImage) {
+              const payload: IBackgroundImageEvent = {
+                id: (canvas.backgroundImage as IBackgroundImage).id,
+                type: 'backgroundImage',
+                target: canvas.backgroundImage,
+              };
+
+              canvas.trigger('object:added', payload);
+            }
+          }
+        );
+        return;
+      }
+
+      (async function () {
+        try {
+          await setLocalImage(backgroundImage);
+          const id = `${userId}:${uuidv4()}`;
+          const payload: IBackgroundImageEvent = {
+            type: 'localImage',
+            target: { backgroundImage, id },
+            id,
+          };
+          canvas.trigger('object:added', payload);
+        } catch (e) {
+          console.error(e);
+        }
+      })();
+
+      return;
+    }
+
+    if (isGif && canvas) {
+      // We use then to avoid inspector warning about ignoring the promise returned
+      createGif(image, userId, canvas).then();
+      return;
+    }
+
+    if (canvas) {
+      createImageAsObject(image.toString(), userId, canvas);
+    }
+  }, [
+    canvas,
+    image,
+    userId,
+    isGif,
+    isBackgroundImage,
+    backgroundImage,
+    backgroundImageIsPartialErasable,
+    setLocalImage,
+    eventSerializer,
+    localImage,
+  ]);
+
+  /**
    * When eraseType value changes, listeners and states
    * necessaries to erase objects are setted or removed
    */
@@ -1839,44 +1911,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     an unexpected event is triggered */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvas, perfectShapeIsActive, userId]);
-
-  /**
-   * Handles the logic to add images and gifs as objects
-   * and background images to the whiteboard.
-   */
-  useEffect(
-    () => {
-      if (isBackgroundImage && canvas) {
-        actions.backgroundImageHandler();
-        return;
-      }
-
-      if (isGif && canvas) {
-        // We use then to avoid inspector warning about ignoring the promise returned
-        createGif(image, userId, canvas).then();
-        return;
-      }
-
-      if (canvas) {
-        createImageAsObject(image.toString(), userId, canvas);
-      }
-    },
-    /* If actions is added on dependencies
-    an unexpected duplicated event is triggered */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      canvas,
-      image,
-      userId,
-      isGif,
-      isBackgroundImage,
-      backgroundImage,
-      backgroundImageIsPartialErasable,
-      setLocalImage,
-      eventSerializer,
-      localImage,
-    ]
-  );
 
   /**
    * Reset perfectShapeIsActive to false when the shape or move tool permissions are revoked
