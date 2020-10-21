@@ -29,8 +29,11 @@ const useSynchronizedBackgroundColorChanged = (
       setIsBackgroundImage(false);
       setBackgroundImageIsPartialErasable(false);
       setLocalImage('');
-      // @ts-ignore
-      canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+
+      if (canvas) {
+        // @ts-ignore
+        canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+      }
     };
 
     eventController?.on('backgroundColorChanged', backgroundColorChanged);
