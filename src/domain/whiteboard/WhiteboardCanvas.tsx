@@ -170,7 +170,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     undoRedoDispatch,
     instanceId,
     eventSerializer,
-    userId
+    userId,
   );
 
   /**
@@ -298,10 +298,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         !eraseType
       ) {
         if (object.isPartialErased) {
-          object.set({
-            selectable: false,
-            evented: false,
-          });
+          // object.set({
+          //   selectable: false,
+          //   evented: false,
+          // });
         } else {
           object.set({
             selectable: teacherHasPermission || studentHasPermission,
@@ -1633,58 +1633,60 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * When eraseType value changes, listeners and states
    * necessaries to erase objects are setted or removed
    */
-  useEffect(() => {
-    if (
-      eraseType === 'partial' &&
-      canvas &&
-      !brushIsActive &&
-      toolbarIsEnabled &&
-      (allToolbarIsEnabled || serializerToolbarState.partialErase)
-    ) {
-      actions.partialEraseObject();
+  // useEffect(() => {
+  //   if (
+  //     eraseType === 'partial' &&
+  //     canvas &&
+  //     !brushIsActive &&
+  //     toolbarIsEnabled &&
+  //     (allToolbarIsEnabled || serializerToolbarState.partialErase)
+  //   ) {
+  //     actions.partialEraseObject();
 
-      return;
-    } else if (canvas && !partialEraseIsActive && !brushIsActive) {
-      canvas.isDrawingMode = false;
-    }
+  //     return;
+  //   } else if (canvas && !partialEraseIsActive && !brushIsActive) {
+  //     canvas.isDrawingMode = false;
+  //   }
 
-    updatePartialEraseIsActive(false);
+  //   console.log('PARTIAL: ', partialEraseIsActive);
 
-    if (
-      eraseType === 'object' &&
-      canvas &&
-      toolbarIsEnabled &&
-      (allToolbarIsEnabled || serializerToolbarState.erase)
-    ) {
-      actions.eraseObject();
+  //   updatePartialEraseIsActive(false);
 
-      if (canvas.getActiveObjects().length === 1) {
-        canvas.discardActiveObject().renderAll();
-      }
-    }
+  //   if (
+  //     eraseType === 'object' &&
+  //     canvas &&
+  //     toolbarIsEnabled &&
+  //     (allToolbarIsEnabled || serializerToolbarState.erase)
+  //   ) {
+  //     actions.eraseObject();
 
-    return () => {
-      if (!textIsActive) {
-        canvas?.off('mouse:down');
-      }
+  //     if (canvas.getActiveObjects().length === 1) {
+  //       canvas.discardActiveObject().renderAll();
+  //     }
+  //   }
 
-      canvas?.off('mouse:up');
-      canvas?.off('mouse:over');
-      canvas?.off('path:created');
-    };
-  }, [
-    eraseType,
-    canvas,
-    actions,
-    textIsActive,
-    toolbarIsEnabled,
-    allToolbarIsEnabled,
-    serializerToolbarState.erase,
-    serializerToolbarState.partialErase,
-    partialEraseIsActive,
-    updatePartialEraseIsActive,
-    brushIsActive,
-  ]);
+  //   return () => {
+  //     if (!textIsActive) {
+  //       canvas?.off('mouse:down');
+  //     }
+
+  //     canvas?.off('mouse:up');
+  //     canvas?.off('mouse:over');
+  //     canvas?.off('path:created');
+  //   };
+  // }, [
+  //   eraseType,
+  //   canvas,
+  //   actions,
+  //   textIsActive,
+  //   toolbarIsEnabled,
+  //   allToolbarIsEnabled,
+  //   serializerToolbarState.erase,
+  //   serializerToolbarState.partialErase,
+  //   partialEraseIsActive,
+  //   updatePartialEraseIsActive,
+  //   brushIsActive,
+  // ]);
 
   useEffect(() => {
     if (shape && shapeIsActive) {

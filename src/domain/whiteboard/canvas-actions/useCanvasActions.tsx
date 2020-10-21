@@ -1,4 +1,4 @@
-import { useCallback, useContext, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { fabric } from 'fabric';
 import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 import { WhiteboardContext } from '../WhiteboardContext';
@@ -47,6 +47,7 @@ export const useCanvasActions = (
     perfectShapeIsActive,
     updatePartialEraseIsActive,
     partialEraseIsActive,
+    eraseType,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
@@ -977,25 +978,69 @@ export const useCanvasActions = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvas, canvasId, userId]);
 
+  useEffect(() => {
+
+    if (!canvas) {
+      return;
+    }
+
+    let eraser: any;
+
+    if (
+      eraseType === 'partial' &&
+      canvas &&
+      toolbarIsEnabled &&
+      (allToolbarIsEnabled || serializerToolbarState.partialErase)
+    ) {
+      eraser = new PartialErase(
+        userId as string,
+        canvas as fabric.Canvas,
+        lineWidth,
+        eraseObjectCursor,
+        allToolbarIsEnabled,
+        partialEraseIsActive,
+        eventSerializer,
+        dispatch
+      );
+      eraser.init();
+    }
+
+    return() => {
+      if (eraser) {
+        console.log('destroy...');
+        eraser.destroy();
+      }
+    }
+  }, [
+    canvas,
+    eraseType,
+    partialEraseIsActive,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.partialErase,
+    userId,
+    lineWidth,
+    eventSerializer,
+    dispatch,
+  ]);
+
   /**
    * Creates the listeners to partial erase objects from the whiteboard
    */
 
   const partialEraseObject = useCallback(() => {
+    // updatePartialEraseIsActive(true);
+    // const eraser = new PartialErase(
+    //   userId as string,
+    //   canvas as fabric.Canvas,
+    //   lineWidth,
+    //   eraseObjectCursor,
+    //   allToolbarIsEnabled,
+    //   partialEraseIsActive,
+    //   eventSerializer
+    // );
 
-    const erase = new PartialErase(
-      userId as string,
-      canvas as fabric.Canvas,
-      lineWidth,
-      eraseObjectCursor,
-      allToolbarIsEnabled,
-      partialEraseIsActive
-    );
-
-    console.log('ERASE: ', erase);
-
-
-
+    // eraser.init();
 
     // const pathCreated = (e: ICanvasDrawingEvent) => {
     //   if (e.path) {
@@ -1046,6 +1091,8 @@ export const useCanvasActions = (
     partialEraseIsActive,
     updatePartialEraseIsActive,
     lineWidth,
+    userId,
+    eventSerializer
   ]);
 
   /**
