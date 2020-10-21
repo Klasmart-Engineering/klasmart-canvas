@@ -1983,7 +1983,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           src={localImage.toString()}
         />
       )}
-      {!localImage && localBackground && (
+      {typeof localImage === 'string' && !localImage.length && localBackground && (
         <div
           style={{
             height: '100%',

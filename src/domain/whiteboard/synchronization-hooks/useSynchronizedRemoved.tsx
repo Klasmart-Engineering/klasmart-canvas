@@ -27,9 +27,12 @@ const useSynchronizedRemoved = (
     state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
 
-  const { clearIsActive, setBackgroundImage, setLocalImage } = useContext(
-    WhiteboardContext
-  );
+  const {
+    clearIsActive,
+    setBackgroundImage,
+    setLocalImage,
+    setLocalBackground,
+  } = useContext(WhiteboardContext);
 
   /** Register and handle remote event. */
   useEffect(() => {
@@ -37,9 +40,9 @@ const useSynchronizedRemoved = (
       if (target.isLocalImage) {
         setLocalImage('');
         setBackgroundImage('');
+        setLocalBackground(false);
         return;
       }
-
       switch (target.strategy) {
         case 'allowClearMyself':
           if (!shouldHandleRemoteEvent(objectId)) return;
@@ -112,6 +115,7 @@ const useSynchronizedRemoved = (
     userId,
     setLocalImage,
     setBackgroundImage,
+    setLocalBackground,
   ]);
 
   /** Register and handle local event. */

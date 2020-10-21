@@ -53,6 +53,7 @@ export const useCanvasActions = (
     setIsBackgroundImage,
     setBackgroundImageIsPartialErasable,
     setLocalImage,
+    localBackground,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
@@ -794,8 +795,20 @@ export const useCanvasActions = (
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
     if (teacherHasPermission || studentHasPermission) {
-      updateBackgroundColor('#000000');
-      setLocalBackground(false);
+      if (localBackground) {
+        updateBackgroundColor('#000000');
+        setLocalBackground(false);
+
+        const target = {
+          id: '',
+          target: {
+            strategy: 'allowClearMyself',
+            isLocalImage: true,
+          },
+        };
+
+        eventSerializer?.push('removed', target as ObjectEvent);
+      }
 
       if (typeof localImage === 'string' && localImage.length) {
         const target = {
@@ -877,6 +890,7 @@ export const useCanvasActions = (
     backgroundImage,
     updateBackgroundColor,
     setLocalBackground,
+    localBackground,
   ]);
 
   /**
