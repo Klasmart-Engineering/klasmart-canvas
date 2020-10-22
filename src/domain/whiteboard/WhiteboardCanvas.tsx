@@ -1674,6 +1674,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (isBackgroundImage && canvas) {
       updateBackgroundColor('#000000');
       setLocalBackground(false);
+      canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
+
       if (backgroundImageIsPartialErasable) {
         createBackgroundImage(backgroundImage.toString(), userId, canvas).then(
           () => {

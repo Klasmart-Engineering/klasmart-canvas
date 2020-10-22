@@ -31,6 +31,7 @@ const useSynchronizedBackgroundColorChanged = (
       setLocalImage('');
 
       if (canvas) {
+        canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
         // @ts-ignore
         canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
       }
