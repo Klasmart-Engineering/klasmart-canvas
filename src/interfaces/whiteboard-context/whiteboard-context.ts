@@ -119,4 +119,5 @@ export interface IWhiteboardContext {
   setIsBackgroundImage: (status: boolean) => void;
   localImage: string | File;
   setLocalImage: (image: string | File) => void;
+  undoRedoIsAvailable: () => boolean;
 }
