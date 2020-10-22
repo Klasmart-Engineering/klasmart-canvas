@@ -329,6 +329,8 @@ const useSynchronizedAdded = (
             left: target.left,
             scaleX: target.scaleX,
             scaleY: target.scaleY,
+            selectable: false,
+            evented: false,
           });
           canvas?.add(data);
           canvas?.renderAll();

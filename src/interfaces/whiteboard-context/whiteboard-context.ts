@@ -1,3 +1,4 @@
+import { MutableRefObject } from 'react';
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
 
 export interface IWhiteboardContext {
@@ -102,6 +103,7 @@ export interface IWhiteboardContext {
   updateLineWidthIsActive: (active: boolean) => void;
   imagePopupIsOpen: boolean;
   updateImagePopupIsOpen: (open: boolean) => void;
+  activeCanvas: MutableRefObject<string | null>;
   perfectShapeIsActive: boolean;
   updatePerfectShapeIsActive: (active: boolean) => void;
   perfectShapeIsAvailable: () => boolean;
@@ -121,4 +123,5 @@ export interface IWhiteboardContext {
   setIsBackgroundImage: (status: boolean) => void;
   localImage: string | File;
   setLocalImage: (image: string | File) => void;
+  undoRedoIsAvailable: () => boolean;
 }

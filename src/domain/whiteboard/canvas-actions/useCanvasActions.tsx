@@ -5,7 +5,7 @@ import { WhiteboardContext } from '../WhiteboardContext';
 import * as shapes from '../shapes/shapes';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { isFreeDrawing, isShape } from '../utils/shapes';
-import { UNDO, REDO, SET } from '../reducers/undo-redo';
+import { UNDO, REDO, SET, SET_GROUP } from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
 import { IEvent, Point, ITextOptions } from 'fabric/fabric-impl';
@@ -18,6 +18,8 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-drawing-event';
 import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { TypedGroup } from '../../../interfaces/shapes/group';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -561,9 +563,61 @@ export const useCanvasActions = (
         }
       });
 
+      const obj = canvas?.getActiveObject() as any;
+      if (!obj) return;
+
+      const type = obj?.get('type');
+
+      if (type === 'textbox') return;
+
+      if (obj?.type !== 'activeSelection') {
+        const payload = {
+          type,
+          target: { stroke: obj?.stroke },
+          id: obj?.id,
+        };
+
+        const event = { event: payload, type: 'colorChanged' };
+
+        dispatch({
+          type: SET,
+          payload: canvas?.getObjects() as TypedShape[],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      } else {
+        const activeIds: string[] = canvas
+          ?.getActiveObject()
+          // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
+          .getObjects()
+          .map((o: TypedShape) => o.id);
+        const payload = {
+          type,
+          svg: true,
+          target: null,
+          id: `${userId}:group`,
+        };
+
+        const event = { event: payload, type: 'activeSelection', activeIds };
+
+        let filtered = canvas?.getObjects().filter((o: any) => {
+          return !o.group;
+        });
+
+        let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
+        active?.set({ id: `${userId}:group` });
+
+        dispatch({
+          type: SET_GROUP,
+          payload: [...(filtered as any[]), active],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      }
+
       canvas?.renderAll();
     },
-    [canvas, updatePenColor]
+    [canvas, updatePenColor, dispatch, userId]
   );
 
   /**
