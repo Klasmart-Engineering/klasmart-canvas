@@ -103,4 +103,5 @@ export interface IWhiteboardContext {
   perfectShapeIsAvailable: () => boolean;
   partialEraseIsActive: boolean;
   updatePartialEraseIsActive: (status: boolean) => void;
+  undoRedoIsAvailable: () => boolean;
 }
