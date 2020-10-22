@@ -90,6 +90,8 @@ export type Props = {
   display?: boolean;
 };
 
+localStorage.clear();
+
 export const WhiteboardCanvas: FunctionComponent<Props> = ({
   children,
   instanceId,
@@ -297,29 +299,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         ((object.id && isLocalObject(object.id, userId)) || !object.id) &&
         !eraseType
       ) {
-        if (object.isPartialErased) {
-          // object.set({
-          //   selectable: false,
-          //   evented: false,
-          // });
-        } else {
-          object.set({
-            selectable: teacherHasPermission || studentHasPermission,
-            evented:
-              (allToolbarIsEnabled &&
-                (shapesAreSelectable || shapesAreEvented)) ||
-              (serializerToolbarState.move &&
-                (shapesAreSelectable || shapesAreEvented)),
-            lockMovementX: !shapesAreSelectable,
-            lockMovementY: !shapesAreSelectable,
-            hoverCursor: shapesAreSelectable ? 'move' : 'default',
-          });
-        }
+        object.set({
+          selectable: teacherHasPermission || studentHasPermission,
+          evented:
+            (allToolbarIsEnabled &&
+              (shapesAreSelectable || shapesAreEvented)) ||
+            (serializerToolbarState.move &&
+              (shapesAreSelectable || shapesAreEvented)),
+          lockMovementX: !shapesAreSelectable,
+          lockMovementY: !shapesAreSelectable,
+          hoverCursor: shapesAreSelectable ? 'move' : 'default',
+        });
       }
     });
 
     canvas.selection = shapesAreSelectable;
-    canvas.preserveObjectStacking = !shapesAreSelectable;
     canvas.renderAll();
   }, [
     canvas,
@@ -980,8 +974,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas?.forEachObject((object: ICanvasObject) => {
         if (
           object.id &&
-          isLocalObject(object.id, userId) &&
-          !object.isPartialErased
+          isLocalObject(object.id, userId)
         ) {
           object.set({
             evented: allToolbarIsEnabled || serializerToolbarState.move,
@@ -1020,8 +1013,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         if (
           object.id &&
-          isLocalObject(object.id, userId) &&
-          !object.isPartialErased
+          isLocalObject(object.id, userId)
         ) {
           setObjectControlsVisibility(
             object,
@@ -1752,8 +1744,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (
         object.id &&
         isLocalObject(object.id, userId) &&
-        shapesAreSelectable &&
-        !object.isPartialErased
+        shapesAreSelectable
       ) {
         object.set({
           evented: allToolbarIsEnabled || studentHasPermission,

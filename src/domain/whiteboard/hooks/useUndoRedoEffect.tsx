@@ -77,9 +77,7 @@ const loadFromJSON = (canvas: fabric.Canvas, mapped: { [key: string]: any }, ins
       .forEach(
         (o: TypedShape | TypedPolygon | TypedGroup | IPathTarget) => {
           if (isLocalObject(o.id as string, instanceId)) {
-            if (!(o as IPathTarget).isPartialErased) {
-              (o as TypedShape).set({ selectable: true, evented: true });
-            }
+            (o as TypedShape).set({ selectable: true, evented: true });
 
             if ((o as TypedGroup)._objects) {
               (o as TypedGroup).toActiveSelection();

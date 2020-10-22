@@ -36,7 +36,6 @@ const useSynchronizedAdded = (
       }
 
       e.path.id = PainterEvents.createId(userId);
-      // if (!shouldSerializeEvent(e.path.id)) return;
 
       const target = {
         stroke: e.path.stroke,

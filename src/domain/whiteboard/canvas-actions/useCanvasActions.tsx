@@ -920,7 +920,6 @@ export const useCanvasActions = (
         return false;
       }
 
-      console.log('test:', e);
       canvas.defaultCursor = `url("${eraseObjectCursor}"), auto`;
       eraser = true;
 
@@ -928,7 +927,6 @@ export const useCanvasActions = (
       if (
         e.target &&
         !e.target._objects &&
-        !e.target.isPartialErased &&
         ((e.target.id && isLocalObject(e.target.id, userId as string)) ||
           !e.target.id)
       ) {
@@ -956,7 +954,6 @@ export const useCanvasActions = (
       if (
         (e.target &&
           e.target.id &&
-          !e.target.isPartialErased &&
           isLocalObject(e.target.id, userId as string)) ||
         (e.target && !e.target.id)
       ) {
@@ -1007,7 +1004,6 @@ export const useCanvasActions = (
 
     return() => {
       if (eraser) {
-        console.log('destroy...');
         eraser.destroy();
       }
     }

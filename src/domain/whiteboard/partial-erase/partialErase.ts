@@ -8,27 +8,78 @@ import { ICanvasMouseEvent } from '../../../interfaces/canvas-events/canvas-mous
 import { CANVAS_OBJECT_PROPS } from '../../../config/undo-redo-values';
 import { IPathTarget } from '../../../interfaces/canvas-events/path-target';
 import { TypedGroup } from '../../../interfaces/shapes/group';
-import { SET } from '../reducers/undo-redo';
+import { CanvasAction, SET } from '../reducers/undo-redo';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
+import { PaintEventSerializer } from '../../../poc/whiteboard/event-serializer/PaintEventSerializer';
+import { Point } from 'fabric/fabric-impl';
 
 /**
  * Class that handles all partial erasure methods.
  */
 export class PartialErase {
+  /**
+   * User ID
+   */
   private id: string;
+
+  /**
+   * Permanent canvas.
+   */
   private canvas: fabric.Canvas;
+
+  /**
+   * Temporary canvas will erasing will take place.
+   */
   private tempCanvas: fabric.Canvas;
+
+  /**
+   * Raw canvas will erasing will take place.
+   */
   private rawCanvas: HTMLCanvasElement;
+
+  /**
+   * Eraser width.
+   */
   private lineWidth: number;
+
+  /**
+   * Eraser cursor.
+   */
   private eraseObjectCursor: string;
+
+  /**
+   * Indicates if all tools in toolbar are enabled. Typically
+   * true for teachers.
+   */
   private allToolbarIsEnabled: boolean;
+
+  /**
+   * Indicates if partial eraser is active.
+   */
   private partialEraseIsActive: boolean;
-  private undoRedoDispatch: any;
-  public eventSerializer: any;
-  
 
-  public coordinates: any[];
+  /**
+   * Dispatcher for undo / redo functionality
+   */
+  private undoRedoDispatch: React.Dispatch<CanvasAction>;
 
+  /**
+   * Indicates if eraser is active.
+   */
+  private active: boolean;
+
+  /**
+   * Event synchronizer methods.
+   */
+  public eventSerializer: PaintEventSerializer;
+
+  /**
+   * Mouse coordinates.
+   */
+  public coordinates: { x: number; y: number }[];
+
+  /** @ignore */
   constructor(
     id: string,
     canvas: fabric.Canvas,
@@ -36,8 +87,8 @@ export class PartialErase {
     eraseObjectCursor: string,
     allToolbarIsEnabled: boolean,
     partialEraseIsActive: boolean,
-    eventSerializer: any,
-    undoRedoDispatch: any,
+    eventSerializer: PaintEventSerializer,
+    undoRedoDispatch: React.Dispatch<CanvasAction>
   ) {
     this.eventSerializer = eventSerializer;
     this.coordinates = [];
@@ -46,7 +97,7 @@ export class PartialErase {
     this.rawCanvas = document.createElement('canvas');
     this.rawCanvas.style.cssText = 'position: absolute; z-index: 3;';
     this.undoRedoDispatch = undoRedoDispatch;
-
+    this.active = false;
 
     this.canvas
       .getElement()
@@ -67,7 +118,7 @@ export class PartialErase {
   }
 
   /**
-   * 
+   * Initiates erasing availability.
    */
   public init = () => {
     this.tempCanvas.freeDrawingBrush = new fabric.PencilBrush();
@@ -79,11 +130,16 @@ export class PartialErase {
     this.tempCanvas.isDrawingMode =
       this.allToolbarIsEnabled || this.partialEraseIsActive;
 
-    this.tempCanvas.on('mouse:move', (e: any) => {
+    this.tempCanvas.on('mouse:move', (e: ICanvasMouseEvent) => {
       if ((e.e as MouseEvent).buttons) {
-        this.coordinates.push(e.absolutePointer);
+        if (!this.active) {
+          this.active = true;
+          this.moveSelfToTemp();
+        }
+        this.coordinates.push(e.absolutePointer as Point);
         this.buildTempEraseLine();
       } else {
+        this.active = false;
         this.coordinates = [];
       }
     });
@@ -105,7 +161,6 @@ export class PartialErase {
       rawContext.moveTo(this.coordinates[0].x, this.coordinates[0].y);
 
       for (i; i < this.coordinates.length; i++) {
-        console.log(this.coordinates.length, i);
         rawContext.lineTo(this.coordinates[0].x, this.coordinates[0].y);
         rawContext.strokeStyle = `rgba(0,0,0,1)`;
         rawContext.stroke();
@@ -122,13 +177,13 @@ export class PartialErase {
   };
 
   /**
-   * Moves owned objects to temporary canvas for partial erasing. 
+   * Moves owned objects to temporary canvas for partial erasing.
    */
   private moveSelfToTemp = () => {
-    let objects: any[] = [];
+    let objects: TypedShape[] = [];
 
-    this.canvas.getObjects().forEach((o: any) => {
-      if (this.isOwned(this.id, o.id)) {
+    this.canvas.getObjects().forEach((o: TypedShape) => {
+      if (this.isOwned(this.id, o.id as string)) {
         this.tempCanvas.add(o);
         objects.push(o);
 
@@ -140,64 +195,80 @@ export class PartialErase {
     this.tempCanvas.renderAll();
   };
 
+  private loadFromJSON = (objects: string) =>
+    new Promise((resolve) => {
+      this.canvas.loadFromJSON(objects, () => {
+        resolve();
+      });
+    });
+
   /**
    * Moves objects from temporary canvas to permanent canvas.
    */
-  private moveSelfToPermanent = () => {
-    const partiallyErased = this.tempCanvas.getObjects().filter((o: any) => o.isPartialErased);
+  private moveSelfToPermanent = async () => {
+    const partiallyErased = this.tempCanvas
+      .getObjects()
+      .filter(
+        (o: TypedShape | IPathTarget) => (o as IPathTarget).isPartialErased
+      );
 
     this.tempCanvas
-      .setActiveObject(
-        new fabric.Group(
-          partiallyErased
-        )
-      )
+      .setActiveObject(new fabric.Group(partiallyErased))
       .renderAll();
-  
+
     let group = this.tempCanvas.getActiveObjects()[0];
 
-    let objects = this.tempCanvas.getObjects().filter((o: any) => {
-      if (!o.isPartialErased) {
-        return o;
-      }
-    });
+    let objects = this.tempCanvas
+      .getObjects()
+      .filter((o: TypedShape | IPathTarget) => {
+        if (!(o as IPathTarget).isPartialErased) {
+          return o;
+        }
+      });
 
-    objects = objects.map((o: any) => {
+    objects = objects.map((o: TypedShape | IPathTarget) => {
       return o.toJSON(CANVAS_OBJECT_PROPS);
     });
 
-    let foreignObjects = this.canvas.getObjects().map((o: any) => {
-      return o.toJSON(CANVAS_OBJECT_PROPS);
-    });
+    let foreignObjects = this.canvas
+      .getObjects()
+      .map((o: TypedShape | IPathTarget) => {
+        return o.toJSON(CANVAS_OBJECT_PROPS);
+      });
 
     objects = [...objects, ...foreignObjects];
 
-    this.canvas.loadFromJSON(JSON.stringify({ objects }), () => {
-      this.canvas
-        .getObjects()
-        .forEach((o: TypedShape | TypedPolygon | TypedGroup | IPathTarget) => {
-          if (this.isOwned(this.id, o.id as string)) {
-            // if (!(o as IPathTarget).isPartialErased) {
-            (o as TypedShape).set({ selectable: true, evented: true });
-            // }
+    await this.loadFromJSON(JSON.stringify({ objects }));
 
-            if ((o as TypedGroup)._objects) {
-              (o as TypedGroup).toActiveSelection();
-              this.canvas.discardActiveObject();
-            }
+    this.canvas
+      .getObjects()
+      .forEach((o: TypedShape | TypedPolygon | TypedGroup | IPathTarget) => {
+        if (this.isOwned(this.id, o.id as string)) {
+          (o as TypedShape).set({ selectable: true, evented: true });
+
+          if ((o as TypedGroup)._objects) {
+            (o as TypedGroup).toActiveSelection();
+            this.canvas.discardActiveObject();
           }
-        });
-
-      group.cloneAsImage((image: any) => {
-        image.set({
-          top: group.top,
-          left: group.left,
-          id: this.generateId(),
-        });
-        this.canvas.add(image);
+        }
       });
 
+    this.canvas.renderAll();
+    this.tempCanvas.clear();
+
+    group.cloneAsImage((image: TypedShape) => {
+      this.tempCanvas.clear();
+      image.set({
+        top: group.top,
+        left: group.left,
+        id: this.generateId(),
+      });
+      this.canvas.add(image);
+      image.bringToFront();
       this.canvas.renderAll();
+      this.canvas.setActiveObject(image);
+      this.canvas.renderAll();
+      image.bringToFront();
     });
   };
 
@@ -206,13 +277,12 @@ export class PartialErase {
    */
   public destroy = () => {
     this.tempCanvas.off('mouse:move');
-    this.moveSelfToPermanent();
     this.tempCanvas.dispose();
     this.canvas.getElement().parentNode?.removeChild(this.rawCanvas);
   };
 
   /**
-   * 
+   *
    * @param selfId Onwer ID
    * @param objectId Object ID
    */
@@ -228,8 +298,8 @@ export class PartialErase {
   };
 
   /**
-   * 
-   * @param e 
+   * Checks when path is created and merges erase path with existing objects if erased.
+   * @param e Canvas event.
    */
   private pathCreated = (e: ICanvasDrawingEvent) => {
     if (e.path) {
@@ -243,6 +313,8 @@ export class PartialErase {
       e.path?.bringToFront();
       e.path.id = this.generateId();
 
+      let joinedIds: string[] = [];
+
       this.tempCanvas.forEachObject((obj: ICanvasObject) => {
         const intersect = obj.intersectsWithObject(
           (e.path as unknown) as TypedShape,
@@ -255,46 +327,54 @@ export class PartialErase {
             isPartialErased: true,
           });
 
+          joinedIds.push(obj.id as string);
           partiallyErased.push(obj);
           this.tempCanvas.remove(obj);
-          this.eventSerializer.push('removed', { id: obj.id });
+          this.eventSerializer.push('removed', { id: obj.id as string });
         }
       });
 
       this.tempCanvas
-        .setActiveObject(
-          new fabric.Group(
-            partiallyErased
-          )
-        )
+        .setActiveObject(new fabric.Group(partiallyErased))
         .renderAll();
-    
+
       let group = this.tempCanvas.getActiveObjects()[0];
       let id = this.generateId();
 
-      group.cloneAsImage((image: any) => {
+      group.cloneAsImage((image: ICanvasObject) => {
         image.set({
           top: group.top,
           left: group.left,
           id,
+          isPartialErased: true,
+          joinedIds,
         });
         this.tempCanvas.add(image);
-        const payload = {
+        const payload: ObjectEvent = {
+          id: id as string,
           type: 'image',
-          target: image,
-          id,
+          target: image as ICanvasObject,
         };
+
+        this.updateState(payload);
         this.eventSerializer.push('added', payload);
       });
 
       this.tempCanvas.renderAll();
-      this.updateState();
+      this.moveSelfToPermanent();
     }
   };
 
-  private updateState = () => {
-    const payload = [ ...this.canvas.getObjects(), ...this.tempCanvas.getObjects() ];
-    const eventData = { event: payload, type: 'partialErase' };
+  /**
+   * Updates undo / redo state.
+   * @param eventPayload Event to store in state
+   */
+  private updateState = (eventPayload: ObjectEvent) => {
+    const payload = [
+      ...this.canvas.getObjects(),
+      ...this.tempCanvas.getObjects(),
+    ];
+    const eventData = { event: eventPayload, type: 'added' };
 
     this.undoRedoDispatch({
       type: SET,
@@ -302,5 +382,5 @@ export class PartialErase {
       canvasId: this.id,
       event: (eventData as unknown) as IUndoRedoEvent,
     });
-  }
+  };
 }

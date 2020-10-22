@@ -1,6 +1,6 @@
 import { ICanvasObject } from '../objects/canvas-object';
 
-export interface IPathTarget {
+export interface IPathTarget extends fabric.Object {
   id?: string;
   stroke: string;
   strokeWidth: number;
@@ -11,6 +11,5 @@ export interface IPathTarget {
   top?: number;
   left?: number;
   globalCompositeOperation: string;
-  bringToFront: () => void;
   isPartialErased: boolean;
 }
