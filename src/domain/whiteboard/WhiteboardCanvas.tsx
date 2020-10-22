@@ -90,8 +90,6 @@ export type Props = {
   display?: boolean;
 };
 
-localStorage.clear();
-
 export const WhiteboardCanvas: FunctionComponent<Props> = ({
   children,
   instanceId,
