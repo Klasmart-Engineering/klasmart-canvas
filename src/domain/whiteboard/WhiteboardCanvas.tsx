@@ -162,7 +162,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updatePerfectShapeIsActive,
     perfectShapeIsAvailable,
     partialEraseIsActive,
-    updatePartialEraseIsActive,
     undoRedoIsAvailable,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 

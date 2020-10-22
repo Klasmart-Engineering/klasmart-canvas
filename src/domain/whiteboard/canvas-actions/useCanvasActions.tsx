@@ -16,8 +16,6 @@ import {
   ObjectEvent,
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
-import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-drawing-event';
-import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { PartialErase } from '../partial-erase/partialErase';
