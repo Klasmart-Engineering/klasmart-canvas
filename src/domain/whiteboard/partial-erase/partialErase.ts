@@ -220,11 +220,9 @@ export class PartialErase {
 
     let objects = this.tempCanvas
       .getObjects()
-      .filter((o: TypedShape | IPathTarget) => {
-        if (!(o as IPathTarget).isPartialErased) {
-          return o;
-        }
-      });
+      .filter((o: TypedShape | IPathTarget) => (
+        !(o as IPathTarget).isPartialErased
+      ));
 
     objects = objects.map((o: TypedShape | IPathTarget) => {
       return o.toJSON(CANVAS_OBJECT_PROPS);
