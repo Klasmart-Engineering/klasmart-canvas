@@ -12,7 +12,7 @@ import { CanvasAction, SET } from '../reducers/undo-redo';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { PaintEventSerializer } from '../../../poc/whiteboard/event-serializer/PaintEventSerializer';
-import { Point } from 'fabric/fabric-impl';
+import { Pattern, Point } from 'fabric/fabric-impl';
 
 /**
  * Class that handles all partial erasure methods.
@@ -195,9 +195,16 @@ export class PartialErase {
     this.tempCanvas.renderAll();
   };
 
-  private loadFromJSON = (objects: string) =>
+  private loadFromJSON = (
+    objects: string,
+    backgroundColor?: string | Pattern | undefined
+  ) =>
     new Promise((resolve) => {
       this.canvas.loadFromJSON(objects, () => {
+        if (backgroundColor) {
+          this.canvas.backgroundColor = backgroundColor;
+        }
+
         resolve();
       });
     });
@@ -206,6 +213,8 @@ export class PartialErase {
    * Moves objects from temporary canvas to permanent canvas.
    */
   private moveSelfToPermanent = async () => {
+    const backgroundColor: string | Pattern | undefined = this.canvas
+      .backgroundColor;
     const partiallyErased = this.tempCanvas
       .getObjects()
       .filter(
@@ -220,9 +229,9 @@ export class PartialErase {
 
     let objects = this.tempCanvas
       .getObjects()
-      .filter((o: TypedShape | IPathTarget) => (
-        !(o as IPathTarget).isPartialErased
-      ));
+      .filter(
+        (o: TypedShape | IPathTarget) => !(o as IPathTarget).isPartialErased
+      );
 
     objects = objects.map((o: TypedShape | IPathTarget) => {
       return o.toJSON(CANVAS_OBJECT_PROPS);
@@ -236,7 +245,7 @@ export class PartialErase {
 
     objects = [...objects, ...foreignObjects];
 
-    await this.loadFromJSON(JSON.stringify({ objects }));
+    await this.loadFromJSON(JSON.stringify({ objects }), backgroundColor);
 
     this.canvas
       .getObjects()
@@ -252,10 +261,12 @@ export class PartialErase {
       });
 
     this.canvas.renderAll();
-    this.tempCanvas.clear();
+
+    if (this.tempCanvas.getContext()) {
+      this.tempCanvas.clear();
+    }
 
     group.cloneAsImage((image: TypedShape) => {
-      this.tempCanvas.clear();
       image.set({
         top: group.top,
         left: group.left,
@@ -265,7 +276,6 @@ export class PartialErase {
       image.bringToFront();
       this.canvas.renderAll();
       this.canvas.setActiveObject(image);
-      this.canvas.renderAll();
       image.bringToFront();
     });
   };
@@ -274,6 +284,10 @@ export class PartialErase {
    * Destroys temporary canvas.
    */
   public destroy = () => {
+    if (this.tempCanvas.getObjects().length) {
+      this.moveSelfToPermanent();
+    }
+
     this.tempCanvas.off('mouse:move');
     this.tempCanvas.dispose();
     this.canvas.getElement().parentNode?.removeChild(this.rawCanvas);
