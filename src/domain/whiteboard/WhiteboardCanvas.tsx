@@ -1107,7 +1107,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         if (
           !event.target ||
           (event.target &&
-            (event.target.get('type') === 'path' ||
+            ((event.target.get('type') === 'path' &&
+              !isEmptyShape(event.target)) ||
               event.target.get('type') === 'image'))
         ) {
           floodFillMouseEvent(
