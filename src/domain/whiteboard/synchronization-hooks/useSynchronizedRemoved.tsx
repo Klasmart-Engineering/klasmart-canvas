@@ -96,6 +96,10 @@ const useSynchronizedRemoved = (
   /** Register and handle local event. */
   useEffect(() => {
     const objectRemoved = (e: fabric.IEvent | CanvasEvent) => {
+      if ((e.target as ICanvasObject).isActiveErase) {
+        return;
+      }
+
       if (
         !e.target ||
         !(e.target as ICanvasObject).id ||
@@ -128,7 +132,8 @@ const useSynchronizedRemoved = (
         if (
           !(e.target as TypedShape).skipState &&
           !(e.target as TypedShape).fromJSON &&
-          (e.target as ICanvasObject)?.text?.trim().length
+          ((e.target as ICanvasObject)?.text?.trim().length ||
+            (e.target as ICanvasObject).get('type') !== 'textbox')
         ) {
           const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
           undoRedoDispatch({

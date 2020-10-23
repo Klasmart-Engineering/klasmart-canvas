@@ -23,4 +23,5 @@ export interface ICanvasObject extends fabric.Object {
   joinedIds?: string[];
   isPartialErased?: boolean;
   active?: boolean;
+  isActiveErase?: boolean;
 }

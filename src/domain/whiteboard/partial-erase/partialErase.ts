@@ -79,6 +79,11 @@ export class PartialErase {
    */
   public coordinates: { x: number; y: number }[];
 
+  /**
+   * Indicates if user has permission to do a partial erase action.
+   */
+  public hasPermission: boolean;
+
   /** @ignore */
   constructor(
     id: string,
@@ -87,6 +92,7 @@ export class PartialErase {
     eraseObjectCursor: string,
     allToolbarIsEnabled: boolean,
     partialEraseIsActive: boolean,
+    hasPermission: boolean,
     eventSerializer: PaintEventSerializer,
     undoRedoDispatch: React.Dispatch<CanvasAction>
   ) {
@@ -112,6 +118,7 @@ export class PartialErase {
     this.eraseObjectCursor = eraseObjectCursor;
     this.allToolbarIsEnabled = allToolbarIsEnabled;
     this.partialEraseIsActive = partialEraseIsActive;
+    this.hasPermission = hasPermission;
 
     this.moveSelfToTemp();
     this.tempCanvas.on('path:created', this.pathCreated);
@@ -128,7 +135,9 @@ export class PartialErase {
     this.tempCanvas.freeDrawingBrush.width = this.lineWidth;
     this.tempCanvas.freeDrawingCursor = `url("${this.eraseObjectCursor}"), auto`;
     this.tempCanvas.isDrawingMode =
-      this.allToolbarIsEnabled || this.partialEraseIsActive;
+      this.allToolbarIsEnabled ||
+      this.hasPermission ||
+      this.partialEraseIsActive;
 
     this.tempCanvas.on('mouse:move', (e: ICanvasMouseEvent) => {
       if ((e.e as MouseEvent).buttons) {
@@ -180,13 +189,13 @@ export class PartialErase {
    * Moves owned objects to temporary canvas for partial erasing.
    */
   private moveSelfToTemp = () => {
-    let objects: TypedShape[] = [];
+    let objects: ICanvasObject[] = [];
 
-    this.canvas.getObjects().forEach((o: TypedShape) => {
+    this.canvas.getObjects().forEach((o: ICanvasObject) => {
       if (this.isOwned(this.id, o.id as string)) {
         this.tempCanvas.add(o);
         objects.push(o);
-
+        o.set({ isActiveErase: true });
         this.canvas.remove(o);
       }
     });
@@ -212,7 +221,7 @@ export class PartialErase {
   /**
    * Moves objects from temporary canvas to permanent canvas.
    */
-  private moveSelfToPermanent = async () => {
+  private moveSelfToPermanent = async (id?: string) => {
     const backgroundColor: string | Pattern | undefined = this.canvas
       .backgroundColor;
     const partiallyErased = this.tempCanvas
@@ -270,7 +279,7 @@ export class PartialErase {
       image.set({
         top: group.top,
         left: group.left,
-        id: this.generateId(),
+        id: id || this.generateId(),
       });
       this.canvas.add(image);
       image.bringToFront();
@@ -368,12 +377,13 @@ export class PartialErase {
           target: image as ICanvasObject,
         };
 
+        console.log('ID: ', id);
         this.updateState(payload);
         this.eventSerializer.push('added', payload);
       });
 
       this.tempCanvas.renderAll();
-      this.moveSelfToPermanent();
+      this.moveSelfToPermanent(id);
     }
   };
 

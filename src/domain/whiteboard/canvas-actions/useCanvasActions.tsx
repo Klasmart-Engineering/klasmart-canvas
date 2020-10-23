@@ -993,6 +993,7 @@ export const useCanvasActions = (
         eraseObjectCursor,
         allToolbarIsEnabled,
         partialEraseIsActive,
+        serializerToolbarState.partialErase,
         eventSerializer,
         dispatch
       );
