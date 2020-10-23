@@ -126,4 +126,5 @@ export interface IWhiteboardContext {
   fillBackgroundColor: (color: string) => void;
   localBackground: boolean;
   setLocalBackground: (condition: boolean) => void;
+  undoRedoIsAvailable: () => boolean;
 }

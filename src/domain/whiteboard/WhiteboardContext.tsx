@@ -232,6 +232,13 @@ export const WhiteboardProvider = ({
       serializerToolbarState.move
     );
   };
+
+  /**
+   * Returns boolean indicating if undo / redo feature is available.
+   */
+  const undoRedoIsAvailable = (): boolean => {
+    return allToolbarIsEnabled || serializerToolbarState.undoRedo;
+  };
   /**
    * List of available colors in toolbar
    * */
@@ -343,6 +350,7 @@ export const WhiteboardProvider = ({
     fillBackgroundColor: backgroundColorAction,
     localBackground,
     setLocalBackground,
+    undoRedoIsAvailable,
   };
 
   return (

@@ -1,12 +1,16 @@
 import { v4 as uuidv4 } from 'uuid';
-import { findIntersectedObjects } from "./findIntersectedObjects";
-import { findLocalObjects } from "./findLocalObjects";
-import { findTopLeftOfCollection } from "./findTopLeftOfCollection";
-import { TypedShape } from "../../../interfaces/shapes/shapes";
+import { findIntersectedObjects } from './findIntersectedObjects';
+import { findLocalObjects } from './findLocalObjects';
+import { findTopLeftOfCollection } from './findTopLeftOfCollection';
+import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
-import { ObjectEvent, PaintEventSerializer } from '../event-serializer/PaintEventSerializer';
+import {
+  ObjectEvent,
+  PaintEventSerializer,
+} from '../event-serializer/PaintEventSerializer';
 import { IFloodFillData } from './floodFiller';
+import floodFillCursor from '../../../assets/cursors/flood-fill.png';
 
 export interface ITargetObject extends ICanvasObject {
   color: string;
@@ -17,8 +21,8 @@ export const updateAfterCustomFloodFill = async (
   image: fabric.Image,
   target: ITargetObject,
   clickedColor: string,
-  canvas: fabric.Canvas, 
-  userId: string, 
+  canvas: fabric.Canvas,
+  userId: string,
   data: IFloodFillData,
   eventSerializer: PaintEventSerializer
 ): Promise<ICanvasObject> => {
@@ -31,11 +35,11 @@ export const updateAfterCustomFloodFill = async (
     canvas.remove(target);
   }
 
-  (image as unknown as TypedShape).set({ 
+  ((image as unknown) as TypedShape).set({
     top: data.y / window.devicePixelRatio,
     left: data.x / window.devicePixelRatio,
-    scaleX: .5 * (2 / window.devicePixelRatio),
-    scaleY: .5 * (2 / window.devicePixelRatio),
+    scaleX: 0.5 * (2 / window.devicePixelRatio),
+    scaleY: 0.5 * (2 / window.devicePixelRatio),
     selectable: false,
     evented: false,
     id,
@@ -44,7 +48,11 @@ export const updateAfterCustomFloodFill = async (
   canvas.add(image);
   canvas.discardActiveObject();
 
-  const objectsAtPoint = findIntersectedObjects(image as TypedShape, findLocalObjects(userId, canvas.getObjects()));            
+  const objectsAtPoint = findIntersectedObjects(
+    image as TypedShape,
+    findLocalObjects(userId, canvas.getObjects()),
+    canvas
+  );
   const { top, left } = findTopLeftOfCollection(objectsAtPoint);
 
   let singleObject = new fabric.Group(objectsAtPoint);
@@ -52,7 +60,7 @@ export const updateAfterCustomFloodFill = async (
 
   objectsAtPoint.forEach((o: TypedShape) => {
     o.set({
-      skipState: true
+      skipState: true,
     });
 
     if (o.id && o.id !== id) {
@@ -69,11 +77,15 @@ export const updateAfterCustomFloodFill = async (
         reject();
       }
 
-      (cloned as ICanvasObject).set({ 
-        top: top as unknown as number,
-        left: left as unknown as number,
+      (cloned as ICanvasObject).set({
+        top: (top as unknown) as number,
+        left: (left as unknown) as number,
+        lockMovementX: true,
+        lockMovementY: true,
+        hoverCursor: `url("${floodFillCursor}") 2 15, default`,
+        selectable: false,
         id,
-        joinedIds
+        joinedIds,
       });
       canvas.add(cloned);
       canvas.renderAll();
@@ -91,4 +103,4 @@ export const updateAfterCustomFloodFill = async (
   });
 
   return await clonedImage;
-}
+};
