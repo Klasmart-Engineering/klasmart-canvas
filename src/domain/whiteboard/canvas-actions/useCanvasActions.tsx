@@ -20,6 +20,7 @@ import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-dr
 import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { TypedGroup } from '../../../interfaces/shapes/group';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -553,14 +554,29 @@ export const useCanvasActions = (
       if (!activeObjects) return;
 
       activeObjects.forEach((object: TypedShape) => {
+        console.log('entra el morro', object.type);
         if (
           (isShape(object) && object.shapeType === 'shape') ||
           isFreeDrawing(object)
         ) {
           object.set('stroke', color);
         }
-      });
 
+        // Color Change in Special Brushes
+        if (object.type === 'group' && (object as ICanvasBrush).basePath) {
+          (object as ICanvasObject)._objects?.forEach((line) => {
+            line.set('stroke', color);
+          });
+
+          (object as ICanvasBrush).set({
+            basePath: {
+              points: (object as ICanvasBrush).basePath?.points || [],
+              stroke: color,
+              strokeWidth: (object as ICanvasBrush).basePath?.strokeWidth || 0,
+            },
+          });
+        }
+      });
 
       const obj = canvas?.getActiveObject() as any;
       if (!obj) return;
@@ -568,15 +584,18 @@ export const useCanvasActions = (
       const type = obj?.get('type');
 
       if (type === 'textbox') return;
-  
+
       if (obj?.type !== 'activeSelection') {
+        let stroke = type === 'path' ? obj?.stroke : obj?.basePath?.stroke;
+
         const payload = {
           type,
-          target: { stroke: obj?.stroke },
+          target: { stroke: stroke },
           id: obj?.id,
         };
 
         const event = { event: payload, type: 'colorChanged' };
+        console.log('payload en dispatch:', canvas?.getObjects());
 
         dispatch({
           type: SET,

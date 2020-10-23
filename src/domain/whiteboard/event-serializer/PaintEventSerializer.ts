@@ -39,7 +39,8 @@ export type ObjectType =
   | 'shape'
   | 'background'
   | 'image'
-  | 'pointer';
+  | 'pointer'
+  | 'group';
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {

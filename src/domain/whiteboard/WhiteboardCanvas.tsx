@@ -46,6 +46,7 @@ import {
   IText,
   ITextOptions,
   Textbox,
+  Group,
 } from 'fabric/fabric-impl';
 import {
   ObjectEvent,
@@ -64,8 +65,9 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
-import { PenBrush } from '../../assets/brushes/penBrush';
-import { MarkerBrush } from '../../assets/brushes/markerBrush';
+import { PenBrush } from './brushes/penBrush';
+import { MarkerBrush } from './brushes/markerBrush';
+import { ICanvasBrush } from '../../interfaces/brushes/canvas-brush';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -545,7 +547,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (brushIsActive && canvas) {
       switch (brushType) {
         case 'pen':
-          canvas.freeDrawingBrush = new PenBrush(canvas);
+          canvas.freeDrawingBrush = new PenBrush(canvas, userId);
           break;
         case 'marker':
           canvas.freeDrawingBrush = new MarkerBrush(canvas);
@@ -586,6 +588,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     serializerToolbarState.pen,
     brushType,
     partialEraseIsActive,
+    userId,
   ]);
 
   /**
@@ -1419,8 +1422,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         const type: ObjectType = obj.get('type') as ObjectType;
 
         if (obj.id && isLocalObject(obj.id, userId) && type !== 'textbox') {
+          const stroke =
+            type === 'path'
+              ? obj.stroke
+              : (obj as ICanvasBrush).basePath?.stroke;
           const target = () => {
-            return { stroke: obj.stroke };
+            return { stroke: stroke };
           };
 
           const payload: ObjectEvent = {
@@ -1449,6 +1456,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       'triangle',
       'polygon',
       'path',
+      'group',
     ];
 
     if (objects && objects.length) {
@@ -1461,6 +1469,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           validTypes.includes(type)
         ) {
           const target = () => {
+            if (type === 'group') {
+              return {
+                linesWidth: [
+                  ...(obj as Group)._objects.map((line) => {
+                    return line.strokeWidth;
+                  }),
+                ],
+                strokeWidth: lineWidth,
+              };
+            }
             return { strokeWidth: lineWidth };
           };
 
@@ -1535,7 +1553,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           canvasId: userId,
           event: (event as unknown) as IUndoRedoEvent,
         });
-      } else {
+      } else if (!(obj as ICanvasBrush).basePath) {
         const type = obj?.get('type');
         const activeIds: string[] = canvas
           ?.getActiveObject()
@@ -1759,11 +1777,79 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         if (isEmptyShape(object) || isFreeDrawing(object)) {
           object.set('strokeWidth', lineWidth);
         }
+
+        // Line Width in Special Brushes
+        if (
+          object.type === 'group' &&
+          (object as ICanvasBrush).basePath?.strokeWidth
+        ) {
+          console.log(lineWidth);
+          const brush = new PenBrush(canvas, userId);
+          const newObject: ICanvasBrush = brush.createPenPath(
+            'provisional',
+            (object as ICanvasBrush).basePath?.points.map((point) => {
+              return {
+                x: point.x,
+                y: point.y,
+                width: brush.getRandomInt(lineWidth / 2, lineWidth),
+              };
+            }) || [],
+            lineWidth,
+            (object as ICanvasBrush).basePath?.stroke || ''
+          );
+
+          console.log('nuevo: ', newObject);
+          (object as ICanvasBrush).set({
+            basePath: newObject.basePath,
+          });
+
+          (object as Group).set({
+            _objects: newObject._objects,
+          });
+
+          // (object as ICanvasBrush).set({
+          //   basePath: {
+          //     points: newObject.basePath?.points || [],
+          //     stroke: newObject.basePath?.stroke || '',
+          //     strokeWidth: newObject.basePath?.strokeWidth || 0,
+          //   },
+          // });
+
+          // console.log('one', object);
+          // console.log('new', object);
+          // (object as Group).set({
+          //   _objects: (newObject as Group)._objects,
+          // });
+          // console.log('two', object);
+
+          // canvas.renderAll();
+
+          // (object as ICanvasObject)._objects?.forEach((line) => {
+          //   line.set(
+          //     'strokeWidth',
+          //     brush.getRandomInt(lineWidth / 2, lineWidth)
+          //   );
+          // });
+
+          // canvas.renderAll();
+
+          // console.log('se ensancha: ', object);
+
+          // (object as ICanvasBrush).set({
+          //   basePath: {
+          //     points: (object as ICanvasBrush).basePath?.points || [],
+          //     stroke: (object as ICanvasBrush).basePath?.stroke || '',
+          //     strokeWidth: lineWidth,
+          //   },
+          // });
+
+          // (object as Group).addWithUpdate();
+        }
       });
 
       canvas.renderAll();
     }
-  }, [lineWidth, canvas]);
+  }, [lineWidth, canvas, userId]);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {

@@ -15,6 +15,8 @@ import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
+import { PenBrush } from '../brushes/penBrush';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -87,22 +89,30 @@ const useSynchronizedAdded = (
       if (e.target.fromJSON) return;
       if (!shouldSerializeEvent(e.target.id)) return;
 
+      let target;
       const type: ObjectType = (e.target.get('type') || 'path') as ObjectType;
 
-      if (type === 'path') {
-        return;
-      }
+      switch (type) {
+        case 'path':
+          return;
 
-      const target = {
-        ...(type === 'textbox' && {
-          text: e.target.text,
-          fontFamily: e.target.fontFamily,
-          stroke: e.target.fill,
-          top: e.target.top,
-          left: e.target.left,
-          width: e.target.width,
-        }),
-      } as ICanvasObject;
+        case 'textbox':
+          target = {
+            text: e.target.text,
+            fontFamily: e.target.fontFamily,
+            stroke: e.target.fill,
+            top: e.target.top,
+            left: e.target.left,
+            width: e.target.width,
+          };
+          break;
+
+        case 'group':
+          target = {
+            basePath: e.target.basePath,
+          };
+          break;
+      }
 
       const payload: ObjectEvent = {
         type,
@@ -114,7 +124,10 @@ const useSynchronizedAdded = (
         id: e.target.id,
       };
 
-      if (canvas && (payload.target as ICanvasObject)?.text?.trim().length) {
+      if (
+        (canvas && (payload.target as ICanvasObject)?.text?.trim().length) ||
+        (canvas && payload.type === 'group')
+      ) {
         const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
         undoRedoDispatch({
@@ -229,6 +242,19 @@ const useSynchronizedAdded = (
         });
 
         return;
+      }
+
+      if (objectType === 'group' && canvas) {
+        const brush = new PenBrush(canvas, userId);
+        const path = brush.createPenPath(
+          id,
+          (target as ICanvasBrush).basePath?.points || [],
+          (target as ICanvasBrush).basePath?.strokeWidth || 0,
+          (target as ICanvasBrush).basePath?.stroke || ''
+        );
+
+        canvas.add(path);
+        canvas.renderAll();
       }
 
       let shape = null;
