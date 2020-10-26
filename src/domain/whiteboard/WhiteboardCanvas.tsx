@@ -193,10 +193,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     userId
   );
 
-  useEffect(() => {
-    console.log('popupIsOpen!: ', imagePopupIsOpen);
-  }, [imagePopupIsOpen]);
-
   /**
    * Creates Canvas/Whiteboard instance
    */
@@ -1876,10 +1872,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     serializerToolbarState.erase,
     shapesAreSelectable,
   ]);
-
-  useEffect(() => {
-    console.log('OPEN:?', imagePopupIsOpen);
-  }, [imagePopupIsOpen]);
 
   /**
    * Set a selected shape like perfect if perfectShapeIsActive
