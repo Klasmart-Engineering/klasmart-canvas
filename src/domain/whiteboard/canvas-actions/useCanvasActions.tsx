@@ -554,7 +554,6 @@ export const useCanvasActions = (
       if (!activeObjects) return;
 
       activeObjects.forEach((object: TypedShape) => {
-        console.log('entra el morro', object.type);
         if (
           (isShape(object) && object.shapeType === 'shape') ||
           isFreeDrawing(object)
@@ -595,7 +594,6 @@ export const useCanvasActions = (
         };
 
         const event = { event: payload, type: 'colorChanged' };
-        console.log('payload en dispatch:', canvas?.getObjects());
 
         dispatch({
           type: SET,

@@ -21,7 +21,13 @@ import { useCanvasActions } from './canvas-actions/useCanvasActions';
 import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
 import useSynchronizedAdded from './synchronization-hooks/useSynchronizedAdded';
 import useSynchronizedMoved from './synchronization-hooks/useSynchronizedMoved';
-import { isEmptyShape, isFreeDrawing, isShape, isText } from './utils/shapes';
+import {
+  isEmptyShape,
+  isFreeDrawing,
+  isShape,
+  isText,
+  isSpecialFreeDrawing,
+} from './utils/shapes';
 import { TypedShape } from '../../interfaces/shapes/shapes';
 
 import '../../assets/style/whiteboard.css';
@@ -46,7 +52,6 @@ import {
   IText,
   ITextOptions,
   Textbox,
-  Group,
 } from 'fabric/fabric-impl';
 import {
   ObjectEvent,
@@ -883,6 +888,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
       }
 
+      // Special Free Drawing Line Selected
+      if (
+        !shapeIsActive &&
+        !brushIsActive &&
+        eventedObjects &&
+        event.target &&
+        isSpecialFreeDrawing(event.target)
+      ) {
+        updatePenColor(
+          (event.target as ICanvasBrush).basePath?.stroke ||
+            DEFAULT_VALUES.PEN_COLOR
+        );
+        updateLineWidth(
+          (event.target as ICanvasBrush).basePath?.strokeWidth ||
+            DEFAULT_VALUES.LINE_WIDTH
+        );
+      }
+
       // Shape Selected
       if (
         event.target &&
@@ -1456,7 +1479,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       'triangle',
       'polygon',
       'path',
-      'group',
     ];
 
     if (objects && objects.length) {
@@ -1469,16 +1491,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           validTypes.includes(type)
         ) {
           const target = () => {
-            if (type === 'group') {
-              return {
-                linesWidth: [
-                  ...(obj as Group)._objects.map((line) => {
-                    return line.strokeWidth;
-                  }),
-                ],
-                strokeWidth: lineWidth,
-              };
-            }
             return { strokeWidth: lineWidth };
           };
 
@@ -1779,14 +1791,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         }
 
         // Line Width in Special Brushes
-        if (
-          object.type === 'group' &&
-          (object as ICanvasBrush).basePath?.strokeWidth
-        ) {
-          console.log(lineWidth);
+        if (object.type === 'group' && (object as ICanvasBrush).basePath) {
           const brush = new PenBrush(canvas, userId);
           const newObject: ICanvasBrush = brush.createPenPath(
-            'provisional',
+            (object as ICanvasObject)?.id || '',
             (object as ICanvasBrush).basePath?.points.map((point) => {
               return {
                 x: point.x,
@@ -1798,58 +1806,44 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             (object as ICanvasBrush).basePath?.stroke || ''
           );
 
-          console.log('nuevo: ', newObject);
-          (object as ICanvasBrush).set({
-            basePath: newObject.basePath,
+          newObject.set({
+            angle: object.angle,
+            top: object.top,
+            left: object.left,
+            scaleX: object.scaleX,
+            scaleY: object.scaleY,
+            flipX: object.flipX,
+            flipY: object.flipY,
+            originX: object.originX || 'left',
+            originY: object.originY || 'top',
           });
 
-          (object as Group).set({
-            _objects: newObject._objects,
-          });
+          delete (object as ICanvasObject).id;
+          canvas.remove(object);
+          canvas.add(newObject);
+          canvas.renderAll();
 
-          // (object as ICanvasBrush).set({
-          //   basePath: {
-          //     points: newObject.basePath?.points || [],
-          //     stroke: newObject.basePath?.stroke || '',
-          //     strokeWidth: newObject.basePath?.strokeWidth || 0,
-          //   },
-          // });
+          canvas.setActiveObject(newObject);
 
-          // console.log('one', object);
-          // console.log('new', object);
-          // (object as Group).set({
-          //   _objects: (newObject as Group)._objects,
-          // });
-          // console.log('two', object);
+          const payload: ObjectEvent = {
+            type: 'group',
+            target: {
+              basePath: {
+                points: newObject.basePath?.points || [],
+                strokeWidth: newObject.basePath?.strokeWidth || 0,
+                stroke: newObject.basePath?.stroke || '',
+              },
+            },
+            id: newObject.id || '',
+          };
 
-          // canvas.renderAll();
-
-          // (object as ICanvasObject)._objects?.forEach((line) => {
-          //   line.set(
-          //     'strokeWidth',
-          //     brush.getRandomInt(lineWidth / 2, lineWidth)
-          //   );
-          // });
-
-          // canvas.renderAll();
-
-          // console.log('se ensancha: ', object);
-
-          // (object as ICanvasBrush).set({
-          //   basePath: {
-          //     points: (object as ICanvasBrush).basePath?.points || [],
-          //     stroke: (object as ICanvasBrush).basePath?.stroke || '',
-          //     strokeWidth: lineWidth,
-          //   },
-          // });
-
-          // (object as Group).addWithUpdate();
+          eventSerializer?.push('lineWidthChanged', payload);
         }
       });
 
       canvas.renderAll();
     }
-  }, [lineWidth, canvas, userId]);
+  }, [lineWidth, canvas, userId, eventSerializer]);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {

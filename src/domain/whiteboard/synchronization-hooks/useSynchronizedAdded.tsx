@@ -253,6 +253,11 @@ const useSynchronizedAdded = (
           (target as ICanvasBrush).basePath?.stroke || ''
         );
 
+        path.set({
+          selectable: false,
+          evented: false,
+        });
+
         canvas.add(path);
         canvas.renderAll();
       }

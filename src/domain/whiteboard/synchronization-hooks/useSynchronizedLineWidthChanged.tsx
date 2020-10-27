@@ -3,7 +3,6 @@ import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { useEffect } from 'react';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
-import { Group } from 'fabric/fabric-impl';
 import { PenBrush } from '../brushes/penBrush';
 
 const useSynchronizedLineWidthChanged = (
@@ -36,21 +35,31 @@ const useSynchronizedLineWidthChanged = (
           if (validTypes.includes(objectType)) {
             if (objectType === 'group') {
               const brush = new PenBrush(canvas, userId);
-              const strokeWidth = Number(target.strokeWidth);
+              const newObject: ICanvasBrush = brush.createPenPath(
+                obj.id,
+                (target as ICanvasBrush).basePath?.points || [],
+                (target as ICanvasBrush).basePath?.strokeWidth || 0,
+                (target as ICanvasBrush).basePath?.stroke || ''
+              );
 
-              (obj as Group).forEachObject((line) => {
-                line.set({
-                  strokeWidth: brush.getRandomInt(strokeWidth / 2, strokeWidth),
-                });
+              newObject.set({
+                angle: obj.angle,
+                top: obj.top,
+                left: obj.left,
+                scaleX: obj.scaleX,
+                scaleY: obj.scaleY,
+                flipX: obj.flipX,
+                flipY: obj.flipY,
+                originX: obj.originX,
+                originY: obj.originY,
+                evented: false,
+                selectable: false,
               });
 
-              (obj as ICanvasBrush).set({
-                basePath: {
-                  points: (obj as ICanvasBrush).basePath?.points || [],
-                  stroke: (obj as ICanvasBrush).basePath?.stroke || '',
-                  strokeWidth: strokeWidth,
-                },
-              });
+              delete obj.id;
+              canvas.remove(obj);
+              canvas.add(newObject);
+              canvas.renderAll();
             } else {
               obj.set({
                 strokeWidth: target.strokeWidth,
