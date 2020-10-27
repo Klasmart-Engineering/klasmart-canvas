@@ -500,7 +500,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             width: textboxWidth + 10,
             height: textboxCopy.height,
             visible: true,
-            text: textboxCopy.text?.replace(/ \n/gi, ' ').trim(),
+            text: textboxCopy.text?.trim(),
           });
 
           canvas.setActiveObject(currentTextbox);
