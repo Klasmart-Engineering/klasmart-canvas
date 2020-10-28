@@ -45,12 +45,35 @@ const getPreviousBackground = (currentIndex: number, events: IUndoRedoEvent[]): 
   }
 
   for (i; i >= 0; i--) {
-    if ((events[i].event as IUndoRedoSingleEvent).type === 'background') {
+    if (events[i].event && (events[i].event as IUndoRedoSingleEvent).type === 'background') {
+      // @ts-ignore  // events[i].event has already been validated
       return (events[i].event as IUndoRedoSingleEvent).target.fill as string;
     }
   }
 
   return '#fff';
+};
+
+/**
+ * Get's previous set color for canvas background.
+ * @param currentIndex Current event index.
+ * @param events List of events.
+ */
+const getPreviousBackgroundDivColor = (currentIndex: number, events: IUndoRedoEvent[]): string | null => {
+  let i = currentIndex;
+
+  if (i < 0) {
+    return null;
+  }
+
+  for (i; i >= 0; i--) {
+    if (events[i].event && (events[i].event as IUndoRedoSingleEvent).type === 'backgroundColorChanged') {
+      // @ts-ignore  // events[i].event has already been validated
+      return (events[i].event as IUndoRedoSingleEvent).color as string;
+    }
+  }
+
+  return null;
 };
 
 const mapActiveState = (activeState: string) => (JSON.parse(activeState).objects.map(
@@ -69,7 +92,16 @@ const mapActiveState = (activeState: string) => (JSON.parse(activeState).objects
   }
 ));
 
-const loadFromJSON = (canvas: fabric.Canvas, mapped: { [key: string]: any }, instanceId: string, state: CanvasHistoryState) => {
+const loadFromJSON = (
+  canvas: fabric.Canvas, mapped: { [key: string]: any },
+  instanceId: string,
+  state: CanvasHistoryState,
+  updateBackgroundColor: (arg1: string) => void,
+  setLocalBackground: (arg1: boolean) => void,
+  setIsBackgroundImage: (arg1: boolean) => void,
+  setBackgroundImageIsPartialErasable: (arg1: boolean) => void,
+  setLocalImage: (arg1: string) => void,
+) => {
   canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
     canvas
       .getObjects()
@@ -85,7 +117,21 @@ const loadFromJSON = (canvas: fabric.Canvas, mapped: { [key: string]: any }, ins
       });
 
     const fill = getPreviousBackground(state.eventIndex, state.events);
-    canvas.backgroundColor = fill;
+    const divColorBackground = getPreviousBackgroundDivColor(state.eventIndex, state.events);
+    if (!divColorBackground) {
+      canvas.backgroundColor = fill;
+    } else {
+      updateBackgroundColor(divColorBackground);
+      setLocalBackground(true);
+      setIsBackgroundImage(false);
+      setBackgroundImageIsPartialErasable(false);
+      setLocalImage('');
+
+      canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
+      // @ts-ignore
+      canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+    }
+    
     canvas.renderAll();
   });
 }
@@ -99,7 +145,12 @@ const loadFromJSON = (canvas: fabric.Canvas, mapped: { [key: string]: any }, ins
 export const UndoRedo = (
   canvas: Canvas,
   eventSerializer: PaintEventSerializer,
-  instanceId: string
+  instanceId: string,
+  updateBackgroundColor: (arg1: string) => void,
+  setLocalBackground: (arg1: boolean) => void,
+  setIsBackgroundImage: (arg1: boolean) => void,
+  setBackgroundImageIsPartialErasable: (arg1: boolean) => void,
+  setLocalImage: (arg1: string) => void,
 ) => {
   const { state, dispatch } = useUndoRedo();
 
@@ -120,7 +171,7 @@ export const UndoRedo = (
       });
 
       const mapped: { [key: string]: any } = mapActiveState(state.activeState as string);
-      loadFromJSON(canvas, mapped, instanceId, state);
+      loadFromJSON(canvas, mapped, instanceId, state, updateBackgroundColor, setLocalBackground, setIsBackgroundImage, setBackgroundImageIsPartialErasable, setLocalImage);
     }
 
     if (state.actionType === UNDO) {
@@ -166,9 +217,9 @@ export const UndoRedo = (
         };
 
         eventSerializer?.push('reconstruct', newPayload);
-      } else if (nextEvent.type !== 'activeSelection') {
+      } else if (nextEvent.type !== 'activeSelection' && (nextEvent.event as IUndoRedoSingleEvent).type !== 'backgroundColorChanged') {
         let currentEvent = state.events[state.eventIndex];
-        if ((nextEvent?.event as any).type === 'background') {
+        if (nextEvent?.event && (nextEvent?.event as any).type === 'background') {
           const fill = getPreviousBackground(state.eventIndex, state.events);
           canvas.backgroundColor = fill;
           canvas.renderAll();
@@ -224,6 +275,14 @@ export const UndoRedo = (
           };
           eventSerializer?.push('reconstruct', payload);
         }
+      } else if ((nextEvent.event as IUndoRedoSingleEvent).type === 'backgroundColorChanged') {
+        const divColorBackground = getPreviousBackgroundDivColor(state.eventIndex, state.events);
+        const payload = {
+          id: instanceId,
+          target: divColorBackground || 'transparent'
+        };
+
+        eventSerializer?.push('backgroundColorChanged', payload); 
       } else {
         if (
           (state.events[state.eventIndex].type === 'activeSelection' &&
@@ -269,8 +328,9 @@ export const UndoRedo = (
     } else if (state.actionType === REDO) {
       let event = state.events[state.eventIndex];
 
-      if ((event?.event as any).type === 'background') {
+      if (event.event && (event?.event as any).type === 'background') {
         canvas.backgroundColor =
+          // @ts-ignore // already validated.
           ((event.event as IUndoRedoSingleEvent).target.fill as string) ||
           '#fff';
         canvas.renderAll();
@@ -279,6 +339,7 @@ export const UndoRedo = (
           id: (event.event as IUndoRedoSingleEvent).id,
           target: {
             background:
+              // @ts-ignore // already validated.
               ((event.event as IUndoRedoSingleEvent).target.fill as string) ||
               'fff',
           },
@@ -304,7 +365,8 @@ export const UndoRedo = (
           type: 'reconstruct',
         };
         eventSerializer?.push('reconstruct', payload);
-      } else if (event && event.type !== 'activeSelection') {
+      } else if (event && event.event && event.type !== 'activeSelection' &&
+      (event.event as IUndoRedoSingleEvent).type !== 'backgroundColorChanged') {
         let id = (event.event as IUndoRedoSingleEvent).id;
         let objects = JSON.parse(state.states[state.activeStateIndex as number])
           .objects;
@@ -319,6 +381,13 @@ export const UndoRedo = (
         };
 
         eventSerializer?.push('reconstruct', payload);
+      } else if ((event.event as IUndoRedoSingleEvent).type === 'backgroundColorChanged') {
+        const payload = {
+          id: instanceId,
+          target: (event.event as IUndoRedoSingleEvent).color,
+        };
+
+        eventSerializer?.push('backgroundColorChanged', payload);
       } else {
         let id = (state.events[state.eventIndex].event as IUndoRedoSingleEvent)
           .id;
@@ -333,7 +402,7 @@ export const UndoRedo = (
         eventSerializer?.push('reconstruct', payload);
       }
     }
-  }, [state, canvas, dispatch, eventSerializer, instanceId]);
+  }, [state, canvas, dispatch, eventSerializer, instanceId, updateBackgroundColor, setLocalBackground, setIsBackgroundImage, setBackgroundImageIsPartialErasable, setLocalImage]);
 
   return { state, dispatch };
 };

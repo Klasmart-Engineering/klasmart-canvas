@@ -130,12 +130,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     requestAllEvents,
   } = useSharedEventSerializer();
 
-  const { dispatch: undoRedoDispatch } = UndoRedo(
-    canvas as fabric.Canvas,
-    eventSerializer,
-    userId
-  );
-
   const {
     text,
     brushIsActive,
@@ -187,8 +181,20 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateBackgroundColor,
     setLocalBackground,
     undoRedoIsAvailable,
-
+    setIsBackgroundImage,
+    setBackgroundImageIsPartialErasable,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
+
+  const { dispatch: undoRedoDispatch } = UndoRedo(
+    canvas as fabric.Canvas,
+    eventSerializer,
+    userId,
+    updateBackgroundColor,
+    setLocalBackground,
+    setIsBackgroundImage,
+    setBackgroundImageIsPartialErasable,
+    setLocalImage,
+  );
 
   const { actions, mouseDown } = useCanvasActions(
     canvas,

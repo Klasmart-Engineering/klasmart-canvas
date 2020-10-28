@@ -727,6 +727,7 @@ export const useCanvasActions = (
       setIsBackgroundImage(false);
       setBackgroundImageIsPartialErasable(false);
       setLocalImage('');
+
       if (canvas)
         canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
       // @ts-ignore
@@ -736,6 +737,21 @@ export const useCanvasActions = (
         id: userId,
         target: color,
       };
+
+      const event = {
+        event: {
+          id: userId,
+          color,
+          type: 'backgroundColorChanged',
+        },
+      };
+
+      dispatch({
+        type: SET,
+        payload: canvas?.getObjects(),
+        canvasId: userId,
+        event,
+      });
 
       eventSerializer?.push('backgroundColorChanged', payload);
     },
@@ -748,6 +764,7 @@ export const useCanvasActions = (
       setIsBackgroundImage,
       setBackgroundImageIsPartialErasable,
       setLocalImage,
+      dispatch,
     ]
   );
 
