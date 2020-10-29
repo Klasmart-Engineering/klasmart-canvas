@@ -4,6 +4,9 @@ import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { useEffect } from 'react';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { PenBrush } from '../brushes/penBrush';
+import { IPenPoint } from '../../../interfaces/brushes/pen-point';
+import { MarkerBrush } from '../brushes/markerBrush';
+import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 
 const useSynchronizedLineWidthChanged = (
   canvas: fabric.Canvas | undefined,
@@ -34,13 +37,34 @@ const useSynchronizedLineWidthChanged = (
         if (obj.id && obj.id === id) {
           if (validTypes.includes(objectType)) {
             if (objectType === 'group') {
-              const brush = new PenBrush(canvas, userId);
-              const newObject: ICanvasBrush = brush.createPenPath(
-                obj.id,
-                (target as ICanvasBrush).basePath?.points || [],
-                (target as ICanvasBrush).basePath?.strokeWidth || 0,
-                (target as ICanvasBrush).basePath?.stroke || ''
-              );
+              let brush: PenBrush | MarkerBrush;
+              let newObject: ICanvasBrush | null = null;
+
+              switch ((obj as ICanvasBrush).basePath?.type) {
+                case 'pen':
+                  brush = new PenBrush(canvas, userId);
+                  newObject = brush.createPenPath(
+                    obj.id,
+                    ((target as ICanvasBrush).basePath
+                      ?.points as IPenPoint[]) || [],
+                    Number((target as ICanvasBrush).basePath?.strokeWidth),
+                    String((target as ICanvasBrush).basePath?.stroke)
+                  );
+                  break;
+
+                case 'marker':
+                  brush = new MarkerBrush(canvas, userId);
+                  newObject = brush.createMarkerPath(
+                    obj.id,
+                    ((target as ICanvasBrush).basePath
+                      ?.points as ICoordinate[]) || [],
+                    Number((target as ICanvasBrush).basePath?.strokeWidth),
+                    String((target as ICanvasBrush).basePath?.stroke)
+                  );
+                  break;
+              }
+
+              if (!newObject) return;
 
               newObject.set({
                 angle: obj.angle,

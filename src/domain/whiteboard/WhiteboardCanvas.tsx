@@ -73,6 +73,7 @@ import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
 import { PenBrush } from './brushes/penBrush';
 import { MarkerBrush } from './brushes/markerBrush';
 import { ICanvasBrush } from '../../interfaces/brushes/canvas-brush';
+import { IPenPoint } from '../../interfaces/brushes/pen-point';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -555,7 +556,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           canvas.freeDrawingBrush = new PenBrush(canvas, userId);
           break;
         case 'marker':
-          canvas.freeDrawingBrush = new MarkerBrush(canvas);
+          canvas.freeDrawingBrush = new MarkerBrush(canvas, userId);
           break;
         case 'dashed':
           canvas.freeDrawingBrush = new fabric.PencilBrush();
@@ -1792,19 +1793,43 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         // Line Width in Special Brushes
         if (object.type === 'group' && (object as ICanvasBrush).basePath) {
-          const brush = new PenBrush(canvas, userId);
-          const newObject: ICanvasBrush = brush.createPenPath(
-            (object as ICanvasObject)?.id || '',
-            (object as ICanvasBrush).basePath?.points.map((point) => {
-              return {
-                x: point.x,
-                y: point.y,
-                width: brush.getRandomInt(lineWidth / 2, lineWidth),
-              };
-            }) || [],
-            lineWidth,
-            (object as ICanvasBrush).basePath?.stroke || ''
-          );
+          let brush: PenBrush | MarkerBrush;
+          let newObject: ICanvasBrush | null = null;
+          let payload: ObjectEvent;
+
+          switch ((object as ICanvasBrush).basePath?.type) {
+            case 'pen':
+              brush = new PenBrush(canvas, userId);
+              newObject = brush.createPenPath(
+                (object as ICanvasObject)?.id || '',
+                ((object as ICanvasBrush).basePath?.points as IPenPoint[]).map(
+                  (point) => {
+                    return {
+                      x: point.x,
+                      y: point.y,
+                      width: (brush as PenBrush).getRandomInt(
+                        lineWidth / 2,
+                        lineWidth
+                      ),
+                    };
+                  }
+                ) || [],
+                lineWidth,
+                (object as ICanvasBrush).basePath?.stroke || ''
+              );
+              break;
+
+            case 'marker':
+              brush = new MarkerBrush(canvas, userId);
+              newObject = brush.createMarkerPath(
+                String((object as ICanvasBrush).id),
+                (object as ICanvasBrush).basePath?.points || [],
+                lineWidth,
+                String((object as ICanvasBrush).basePath?.stroke)
+              );
+          }
+
+          if (!newObject) return;
 
           newObject.set({
             angle: object.angle,
@@ -1825,7 +1850,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
           canvas.setActiveObject(newObject);
 
-          const payload: ObjectEvent = {
+          payload = {
             type: 'group',
             target: {
               basePath: {

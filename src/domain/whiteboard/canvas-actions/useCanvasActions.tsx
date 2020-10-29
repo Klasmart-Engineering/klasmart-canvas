@@ -569,6 +569,7 @@ export const useCanvasActions = (
 
           (object as ICanvasBrush).set({
             basePath: {
+              type: (object as ICanvasBrush).basePath?.type || 'pen',
               points: (object as ICanvasBrush).basePath?.points || [],
               stroke: color,
               strokeWidth: (object as ICanvasBrush).basePath?.strokeWidth || 0,

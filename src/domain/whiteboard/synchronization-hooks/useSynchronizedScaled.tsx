@@ -9,6 +9,8 @@ import {
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { Group } from 'fabric/fabric-impl';
 
 const useSynchronizedScaled = (
   canvas: fabric.Canvas | undefined,
@@ -20,6 +22,30 @@ const useSynchronizedScaled = (
   const {
     state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
+
+  /**
+   * Fix the lines of marker path to maintain
+   * the same separation on them when marker path is scaled
+   * @param {ICanvasBrush} path - Modified marker path
+   */
+  const fixMarkerLines = (path: ICanvasBrush) => {
+    let top = path.top;
+    let left = path.left;
+
+    (path as Group)._objects.forEach((line) => {
+      line.set({
+        top: Number(line.top) / Number(path.scaleY),
+        left: Number(line.left) / Number(path.scaleX),
+      });
+    });
+    (path as Group).addWithUpdate();
+
+    path.set({
+      top: top,
+      left: left,
+    });
+    (path as Group).addWithUpdate();
+  };
 
   /** Register and handle remote event. */
   useEffect(() => {
@@ -42,6 +68,10 @@ const useSynchronizedScaled = (
               originY: object.originY || 'top',
             });
             obj.setCoords();
+
+            if (object.type === 'group-marker') {
+              fixMarkerLines(obj as ICanvasBrush);
+            }
           }
         }
       });
@@ -184,7 +214,7 @@ const useSynchronizedScaled = (
         ) as ObjectType;
 
         const id = (e.target as ICanvasObject).id;
-        const target = {
+        let target = {
           top: e.target.top,
           left: e.target.left,
           angle: e.target.angle,
@@ -195,6 +225,12 @@ const useSynchronizedScaled = (
           originX: e.target.originX,
           originY: e.target.originY,
         } as ICanvasObject;
+
+        if ((e.target as ICanvasBrush).basePath?.type === 'marker') {
+          fixMarkerLines(e.target as ICanvasBrush);
+          canvas?.renderAll();
+          target.type = 'group-marker';
+        }
 
         const payload: ObjectEvent = {
           id: id as string,

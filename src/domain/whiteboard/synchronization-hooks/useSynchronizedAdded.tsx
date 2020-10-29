@@ -17,6 +17,9 @@ import { WhiteboardContext } from '../WhiteboardContext';
 import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { PenBrush } from '../brushes/penBrush';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { IPenPoint } from '../../../interfaces/brushes/pen-point';
+import { MarkerBrush } from '../brushes/markerBrush';
+import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -245,13 +248,33 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'group' && canvas) {
-        const brush = new PenBrush(canvas, userId);
-        const path = brush.createPenPath(
-          id,
-          (target as ICanvasBrush).basePath?.points || [],
-          (target as ICanvasBrush).basePath?.strokeWidth || 0,
-          (target as ICanvasBrush).basePath?.stroke || ''
-        );
+        let brush: PenBrush | MarkerBrush;
+        let path;
+
+        switch ((target as ICanvasBrush).basePath?.type) {
+          case 'pen':
+            brush = new PenBrush(canvas, userId);
+            path = brush.createPenPath(
+              id,
+              ((target as ICanvasBrush).basePath?.points as IPenPoint[]) || [],
+              (target as ICanvasBrush).basePath?.strokeWidth || 0,
+              (target as ICanvasBrush).basePath?.stroke || ''
+            );
+            break;
+
+          case 'marker':
+            brush = new MarkerBrush(canvas, userId);
+            path = brush.createMarkerPath(
+              id,
+              ((target as ICanvasBrush).basePath?.points as ICoordinate[]) ||
+                [],
+              Number((target as ICanvasBrush).basePath?.strokeWidth),
+              String((target as ICanvasBrush).basePath?.stroke)
+            );
+            break;
+        }
+
+        if (!path) return;
 
         path.set({
           selectable: false,

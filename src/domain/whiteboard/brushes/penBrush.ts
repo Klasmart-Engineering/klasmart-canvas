@@ -3,11 +3,7 @@ import { Canvas } from 'fabric/fabric-impl';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { v4 as uuidv4 } from 'uuid';
 import { IPenPoint } from '../../../interfaces/brushes/pen-point';
-
-interface IEventCoordinate {
-  x: number;
-  y: number;
-}
+import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 
 export class PenBrush extends fabric.PencilBrush {
   /**
@@ -56,9 +52,9 @@ export class PenBrush extends fabric.PencilBrush {
 
   /**
    * Mouse Down Event, starts to draw in the canvas
-   * @param {IEventCoordinate} e - Event Coordinate value
+   * @param {ICoordinate} e - Event Coordinate value
    */
-  public onMouseDown(e: IEventCoordinate) {
+  public onMouseDown(e: ICoordinate) {
     this.isDrawing = true;
     this.points.push({
       x: e.x,
@@ -69,9 +65,9 @@ export class PenBrush extends fabric.PencilBrush {
 
   /**
    * Mouse Move Event, detects mouse movement to set the position of each point
-   * @param {IEventCoordinate} e - Event Coordinate value
+   * @param {ICoordinate} e - Event Coordinate value
    */
-  public onMouseMove(e: IEventCoordinate) {
+  public onMouseMove(e: ICoordinate) {
     if (!this.isDrawing) return;
 
     const ctx = this.canvas.getContext();
@@ -163,6 +159,7 @@ export class PenBrush extends fabric.PencilBrush {
     penPath.set({
       id: id,
       basePath: {
+        type: 'pen',
         points: [...points],
         stroke: color,
         strokeWidth: width,

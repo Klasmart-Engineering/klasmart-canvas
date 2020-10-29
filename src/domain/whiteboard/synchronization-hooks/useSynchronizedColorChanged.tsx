@@ -50,6 +50,7 @@ const useSynchronizedColorChanged = (
                 (line as ICanvasBrush).set({
                   stroke: target.stroke,
                   basePath: {
+                    type: (obj as ICanvasBrush).basePath?.type || 'pen',
                     points: (obj as ICanvasBrush).basePath?.points || [],
                     stroke: target.stroke || '',
                     strokeWidth:

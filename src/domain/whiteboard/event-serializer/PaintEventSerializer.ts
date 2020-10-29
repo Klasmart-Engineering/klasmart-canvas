@@ -2,7 +2,7 @@ import { PainterEvent, PainterEventType } from './PainterEvent';
 import { EventEmitter } from 'events';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { IToolbarUI } from '../../../interfaces/toolbar/toolbar-ui';
-import { IPenSyncTarget } from '../../../interfaces/brushes/pen-sync-target';
+import { IBrushSyncTarget } from '../../../interfaces/brushes/brush-sync-target';
 
 // TODO: This service should probably implement some sort of
 // event batching, especially the line drawing can generate
@@ -30,7 +30,7 @@ export interface ObjectEvent {
     | boolean
     | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean }
     | IToolbarUI
-    | IPenSyncTarget;
+    | IBrushSyncTarget;
 }
 
 export type ObjectType =
