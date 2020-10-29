@@ -53,8 +53,19 @@ const useSynchronizedLineWidthChanged = (
                   break;
 
                 case 'marker':
-                  brush = new MarkerBrush(canvas, userId);
+                  brush = new MarkerBrush(canvas, userId, 'marker');
                   newObject = brush.createMarkerPath(
+                    obj.id,
+                    ((target as ICanvasBrush).basePath
+                      ?.points as ICoordinate[]) || [],
+                    Number((target as ICanvasBrush).basePath?.strokeWidth),
+                    String((target as ICanvasBrush).basePath?.stroke)
+                  );
+                  break;
+
+                case 'felt':
+                  brush = new MarkerBrush(canvas, userId, 'felt');
+                  newObject = brush.createFeltPath(
                     obj.id,
                     ((target as ICanvasBrush).basePath
                       ?.points as ICoordinate[]) || [],

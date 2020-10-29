@@ -226,7 +226,10 @@ const useSynchronizedScaled = (
           originY: e.target.originY,
         } as ICanvasObject;
 
-        if ((e.target as ICanvasBrush).basePath?.type === 'marker') {
+        if (
+          (e.target as ICanvasBrush).basePath?.type === 'marker' ||
+          (e.target as ICanvasBrush).basePath?.type === 'felt'
+        ) {
           fixMarkerLines(e.target as ICanvasBrush);
           canvas?.renderAll();
           target.type = 'group-marker';

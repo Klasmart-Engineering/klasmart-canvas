@@ -4,6 +4,8 @@ import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { v4 as uuidv4 } from 'uuid';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
+type IMarkerStyle = 'marker' | 'felt';
+
 export class MarkerBrush extends fabric.PencilBrush {
   /**
    * Canvas to print the lines
@@ -37,15 +39,21 @@ export class MarkerBrush extends fabric.PencilBrush {
   private points: { x: number; y: number }[] = [];
 
   /**
+   * Style for the brush, it could be marker or felt
+   */
+  private style: IMarkerStyle;
+
+  /**
    * Class constructor
    * @param {Canvas} canvas - Canvas to print the lines
    * @param {string} userId - Id of the user that will draw
    */
-  constructor(canvas: Canvas, userId: string) {
+  constructor(canvas: Canvas, userId: string, style: IMarkerStyle) {
     super();
     this.userId = userId;
     this.canvas = canvas;
     this.ctx = this.canvas.getContext();
+    this.style = style;
   }
 
   /**
@@ -68,54 +76,16 @@ export class MarkerBrush extends fabric.PencilBrush {
     this.points.push(e);
     this.ctx.beginPath();
 
-    this.ctx.lineJoin = 'round';
+    this.ctx.lineJoin = this.ctx.lineCap = 'round';
     this.ctx.strokeStyle = this.color;
-    this.ctx.lineWidth = this.width / 5;
 
-    this.addContextLine(
-      1,
-      {
-        x: this.lastPoint.x - this.width / 8,
-        y: this.lastPoint.y - this.width / 8,
-      },
-      { x: e.x - this.width / 8, y: e.y - this.width / 8 }
-    );
-
-    this.addContextLine(
-      0.8,
-      {
-        x: this.lastPoint.x - this.width / 4,
-        y: this.lastPoint.y - this.width / 4,
-      },
-      { x: e.x - this.width / 4, y: e.y - this.width / 4 }
-    );
-
-    this.addContextLine(
-      0.6,
-      {
-        x: this.lastPoint.x,
-        y: this.lastPoint.y,
-      },
-      { x: e.x, y: e.y }
-    );
-
-    this.addContextLine(
-      0.4,
-      {
-        x: this.lastPoint.x + this.width / 4,
-        y: this.lastPoint.y + this.width / 4,
-      },
-      { x: e.x + this.width / 4, y: e.y + this.width / 4 }
-    );
-
-    this.addContextLine(
-      0.2,
-      {
-        x: this.lastPoint.x + this.width / 8,
-        y: this.lastPoint.y + this.width / 8,
-      },
-      { x: e.x + this.width / 8, y: e.y + this.width / 8 }
-    );
+    if (this.style === 'marker') {
+      this.ctx.lineWidth = this.width / 5;
+      this.createContextLinesForMarker(e);
+    } else {
+      this.ctx.lineWidth = this.width;
+      this.createContextLinesForFelt(e);
+    }
 
     this.lastPoint = { x: e.x, y: e.y };
     this.ctx.globalAlpha = 1;
@@ -128,12 +98,22 @@ export class MarkerBrush extends fabric.PencilBrush {
   public onMouseUp() {
     this.isDrawing = false;
 
-    let path = this.createMarkerPath(
-      `${this.userId}:${uuidv4()}`,
-      this.points,
-      this.width,
-      this.color
-    );
+    let path;
+    if (this.style === 'marker') {
+      path = this.createMarkerPath(
+        `${this.userId}:${uuidv4()}`,
+        this.points,
+        this.width,
+        this.color
+      );
+    } else {
+      path = this.createFeltPath(
+        `${this.userId}:${uuidv4()}`,
+        this.points,
+        this.width,
+        this.color
+      );
+    }
 
     this.points = [];
 
@@ -225,5 +205,116 @@ export class MarkerBrush extends fabric.PencilBrush {
     });
 
     return markerPath;
+  }
+
+  /**
+   * Creates a new Felt Brush Path with the given parameters
+   * @param {string} id - Id to set in the new path object
+   * @param {ICoordinate[]} points - Points to follow and draw the path object
+   * @param {number} width - General width that the draw
+   * will have (lineWidth value)
+   * @param {string} color - Path Color
+   */
+  public createFeltPath(
+    id: string,
+    points: ICoordinate[],
+    width: number,
+    color: string
+  ) {
+    let feltPath = new fabric.Group([
+      this.addSVGLine(0.6, points, color, width, width / 5),
+      this.addSVGLine(0.8, points, color, width, 0),
+    ]);
+
+    (feltPath as ICanvasBrush).set({
+      id: id,
+      basePath: {
+        type: 'felt',
+        points: points,
+        stroke: color,
+        strokeWidth: width,
+      },
+    });
+
+    return feltPath;
+  }
+
+  /**
+   * Creates the context lines for marker brush
+   * @param {ICoordinate} e - Coordinates of current point
+   */
+  private createContextLinesForMarker(e: ICoordinate) {
+    if (!this.lastPoint) return;
+
+    this.addContextLine(
+      1,
+      {
+        x: this.lastPoint.x - this.width / 8,
+        y: this.lastPoint.y - this.width / 8,
+      },
+      { x: e.x - this.width / 8, y: e.y - this.width / 8 }
+    );
+
+    this.addContextLine(
+      0.8,
+      {
+        x: this.lastPoint.x - this.width / 4,
+        y: this.lastPoint.y - this.width / 4,
+      },
+      { x: e.x - this.width / 4, y: e.y - this.width / 4 }
+    );
+
+    this.addContextLine(
+      0.6,
+      {
+        x: this.lastPoint.x,
+        y: this.lastPoint.y,
+      },
+      { x: e.x, y: e.y }
+    );
+
+    this.addContextLine(
+      0.4,
+      {
+        x: this.lastPoint.x + this.width / 4,
+        y: this.lastPoint.y + this.width / 4,
+      },
+      { x: e.x + this.width / 4, y: e.y + this.width / 4 }
+    );
+
+    this.addContextLine(
+      0.2,
+      {
+        x: this.lastPoint.x + this.width / 8,
+        y: this.lastPoint.y + this.width / 8,
+      },
+      { x: e.x + this.width / 8, y: e.y + this.width / 8 }
+    );
+  }
+
+  /**
+   * Creates the context lines for felt brush
+   * @param {ICoordinate} e - Coordinates of current point
+   */
+  private createContextLinesForFelt(e: ICoordinate) {
+    if (!this.lastPoint) return;
+
+    this.addContextLine(
+      0.8,
+      {
+        x: this.lastPoint.x,
+        y: this.lastPoint.y,
+      },
+      { x: e.x, y: e.y }
+    );
+
+    this.addContextLine(
+      0.6,
+      {
+        x: this.lastPoint.x + this.width / 6,
+        y: this.lastPoint.y + this.width / 6,
+      },
+      { x: e.x + this.width / 6, y: e.y + this.width / 6 }
+    );
   }
 }

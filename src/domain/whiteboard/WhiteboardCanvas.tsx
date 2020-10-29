@@ -556,7 +556,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           canvas.freeDrawingBrush = new PenBrush(canvas, userId);
           break;
         case 'marker':
-          canvas.freeDrawingBrush = new MarkerBrush(canvas, userId);
+          canvas.freeDrawingBrush = new MarkerBrush(canvas, userId, 'marker');
+          break;
+        case 'felt':
+          canvas.freeDrawingBrush = new MarkerBrush(canvas, userId, 'felt');
           break;
         case 'dashed':
           canvas.freeDrawingBrush = new fabric.PencilBrush();
@@ -1820,13 +1823,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               break;
 
             case 'marker':
-              brush = new MarkerBrush(canvas, userId);
+              brush = new MarkerBrush(canvas, userId, 'marker');
               newObject = brush.createMarkerPath(
                 String((object as ICanvasBrush).id),
                 (object as ICanvasBrush).basePath?.points || [],
                 lineWidth,
                 String((object as ICanvasBrush).basePath?.stroke)
               );
+              break;
+
+            case 'felt':
+              brush = new MarkerBrush(canvas, userId, 'felt');
+              newObject = brush.createFeltPath(
+                String((object as ICanvasBrush).id),
+                (object as ICanvasBrush).basePath?.points || [],
+                lineWidth,
+                String((object as ICanvasBrush).basePath?.stroke)
+              );
+              break;
           }
 
           if (!newObject) return;
