@@ -473,6 +473,8 @@ export const useCanvasActions = (
             'strokeUniform',
             'originX',
             'originY',
+            'strokeMiterLimit',
+            'strokeLineJoin',
           ];
 
           const requiredEllipseProps = [
