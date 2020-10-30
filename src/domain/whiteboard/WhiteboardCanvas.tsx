@@ -1107,6 +1107,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.defaultCursor = `url("${floodFillCursor}") 2 15, default`;
       canvas.forEachObject((object: TypedShape) => {
         setObjectControlsVisibility(object as ICanvasObject, false);
+
+        if (!isLocalShape(object)) {
+          return;
+        }
+
         object.set({
           evented: true,
           selectable: object.get('type') !== 'image' ? true : false,
