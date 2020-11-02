@@ -45,6 +45,8 @@ export const useCanvasActions = (
     perfectShapeIsActive,
     partialEraseIsActive,
     eraseType,
+    backgroundImage,
+    localImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
@@ -470,6 +472,8 @@ export const useCanvasActions = (
             'strokeUniform',
             'originX',
             'originY',
+            'strokeMiterLimit',
+            'strokeLineJoin',
           ];
 
           const requiredEllipseProps = [
@@ -753,6 +757,17 @@ export const useCanvasActions = (
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
     if (teacherHasPermission || studentHasPermission) {
+      if (typeof localImage === 'string' && localImage.length) {
+        const target = {
+          id: '',
+          target: {
+            strategy: 'allowClearMyself',
+            isLocalImage: true,
+          },
+        };
+
+        eventSerializer?.push('removed', target as ObjectEvent);
+      }
       await updateClearIsActive(true);
       await canvas?.getObjects().forEach((obj: ICanvasObject) => {
         if (obj.id && isLocalObject(obj.id, userId)) {
@@ -768,6 +783,26 @@ export const useCanvasActions = (
           eventSerializer?.push('removed', target as ObjectEvent);
         }
       });
+
+      if (canvas?.backgroundImage) {
+        const target = {
+          // @ts-ignore
+          id: canvas.backgroundImage.id,
+          target: {
+            strategy: 'allowClearMyself',
+            isBackgroundImage: true,
+          },
+        };
+
+        eventSerializer?.push('removed', target as ObjectEvent);
+
+        // In order to remove background you need to add 0 to the first argument.
+        // An empty string unfortunately doesnt work.
+        // https://stackoverflow.com/a/14171884
+        // @ts-ignore
+        canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+      }
+
       closeModal();
 
       const event = {
@@ -798,6 +833,8 @@ export const useCanvasActions = (
     serializerToolbarState.clearWhiteboard,
     dispatch,
     userId,
+    localImage,
+    backgroundImage,
   ]);
 
   /**
@@ -995,23 +1032,29 @@ export const useCanvasActions = (
       eraser.init();
     }
 
+    if (
+      eraseType === 'object' &&
+      canvas &&
+      toolbarIsEnabled &&
+      (allToolbarIsEnabled || serializerToolbarState.erase)
+    ) {
+      eraseObject();
+
+      if (canvas.getActiveObjects().length === 1) {
+        canvas.discardActiveObject().renderAll();
+      }
+    }
+
     return() => {
       if (eraser) {
         eraser.destroy();
       }
+
+      canvas?.off('mouse:up');
+      canvas?.off('mouse:over');
+      canvas?.off('path:created');
     }
-  }, [
-    canvas,
-    eraseType,
-    partialEraseIsActive,
-    toolbarIsEnabled,
-    allToolbarIsEnabled,
-    serializerToolbarState.partialErase,
-    userId,
-    lineWidth,
-    eventSerializer,
-    dispatch,
-  ]);
+  }, [canvas, eraseType, partialEraseIsActive, toolbarIsEnabled, allToolbarIsEnabled, serializerToolbarState.partialErase, userId, lineWidth, eventSerializer, dispatch, serializerToolbarState.erase, eraseObject]);
 
   /**
    * Deselect the actual selected object

@@ -15,16 +15,16 @@ import { CSSProperties } from '@material-ui/core/styles/withStyles';
  * - onClick - event to send to parent when the button is clicked
  */
 function ToolbarButton(props: IToolbarButton) {
-  const { id, title, iconSrc, iconName, active, onClick } = props;
+  const { id, title, iconSrc, iconName, active, enabled, onClick } = props;
 
   const toolbarButtonStyle: CSSProperties = {
-    border: "none",
-    width: "36px",
-    marginLeft: "2px",
-    backgroundColor: active ? "#d9d9d9" : "#fff",
-    borderRadius: "4px",
+    border: 'none',
+    width: '36px',
+    marginLeft: '2px',
+    backgroundColor: active ? '#d9d9d9' : '#fff',
+    borderRadius: '4px',
     outline: 0,
-  }
+  };
 
   return (
     <button
@@ -37,6 +37,7 @@ function ToolbarButton(props: IToolbarButton) {
         !active ? 'unselected-button' : '',
       ].join(' ')}
       onClick={() => onClick(id)}
+      disabled={enabled === false}
     >
       <img src={iconSrc} alt={iconName} width="24px" height="24px" />
     </button>

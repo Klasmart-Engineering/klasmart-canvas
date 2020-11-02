@@ -80,6 +80,8 @@ export interface IWhiteboardContext {
     shape: boolean;
     undoRedo: boolean;
     clearWhiteboard: boolean;
+    downloadCanvas: boolean;
+    uploadImage: boolean;
   };
   setSerializerToolbarState: (enabled: {
     [p: string]: boolean;
@@ -93,15 +95,33 @@ export interface IWhiteboardContext {
     shape: boolean;
     undoRedo: boolean;
     clearWhiteboard: boolean;
+    downloadCanvas: boolean;
+    uploadImage: boolean;
   }) => void;
   allToolbarIsEnabled: boolean;
   lineWidthIsActive: boolean;
   updateLineWidthIsActive: (active: boolean) => void;
+  imagePopupIsOpen: boolean;
+  updateImagePopupIsOpen: (open: boolean) => void;
   activeCanvas: MutableRefObject<string | null>;
   perfectShapeIsActive: boolean;
   updatePerfectShapeIsActive: (active: boolean) => void;
   perfectShapeIsAvailable: () => boolean;
   partialEraseIsActive: boolean;
   updatePartialEraseIsActive: (status: boolean) => void;
+  openUploadFileModal: () => void;
+  closeUploadFileModal: () => void;
+  image: string | File;
+  setImage: (image: string | File) => void;
+  isGif: boolean;
+  setIsGif: (status: boolean) => void;
+  backgroundImage: string | File;
+  setBackgroundImage: (image: string | File) => void;
+  backgroundImageIsPartialErasable: boolean;
+  setBackgroundImageIsPartialErasable: (status: boolean) => void;
+  isBackgroundImage: boolean;
+  setIsBackgroundImage: (status: boolean) => void;
+  localImage: string | File;
+  setLocalImage: (image: string | File) => void;
   undoRedoIsAvailable: () => boolean;
 }

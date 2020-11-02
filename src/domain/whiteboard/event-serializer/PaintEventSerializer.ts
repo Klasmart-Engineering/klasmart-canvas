@@ -2,6 +2,7 @@ import { PainterEvent, PainterEventType } from './PainterEvent';
 import { EventEmitter } from 'events';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { IToolbarUI } from '../../../interfaces/toolbar/toolbar-ui';
+import { Image } from 'fabric/fabric-impl';
 
 // TODO: This service should probably implement some sort of
 // event batching, especially the line drawing can generate
@@ -28,7 +29,18 @@ export interface ObjectEvent {
     | { pointer: boolean }
     | boolean
     | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean }
-    | IToolbarUI;
+    | IToolbarUI
+    | string;
+}
+
+export interface IBackgroundImageEvent {
+  id: string | undefined;
+  type?: ObjectType;
+  target?:
+    | Image
+    | string
+    | File
+    | { backgroundImage: string | File; id: string };
 }
 
 export type ObjectType =
@@ -39,7 +51,10 @@ export type ObjectType =
   | 'shape'
   | 'background'
   | 'image'
-  | 'pointer';
+  | 'pointer'
+  | 'gif'
+  | 'backgroundImage'
+  | 'localImage';
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {

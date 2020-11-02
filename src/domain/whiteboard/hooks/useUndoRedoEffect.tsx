@@ -148,7 +148,7 @@ export const UndoRedo = (
           ?.joinedIds as string[];
         let event = state.events[state.eventIndex];
 
-        if ((event?.event as IUndoRedoSingleEvent).target?.joinedIds) {
+        if ((event?.event as IUndoRedoSingleEvent)?.target?.joinedIds) {
           const currentIds = (event?.event as IUndoRedoSingleEvent).target
             ?.joinedIds;
           joinedIds = [...joinedIds, ...(currentIds as string[])];

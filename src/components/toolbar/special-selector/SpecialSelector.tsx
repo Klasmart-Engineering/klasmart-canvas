@@ -25,6 +25,7 @@ function SpecialSelector(props: ISpecialSelector) {
     styleOptions,
     onClick,
     onChange,
+    enabled
   } = props;
 
   const [selectedOption, setSelectedOption] = useState(
@@ -163,6 +164,7 @@ function SpecialSelector(props: ISpecialSelector) {
           !active ? 'unselected' : '',
         ].join(' ')}
         onClick={handleClick}
+        disabled={enabled === false}
       >
         <div style={iconContainerStyle}>
           <Icon style={selectedOption.style} />

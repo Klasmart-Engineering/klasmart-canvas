@@ -82,7 +82,6 @@ function Whiteboard() {
             >
               <button>Teacher</button>
             </WhiteboardCanvas>
-            <button>Teacher</button>
           </WhiteboardContainer>
         </div>
       </WhiteboardProvider>
@@ -114,7 +113,6 @@ function Whiteboard() {
             >
               <button>Student</button>
             </WhiteboardCanvas>
-            <button>Student</button>
           </WhiteboardContainer>
         </div>
       </WhiteboardProvider>
@@ -146,7 +144,6 @@ function Whiteboard() {
             >
               <button>Student</button>
             </WhiteboardCanvas>
-            <button>Student</button>
           </WhiteboardContainer>
         </div>
       </WhiteboardProvider>

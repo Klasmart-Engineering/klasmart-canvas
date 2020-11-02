@@ -43,6 +43,7 @@ import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import {
   Canvas,
   IEvent,
+  IStaticCanvasOptions,
   IText,
   ITextOptions,
   Textbox,
@@ -50,6 +51,7 @@ import {
 import {
   ObjectEvent,
   ObjectType,
+  IBackgroundImageEvent,
 } from './event-serializer/PaintEventSerializer';
 import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
@@ -65,6 +67,15 @@ import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
 import { CANVAS_OBJECT_PROPS } from '../../config/undo-redo-values';
+import { CanvasDownloadConfirm } from '../../modals/canvas-download/canvasDownload';
+import {
+  createBackgroundImage,
+  createGif,
+  createImageAsObject,
+} from './gifs-actions/util';
+interface IBackgroundImage extends IStaticCanvasOptions {
+  id?: string;
+}
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -157,11 +168,20 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setSerializerToolbarState,
     allToolbarIsEnabled,
     lineWidthIsActive,
+    imagePopupIsOpen,
+    updateImagePopupIsOpen,
     activeCanvas,
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
     perfectShapeIsAvailable,
     partialEraseIsActive,
+    image,
+    isGif,
+    isBackgroundImage,
+    backgroundImage,
+    backgroundImageIsPartialErasable,
+    localImage,
+    setLocalImage,
     undoRedoIsAvailable,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
@@ -492,7 +512,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             width: textboxWidth + 10,
             height: textboxCopy.height,
             visible: true,
-            text: textboxCopy.text?.replace(/ \n/gi, ' ').trim(),
+            text: textboxCopy.text?.trim(),
           });
 
           canvas.setActiveObject(currentTextbox);
@@ -695,6 +715,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       perfectShapeIsActive,
       perfectShapeIsAvailable,
       updatePerfectShapeIsActive,
+      undoRedoIsAvailable,
     ]
   );
 
@@ -1070,6 +1091,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.defaultCursor = `url("${floodFillCursor}") 2 15, default`;
       canvas.forEachObject((object: TypedShape) => {
         setObjectControlsVisibility(object as ICanvasObject, false);
+
+        if (!isLocalShape(object)) {
+          return;
+        }
+
         object.set({
           evented: true,
           selectable: object.get('type') !== 'image' ? true : false,
@@ -1618,6 +1644,69 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
   }, [pointerEvents, canvas]);
 
+  /**
+   * Handles the logic to add images and gifs as objects
+   * and background images to the whiteboard.
+   */
+  useEffect(() => {
+    if (isBackgroundImage && canvas) {
+      if (backgroundImageIsPartialErasable) {
+        createBackgroundImage(backgroundImage.toString(), userId, canvas).then(
+          () => {
+            if (canvas.backgroundImage) {
+              const payload: IBackgroundImageEvent = {
+                id: (canvas.backgroundImage as IBackgroundImage).id,
+                type: 'backgroundImage',
+                target: canvas.backgroundImage,
+              };
+
+              canvas.trigger('object:added', payload);
+            }
+          }
+        );
+        return;
+      }
+
+      (async function () {
+        try {
+          await setLocalImage(backgroundImage);
+          const id = `${userId}:${uuidv4()}`;
+          const payload: IBackgroundImageEvent = {
+            type: 'localImage',
+            target: { backgroundImage, id },
+            id,
+          };
+          canvas.trigger('object:added', payload);
+        } catch (e) {
+          console.error(e);
+        }
+      })();
+
+      return;
+    }
+
+    if (isGif && canvas) {
+      // We use then to avoid inspector warning about ignoring the promise returned
+      createGif(image, userId, canvas).then();
+      return;
+    }
+
+    if (canvas) {
+      createImageAsObject(image.toString(), userId, canvas);
+    }
+  }, [
+    canvas,
+    image,
+    userId,
+    isGif,
+    isBackgroundImage,
+    backgroundImage,
+    backgroundImageIsPartialErasable,
+    setLocalImage,
+    eventSerializer,
+    localImage,
+  ]);
+  
   useEffect(() => {
     if (shape && shapeIsActive) {
       mouseDown(shape, shapeColor);
@@ -1803,6 +1892,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   return (
     <>
+      <CanvasDownloadConfirm 
+        open={imagePopupIsOpen}
+        onClose={updateImagePopupIsOpen}
+        canvas={canvas as fabric.Canvas}
+        backgroundImage={backgroundImage}
+        width={width}
+        height={height}
+      ></CanvasDownloadConfirm>
       <canvas
         width={pixelWidth}
         height={pixelHeight}
@@ -1816,6 +1913,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       >
         {children}
       </canvas>
+      {!backgroundImageIsPartialErasable && localImage && (
+        <img
+          style={{
+            height: '100%',
+            width: '100%',
+          }}
+          alt="background"
+          src={localImage.toString()}
+        />
+      )}
     </>
   );
 };
