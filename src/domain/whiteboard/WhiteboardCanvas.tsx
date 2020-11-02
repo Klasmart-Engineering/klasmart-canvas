@@ -49,6 +49,7 @@ import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import {
   Canvas,
   IEvent,
+  IStaticCanvasOptions,
   IText,
   ITextOptions,
   Textbox,
@@ -56,6 +57,7 @@ import {
 import {
   ObjectEvent,
   ObjectType,
+  IBackgroundImageEvent,
 } from './event-serializer/PaintEventSerializer';
 import { ICanvasDrawingEvent } from '../../interfaces/canvas-events/canvas-drawing-event';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
@@ -75,6 +77,15 @@ import { MarkerBrush } from './brushes/markerBrush';
 import { ICanvasBrush } from '../../interfaces/brushes/canvas-brush';
 import { IPenPoint } from '../../interfaces/brushes/pen-point';
 import { PaintBrush } from './brushes/paintBrush';
+import { CanvasDownloadConfirm } from '../../modals/canvas-download/canvasDownload';
+import {
+  createBackgroundImage,
+  createGif,
+  createImageAsObject,
+} from './gifs-actions/util';
+interface IBackgroundImage extends IStaticCanvasOptions {
+  id?: string;
+}
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -168,12 +179,22 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     allToolbarIsEnabled,
     lineWidthIsActive,
     brushType,
+    imagePopupIsOpen,
+    updateImagePopupIsOpen,
     activeCanvas,
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
     perfectShapeIsAvailable,
     partialEraseIsActive,
     updatePartialEraseIsActive,
+    image,
+    isGif,
+    isBackgroundImage,
+    backgroundImage,
+    backgroundImageIsPartialErasable,
+    localImage,
+    setLocalImage,
+    undoRedoIsAvailable,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -511,7 +532,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             width: textboxWidth + 10,
             height: textboxCopy.height,
             visible: true,
-            text: textboxCopy.text?.replace(/ \n/gi, ' ').trim(),
+            text: textboxCopy.text?.trim(),
           });
 
           canvas.setActiveObject(currentTextbox);
@@ -687,6 +708,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
+      if (!undoRedoIsAvailable()) {
+        return;
+      }
+
       if (
         ((e as unknown) as KeyboardEvent).keyCode === 90 &&
         (e as any).ctrlKey &&
@@ -741,6 +766,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       perfectShapeIsActive,
       perfectShapeIsAvailable,
       updatePerfectShapeIsActive,
+      undoRedoIsAvailable,
     ]
   );
 
@@ -1142,6 +1168,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.defaultCursor = `url("${floodFillCursor}") 2 15, default`;
       canvas.forEachObject((object: TypedShape) => {
         setObjectControlsVisibility(object as ICanvasObject, false);
+
+        if (!isLocalShape(object)) {
+          return;
+        }
+
         object.set({
           evented: true,
           selectable: object.get('type') !== 'image' ? true : false,
@@ -1163,7 +1194,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         if (
           !event.target ||
           (event.target &&
-            (event.target.get('type') === 'path' ||
+            ((event.target.get('type') === 'path' &&
+              !isEmptyShape(event.target)) ||
               event.target.get('type') === 'image'))
         ) {
           floodFillMouseEvent(
@@ -1714,6 +1746,69 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [pointerEvents, canvas]);
 
   /**
+   * Handles the logic to add images and gifs as objects
+   * and background images to the whiteboard.
+   */
+  useEffect(() => {
+    if (isBackgroundImage && canvas) {
+      if (backgroundImageIsPartialErasable) {
+        createBackgroundImage(backgroundImage.toString(), userId, canvas).then(
+          () => {
+            if (canvas.backgroundImage) {
+              const payload: IBackgroundImageEvent = {
+                id: (canvas.backgroundImage as IBackgroundImage).id,
+                type: 'backgroundImage',
+                target: canvas.backgroundImage,
+              };
+
+              canvas.trigger('object:added', payload);
+            }
+          }
+        );
+        return;
+      }
+
+      (async function () {
+        try {
+          await setLocalImage(backgroundImage);
+          const id = `${userId}:${uuidv4()}`;
+          const payload: IBackgroundImageEvent = {
+            type: 'localImage',
+            target: { backgroundImage, id },
+            id,
+          };
+          canvas.trigger('object:added', payload);
+        } catch (e) {
+          console.error(e);
+        }
+      })();
+
+      return;
+    }
+
+    if (isGif && canvas) {
+      // We use then to avoid inspector warning about ignoring the promise returned
+      createGif(image, userId, canvas).then();
+      return;
+    }
+
+    if (canvas) {
+      createImageAsObject(image.toString(), userId, canvas);
+    }
+  }, [
+    canvas,
+    image,
+    userId,
+    isGif,
+    isBackgroundImage,
+    backgroundImage,
+    backgroundImageIsPartialErasable,
+    setLocalImage,
+    eventSerializer,
+    localImage,
+  ]);
+
+  /**
    * When eraseType value changes, listeners and states
    * necessaries to erase objects are setted or removed
    */
@@ -1966,6 +2061,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Set a selected shape like perfect if perfectShapeIsActive
    */
   useEffect(() => {
+    /**
+     * Multiplies the width by scaleX of the given shape
+     * to obtain the real current width
+     * @param {TypedShape} shape - Shape to calculate its real width
+     */
+    const getShapeRealWidth = (shape: TypedShape) => {
+      return Number(shape.width) * Number(shape.scaleX);
+    };
+
+    /**
+     * Multiplies the height by scaleY of the given shape
+     * to obtain the real current height
+     * @param {TypedShape} shape - Shape to calculate its real height
+     */
+    const getShapeRealHeight = (shape: TypedShape) => {
+      return Number(shape.height) * Number(shape.scaleY);
+    };
+
     canvas?.forEachObject((object: ICanvasObject) => {
       if (
         isEmptyShape(object as TypedShape) &&
@@ -1982,21 +2095,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       isEmptyShape(canvas.getActiveObject())
     ) {
       const shapeToFix = canvas.getActiveObject();
-      if (Number(shapeToFix.width) > Number(shapeToFix.height)) {
+      if (getShapeRealWidth(shapeToFix) > getShapeRealHeight(shapeToFix)) {
         shapeToFix.set(
           'scaleY',
-          (Number(shapeToFix.width) * Number(shapeToFix.scaleX)) /
-            Number(shapeToFix.height)
+          getShapeRealWidth(shapeToFix) / Number(shapeToFix.height)
         );
 
         canvas.trigger('object:scaled', {
           target: shapeToFix,
         });
-      } else if (Number(shapeToFix.height) > Number(shapeToFix.width)) {
+      } else if (
+        getShapeRealHeight(shapeToFix) > getShapeRealWidth(shapeToFix)
+      ) {
         shapeToFix.set(
           'scaleX',
-          (Number(shapeToFix.height) * Number(shapeToFix.scaleY)) /
-            Number(shapeToFix.width)
+          getShapeRealHeight(shapeToFix) / Number(shapeToFix.width)
         );
 
         canvas.trigger('object:scaled', {
@@ -2046,6 +2159,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   return (
     <>
+      <CanvasDownloadConfirm
+        open={imagePopupIsOpen}
+        onClose={updateImagePopupIsOpen}
+        canvas={canvas as fabric.Canvas}
+        backgroundImage={backgroundImage}
+        width={width}
+        height={height}
+      ></CanvasDownloadConfirm>
       <canvas
         width={pixelWidth}
         height={pixelHeight}
@@ -2059,6 +2180,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       >
         {children}
       </canvas>
+      {!backgroundImageIsPartialErasable && localImage && (
+        <img
+          style={{
+            height: '100%',
+            width: '100%',
+          }}
+          alt="background"
+          src={localImage.toString()}
+        />
+      )}
     </>
   );
 };

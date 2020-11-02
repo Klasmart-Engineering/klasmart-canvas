@@ -10,4 +10,5 @@ export default interface ToolbarSelector {
   onAction: (tool: string, option: string) => void;
   onClick: (tool: string) => void;
   onChange: (tool: string, option: string) => void;
+  enabled?: boolean;
 }

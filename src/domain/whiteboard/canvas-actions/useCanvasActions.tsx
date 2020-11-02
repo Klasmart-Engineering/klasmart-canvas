@@ -48,6 +48,8 @@ export const useCanvasActions = (
     perfectShapeIsActive,
     updatePartialEraseIsActive,
     partialEraseIsActive,
+    backgroundImage,
+    localImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   /**
@@ -473,6 +475,8 @@ export const useCanvasActions = (
             'strokeUniform',
             'originX',
             'originY',
+            'strokeMiterLimit',
+            'strokeLineJoin',
           ];
 
           const requiredEllipseProps = [
@@ -825,6 +829,17 @@ export const useCanvasActions = (
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
     if (teacherHasPermission || studentHasPermission) {
+      if (typeof localImage === 'string' && localImage.length) {
+        const target = {
+          id: '',
+          target: {
+            strategy: 'allowClearMyself',
+            isLocalImage: true,
+          },
+        };
+
+        eventSerializer?.push('removed', target as ObjectEvent);
+      }
       await updateClearIsActive(true);
       await canvas?.getObjects().forEach((obj: ICanvasObject) => {
         if (obj.id && isLocalObject(obj.id, userId)) {
@@ -840,6 +855,26 @@ export const useCanvasActions = (
           eventSerializer?.push('removed', target as ObjectEvent);
         }
       });
+
+      if (canvas?.backgroundImage) {
+        const target = {
+          // @ts-ignore
+          id: canvas.backgroundImage.id,
+          target: {
+            strategy: 'allowClearMyself',
+            isBackgroundImage: true,
+          },
+        };
+
+        eventSerializer?.push('removed', target as ObjectEvent);
+
+        // In order to remove background you need to add 0 to the first argument.
+        // An empty string unfortunately doesnt work.
+        // https://stackoverflow.com/a/14171884
+        // @ts-ignore
+        canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+      }
+
       closeModal();
 
       const event = {
@@ -870,6 +905,8 @@ export const useCanvasActions = (
     serializerToolbarState.clearWhiteboard,
     dispatch,
     userId,
+    localImage,
+    backgroundImage,
   ]);
 
   /**

@@ -17,6 +17,7 @@ import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
 import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
+import { mappedActionElements, mappedToolElements } from './permissions-mapper';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -74,7 +75,9 @@ function Toolbar() {
     updateLineWidthIsActive,
     brushType,
     updateBrushType,
+    updateImagePopupIsOpen,
     updatePartialEraseIsActive,
+    openUploadFileModal,
   } = useContext(WhiteboardContext);
 
   const pointerToolIsActive =
@@ -229,6 +232,17 @@ function Toolbar() {
         case ELEMENTS.REDO_ACTION:
           if (teacherHasPermission || studentHasPermission) {
             redo();
+          }
+          break;
+        case ELEMENTS.WHITEBOARD_SCREENSHOT_ACTION:
+          updateImagePopupIsOpen(true);
+          break;
+        case ELEMENTS.ADD_IMAGE_ACTION:
+          if (
+            teacherHasPermission ||
+            (toolbarIsEnabled && serializerToolbarState.uploadImage)
+          ) {
+            openUploadFileModal();
           }
           break;
       }
@@ -526,47 +540,68 @@ function Toolbar() {
     borderRadius: '8px',
   };
 
+  const actionElements = mappedActionElements(
+    actions,
+    allToolbarIsEnabled,
+    serializerToolbarState
+  );
+
+  const toolElements = mappedToolElements(
+    tools,
+    allToolbarIsEnabled,
+    serializerToolbarState
+  );
+
   return (
     <div style={toolbarContainerStyle}>
       <div style={toolbarStyle}>
         <ToolbarSection>
-          {tools.elements.map((tool) =>
-            determineIfIsToolbarButton(tool)
-              ? createToolbarButton(
-                  tool.id,
-                  tool.title,
-                  tool.iconSrc,
-                  tool.iconName,
-                  tools.active === tool.id,
-                  handleToolsElementClick
-                )
-              : determineIfIsToolbarSelector(tool)
-              ? createToolbarSelector(
-                  tool.id,
-                  tool.options,
-                  tools.active === tool.id,
-                  handleToolsElementClick,
-                  handleToolSelectorChange,
-                  handleToolsElementAction,
-                  setSelectedOptionSelector(tool.id),
-                  setColorPalette(tool)
-                )
-              : determineIfIsSpecialSelector(tool)
-              ? createSpecialSelector(
-                  tool.id,
-                  tool.icon,
-                  tools.active === tool.id,
-                  setSelectedOptionSelector(tool.id),
-                  tool.styleOptions,
-                  handleToolsElementClick,
-                  handleToolSelectorChange
-                )
-              : null
+          {toolElements.map(
+            (
+              tool:
+                | IBasicToolbarButton
+                | IBasicToolbarSelector
+                | IBasicSpecialSelector
+            ) =>
+              determineIfIsToolbarButton(tool)
+                ? createToolbarButton(
+                    tool.id,
+                    tool.title,
+                    tool.iconSrc,
+                    tool.iconName,
+                    tools.active === tool.id,
+                    handleToolsElementClick,
+                    tool.enabled
+                  )
+                : determineIfIsToolbarSelector(tool)
+                ? createToolbarSelector(
+                    tool.id,
+                    tool.options,
+                    tools.active === tool.id,
+                    handleToolsElementClick,
+                    handleToolSelectorChange,
+                    handleToolsElementAction,
+                    setSelectedOptionSelector(tool.id),
+                    setColorPalette(tool),
+                    tool.enabled
+                  )
+                : determineIfIsSpecialSelector(tool)
+                ? createSpecialSelector(
+                    tool.id,
+                    tool.icon,
+                    tools.active === tool.id,
+                    setSelectedOptionSelector(tool.id),
+                    tool.styleOptions,
+                    handleToolsElementClick,
+                    handleToolSelectorChange,
+                    tool.enabled
+                  )
+                : null
           )}
         </ToolbarSection>
 
         <ToolbarSection>
-          {actions.elements.map((action) =>
+          {actionElements.map((action) =>
             determineIfIsToolbarButton(action)
               ? createToolbarButton(
                   action.id,
@@ -574,7 +609,8 @@ function Toolbar() {
                   action.iconSrc,
                   action.iconName,
                   actions.active === action.id,
-                  handleActionsElementClick
+                  handleActionsElementClick,
+                  action.enabled
                 )
               : null
           )}
@@ -598,7 +634,8 @@ function createToolbarButton(
   iconSrc: string,
   iconName: string,
   active: boolean,
-  onClick: (tool: string) => void
+  onClick: (tool: string) => void,
+  enabled?: boolean | undefined
 ): JSX.Element {
   return (
     <ToolbarButton
@@ -608,6 +645,7 @@ function createToolbarButton(
       iconSrc={iconSrc}
       iconName={iconName}
       active={active}
+      enabled={enabled === false ? false : true}
       onClick={onClick}
     />
   );
@@ -637,7 +675,8 @@ function createToolbarSelector(
   onChange: (tool: string, value: string) => void,
   onAction: (tool: string, value: string) => void,
   selectedValue: string | number | null,
-  colorPalette?: IColorPalette
+  colorPalette?: IColorPalette,
+  enabled?: boolean
 ): JSX.Element {
   return (
     <ToolbarSelector
@@ -650,6 +689,7 @@ function createToolbarSelector(
       onAction={onAction as any}
       onClick={onClick}
       onChange={onChange}
+      enabled={enabled === false ? false : true}
     />
   );
 }
@@ -673,7 +713,8 @@ function createSpecialSelector(
   selectedValue: string | number | null,
   styleOptions: IStyleOptions[],
   onClick: (tool: string) => void,
-  onChange: (tool: string, value: string) => void
+  onChange: (tool: string, value: string) => void,
+  enabled: boolean | undefined
 ): JSX.Element {
   return (
     <SpecialSelector
@@ -685,6 +726,7 @@ function createSpecialSelector(
       styleOptions={styleOptions}
       onClick={onClick}
       onChange={onChange}
+      enabled={enabled}
     />
   );
 }

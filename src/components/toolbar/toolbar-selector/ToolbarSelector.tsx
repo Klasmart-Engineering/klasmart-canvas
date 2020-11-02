@@ -30,6 +30,7 @@ function ToolbarSelector(props: IToolbarSelector) {
     onAction,
     onClick,
     onChange,
+    enabled
   } = props;
 
   const [selectedOption, setSelectedOption] = useState(
@@ -177,6 +178,7 @@ function ToolbarSelector(props: IToolbarSelector) {
           !active ? 'unselected' : '',
         ].join(' ')}
         onClick={handleClick}
+        disabled={enabled === false}
       >
         <img
           className="icon"
@@ -213,6 +215,7 @@ function ToolbarSelector(props: IToolbarSelector) {
                     iconName={option.iconName}
                     active={false}
                     onClick={() => handleSelect(option)}
+                    enabled={option.enabled}
                   />
                 );
               })}

@@ -31,9 +31,11 @@ import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
 import { useBrushType } from './hooks/useBrushType';
+import { canvasImagePopup } from './hooks/canvasImagePopup';
 import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
 import WhiteboardToggle from '../../components/WhiteboardToogle';
 import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
+import { useUploadFileModal } from './hooks/useUploadFileModal';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -59,6 +61,7 @@ export const WhiteboardProvider = ({
   const { lineWidth, updateLineWidth } = useLineWidth();
   const { floodFill, updateFloodFill } = useFloodFill();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
+  const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
 
   const {
     ClearWhiteboardModal,
@@ -95,6 +98,11 @@ export const WhiteboardProvider = ({
     setSerializerToolbarState,
   } = useToolbarPermissions();
   const { pointerIsEnabled, setPointerIsEnabled } = usePointerPermissions();
+  const {
+    UploadFileModal,
+    openUploadFileModal,
+    closeUploadFileModal,
+  } = useUploadFileModal();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -108,6 +116,15 @@ export const WhiteboardProvider = ({
   // multiple instances using the instanceId to choose which one to
   // apply action to.
   const [canvasActions, updateCanvasActions] = useState<ICanvasActions>();
+  const [image, setImage] = useState<string | File>('');
+  const [isGif, setIsGif] = useState(false);
+  const [backgroundImage, setBackgroundImage] = useState<string | File>('');
+  const [isBackgroundImage, setIsBackgroundImage] = useState(false);
+  const [localImage, setLocalImage] = useState<string | File>('');
+  const [
+    backgroundImageIsPartialErasable,
+    setBackgroundImageIsPartialErasable,
+  ] = useState(false);
 
   const isLocalObject = (id: string, canvasId: string | undefined) => {
     const object = id.split(':');
@@ -208,6 +225,13 @@ export const WhiteboardProvider = ({
       serializerToolbarState.move
     );
   };
+
+  /**
+   * Returns boolean indicating if undo / redo feature is available.
+   */
+  const undoRedoIsAvailable = (): boolean => {
+    return allToolbarIsEnabled || serializerToolbarState.undoRedo;
+  };
   /**
    * List of available colors in toolbar
    * */
@@ -276,7 +300,6 @@ export const WhiteboardProvider = ({
     isLocalObject,
     brushType,
     updateBrushType,
-
     // NOTE: Actions that will get invoked based on registered handler.
     fillColor: fillColorAction,
     textColor: textColorAction,
@@ -297,10 +320,27 @@ export const WhiteboardProvider = ({
     serializerToolbarState,
     setSerializerToolbarState,
     allToolbarIsEnabled,
+    imagePopupIsOpen,
+    updateImagePopupIsOpen,
     activeCanvas,
     perfectShapeIsAvailable,
     partialEraseIsActive,
     updatePartialEraseIsActive,
+    openUploadFileModal,
+    closeUploadFileModal,
+    image,
+    setImage,
+    isGif,
+    setIsGif,
+    backgroundImage,
+    setBackgroundImage,
+    backgroundImageIsPartialErasable,
+    setBackgroundImageIsPartialErasable,
+    isBackgroundImage,
+    setIsBackgroundImage,
+    localImage,
+    setLocalImage,
+    undoRedoIsAvailable,
   };
 
   return (
@@ -331,6 +371,17 @@ export const WhiteboardProvider = ({
       <AuthMenu userId={userId} setToolbarIsEnabled={setToolbarIsEnabled} />
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
+      />
+
+      <UploadFileModal
+        setImage={setImage}
+        setIsGif={setIsGif}
+        setBackgroundImage={setBackgroundImage}
+        setBackgroundImageIsPartialErasable={
+          setBackgroundImageIsPartialErasable
+        }
+        isBackgroundImage={isBackgroundImage}
+        setIsBackgroundImage={setIsBackgroundImage}
       />
       {children}
     </WhiteboardContext.Provider>

@@ -10,4 +10,5 @@ export default interface ISpecialSelector {
   selectedValue: string | number | null;
   onClick: (tool: string) => void;
   onChange: (tool: string, valueId: string) => void;
+  enabled?: boolean;
 }
