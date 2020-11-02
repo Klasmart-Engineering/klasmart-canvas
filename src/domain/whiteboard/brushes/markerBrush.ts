@@ -63,7 +63,7 @@ export class MarkerBrush extends fabric.PencilBrush {
   public onMouseDown(e: ICoordinate) {
     this.isDrawing = true;
     this.lastPoint = { x: e.x, y: e.y };
-    this.points.push(e);
+    this.points.push(e, e);
   }
 
   /**

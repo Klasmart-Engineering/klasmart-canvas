@@ -351,7 +351,8 @@ export class PaintBrush extends fabric.PencilBrush {
   }
 
   /**
-   * Creates a new path based on previous properties and a new modification on it
+   * Creates a new path based on previous properties
+   * and a new modification on it
    * @param {string} id - Id for the path object
    * @param {ICoordinate[]} points - Points to follow in path creation
    * @param {number} width - Path general width
@@ -370,6 +371,14 @@ export class PaintBrush extends fabric.PencilBrush {
         let newPoints: ICoordinate[] = [];
         let currentAngle = 0;
         let latestPoint = points[0];
+
+        if (points.length === 1) {
+          return this.addSVGLine(
+            [points[0], points[0]],
+            bristle.thickness,
+            bristle.color
+          );
+        }
 
         points.forEach((point) => {
           const newAngle = this.getNewAngle(latestPoint, point, currentAngle);
@@ -442,7 +451,17 @@ export class PaintBrush extends fabric.PencilBrush {
     );
   }
 
+  /**
+   * Creates a new paintbrush path from mouse events
+   * @param {string} id - Id to set in the path
+   */
   private createNewPaintBrushPath(id: string) {
+    if (this.points.length === 1) {
+      this.brushPoints.forEach((bristle) => {
+        bristle.push(this.points[0], this.points[0]);
+      });
+    }
+
     let paintBrushPath = new fabric.Group(
       this.currentBrush.map((bristle, index) => {
         return this.addSVGLine(

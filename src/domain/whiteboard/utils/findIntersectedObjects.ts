@@ -1,5 +1,7 @@
 import { TypedShape } from '../../../interfaces/shapes/shapes';
-import { Canvas } from 'fabric/fabric-impl';
+import { Canvas, Group } from 'fabric/fabric-impl';
+import { isSpecialFreeDrawing } from './shapes';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
 export const findIntersectedObjects = (
   mainObject: TypedShape,
@@ -35,17 +37,27 @@ export const findIntersectedObjects = (
 
         return imageIsTouching(data, object);
       } else {
-        if (!object.stroke) return;
-
-        let originalStroke = object.stroke;
+        let originalStroke = String(
+          isSpecialFreeDrawing(object)
+            ? (object as ICanvasBrush).basePath?.stroke
+            : object.stroke
+        );
 
         mainObject.set({
           backgroundColor: differentBackground,
         });
 
-        object.set({
-          stroke: differentStroke,
-        });
+        if (isSpecialFreeDrawing(object)) {
+          (object as Group).forEachObject((line) => {
+            line.set({
+              stroke: differentStroke,
+            });
+          });
+        } else {
+          object.set({
+            stroke: differentStroke,
+          });
+        }
         canvas.renderAll();
 
         let data = getMainObjectColorData();
@@ -131,9 +143,22 @@ export const findIntersectedObjects = (
           backgroundColor: 'transparent',
         });
 
-        currentObject.set({
-          stroke: originalStroke,
-        });
+        if (isSpecialFreeDrawing(currentObject)) {
+          const currentBrush =
+            (currentObject as ICanvasBrush).basePath?.bristles || [];
+          (currentObject as Group).forEachObject((line, index) => {
+            line.set({
+              stroke:
+                (currentObject as ICanvasBrush).basePath?.type === 'paintbrush'
+                  ? String(currentBrush[index].color)
+                  : originalStroke,
+            });
+          });
+        } else {
+          currentObject.set({
+            stroke: originalStroke,
+          });
+        }
         canvas.renderAll();
 
         return true;

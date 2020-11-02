@@ -56,11 +56,18 @@ export class PenBrush extends fabric.PencilBrush {
    */
   public onMouseDown(e: ICoordinate) {
     this.isDrawing = true;
-    this.points.push({
-      x: e.x,
-      y: e.y,
-      width: this.getRandomInt(this.width / 2, this.width),
-    });
+    this.points.push(
+      {
+        x: e.x,
+        y: e.y,
+        width: this.getRandomInt(this.width / 2, this.width),
+      },
+      {
+        x: e.x,
+        y: e.y,
+        width: this.getRandomInt(this.width / 2, this.width),
+      }
+    );
   }
 
   /**

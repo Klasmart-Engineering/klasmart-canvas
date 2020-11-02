@@ -83,6 +83,7 @@ import {
   createGif,
   createImageAsObject,
 } from './gifs-actions/util';
+import { IBristle } from '../../interfaces/brushes/bristle';
 interface IBackgroundImage extends IStaticCanvasOptions {
   id?: string;
 }
@@ -1196,7 +1197,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           (event.target &&
             ((event.target.get('type') === 'path' &&
               !isEmptyShape(event.target)) ||
-              event.target.get('type') === 'image'))
+              event.target.get('type') === 'image')) ||
+          (event.target.get('type') && isSpecialFreeDrawing(event.target))
         ) {
           floodFillMouseEvent(
             event,
@@ -1904,6 +1906,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           let newObject: ICanvasBrush | null = null;
           let payload: ObjectEvent;
 
+          if (lineWidth === (object as ICanvasBrush).basePath?.strokeWidth)
+            return;
           switch ((object as ICanvasBrush).basePath?.type) {
             case 'pen':
               brush = new PenBrush(canvas, userId);
@@ -1948,15 +1952,18 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
             case 'paintbrush':
               brush = new PaintBrush(canvas, userId);
+
+              const newBrush: IBristle[] = brush.makeBrush(
+                String((object as ICanvasBrush).basePath?.stroke),
+                lineWidth
+              );
+
               newObject = brush.modifyPaintBrushPath(
                 String((object as ICanvasBrush).id),
                 (object as ICanvasBrush).basePath?.points || [],
                 lineWidth,
                 String((object as ICanvasBrush).basePath?.stroke),
-                brush.makeBrush(
-                  String((object as ICanvasBrush).basePath?.stroke),
-                  lineWidth
-                )
+                newBrush
               );
               break;
           }
