@@ -20,6 +20,7 @@ import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { IPenPoint } from '../../../interfaces/brushes/pen-point';
 import { MarkerBrush } from '../brushes/markerBrush';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
+import { PaintBrush } from '../brushes/paintBrush';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -248,7 +249,7 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'group' && canvas) {
-        let brush: PenBrush | MarkerBrush;
+        let brush: PenBrush | MarkerBrush | PaintBrush;
         let path;
 
         switch ((target as ICanvasBrush).basePath?.type) {
@@ -281,6 +282,18 @@ const useSynchronizedAdded = (
                 [],
               Number((target as ICanvasBrush).basePath?.strokeWidth),
               String((target as ICanvasBrush).basePath?.stroke)
+            );
+            break;
+
+          case 'paintbrush':
+            brush = new PaintBrush(canvas, userId);
+            path = brush.modifyPaintBrushPath(
+              id,
+              ((target as ICanvasBrush).basePath?.points as ICoordinate[]) ||
+                [],
+              Number((target as ICanvasBrush).basePath?.strokeWidth),
+              String((target as ICanvasBrush).basePath?.stroke),
+              (target as ICanvasBrush).basePath?.bristles || []
             );
             break;
         }

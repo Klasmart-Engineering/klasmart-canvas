@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
 import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
@@ -11,6 +11,8 @@ import {
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { Group } from 'fabric/fabric-impl';
+import { ICoordinate } from '../../../interfaces/brushes/coordinate';
+import { PaintBrush } from '../brushes/paintBrush';
 
 const useSynchronizedScaled = (
   canvas: fabric.Canvas | undefined,
@@ -24,28 +26,70 @@ const useSynchronizedScaled = (
   } = useSharedEventSerializer();
 
   /**
-   * Fix the lines of marker path to maintain
-   * the same separation on them when marker path is scaled
-   * @param {ICanvasBrush} path - Modified marker path
+   * When the lines to fix are paintbrush type is necessary
+   * create a new paintbrush path based on its current data
+   * @param {ICanvasBrush} path
    */
-  const fixMarkerLines = (path: ICanvasBrush) => {
-    let top = path.top;
-    let left = path.left;
+  const fixPaintBrushLines = useCallback(
+    (path: ICanvasBrush) => {
+      if (!canvas || !userId) return;
 
-    (path as Group)._objects.forEach((line) => {
-      line.set({
-        top: Number(line.top) / Number(path.scaleY),
-        left: Number(line.left) / Number(path.scaleX),
+      const brush = new PaintBrush(canvas, userId);
+      const newPoints = (path.basePath?.points as ICoordinate[]).map(
+        (point) => {
+          return {
+            x: point.x * Number(path.scaleX),
+            y: point.y * Number(path.scaleY),
+          };
+        }
+      );
+
+      const newPath = brush.modifyPaintBrushPath(
+        String(path.id),
+        newPoints,
+        Number(path.basePath?.strokeWidth),
+        String(path.basePath?.stroke),
+        path.basePath?.bristles || []
+      );
+
+      path.set({ ...newPath });
+      (path as Group).addWithUpdate();
+      canvas.renderAll();
+    },
+    [canvas, userId]
+  );
+
+  /**
+   * Fix the lines of marker/paintbrush path to maintain
+   * the same separation on them when marker/paintbrush path is scaled
+   * @param {ICanvasBrush} path - Modified path
+   */
+  const fixLines = useCallback(
+    (path: ICanvasBrush) => {
+      let top = path.top;
+      let left = path.left;
+
+      if (path.basePath?.type === 'paintbrush') {
+        fixPaintBrushLines(path);
+      }
+
+      (path as Group)._objects.forEach((line) => {
+        line.set({
+          top: Number(line.top) / Number(path.scaleY),
+          left: Number(line.left) / Number(path.scaleX),
+        });
       });
-    });
-    (path as Group).addWithUpdate();
+      (path as Group).addWithUpdate();
 
-    path.set({
-      top: top,
-      left: left,
-    });
-    (path as Group).addWithUpdate();
-  };
+      path.set({
+        top: top,
+        left: left,
+      });
+
+      (path as Group).addWithUpdate();
+    },
+    [fixPaintBrushLines]
+  );
 
   /** Register and handle remote event. */
   useEffect(() => {
@@ -70,7 +114,7 @@ const useSynchronizedScaled = (
             obj.setCoords();
 
             if (object.type === 'group-marker') {
-              fixMarkerLines(obj as ICanvasBrush);
+              fixLines(obj as ICanvasBrush);
             }
           }
         }
@@ -148,7 +192,7 @@ const useSynchronizedScaled = (
     return () => {
       eventController?.removeListener('scaled', scaled);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent, userId]);
+  }, [canvas, eventController, fixLines, shouldHandleRemoteEvent, userId]);
 
   useEffect(() => {
     const objectScaled = (e: fabric.IEvent | CanvasEvent) => {
@@ -228,9 +272,10 @@ const useSynchronizedScaled = (
 
         if (
           (e.target as ICanvasBrush).basePath?.type === 'marker' ||
-          (e.target as ICanvasBrush).basePath?.type === 'felt'
+          (e.target as ICanvasBrush).basePath?.type === 'felt' ||
+          (e.target as ICanvasBrush).basePath?.type === 'paintbrush'
         ) {
-          fixMarkerLines(e.target as ICanvasBrush);
+          fixLines(e.target as ICanvasBrush);
           canvas?.renderAll();
           target.type = 'group-marker';
         }
@@ -261,7 +306,14 @@ const useSynchronizedScaled = (
     return () => {
       canvas?.off('object:scaled', objectScaled);
     };
-  }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
+  }, [
+    canvas,
+    eventSerializer,
+    fixLines,
+    shouldSerializeEvent,
+    undoRedoDispatch,
+    userId,
+  ]);
 };
 
 export default useSynchronizedScaled;

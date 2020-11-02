@@ -4,6 +4,7 @@ import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { Group } from 'fabric/fabric-impl';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { fabric } from 'fabric';
 
 const useSynchronizedColorChanged = (
   canvas: fabric.Canvas | undefined,
@@ -46,9 +47,40 @@ const useSynchronizedColorChanged = (
               break;
 
             case 'group':
-              (obj as Group).forEachObject((line) => {
-                (line as ICanvasBrush).set({
-                  stroke: target.stroke,
+              if ((obj as ICanvasBrush).basePath?.type === 'paintbrush') {
+                const bristles = target.bristles || [];
+
+                if (!bristles.length) return;
+                (obj as Group).forEachObject((line, index) => {
+                  (line as ICanvasBrush).set({
+                    stroke: bristles[index].color,
+                    shadow: new fabric.Shadow({
+                      affectStroke: true,
+                      nonScaling: true,
+                      color: bristles[index].color,
+                      blur: Number(line.strokeWidth) / 2,
+                    }),
+                  });
+
+                  (obj as ICanvasBrush).set({
+                    basePath: {
+                      type: (obj as ICanvasBrush).basePath?.type || 'pen',
+                      points: (obj as ICanvasBrush).basePath?.points || [],
+                      stroke: target.stroke || '',
+                      strokeWidth:
+                        (obj as ICanvasBrush).basePath?.strokeWidth || 0,
+                      bristles: bristles,
+                    },
+                  });
+                });
+              } else {
+                (obj as Group).forEachObject((line) => {
+                  (line as ICanvasBrush).set({
+                    stroke: target.stroke,
+                  });
+                });
+
+                (obj as ICanvasBrush).set({
                   basePath: {
                     type: (obj as ICanvasBrush).basePath?.type || 'pen',
                     points: (obj as ICanvasBrush).basePath?.points || [],
@@ -57,7 +89,8 @@ const useSynchronizedColorChanged = (
                       (obj as ICanvasBrush).basePath?.strokeWidth || 0,
                   },
                 });
-              });
+              }
+              break;
           }
         }
 

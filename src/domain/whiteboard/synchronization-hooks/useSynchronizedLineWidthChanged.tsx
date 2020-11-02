@@ -7,6 +7,7 @@ import { PenBrush } from '../brushes/penBrush';
 import { IPenPoint } from '../../../interfaces/brushes/pen-point';
 import { MarkerBrush } from '../brushes/markerBrush';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
+import { PaintBrush } from '../brushes/paintBrush';
 
 const useSynchronizedLineWidthChanged = (
   canvas: fabric.Canvas | undefined,
@@ -37,7 +38,7 @@ const useSynchronizedLineWidthChanged = (
         if (obj.id && obj.id === id) {
           if (validTypes.includes(objectType)) {
             if (objectType === 'group') {
-              let brush: PenBrush | MarkerBrush;
+              let brush: PenBrush | MarkerBrush | PaintBrush;
               let newObject: ICanvasBrush | null = null;
 
               switch ((obj as ICanvasBrush).basePath?.type) {
@@ -71,6 +72,18 @@ const useSynchronizedLineWidthChanged = (
                       ?.points as ICoordinate[]) || [],
                     Number((target as ICanvasBrush).basePath?.strokeWidth),
                     String((target as ICanvasBrush).basePath?.stroke)
+                  );
+                  break;
+
+                case 'paintbrush':
+                  brush = new PaintBrush(canvas, userId);
+                  newObject = brush.modifyPaintBrushPath(
+                    obj.id,
+                    ((target as ICanvasBrush).basePath
+                      ?.points as ICoordinate[]) || [],
+                    Number((target as ICanvasBrush).basePath?.strokeWidth),
+                    String((target as ICanvasBrush).basePath?.stroke),
+                    (target as ICanvasBrush).basePath?.bristles || []
                   );
                   break;
               }

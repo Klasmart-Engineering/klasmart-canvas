@@ -21,6 +21,7 @@ import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { PaintBrush } from '../brushes/paintBrush';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -563,18 +564,69 @@ export const useCanvasActions = (
 
         // Color Change in Special Brushes
         if (object.type === 'group' && (object as ICanvasBrush).basePath) {
-          (object as ICanvasObject)._objects?.forEach((line) => {
-            line.set('stroke', color);
-          });
+          if (
+            (object as ICanvasBrush).basePath?.type === 'paintbrush' &&
+            canvas &&
+            userId
+          ) {
+            const basePath = (object as ICanvasBrush).basePath;
+            const brush = new PaintBrush(canvas, userId);
+            const newBrush = brush.makeBrush(
+              color,
+              Number(basePath?.strokeWidth)
+            );
 
-          (object as ICanvasBrush).set({
-            basePath: {
-              type: (object as ICanvasBrush).basePath?.type || 'pen',
-              points: (object as ICanvasBrush).basePath?.points || [],
-              stroke: color,
-              strokeWidth: (object as ICanvasBrush).basePath?.strokeWidth || 0,
-            },
-          });
+            (object as ICanvasObject)._objects?.forEach((line, index) => {
+              line.set({
+                stroke: newBrush[index].color,
+                shadow: new fabric.Shadow({
+                  affectStroke: true,
+                  nonScaling: true,
+                  color: color,
+                  blur: Number(line.strokeWidth) / 2,
+                }),
+              });
+            });
+
+            (object as ICanvasBrush).set({
+              basePath: {
+                type: (object as ICanvasBrush).basePath?.type || 'pen',
+                points: (object as ICanvasBrush).basePath?.points || [],
+                stroke: color,
+                strokeWidth:
+                  (object as ICanvasBrush).basePath?.strokeWidth || 0,
+                bristles: newBrush,
+              },
+            });
+          } else {
+            (object as ICanvasObject)._objects?.forEach((line) => {
+              line.set('stroke', color);
+            });
+
+            (object as ICanvasBrush).set({
+              basePath: {
+                type: (object as ICanvasBrush).basePath?.type || 'pen',
+                points: (object as ICanvasBrush).basePath?.points || [],
+                stroke: color,
+                strokeWidth: Number(
+                  (object as ICanvasBrush).basePath?.strokeWidth
+                ),
+              },
+            });
+          }
+
+          if ((object as ICanvasBrush).basePath?.type === 'paintbrush') {
+            const payload: ObjectEvent = {
+              type: 'group',
+              target: {
+                stroke: (object as ICanvasBrush).basePath?.stroke,
+                bristles: (object as ICanvasBrush).basePath?.bristles,
+              } as ICanvasObject,
+              id: String(object.id),
+            };
+
+            eventSerializer?.push('colorChanged', payload);
+          }
         }
       });
 
@@ -634,7 +686,7 @@ export const useCanvasActions = (
 
       canvas?.renderAll();
     },
-    [canvas, updatePenColor, dispatch, userId]
+    [updatePenColor, canvas, userId, eventSerializer, dispatch]
   );
 
   /**

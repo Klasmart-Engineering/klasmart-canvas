@@ -6,6 +6,7 @@
   "dependencies": {
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^4.9.1",
+    "@types/tinycolor2": "^1.4.2",
     "d3-path": "^2.0.0",
     "fabric": "^3.6.3",
     "fontfaceobserver": "^2.1.0",
@@ -15,6 +16,7 @@
     "react-dom": "^16.13.1",
     "react-player": "^2.5.0",
     "resize-observer-polyfill": "^1.5.1",
+    "tinycolor2": "^1.4.2",
     "typescript": "^3.9.7",
     "uuid": "^8.3.0"
   },

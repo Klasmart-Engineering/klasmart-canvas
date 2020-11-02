@@ -74,6 +74,7 @@ import { PenBrush } from './brushes/penBrush';
 import { MarkerBrush } from './brushes/markerBrush';
 import { ICanvasBrush } from '../../interfaces/brushes/canvas-brush';
 import { IPenPoint } from '../../interfaces/brushes/pen-point';
+import { PaintBrush } from './brushes/paintBrush';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -560,6 +561,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           break;
         case 'felt':
           canvas.freeDrawingBrush = new MarkerBrush(canvas, userId, 'felt');
+          break;
+        case 'paintbrush':
+          canvas.freeDrawingBrush = new PaintBrush(canvas, userId);
           break;
         case 'dashed':
           canvas.freeDrawingBrush = new fabric.PencilBrush();
@@ -1448,7 +1452,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       objects.forEach((obj: ICanvasObject) => {
         const type: ObjectType = obj.get('type') as ObjectType;
 
-        if (obj.id && isLocalObject(obj.id, userId) && type !== 'textbox') {
+        if (
+          obj.id &&
+          isLocalObject(obj.id, userId) &&
+          type !== 'textbox' &&
+          (obj as ICanvasBrush).basePath?.type !== 'paintbrush'
+        ) {
           const stroke =
             type === 'path'
               ? obj.stroke
@@ -1796,7 +1805,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         // Line Width in Special Brushes
         if (object.type === 'group' && (object as ICanvasBrush).basePath) {
-          let brush: PenBrush | MarkerBrush;
+          let brush: PenBrush | MarkerBrush | PaintBrush;
           let newObject: ICanvasBrush | null = null;
           let payload: ObjectEvent;
 
@@ -1841,6 +1850,20 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
                 String((object as ICanvasBrush).basePath?.stroke)
               );
               break;
+
+            case 'paintbrush':
+              brush = new PaintBrush(canvas, userId);
+              newObject = brush.modifyPaintBrushPath(
+                String((object as ICanvasBrush).id),
+                (object as ICanvasBrush).basePath?.points || [],
+                lineWidth,
+                String((object as ICanvasBrush).basePath?.stroke),
+                brush.makeBrush(
+                  String((object as ICanvasBrush).basePath?.stroke),
+                  lineWidth
+                )
+              );
+              break;
           }
 
           if (!newObject) return;
@@ -1871,6 +1894,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
                 points: newObject.basePath?.points || [],
                 strokeWidth: newObject.basePath?.strokeWidth || 0,
                 stroke: newObject.basePath?.stroke || '',
+                bristles: newObject.basePath?.bristles,
               },
             },
             id: newObject.id || '',

@@ -1,6 +1,8 @@
 import { ObjectType } from '../../domain/whiteboard/event-serializer/PaintEventSerializer';
+import { IBristle } from '../brushes/bristle';
 
 export interface ICanvasObject extends fabric.Object {
+  bristles?: IBristle[];
   _objects?: ICanvasObject[];
   id?: string;
   path?: string | ICanvasObject;
