@@ -8,7 +8,7 @@ import { isFreeDrawing, isShape } from '../utils/shapes';
 import { UNDO, REDO, SET, SET_GROUP } from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
-import { IEvent, Point, ITextOptions } from 'fabric/fabric-impl';
+import { IEvent, Point, ITextOptions, Group } from 'fabric/fabric-impl';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasMouseEvent } from '../../../interfaces/canvas-events/canvas-mouse-event';
 import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
@@ -22,6 +22,7 @@ import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-even
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { PaintBrush } from '../brushes/paintBrush';
+import tinycolor from 'tinycolor2';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -601,6 +602,12 @@ export const useCanvasActions = (
                   (object as ICanvasBrush).basePath?.strokeWidth || 0,
                 bristles: newBrush,
               },
+            });
+          } else if ((object as ICanvasBrush).basePath?.type === 'chalk') {
+            let line = (object as Group)._objects[0];
+
+            line.set({
+              stroke: tinycolor(color).brighten(20).toHexString(),
             });
           } else {
             (object as ICanvasObject)._objects?.forEach((line) => {

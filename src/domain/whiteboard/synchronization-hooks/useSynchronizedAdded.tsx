@@ -22,6 +22,7 @@ import { MarkerBrush } from '../brushes/markerBrush';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { PaintBrush } from '../brushes/paintBrush';
 import { fabricGif } from '../gifs-actions/fabricGif';
+import { ChalkBrush } from '../brushes/chalkBrush';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -302,7 +303,7 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'group' && canvas) {
-        let brush: PenBrush | MarkerBrush | PaintBrush;
+        let brush: PenBrush | MarkerBrush | PaintBrush | ChalkBrush;
         let path;
 
         switch ((target as ICanvasBrush).basePath?.type) {
@@ -347,6 +348,17 @@ const useSynchronizedAdded = (
               Number((target as ICanvasBrush).basePath?.strokeWidth),
               String((target as ICanvasBrush).basePath?.stroke),
               (target as ICanvasBrush).basePath?.bristles || []
+            );
+            break;
+
+          case 'chalk':
+            brush = new ChalkBrush(canvas, userId);
+            path = brush.createChalkPath(
+              id,
+              (target as ICanvasBrush).basePath?.points || [],
+              Number((target as ICanvasBrush).basePath?.strokeWidth),
+              String((target as ICanvasBrush).basePath?.stroke),
+              (target as ICanvasBrush).basePath?.clearRects || []
             );
             break;
         }

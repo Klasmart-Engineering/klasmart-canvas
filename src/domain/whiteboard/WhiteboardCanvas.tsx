@@ -84,6 +84,7 @@ import {
   createImageAsObject,
 } from './gifs-actions/util';
 import { IBristle } from '../../interfaces/brushes/bristle';
+import { ChalkBrush } from './brushes/chalkBrush';
 interface IBackgroundImage extends IStaticCanvasOptions {
   id?: string;
 }
@@ -586,6 +587,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           break;
         case 'paintbrush':
           canvas.freeDrawingBrush = new PaintBrush(canvas, userId);
+          break;
+        case 'chalk':
+          canvas.freeDrawingBrush = new ChalkBrush(canvas, userId);
           break;
         case 'dashed':
           canvas.freeDrawingBrush = new fabric.PencilBrush();
@@ -1902,7 +1906,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         // Line Width in Special Brushes
         if (object.type === 'group' && (object as ICanvasBrush).basePath) {
-          let brush: PenBrush | MarkerBrush | PaintBrush;
+          let brush: PenBrush | MarkerBrush | PaintBrush | ChalkBrush;
           let newObject: ICanvasBrush | null = null;
           let payload: ObjectEvent;
 
@@ -1964,6 +1968,23 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
                 lineWidth,
                 String((object as ICanvasBrush).basePath?.stroke),
                 newBrush
+              );
+              break;
+
+            case 'chalk':
+              brush = new ChalkBrush(canvas, userId);
+
+              const newClearRects = brush.createChalkEffect(
+                (object as ICanvasBrush).basePath?.points || [],
+                lineWidth
+              );
+
+              newObject = brush.createChalkPath(
+                String((object as ICanvasBrush).id),
+                (object as ICanvasBrush).basePath?.points || [],
+                lineWidth,
+                String((object as ICanvasBrush).basePath?.stroke),
+                newClearRects
               );
               break;
           }
