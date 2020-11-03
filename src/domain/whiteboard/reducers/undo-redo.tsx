@@ -3,7 +3,10 @@ import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
-import { STATES_LIMIT } from '../../../config/undo-redo-values';
+import {
+  STATES_LIMIT,
+  CANVAS_OBJECT_PROPS,
+} from '../../../config/undo-redo-values';
 
 export const UNDO = 'CANVAS_UNDO';
 export const REDO = 'CANVAS_REDO';
@@ -118,14 +121,7 @@ const objectStringifier = (payload: (fabric.Object | TypedShape)[]): string => {
 
   if (payload) {
     formatted = payload.map((object: fabric.Object | TypedShape) =>
-      object.toJSON([
-        'strokeUniform',
-        'id',
-        'selectable',
-        'evented',
-        'shapeType',
-        'joinedIds',
-      ])
+      object.toJSON(CANVAS_OBJECT_PROPS)
     );
   }
 

@@ -1,4 +1,4 @@
-import { useCallback, useContext, useMemo, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { fabric } from 'fabric';
 import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 import { WhiteboardContext } from '../WhiteboardContext';
@@ -16,13 +16,12 @@ import {
   ObjectEvent,
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
-import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-drawing-event';
-import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { PaintBrush } from '../brushes/paintBrush';
 import tinycolor from 'tinycolor2';
+import { PartialErase } from '../partial-erase/partialErase';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -47,8 +46,8 @@ export const useCanvasActions = (
     allToolbarIsEnabled,
     serializerToolbarState,
     perfectShapeIsActive,
-    updatePartialEraseIsActive,
     partialEraseIsActive,
+    eraseType,
     backgroundImage,
     localImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
@@ -1035,7 +1034,6 @@ export const useCanvasActions = (
       if (
         e.target &&
         !e.target._objects &&
-        !e.target.isPartialErased &&
         ((e.target.id && isLocalObject(e.target.id, userId as string)) ||
           !e.target.id)
       ) {
@@ -1063,7 +1061,6 @@ export const useCanvasActions = (
       if (
         (e.target &&
           e.target.id &&
-          !e.target.isPartialErased &&
           isLocalObject(e.target.id, userId as string)) ||
         (e.target && !e.target.id)
       ) {
@@ -1085,59 +1082,68 @@ export const useCanvasActions = (
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvas, canvasId, userId]);
 
-  /**
-   * Creates the listeners to partial erase objects from the whiteboard
-   */
-  const partialEraseObject = useCallback(() => {
-    const pathCreated = (e: ICanvasDrawingEvent) => {
-      if (e.path) {
-        e.path.strokeUniform = true;
-        e.path.globalCompositeOperation = 'destination-out';
-        e.path.evented = false;
-        e.path.selectable = false;
-        e.path.isPartialErased = true;
-        e.path?.bringToFront();
+  useEffect(() => {
+    if (!canvas) {
+      return;
+    }
 
-        canvas?.forEachObject(function (obj: ICanvasObject) {
-          const intersect = obj.intersectsWithObject(
-            (e.path as unknown) as TypedShape,
-            true,
-            true
-          );
+    let eraser: any;
 
-          if (intersect) {
-            obj.set({
-              isPartialErased: true,
-              evented: false,
-              selectable: false,
-            });
-          }
-        });
-        canvas?.renderAll();
-      }
-    };
+    if (
+      eraseType === 'partial' &&
+      canvas &&
+      toolbarIsEnabled &&
+      (allToolbarIsEnabled || serializerToolbarState.partialErase)
+    ) {
+      eraser = new PartialErase(
+        userId as string,
+        canvas as fabric.Canvas,
+        lineWidth,
+        eraseObjectCursor,
+        allToolbarIsEnabled,
+        partialEraseIsActive,
+        serializerToolbarState.partialErase,
+        eventSerializer,
+        dispatch
+      );
+      eraser.init();
+    }
 
-    updatePartialEraseIsActive(true);
-
-    if (canvas) {
-      canvas.freeDrawingBrush = new fabric.PencilBrush();
-      (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
-      canvas.freeDrawingBrush.color = 'white';
-      canvas.freeDrawingBrush.width = lineWidth;
-      canvas.freeDrawingCursor = `url("${eraseObjectCursor}"), auto`;
-      canvas.isDrawingMode = allToolbarIsEnabled || partialEraseIsActive;
-      canvas.on('path:created', pathCreated);
+    if (
+      eraseType === 'object' &&
+      canvas &&
+      toolbarIsEnabled &&
+      (allToolbarIsEnabled || serializerToolbarState.erase)
+    ) {
+      eraseObject();
 
       if (canvas.getActiveObjects().length === 1) {
         canvas.discardActiveObject().renderAll();
       }
     }
+
+    return () => {
+      if (eraser) {
+        eraser.destroy();
+      }
+
+      canvas?.off('mouse:up');
+      canvas?.off('mouse:over');
+      canvas?.off('path:created');
+    };
   }, [
     canvas,
-    allToolbarIsEnabled,
+    eraseType,
     partialEraseIsActive,
-    updatePartialEraseIsActive,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.partialErase,
+    userId,
     lineWidth,
+    eventSerializer,
+    dispatch,
+    serializerToolbarState.erase,
+    eraseObject,
   ]);
 
   /**
@@ -1194,7 +1200,6 @@ export const useCanvasActions = (
       redo,
       clearWhiteboardAllowClearOthers,
       clearWhiteboardClearMySelf,
-      partialEraseObject,
     };
 
     return { actions, mouseDown };
@@ -1213,7 +1218,6 @@ export const useCanvasActions = (
     redo,
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
-    partialEraseObject,
   ]);
 
   return state;

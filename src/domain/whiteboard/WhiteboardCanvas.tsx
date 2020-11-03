@@ -77,6 +77,7 @@ import { MarkerBrush } from './brushes/markerBrush';
 import { ICanvasBrush } from '../../interfaces/brushes/canvas-brush';
 import { IPenPoint } from '../../interfaces/brushes/pen-point';
 import { PaintBrush } from './brushes/paintBrush';
+import { CANVAS_OBJECT_PROPS } from '../../config/undo-redo-values';
 import { CanvasDownloadConfirm } from '../../modals/canvas-download/canvasDownload';
 import {
   createBackgroundImage,
@@ -188,7 +189,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updatePerfectShapeIsActive,
     perfectShapeIsAvailable,
     partialEraseIsActive,
-    updatePartialEraseIsActive,
     image,
     isGif,
     isBackgroundImage,
@@ -331,29 +331,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         ((object.id && isLocalObject(object.id, userId)) || !object.id) &&
         !eraseType
       ) {
-        if (object.isPartialErased) {
-          object.set({
-            selectable: false,
-            evented: false,
-          });
-        } else {
-          object.set({
-            selectable: teacherHasPermission || studentHasPermission,
-            evented:
-              (allToolbarIsEnabled &&
-                (shapesAreSelectable || shapesAreEvented)) ||
-              (serializerToolbarState.move &&
-                (shapesAreSelectable || shapesAreEvented)),
-            lockMovementX: !shapesAreSelectable,
-            lockMovementY: !shapesAreSelectable,
-            hoverCursor: shapesAreSelectable ? 'move' : 'default',
-          });
-        }
+        object.set({
+          selectable: teacherHasPermission || studentHasPermission,
+          evented:
+            (allToolbarIsEnabled &&
+              (shapesAreSelectable || shapesAreEvented)) ||
+            (serializerToolbarState.move &&
+              (shapesAreSelectable || shapesAreEvented)),
+          lockMovementX: !shapesAreSelectable,
+          lockMovementY: !shapesAreSelectable,
+          hoverCursor: shapesAreSelectable ? 'move' : 'default',
+        });
       }
     });
 
     canvas.selection = shapesAreSelectable;
-    canvas.preserveObjectStacking = !shapesAreSelectable;
     canvas.renderAll();
   }, [
     canvas,
@@ -1069,11 +1061,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     const studentHasPermission = serializerToolbarState.move && eventedObjects;
     if (teacherHasPermission || studentHasPermission) {
       canvas?.forEachObject((object: ICanvasObject) => {
-        if (
-          object.id &&
-          isLocalObject(object.id, userId) &&
-          !object.isPartialErased
-        ) {
+        if (object.id && isLocalObject(object.id, userId)) {
           object.set({
             evented: allToolbarIsEnabled || serializerToolbarState.move,
             selectable: allToolbarIsEnabled || serializerToolbarState.move,
@@ -1109,11 +1097,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.forEachObject((object: ICanvasObject) => {
         const isTextObject = Boolean(isText(object));
 
-        if (
-          object.id &&
-          isLocalObject(object.id, userId) &&
-          !object.isPartialErased
-        ) {
+        if (object.id && isLocalObject(object.id, userId)) {
           setObjectControlsVisibility(
             object,
             eventedObjects || (isTextObject && textIsActive)
@@ -1693,25 +1677,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
         let mappedObjects = canvas?.getObjects().map((object: any) => {
           if (!object.group) {
-            return object.toJSON([
-              'strokeUniform',
-              'id',
-              'selectable',
-              'evented',
-              'shapeType',
-              'joinedIds',
-            ]);
+            return object.toJSON(CANVAS_OBJECT_PROPS);
           }
           const matrix = object.calcTransformMatrix();
           const options = fabric.util.qrDecompose(matrix);
-          const transformed = object.toJSON([
-            'strokeUniform',
-            'id',
-            'selectable',
-            'evented',
-            'shapeType',
-            'joinedIds',
-          ]);
+          const transformed = object.toJSON(CANVAS_OBJECT_PROPS);
           let top = object.group.height / 2 + object.top + object.group.top;
           let left = object.group.width / 2 + object.left + object.group.left;
 
@@ -1812,63 +1782,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setLocalImage,
     eventSerializer,
     localImage,
-  ]);
-
-  /**
-   * When eraseType value changes, listeners and states
-   * necessaries to erase objects are setted or removed
-   */
-  useEffect(() => {
-    if (
-      eraseType === 'partial' &&
-      canvas &&
-      !brushIsActive &&
-      toolbarIsEnabled &&
-      (allToolbarIsEnabled || serializerToolbarState.partialErase)
-    ) {
-      actions.partialEraseObject();
-
-      return;
-    } else if (canvas && !partialEraseIsActive && !brushIsActive) {
-      canvas.isDrawingMode = false;
-    }
-
-    updatePartialEraseIsActive(false);
-
-    if (
-      eraseType === 'object' &&
-      canvas &&
-      toolbarIsEnabled &&
-      (allToolbarIsEnabled || serializerToolbarState.erase)
-    ) {
-      actions.eraseObject();
-
-      if (canvas.getActiveObjects().length === 1) {
-        canvas.discardActiveObject().renderAll();
-      }
-    }
-
-    return () => {
-      if (!textIsActive && !brushIsActive) {
-        canvas?.off('mouse:down');
-      }
-
-      canvas?.off('mouse:up');
-      canvas?.off('mouse:over');
-      canvas?.off('path:created');
-    };
-  }, [
-    eraseType,
-    canvas,
-    actions,
-    textIsActive,
-    toolbarIsEnabled,
-    allToolbarIsEnabled,
-    serializerToolbarState.erase,
-    serializerToolbarState.partialErase,
-    partialEraseIsActive,
-    updatePartialEraseIsActive,
-    brushIsActive,
   ]);
 
   useEffect(() => {
@@ -2065,8 +1978,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (
         object.id &&
         isLocalObject(object.id, userId) &&
-        shapesAreSelectable &&
-        !object.isPartialErased
+        shapesAreSelectable
       ) {
         object.set({
           evented: allToolbarIsEnabled || studentHasPermission,

@@ -39,6 +39,7 @@ const useSynchronizedAdded = (
   } = useSharedEventSerializer();
 
   /** Register and handle path:created event. */
+  // Remove all of this useEffect.
   useEffect(() => {
     const pathCreated = (e: ICanvasDrawingEvent) => {
       if (!e.path) {
@@ -46,7 +47,6 @@ const useSynchronizedAdded = (
       }
 
       e.path.id = PainterEvents.createId(userId);
-      // if (!shouldSerializeEvent(e.path.id)) return;
 
       const target = {
         stroke: e.path.stroke,

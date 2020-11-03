@@ -2,6 +2,7 @@ import { Point2D } from '../types/Point2D';
 import { PainterEvent, LineData, OperationData } from '../types/PainterEvent';
 import { BrushParameters } from '../types/BrushParameters';
 import { EventEmitter } from 'events';
+import { ObjectEvent } from '../../../domain/whiteboard/event-serializer/PaintEventSerializer';
 
 // TODO: This service should probably implement some sort of
 // event batching, especially the line drawing can generate
@@ -16,6 +17,7 @@ import { EventEmitter } from 'events';
 
 export declare interface PaintEventSerializer {
   on(event: 'event', listener: (payload: PainterEvent) => void): this;
+  push(type: string, object: ObjectEvent): void;
 }
 
 export class PaintEventSerializer extends EventEmitter {
