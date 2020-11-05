@@ -258,6 +258,7 @@ const useSynchronizedScaled = (
           'type'
         ) as ObjectType;
 
+        const brushType = (e.target as ICanvasBrush).basePath?.type;
         const id = (e.target as ICanvasObject).id;
         let target = {
           top: e.target.top,
@@ -272,20 +273,20 @@ const useSynchronizedScaled = (
         } as ICanvasObject;
 
         if (
-          (e.target as ICanvasBrush).basePath?.type === 'marker' ||
-          (e.target as ICanvasBrush).basePath?.type === 'felt' ||
-          (e.target as ICanvasBrush).basePath?.type === 'paintbrush'
+          brushType === 'marker' ||
+          brushType === 'felt' ||
+          brushType === 'paintbrush'
         ) {
           fixLines(e.target as ICanvasBrush);
           canvas?.renderAll();
           target.type = 'group-marker';
         }
 
-        if ((e.target as ICanvasBrush).basePath?.type === 'chalk') {
+        if (brushType === 'chalk' || brushType === 'crayon') {
           if (!canvas || !userId) return;
 
           let newObject;
-          const brush = new ChalkBrush(canvas, userId, 'chalk');
+          const brush = new ChalkBrush(canvas, userId, brushType);
           const basePath = (e.target as ICanvasBrush).basePath;
           const newPoints = (basePath?.points as ICoordinate[]).map((point) => {
             return {

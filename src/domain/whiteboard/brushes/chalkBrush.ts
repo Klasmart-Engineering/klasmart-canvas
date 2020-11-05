@@ -10,6 +10,8 @@ interface IClearRectDimensions {
   height: number;
 }
 
+type IBrushStyle = 'chalk' | 'crayon';
+
 export class ChalkBrush extends fabric.PencilBrush {
   /**
    * Canvas to print the path
@@ -58,6 +60,11 @@ export class ChalkBrush extends fabric.PencilBrush {
   private clearRects: IClearRect[];
 
   /**
+   * Style of the brush (chalk/crayon)
+   */
+  private style: IBrushStyle;
+
+  /**
    * Brightness in path stroke
    */
   private brightness: number;
@@ -73,14 +80,11 @@ export class ChalkBrush extends fabric.PencilBrush {
    * @param {string} userId - Id of the user that will draw
    * @param {IBrushStyle} style - Style for the brush (chalk/crayon)
    */
-  constructor(
-    canvas: fabric.Canvas,
-    userId: string,
-    style: 'chalk' | 'crayon'
-  ) {
+  constructor(canvas: fabric.Canvas, userId: string, style: IBrushStyle) {
     super();
     this.canvas = canvas;
     this.userId = userId;
+    this.style = style;
     this.brightness = style === 'chalk' ? 20 : 0;
     this.clearRectDimensions =
       style === 'chalk' ? { width: 3, height: 1 } : { width: 1, height: 1 };
@@ -226,7 +230,7 @@ export class ChalkBrush extends fabric.PencilBrush {
               top: top,
               left: left,
               basePath: {
-                type: 'chalk',
+                type: this.style,
                 points: points,
                 stroke: color,
                 strokeWidth: width,

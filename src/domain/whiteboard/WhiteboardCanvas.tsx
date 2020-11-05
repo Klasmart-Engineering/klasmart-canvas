@@ -1828,10 +1828,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           let brush: PenBrush | MarkerBrush | PaintBrush | ChalkBrush;
           let newObject: ICanvasBrush | null = null;
           let payload: ObjectEvent;
+          const brushType = (object as ICanvasBrush).basePath?.type;
 
           if (lineWidth === (object as ICanvasBrush).basePath?.strokeWidth)
             return;
-          switch ((object as ICanvasBrush).basePath?.type) {
+          switch (brushType) {
             case 'pen':
               brush = new PenBrush(canvas, userId);
               newObject = brush.createPenPath(
@@ -1854,18 +1855,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               break;
 
             case 'marker':
-              brush = new MarkerBrush(canvas, userId, 'marker');
-              newObject = brush.createMarkerPath(
-                String((object as ICanvasBrush).id),
-                (object as ICanvasBrush).basePath?.points || [],
-                lineWidth,
-                String((object as ICanvasBrush).basePath?.stroke)
-              );
-              break;
-
             case 'felt':
-              brush = new MarkerBrush(canvas, userId, 'felt');
-              newObject = brush.createFeltPath(
+              brush = new MarkerBrush(canvas, userId, brushType);
+              newObject = brush.createMarkerPath(
                 String((object as ICanvasBrush).id),
                 (object as ICanvasBrush).basePath?.points || [],
                 lineWidth,
@@ -1891,7 +1883,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               break;
 
             case 'chalk':
-              brush = new ChalkBrush(canvas, userId, 'chalk');
+            case 'crayon':
+              brush = new ChalkBrush(canvas, userId, brushType);
 
               const newClearRects = brush.createChalkEffect(
                 (object as ICanvasBrush).basePath?.points || [],

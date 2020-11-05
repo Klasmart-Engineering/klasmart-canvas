@@ -47,7 +47,8 @@ const useSynchronizedColorChanged = (
               break;
 
             case 'group':
-              if ((obj as ICanvasBrush).basePath?.type === 'paintbrush') {
+              const brushType = (obj as ICanvasBrush).basePath?.type;
+              if (brushType === 'paintbrush') {
                 const bristles = target.bristles || [];
 
                 if (!bristles.length) return;
@@ -64,7 +65,7 @@ const useSynchronizedColorChanged = (
 
                   (obj as ICanvasBrush).set({
                     basePath: {
-                      type: (obj as ICanvasBrush).basePath?.type || 'pen',
+                      type: brushType || 'pen',
                       points: (obj as ICanvasBrush).basePath?.points || [],
                       stroke: target.stroke || '',
                       strokeWidth:
@@ -73,7 +74,7 @@ const useSynchronizedColorChanged = (
                     },
                   });
                 });
-              } else if ((obj as ICanvasBrush).basePath?.type !== 'chalk') {
+              } else if (brushType !== 'chalk' && brushType !== 'crayon') {
                 (obj as Group).forEachObject((line) => {
                   (line as ICanvasBrush).set({
                     stroke: target.stroke,
@@ -82,7 +83,7 @@ const useSynchronizedColorChanged = (
 
                 (obj as ICanvasBrush).set({
                   basePath: {
-                    type: (obj as ICanvasBrush).basePath?.type || 'pen',
+                    type: brushType || 'pen',
                     points: (obj as ICanvasBrush).basePath?.points || [],
                     stroke: target.stroke || '',
                     strokeWidth:

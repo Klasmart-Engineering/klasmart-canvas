@@ -571,11 +571,8 @@ export const useCanvasActions = (
           (object.type === 'group' && (object as ICanvasBrush).basePath) ||
           (object.type === 'image' && (object as ICanvasBrush).basePath)
         ) {
-          if (
-            (object as ICanvasBrush).basePath?.type === 'paintbrush' &&
-            canvas &&
-            userId
-          ) {
+          const brushType = (object as ICanvasBrush).basePath?.type;
+          if (brushType === 'paintbrush' && canvas && userId) {
             const basePath = (object as ICanvasBrush).basePath;
             const brush = new PaintBrush(canvas, userId);
             const newBrush = brush.makeBrush(
@@ -606,11 +603,11 @@ export const useCanvasActions = (
               },
             });
           } else if (
-            (object as ICanvasBrush).basePath?.type === 'chalk' &&
+            (brushType === 'chalk' || brushType === 'crayon') &&
             canvas &&
             userId
           ) {
-            const brush = new ChalkBrush(canvas, userId, 'chalk');
+            const brush = new ChalkBrush(canvas, userId, brushType);
 
             const newClearRects = brush.createChalkEffect(
               (object as ICanvasBrush).basePath?.points || [],
@@ -648,7 +645,7 @@ export const useCanvasActions = (
 
             (object as ICanvasBrush).set({
               basePath: {
-                type: (object as ICanvasBrush).basePath?.type || 'pen',
+                type: brushType || 'pen',
                 points: (object as ICanvasBrush).basePath?.points || [],
                 stroke: color,
                 strokeWidth: Number(
@@ -658,7 +655,7 @@ export const useCanvasActions = (
             });
           }
 
-          if ((object as ICanvasBrush).basePath?.type === 'paintbrush') {
+          if (brushType === 'paintbrush') {
             const payload: ObjectEvent = {
               type: 'group',
               target: {

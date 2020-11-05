@@ -88,6 +88,7 @@ const useSynchronizedLineWidthChanged = (
                   break;
 
                 case 'chalk':
+                case 'crayon':
                   canvas.remove(obj);
                   canvas.renderAll();
                   break;
