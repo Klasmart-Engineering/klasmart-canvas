@@ -86,6 +86,11 @@ const useSynchronizedLineWidthChanged = (
                     (target as ICanvasBrush).basePath?.bristles || []
                   );
                   break;
+
+                case 'chalk':
+                  canvas.remove(obj);
+                  canvas.renderAll();
+                  break;
               }
 
               if (!newObject) return;

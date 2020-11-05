@@ -73,7 +73,7 @@ const useSynchronizedColorChanged = (
                     },
                   });
                 });
-              } else {
+              } else if ((obj as ICanvasBrush).basePath?.type !== 'chalk') {
                 (obj as Group).forEachObject((line) => {
                   (line as ICanvasBrush).set({
                     stroke: target.stroke,

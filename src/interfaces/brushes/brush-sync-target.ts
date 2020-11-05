@@ -8,5 +8,6 @@ export interface IBrushSyncTarget {
     stroke: string;
     strokeWidth: number;
     bristles?: IBristle[];
+    imageData?: string;
   };
 }

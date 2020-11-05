@@ -8,7 +8,7 @@ import { isFreeDrawing, isShape } from '../utils/shapes';
 import { UNDO, REDO, SET, SET_GROUP } from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
-import { IEvent, Point, ITextOptions, Group } from 'fabric/fabric-impl';
+import { IEvent, Point, ITextOptions } from 'fabric/fabric-impl';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasMouseEvent } from '../../../interfaces/canvas-events/canvas-mouse-event';
 import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
@@ -20,8 +20,8 @@ import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-even
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { PaintBrush } from '../brushes/paintBrush';
-import tinycolor from 'tinycolor2';
 import { PartialErase } from '../partial-erase/partialErase';
+import { ChalkBrush } from '../brushes/chalkBrush';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -558,7 +558,7 @@ export const useCanvasActions = (
       const activeObjects = canvas?.getActiveObjects();
       if (!activeObjects) return;
 
-      activeObjects.forEach((object: TypedShape) => {
+      activeObjects.forEach(async (object: TypedShape) => {
         if (
           (isShape(object) && object.shapeType === 'shape') ||
           isFreeDrawing(object)
@@ -567,7 +567,10 @@ export const useCanvasActions = (
         }
 
         // Color Change in Special Brushes
-        if (object.type === 'group' && (object as ICanvasBrush).basePath) {
+        if (
+          (object.type === 'group' && (object as ICanvasBrush).basePath) ||
+          (object.type === 'image' && (object as ICanvasBrush).basePath)
+        ) {
           if (
             (object as ICanvasBrush).basePath?.type === 'paintbrush' &&
             canvas &&
@@ -602,12 +605,42 @@ export const useCanvasActions = (
                 bristles: newBrush,
               },
             });
-          } else if ((object as ICanvasBrush).basePath?.type === 'chalk') {
-            let line = (object as Group)._objects[0];
+          } else if (
+            (object as ICanvasBrush).basePath?.type === 'chalk' &&
+            canvas &&
+            userId
+          ) {
+            const brush = new ChalkBrush(canvas, userId, 'chalk');
 
-            line.set({
-              stroke: tinycolor(color).brighten(20).toHexString(),
-            });
+            const newClearRects = brush.createChalkEffect(
+              (object as ICanvasBrush).basePath?.points || [],
+              Number((object as ICanvasBrush).basePath?.strokeWidth)
+            );
+
+            await brush
+              .createChalkPath(
+                String((object as ICanvasBrush).id),
+                (object as ICanvasBrush).basePath?.points || [],
+                Number((object as ICanvasBrush).basePath?.strokeWidth),
+                color,
+                newClearRects
+              )
+              .then((response) => {
+                if (response) {
+                  (response as ICanvasBrush).set({
+                    angle: object.angle,
+                    top: object.top,
+                    left: object.left,
+                    flipX: object.flipX,
+                    flipY: object.flipY,
+                  });
+
+                  canvas.remove(object);
+                  canvas.add(response);
+                  canvas.setActiveObject(response);
+                  canvas.renderAll();
+                }
+              });
           } else {
             (object as ICanvasObject)._objects?.forEach((line) => {
               line.set('stroke', color);

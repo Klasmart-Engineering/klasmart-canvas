@@ -13,6 +13,7 @@ import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { Group } from 'fabric/fabric-impl';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { PaintBrush } from '../brushes/paintBrush';
+import { ChalkBrush } from '../brushes/chalkBrush';
 
 const useSynchronizedScaled = (
   canvas: fabric.Canvas | undefined,
@@ -195,7 +196,7 @@ const useSynchronizedScaled = (
   }, [canvas, eventController, fixLines, shouldHandleRemoteEvent, userId]);
 
   useEffect(() => {
-    const objectScaled = (e: fabric.IEvent | CanvasEvent) => {
+    const objectScaled = async (e: fabric.IEvent | CanvasEvent) => {
       if (!e.target) return;
 
       const type = (e.target as ICanvasObject).get('type');
@@ -278,6 +279,51 @@ const useSynchronizedScaled = (
           fixLines(e.target as ICanvasBrush);
           canvas?.renderAll();
           target.type = 'group-marker';
+        }
+
+        if ((e.target as ICanvasBrush).basePath?.type === 'chalk') {
+          if (!canvas || !userId) return;
+
+          let newObject;
+          const brush = new ChalkBrush(canvas, userId, 'chalk');
+          const basePath = (e.target as ICanvasBrush).basePath;
+          const newPoints = (basePath?.points as ICoordinate[]).map((point) => {
+            return {
+              x: point.x * Number(e.target?.scaleX),
+              y: point.y * Number(e.target?.scaleY),
+            };
+          });
+          const newRects = brush.createChalkEffect(
+            newPoints,
+            Number(basePath?.strokeWidth)
+          );
+
+          await brush
+            .createChalkPath(
+              String((e.target as ICanvasBrush).id),
+              newPoints,
+              Number(basePath?.strokeWidth),
+              String(basePath?.stroke),
+              newRects
+            )
+            .then((result) => {
+              newObject = result;
+            });
+
+          if (newObject) {
+            (newObject as ICanvasBrush).set({
+              top: e.target.top,
+              left: e.target.left,
+              angle: e.target.angle,
+              flipX: e.target.flipX,
+              flipY: e.target.flipY,
+            });
+
+            canvas.remove(e.target);
+            canvas.add(newObject);
+            canvas.setActiveObject(newObject);
+            canvas.renderAll();
+          }
         }
 
         const payload: ObjectEvent = {

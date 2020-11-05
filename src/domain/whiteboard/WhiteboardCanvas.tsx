@@ -581,7 +581,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           canvas.freeDrawingBrush = new PaintBrush(canvas, userId);
           break;
         case 'chalk':
-          canvas.freeDrawingBrush = new ChalkBrush(canvas, userId);
+          canvas.freeDrawingBrush = new ChalkBrush(canvas, userId, 'chalk');
+          break;
+        case 'crayon':
+          canvas.freeDrawingBrush = new ChalkBrush(canvas, userId, 'crayon');
           break;
         case 'dashed':
           canvas.freeDrawingBrush = new fabric.PencilBrush();
@@ -1812,13 +1815,16 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     if (canvas?.getActiveObjects()) {
-      canvas.getActiveObjects().forEach((object) => {
+      canvas.getActiveObjects().forEach(async (object) => {
         if (isEmptyShape(object) || isFreeDrawing(object)) {
           object.set('strokeWidth', lineWidth);
         }
 
         // Line Width in Special Brushes
-        if (object.type === 'group' && (object as ICanvasBrush).basePath) {
+        if (
+          (object.type === 'group' && (object as ICanvasBrush).basePath) ||
+          (object.type === 'image' && (object as ICanvasBrush).basePath)
+        ) {
           let brush: PenBrush | MarkerBrush | PaintBrush | ChalkBrush;
           let newObject: ICanvasBrush | null = null;
           let payload: ObjectEvent;
@@ -1885,20 +1891,26 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               break;
 
             case 'chalk':
-              brush = new ChalkBrush(canvas, userId);
+              brush = new ChalkBrush(canvas, userId, 'chalk');
 
               const newClearRects = brush.createChalkEffect(
                 (object as ICanvasBrush).basePath?.points || [],
                 lineWidth
               );
 
-              newObject = brush.createChalkPath(
-                String((object as ICanvasBrush).id),
-                (object as ICanvasBrush).basePath?.points || [],
-                lineWidth,
-                String((object as ICanvasBrush).basePath?.stroke),
-                newClearRects
-              );
+              await brush
+                .createChalkPath(
+                  String((object as ICanvasBrush).id),
+                  (object as ICanvasBrush).basePath?.points || [],
+                  lineWidth,
+                  String((object as ICanvasBrush).basePath?.stroke),
+                  newClearRects
+                )
+                .then((response) => {
+                  if (response) {
+                    newObject = response;
+                  }
+                });
               break;
           }
 
@@ -1919,9 +1931,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           delete (object as ICanvasObject).id;
           canvas.remove(object);
           canvas.add(newObject);
-          canvas.renderAll();
-
           canvas.setActiveObject(newObject);
+          canvas.renderAll();
 
           payload = {
             type: 'group',
@@ -1931,6 +1942,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
                 strokeWidth: newObject.basePath?.strokeWidth || 0,
                 stroke: newObject.basePath?.stroke || '',
                 bristles: newObject.basePath?.bristles,
+                imageData: newObject.basePath?.imageData,
               },
             },
             id: newObject.id || '',

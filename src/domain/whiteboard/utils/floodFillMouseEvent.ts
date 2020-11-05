@@ -164,7 +164,6 @@ export const floodFillMouseEvent = async (
 
   const clickedColor = floodFiller.getReplacedColor();
 
-  console.log(data);
   palette.data.set(new Uint8ClampedArray(data.coords));
   updateTemporary(palette, tempCanvas, tempContext, data);
 

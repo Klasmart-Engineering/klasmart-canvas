@@ -11,7 +11,10 @@ export const isFreeDrawing = (object: fabric.Object) => {
 };
 
 export const isSpecialFreeDrawing = (object: fabric.Object) => {
-  return object.type === 'group' && (object as ICanvasBrush).basePath;
+  return (
+    (object.type === 'group' && (object as ICanvasBrush).basePath) ||
+    (object.type === 'image' && (object as ICanvasBrush).basePath)
+  );
 };
 
 /**

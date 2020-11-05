@@ -131,6 +131,19 @@ const useSynchronizedAdded = (
             basePath: e.target.basePath,
           };
           break;
+
+        case 'image':
+          if (e.target.basePath) {
+            target = {
+              basePath: e.target.basePath,
+              scaleX: e.target.scaleX,
+              scaleY: e.target.scaleY,
+              angle: e.target.angle,
+              flipX: e.target.flipX,
+              flipY: e.target.flipY,
+            };
+          }
+          break;
       }
 
       const payload: ObjectEvent = {
@@ -145,7 +158,8 @@ const useSynchronizedAdded = (
 
       if (
         (canvas && (payload.target as ICanvasObject)?.text?.trim().length) ||
-        (canvas && payload.type === 'group')
+        (canvas && payload.type === 'group') ||
+        (canvas && payload.type === 'image')
       ) {
         const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
@@ -182,7 +196,7 @@ const useSynchronizedAdded = (
         return;
       }
 
-      if (type === 'image') {
+      if (type === 'image' && !e.target.basePath) {
         const payload: ObjectEvent = {
           type,
           target: e.target,
@@ -350,17 +364,6 @@ const useSynchronizedAdded = (
               (target as ICanvasBrush).basePath?.bristles || []
             );
             break;
-
-          case 'chalk':
-            brush = new ChalkBrush(canvas, userId);
-            path = brush.createChalkPath(
-              id,
-              (target as ICanvasBrush).basePath?.points || [],
-              Number((target as ICanvasBrush).basePath?.strokeWidth),
-              String((target as ICanvasBrush).basePath?.stroke),
-              (target as ICanvasBrush).basePath?.clearRects || []
-            );
-            break;
         }
 
         if (!path) return;
@@ -416,16 +419,28 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'image') {
-        fabric.Image.fromURL(target.src as string, (data: fabric.Image) => {
+        const src = (target as ICanvasBrush).basePath?.imageData || target.src;
+
+        fabric.Image.fromURL(src as string, (data: fabric.Image) => {
           (data as TypedShape).set({
             id,
             top: target.top,
             left: target.left,
+            angle: target.angle,
             scaleX: target.scaleX,
             scaleY: target.scaleY,
+            flipX: target.flipX,
+            flipY: target.flipY,
             selectable: false,
             evented: false,
           });
+
+          if ((target as ICanvasBrush).basePath) {
+            ((data as unknown) as ICanvasBrush).set({
+              basePath: (target as ICanvasBrush).basePath,
+            });
+          }
+
           canvas?.add(data);
           canvas?.renderAll();
 
