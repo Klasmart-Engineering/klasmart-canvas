@@ -2,9 +2,9 @@ import { useEffect } from 'react';
 import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
-import { Group } from 'fabric/fabric-impl';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { fabric } from 'fabric';
+import { colorChangeSynchronizationInSpecialBrushes } from '../brushes/actions/colorChangeSynchronizationInSpecialBrushes';
 
 const useSynchronizedColorChanged = (
   canvas: fabric.Canvas | undefined,
@@ -46,51 +46,12 @@ const useSynchronizedColorChanged = (
               });
               break;
 
+            // Color change in special brushes
             case 'group':
-              const brushType = (obj as ICanvasBrush).basePath?.type;
-              if (brushType === 'paintbrush') {
-                const bristles = target.bristles || [];
-
-                if (!bristles.length) return;
-                (obj as Group).forEachObject((line, index) => {
-                  (line as ICanvasBrush).set({
-                    stroke: bristles[index].color,
-                    shadow: new fabric.Shadow({
-                      affectStroke: true,
-                      nonScaling: true,
-                      color: bristles[index].color,
-                      blur: Number(line.strokeWidth) / 2,
-                    }),
-                  });
-
-                  (obj as ICanvasBrush).set({
-                    basePath: {
-                      type: brushType || 'pen',
-                      points: (obj as ICanvasBrush).basePath?.points || [],
-                      stroke: target.stroke || '',
-                      strokeWidth:
-                        (obj as ICanvasBrush).basePath?.strokeWidth || 0,
-                      bristles: bristles,
-                    },
-                  });
-                });
-              } else if (brushType !== 'chalk' && brushType !== 'crayon') {
-                (obj as Group).forEachObject((line) => {
-                  (line as ICanvasBrush).set({
-                    stroke: target.stroke,
-                  });
-                });
-
-                (obj as ICanvasBrush).set({
-                  basePath: {
-                    type: brushType || 'pen',
-                    points: (obj as ICanvasBrush).basePath?.points || [],
-                    stroke: target.stroke || '',
-                    strokeWidth:
-                      (obj as ICanvasBrush).basePath?.strokeWidth || 0,
-                  },
-                });
-              }
+              colorChangeSynchronizationInSpecialBrushes(
+                obj as ICanvasBrush,
+                target
+              );
               break;
           }
         }

@@ -1,9 +1,9 @@
 import tinycolor from 'tinycolor2';
 import { fabric } from 'fabric';
-import { ICoordinate } from '../../../interfaces/brushes/coordinate';
-import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { ICoordinate } from '../../../../interfaces/brushes/coordinate';
+import { ICanvasBrush } from '../../../../interfaces/brushes/canvas-brush';
 import { v4 as uuidv4 } from 'uuid';
-import { IBristle } from '../../../interfaces/brushes/bristle';
+import { IBristle } from '../../../../interfaces/brushes/bristle';
 
 export class PaintBrush extends fabric.PencilBrush {
   /**

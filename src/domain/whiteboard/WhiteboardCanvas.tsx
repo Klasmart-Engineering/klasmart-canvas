@@ -72,11 +72,10 @@ import useFixedAspectScaling, {
 import { TypedGroup } from '../../interfaces/shapes/group';
 
 import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
-import { PenBrush } from './brushes/penBrush';
-import { MarkerBrush } from './brushes/markerBrush';
+import { PenBrush } from './brushes/classes/penBrush';
+import { MarkerBrush } from './brushes/classes/markerBrush';
 import { ICanvasBrush } from '../../interfaces/brushes/canvas-brush';
-import { IPenPoint } from '../../interfaces/brushes/pen-point';
-import { PaintBrush } from './brushes/paintBrush';
+import { PaintBrush } from './brushes/classes/paintBrush';
 import { CANVAS_OBJECT_PROPS } from '../../config/undo-redo-values';
 import { CanvasDownloadConfirm } from '../../modals/canvas-download/canvasDownload';
 import {
@@ -84,8 +83,8 @@ import {
   createGif,
   createImageAsObject,
 } from './gifs-actions/util';
-import { IBristle } from '../../interfaces/brushes/bristle';
-import { ChalkBrush } from './brushes/chalkBrush';
+import { ChalkBrush } from './brushes/classes/chalkBrush';
+import { changeLineWidthInSpecialBrushes } from './brushes/actions/changeLineWidthInSpecialBrushes';
 interface IBackgroundImage extends IStaticCanvasOptions {
   id?: string;
 }
@@ -572,19 +571,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           canvas.freeDrawingBrush = new PenBrush(canvas, userId);
           break;
         case 'marker':
-          canvas.freeDrawingBrush = new MarkerBrush(canvas, userId, 'marker');
-          break;
         case 'felt':
-          canvas.freeDrawingBrush = new MarkerBrush(canvas, userId, 'felt');
+          canvas.freeDrawingBrush = new MarkerBrush(canvas, userId, brushType);
           break;
         case 'paintbrush':
           canvas.freeDrawingBrush = new PaintBrush(canvas, userId);
           break;
         case 'chalk':
-          canvas.freeDrawingBrush = new ChalkBrush(canvas, userId, 'chalk');
-          break;
         case 'crayon':
-          canvas.freeDrawingBrush = new ChalkBrush(canvas, userId, 'crayon');
+          canvas.freeDrawingBrush = new ChalkBrush(canvas, userId, brushType);
           break;
         case 'dashed':
           canvas.freeDrawingBrush = new fabric.PencilBrush();
@@ -1476,17 +1471,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (objects && objects.length) {
       objects.forEach((obj: ICanvasObject) => {
         const type: ObjectType = obj.get('type') as ObjectType;
+        const basePath = (obj as ICanvasBrush).basePath;
 
         if (
           obj.id &&
           isLocalObject(obj.id, userId) &&
           type !== 'textbox' &&
-          (obj as ICanvasBrush).basePath?.type !== 'paintbrush'
+          basePath?.type !== 'paintbrush'
         ) {
-          const stroke =
-            type === 'path'
-              ? obj.stroke
-              : (obj as ICanvasBrush).basePath?.stroke;
+          const stroke = type === 'path' ? obj.stroke : basePath?.stroke;
           const target = () => {
             return { stroke: stroke };
           };
@@ -1825,123 +1818,36 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           (object.type === 'group' && (object as ICanvasBrush).basePath) ||
           (object.type === 'image' && (object as ICanvasBrush).basePath)
         ) {
-          let brush: PenBrush | MarkerBrush | PaintBrush | ChalkBrush;
-          let newObject: ICanvasBrush | null = null;
           let payload: ObjectEvent;
-          const brushType = (object as ICanvasBrush).basePath?.type;
 
-          if (lineWidth === (object as ICanvasBrush).basePath?.strokeWidth)
-            return;
-          switch (brushType) {
-            case 'pen':
-              brush = new PenBrush(canvas, userId);
-              newObject = brush.createPenPath(
-                (object as ICanvasObject)?.id || '',
-                ((object as ICanvasBrush).basePath?.points as IPenPoint[]).map(
-                  (point) => {
-                    return {
-                      x: point.x,
-                      y: point.y,
-                      width: (brush as PenBrush).getRandomInt(
-                        lineWidth / 2,
-                        lineWidth
-                      ),
-                    };
-                  }
-                ) || [],
-                lineWidth,
-                (object as ICanvasBrush).basePath?.stroke || ''
-              );
-              break;
+          changeLineWidthInSpecialBrushes(
+            canvas,
+            userId,
+            object as ICanvasBrush,
+            lineWidth
+          )
+            .then((newObject) => {
+              payload = {
+                type: 'group',
+                target: {
+                  basePath: {
+                    points: newObject.basePath?.points || [],
+                    strokeWidth: Number(newObject.basePath?.strokeWidth),
+                    stroke: String(newObject.basePath?.stroke),
+                    bristles: newObject.basePath?.bristles,
+                    imageData: newObject.basePath?.imageData,
+                  },
+                },
+                id: String(newObject.id),
+              };
 
-            case 'marker':
-            case 'felt':
-              brush = new MarkerBrush(canvas, userId, brushType);
-              newObject = brush.createMarkerPath(
-                String((object as ICanvasBrush).id),
-                (object as ICanvasBrush).basePath?.points || [],
-                lineWidth,
-                String((object as ICanvasBrush).basePath?.stroke)
-              );
-              break;
-
-            case 'paintbrush':
-              brush = new PaintBrush(canvas, userId);
-
-              const newBrush: IBristle[] = brush.makeBrush(
-                String((object as ICanvasBrush).basePath?.stroke),
-                lineWidth
-              );
-
-              newObject = brush.modifyPaintBrushPath(
-                String((object as ICanvasBrush).id),
-                (object as ICanvasBrush).basePath?.points || [],
-                lineWidth,
-                String((object as ICanvasBrush).basePath?.stroke),
-                newBrush
-              );
-              break;
-
-            case 'chalk':
-            case 'crayon':
-              brush = new ChalkBrush(canvas, userId, brushType);
-
-              const newClearRects = brush.createChalkEffect(
-                (object as ICanvasBrush).basePath?.points || [],
-                lineWidth
-              );
-
-              await brush
-                .createChalkPath(
-                  String((object as ICanvasBrush).id),
-                  (object as ICanvasBrush).basePath?.points || [],
-                  lineWidth,
-                  String((object as ICanvasBrush).basePath?.stroke),
-                  newClearRects
-                )
-                .then((response) => {
-                  if (response) {
-                    newObject = response;
-                  }
-                });
-              break;
-          }
-
-          if (!newObject) return;
-
-          newObject.set({
-            angle: object.angle,
-            top: object.top,
-            left: object.left,
-            scaleX: object.scaleX,
-            scaleY: object.scaleY,
-            flipX: object.flipX,
-            flipY: object.flipY,
-            originX: object.originX || 'left',
-            originY: object.originY || 'top',
-          });
-
-          delete (object as ICanvasObject).id;
-          canvas.remove(object);
-          canvas.add(newObject);
-          canvas.setActiveObject(newObject);
-          canvas.renderAll();
-
-          payload = {
-            type: 'group',
-            target: {
-              basePath: {
-                points: newObject.basePath?.points || [],
-                strokeWidth: newObject.basePath?.strokeWidth || 0,
-                stroke: newObject.basePath?.stroke || '',
-                bristles: newObject.basePath?.bristles,
-                imageData: newObject.basePath?.imageData,
-              },
-            },
-            id: newObject.id || '',
-          };
-
-          eventSerializer?.push('lineWidthChanged', payload);
+              eventSerializer?.push('lineWidthChanged', payload);
+            })
+            .catch((e: Error) => {
+              if (e.message !== 'lineWidth is the same') {
+                console.warn(e);
+              }
+            });
         }
       });
 

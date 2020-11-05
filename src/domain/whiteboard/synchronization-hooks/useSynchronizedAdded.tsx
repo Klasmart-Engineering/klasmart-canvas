@@ -15,14 +15,9 @@ import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
-import { PenBrush } from '../brushes/penBrush';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
-import { IPenPoint } from '../../../interfaces/brushes/pen-point';
-import { MarkerBrush } from '../brushes/markerBrush';
-import { ICoordinate } from '../../../interfaces/brushes/coordinate';
-import { PaintBrush } from '../brushes/paintBrush';
 import { fabricGif } from '../gifs-actions/fabricGif';
-import { ChalkBrush } from '../brushes/chalkBrush';
+import { addSynchronizationInSpecialBrushes } from '../brushes/actions/addSynchronizationInSpecialBrushes';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -317,64 +312,12 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'group' && canvas) {
-        let brush: PenBrush | MarkerBrush | PaintBrush | ChalkBrush;
-        let path;
-
-        switch ((target as ICanvasBrush).basePath?.type) {
-          case 'pen':
-            brush = new PenBrush(canvas, userId);
-            path = brush.createPenPath(
-              id,
-              ((target as ICanvasBrush).basePath?.points as IPenPoint[]) || [],
-              (target as ICanvasBrush).basePath?.strokeWidth || 0,
-              (target as ICanvasBrush).basePath?.stroke || ''
-            );
-            break;
-
-          case 'marker':
-            brush = new MarkerBrush(canvas, userId, 'marker');
-            path = brush.createMarkerPath(
-              id,
-              ((target as ICanvasBrush).basePath?.points as ICoordinate[]) ||
-                [],
-              Number((target as ICanvasBrush).basePath?.strokeWidth),
-              String((target as ICanvasBrush).basePath?.stroke)
-            );
-            break;
-
-          case 'felt':
-            brush = new MarkerBrush(canvas, userId, 'felt');
-            path = brush.createFeltPath(
-              id,
-              ((target as ICanvasBrush).basePath?.points as ICoordinate[]) ||
-                [],
-              Number((target as ICanvasBrush).basePath?.strokeWidth),
-              String((target as ICanvasBrush).basePath?.stroke)
-            );
-            break;
-
-          case 'paintbrush':
-            brush = new PaintBrush(canvas, userId);
-            path = brush.modifyPaintBrushPath(
-              id,
-              ((target as ICanvasBrush).basePath?.points as ICoordinate[]) ||
-                [],
-              Number((target as ICanvasBrush).basePath?.strokeWidth),
-              String((target as ICanvasBrush).basePath?.stroke),
-              (target as ICanvasBrush).basePath?.bristles || []
-            );
-            break;
-        }
-
-        if (!path) return;
-
-        path.set({
-          selectable: false,
-          evented: false,
-        });
-
-        canvas.add(path);
-        canvas.renderAll();
+        addSynchronizationInSpecialBrushes(
+          canvas,
+          userId,
+          id,
+          target as ICanvasBrush
+        );
       }
 
       let shape = null;

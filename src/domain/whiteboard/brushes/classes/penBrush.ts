@@ -1,9 +1,9 @@
 import { fabric } from 'fabric';
 import { Canvas } from 'fabric/fabric-impl';
-import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { ICanvasBrush } from '../../../../interfaces/brushes/canvas-brush';
 import { v4 as uuidv4 } from 'uuid';
-import { IPenPoint } from '../../../interfaces/brushes/pen-point';
-import { ICoordinate } from '../../../interfaces/brushes/coordinate';
+import { IPenPoint } from '../../../../interfaces/brushes/pen-point';
+import { ICoordinate } from '../../../../interfaces/brushes/coordinate';
 
 export class PenBrush extends fabric.PencilBrush {
   /**

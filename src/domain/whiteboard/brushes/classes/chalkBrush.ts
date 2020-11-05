@@ -1,9 +1,9 @@
 import { fabric } from 'fabric';
 import tinycolor from 'tinycolor2';
-import { ICoordinate } from '../../../interfaces/brushes/coordinate';
-import { IClearRect } from '../../../interfaces/brushes/clear-rects';
+import { ICoordinate } from '../../../../interfaces/brushes/coordinate';
+import { IClearRect } from '../../../../interfaces/brushes/clear-rects';
 import { v4 as uuidv4 } from 'uuid';
-import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { ICanvasBrush } from '../../../../interfaces/brushes/canvas-brush';
 
 interface IClearRectDimensions {
   width: number;
@@ -169,7 +169,7 @@ export class ChalkBrush extends fabric.PencilBrush {
     width: number,
     color: string,
     clearRects: IClearRect[]
-  ): Promise<ICanvasBrush | undefined> {
+  ): Promise<ICanvasBrush> {
     try {
       let imagePath;
       const line = super
@@ -256,6 +256,7 @@ export class ChalkBrush extends fabric.PencilBrush {
           throw e;
         });
 
+      if (!imagePath) throw new Error('Path Image not retrieved');
       return imagePath;
     } catch (e) {
       throw e;
