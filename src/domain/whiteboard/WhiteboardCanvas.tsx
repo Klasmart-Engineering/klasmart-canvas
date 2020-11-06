@@ -181,6 +181,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     allToolbarIsEnabled,
     lineWidthIsActive,
     brushType,
+    updateBrushType,
     imagePopupIsOpen,
     updateImagePopupIsOpen,
     activeCanvas,
@@ -915,6 +916,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       ) {
         updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
         updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
+        updateBrushType(event.target.strokeDashArray ? 'dashed' : 'pencil');
       }
 
       // Special Free Drawing Line Selected
@@ -932,6 +934,10 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         updateLineWidth(
           (event.target as ICanvasBrush).basePath?.strokeWidth ||
             DEFAULT_VALUES.LINE_WIDTH
+        );
+        updateBrushType(
+          (event.target as ICanvasBrush).basePath?.type ||
+            DEFAULT_VALUES.PEN_LINE
         );
       }
 
@@ -975,6 +981,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       eventedObjects,
       reorderShapes,
       shapeIsActive,
+      updateBrushType,
       updateFontColor,
       updateFontFamily,
       updateLineWidth,
