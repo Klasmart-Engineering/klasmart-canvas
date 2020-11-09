@@ -18,6 +18,7 @@ import { ELEMENTS } from '../../config/toolbar-element-names';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
 import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 import { mappedActionElements, mappedToolElements } from './permissions-mapper';
+import { IBrushType } from '../../interfaces/brushes/brush-type';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -61,6 +62,7 @@ function Toolbar() {
     updatePointer,
     penColor,
     changeStrokeColor,
+    changeBrushType,
     stamp,
     updateStamp,
     updateShapesAreSelectable,
@@ -74,7 +76,6 @@ function Toolbar() {
     serializerToolbarState,
     updateLineWidthIsActive,
     brushType,
-    updateBrushType,
     updateImagePopupIsOpen,
     updatePartialEraseIsActive,
     openUploadFileModal,
@@ -261,7 +262,7 @@ function Toolbar() {
         break;
 
       case ELEMENTS.LINE_TYPE_TOOL:
-        updateBrushType(option);
+        changeBrushType(option as IBrushType);
         break;
 
       case ELEMENTS.LINE_WIDTH_TOOL:

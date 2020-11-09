@@ -18,6 +18,7 @@ import {
 } from './toolbar-utils';
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
+import { IBrushType } from '../../interfaces/brushes/brush-type';
 
 export type ToolType =
   | 'select'
@@ -175,7 +176,7 @@ export default function ToolbarContextProvider({
           break;
 
         case ELEMENTS.LINE_TYPE_TOOL:
-          updateBrushType(option.value);
+          updateBrushType(option.value as IBrushType);
           break;
 
         case ELEMENTS.LINE_WIDTH_TOOL:

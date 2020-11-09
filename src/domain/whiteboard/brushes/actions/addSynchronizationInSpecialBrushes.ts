@@ -23,8 +23,6 @@ export const addSynchronizationInSpecialBrushes = (
   const basePath = target.basePath;
   const brushType = target.basePath?.type;
 
-  console.log(brushType);
-
   switch (brushType) {
     case 'pen':
       brush = new PenBrush(canvas, userId);

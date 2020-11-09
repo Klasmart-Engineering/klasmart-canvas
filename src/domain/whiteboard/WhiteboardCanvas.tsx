@@ -85,6 +85,10 @@ import {
 } from './gifs-actions/util';
 import { ChalkBrush } from './brushes/classes/chalkBrush';
 import { changeLineWidthInSpecialBrushes } from './brushes/actions/changeLineWidthInSpecialBrushes';
+import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { ICanvasPathBrush } from '../../interfaces/brushes/canvas-path-brush';
+import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
+import { setBasePathInNormalBrushes } from './brushes/utils/setBasePathInNormalBrushes';
 interface IBackgroundImage extends IStaticCanvasOptions {
   id?: string;
 }
@@ -561,6 +565,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     const pathCreated = (e: ICanvasDrawingEvent) => {
       if (e.path) {
+        setBasePathInNormalBrushes(e.path as ICanvasPathBrush);
         e.path.strokeUniform = true;
         canvas?.renderAll();
       }
@@ -936,7 +941,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             DEFAULT_VALUES.LINE_WIDTH
         );
         updateBrushType(
-          (event.target as ICanvasBrush).basePath?.type ||
+          ((event.target as ICanvasBrush).basePath?.type as IBrushType) ||
             DEFAULT_VALUES.PEN_LINE
         );
       }
@@ -1469,6 +1474,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     undoRedoDispatch
   );
+  useSynchronizedBrushTypeChanged(canvas, userId, filterIncomingEvents);
 
   /**
    * Send synchronization event for penColor changes.
@@ -1818,6 +1824,19 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.getActiveObjects().forEach(async (object) => {
         if (isEmptyShape(object) || isFreeDrawing(object)) {
           object.set('strokeWidth', lineWidth);
+        }
+
+        // Updating basePath
+        if (isFreeDrawing(object)) {
+          const basePath = (object as ICanvasPathBrush).basePath;
+          (object as ICanvasPathBrush).set({
+            basePath: {
+              type: basePath.type,
+              points: basePath.points,
+              stroke: basePath.stroke,
+              strokeWidth: lineWidth,
+            },
+          });
         }
 
         // Line Width in Special Brushes
