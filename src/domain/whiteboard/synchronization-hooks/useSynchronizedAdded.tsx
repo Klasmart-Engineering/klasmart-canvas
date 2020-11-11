@@ -230,7 +230,8 @@ const useSynchronizedAdded = (
           target.height as number,
           target.stroke as string,
           target.filled as boolean,
-          target.strokeWidth as number
+          target.strokeWidth as number,
+          target.strokeDashArray as boolean
         );
       }
       case 'star': {
@@ -239,21 +240,24 @@ const useSynchronizedAdded = (
           target.height as number,
           target.stroke as string,
           target.filled as boolean,
-          target.strokeWidth as number
+          target.strokeWidth as number,
+          target.strokeDashArray as boolean
         );
       }
       case 'hexagon': {
         return hexagon(
           target.stroke as string,
           target.filled as boolean,
-          target.strokeWidth as number
+          target.strokeWidth as number,
+          target.strokeDashArray as boolean
         );
       }
       case 'pentagon': {
         return pentagon(
           target.stroke as string,
           target.filled as boolean,
-          target.strokeWidth as number
+          target.strokeWidth as number,
+          target.strokeDashArray as boolean
         );
       }
       default: {
@@ -262,7 +266,8 @@ const useSynchronizedAdded = (
           target.height as number,
           target.stroke as string,
           target.filled as boolean,
-          target.strokeWidth as number
+          target.strokeWidth as number,
+          target.strokeDashArray as boolean
         );
       }
     }

@@ -60,6 +60,8 @@ export const addSynchronizationInSpecialBrushes = (
   if (!path) return;
 
   path.set({
+    top: target.top,
+    left: target.left,
     selectable: false,
     evented: false,
   });

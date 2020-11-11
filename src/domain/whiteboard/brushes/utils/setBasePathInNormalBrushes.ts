@@ -1,5 +1,7 @@
 import { ICanvasPathBrush } from '../../../../interfaces/brushes/canvas-path-brush';
 import { ICoordinate } from '../../../../interfaces/brushes/coordinate';
+import { convertSVGPathInPoints } from './convertSVGPathInPoints';
+import { ICanvasObject } from '../../../../interfaces/objects/canvas-object';
 
 /**
  * Creates basePath property in pencil and dashed line styles
@@ -7,19 +9,9 @@ import { ICoordinate } from '../../../../interfaces/brushes/coordinate';
  */
 export const setBasePathInNormalBrushes = (object: ICanvasPathBrush) => {
   // Getting point from SVG data in object
-  const points: ICoordinate[] | undefined = object
-    .toSVG()
-    .split('"')
-    .find((element: string) => element.startsWith('M'))
-    ?.split(/ ([MQL] [\d+ .]+)/gm)
-    .map((element: string) => element.trim())
-    .map((value: string, index: number, array: string[]) => {
-      const parts = (value || array[index - 1]).split(' ');
-      return {
-        x: Number(parts[1]),
-        y: Number(parts[2]),
-      };
-    });
+  const points: ICoordinate[] | undefined = convertSVGPathInPoints(
+    (object as ICanvasObject) as fabric.Path
+  );
 
   // Setting properties of base Path and adding them in current object
   (object as ICanvasPathBrush).set({

@@ -25,7 +25,8 @@ export const rectangle = (
   height: number,
   color: string,
   filled: boolean,
-  thickness: number
+  thickness: number,
+  dashed: boolean
 ) => {
   const shape = new fabric.Rect({
     width: width,
@@ -36,6 +37,9 @@ export const rectangle = (
     strokeWidth: thickness,
     fill: filled ? color : emptyShape.fill,
     strokeUniform: true,
+    strokeDashArray: dashed ? [thickness * 2] : [],
+    strokeLineCap: dashed ? 'round' : 'butt',
+    strokeLineJoin: dashed ? 'round' : 'butt',
     padding: 15,
   });
 
@@ -57,7 +61,8 @@ export const triangle = (
   height: number,
   color: string,
   filled: boolean,
-  thickness: number
+  thickness: number,
+  dashed: boolean
 ) => {
   const shape = new fabric.Triangle({
     width: width,
@@ -69,8 +74,10 @@ export const triangle = (
     evented: false,
     padding: 15,
     strokeUniform: true,
+    strokeDashArray: dashed ? [thickness * 2] : [],
     strokeMiterLimit: 50,
-    strokeLineJoin: 'miter',
+    strokeLineCap: dashed ? 'round' : 'butt',
+    strokeLineJoin: dashed ? 'round' : 'miter',
   });
 
   return fabric.util.object.extend(shape, {
@@ -91,7 +98,8 @@ export const circle = (
   height: number,
   color: string,
   filled: boolean,
-  thickness: number
+  thickness: number,
+  dashed: boolean
 ) => {
   const shape = new fabric.Ellipse({
     rx: width,
@@ -102,6 +110,9 @@ export const circle = (
     selectable: false,
     evented: false,
     strokeUniform: true,
+    strokeDashArray: dashed ? [thickness * 2] : [],
+    strokeLineCap: dashed ? 'round' : 'butt',
+    strokeLineJoin: dashed ? 'round' : 'butt',
     padding: 15,
   });
 
@@ -119,7 +130,8 @@ export const circle = (
 export const pentagon = (
   color: string,
   filled: boolean,
-  thickness: number
+  thickness: number,
+  dashed: boolean
 ): TypedShape => {
   let shape = new fabric.Polygon([
     { x: 200, y: 0 },
@@ -143,9 +155,11 @@ export const pentagon = (
     selectable: false,
     evented: false,
     strokeUniform: true,
+    strokeDashArray: dashed ? [thickness * 2] : [],
     padding: 15,
     strokeMiterLimit: 50,
-    strokeLineJoin: 'miter',
+    strokeLineCap: dashed ? 'round' : 'butt',
+    strokeLineJoin: dashed ? 'round' : 'miter',
   });
 };
 
@@ -157,7 +171,8 @@ export const pentagon = (
 export const hexagon = (
   color: string,
   filled: boolean,
-  thickness: number
+  thickness: number,
+  dashed: boolean
 ): TypedPolygon => {
   let shape = new fabric.Polygon([
     { x: 125, y: 0 },
@@ -178,9 +193,11 @@ export const hexagon = (
     selectable: false,
     evented: false,
     strokeUniform: true,
+    strokeDashArray: dashed ? [thickness * 2] : [],
     padding: 15,
     strokeMiterLimit: 50,
-    strokeLineJoin: 'miter',
+    strokeLineCap: dashed ? 'round' : 'butt',
+    strokeLineJoin: dashed ? 'round' : 'miter',
   });
 
   return shape;
@@ -200,7 +217,8 @@ export const generic = (
   height: number,
   color: string,
   filled: boolean,
-  thickness: number
+  thickness: number,
+  dashed: boolean
 ): TypedShape => {
   let shape = new fabric.Path(path);
   const scaleX = 1 / (Number(shape.width) / width);
@@ -220,9 +238,11 @@ export const generic = (
     selectable: false,
     evented: false,
     strokeUniform: true,
+    strokeDashArray: dashed ? [thickness * 2] : [],
     padding: 15,
     strokeMiterLimit: 50,
-    strokeLineJoin: 'miter',
+    strokeLineCap: dashed ? 'round' : 'butt',
+    strokeLineJoin: dashed ? 'round' : 'miter',
   });
 };
 
@@ -238,7 +258,8 @@ export const star = (
   height: number,
   color: string,
   filled: boolean,
-  thickness: number
+  thickness: number,
+  dashed: boolean
 ): TypedShape => {
   const path: string = `
     M 202.000 222.000 \
@@ -254,7 +275,7 @@ export const star = (
     L 202.000 222.000 \
     z
   `;
-  return generic(path, width, height, color, filled, thickness);
+  return generic(path, width, height, color, filled, thickness, dashed);
 };
 
 /**
@@ -269,7 +290,8 @@ export const arrow = (
   height: number,
   color: string,
   filled: boolean,
-  thickness: number
+  thickness: number,
+  dashed: boolean
 ): TypedShape => {
   const path: string = `
     M421.976,196.712L236.111,10.848C228.884,3.615,220.219,0,210.131,0c-9.9,0-18.464,3.615-25.697,10.848L163.023,32.26
@@ -280,7 +302,7 @@ export const arrow = (
     c7.043-7.043,10.567-15.701,10.567-25.981C432.54,211.939,429.016,203.37,421.976,196.712z
   `;
 
-  return generic(path, width, height, color, filled, thickness);
+  return generic(path, width, height, color, filled, thickness, dashed);
 };
 
 /**
@@ -295,7 +317,8 @@ export const chat = (
   height: number,
   color: string,
   filled: boolean,
-  thickness: number
+  thickness: number,
+  dashed: boolean
 ): TypedShape => {
   const path: string = `
     M29,1.5c-16.016,0-29,11.641-29,26c0,5.292,1.768,10.211,4.796,14.318
@@ -304,7 +327,7 @@ export const chat = (
     c0.01,0.622-0.005,0.784-5.585,4.421C22.146,52.933,25.498,53.5,29,53.5c16.016,0,29-11.641,29-26S45.016,1.5,29,1.5z
   `;
 
-  return generic(path, width, height, color, filled, thickness);
+  return generic(path, width, height, color, filled, thickness, dashed);
 };
 
 /**
