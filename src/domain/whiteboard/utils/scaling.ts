@@ -26,11 +26,23 @@ export const getLength = (x1: number, x2: number): number => Math.abs(x1 - x2);
 export const setSize = (
   shape: fabric.Rect | fabric.Triangle,
   start: Point,
-  end: Point
+  end: Point,
+  isNormalBrush: boolean
 ): Dimensions => {
   const width = getLength(end.x, start.x);
   const height = getLength(end.y, start.y);
-  shape.set({ width, height });
+
+  if (isNormalBrush) {
+    shape.set({ width, height });
+  } else {
+    const scaleX = Number(shape.width) / width;
+    const scaleY = Number(shape.height) / height;
+
+    shape.set({
+      scaleX: 1 / scaleX,
+      scaleY: 1 / scaleY,
+    });
+  }
 
   return { width, height };
 };
@@ -44,11 +56,23 @@ export const setSize = (
 export const setCircleSize = (
   shape: fabric.Ellipse,
   start: Point,
-  end: Point
+  end: Point,
+  isNormalBrush: boolean
 ): Dimensions => {
   const rx = getLength(end.x, start.x) / 2;
   const ry = getLength(end.y, start.y) / 2;
-  shape.set({ rx, ry });
+
+  if (isNormalBrush) {
+    shape.set({ rx, ry });
+  } else {
+    const scaleX = Number(shape.width) / rx;
+    const scaleY = Number(shape.height) / ry;
+
+    shape.set({
+      scaleX: (1 / scaleX) * 2,
+      scaleY: (1 / scaleY) * 2,
+    });
+  }
 
   return { width: rx * 2, height: ry * 2 };
 };

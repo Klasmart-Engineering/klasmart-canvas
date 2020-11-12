@@ -124,6 +124,8 @@ const useSynchronizedAdded = (
         case 'group':
           target = {
             basePath: e.target.basePath,
+            originX: e.target.originX,
+            originY: e.target.originY,
           };
           break;
 
@@ -136,6 +138,8 @@ const useSynchronizedAdded = (
               angle: e.target.angle,
               flipX: e.target.flipX,
               flipY: e.target.flipY,
+              originX: e.target.originX,
+              originY: e.target.originY,
             };
           }
           break;
@@ -379,6 +383,8 @@ const useSynchronizedAdded = (
             scaleY: target.scaleY,
             flipX: target.flipX,
             flipY: target.flipY,
+            originX: target.originX,
+            originY: target.originY,
             selectable: false,
             evented: false,
           });

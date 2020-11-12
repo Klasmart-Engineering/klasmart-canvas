@@ -4,7 +4,7 @@ import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 import { WhiteboardContext } from '../WhiteboardContext';
 import * as shapes from '../shapes/shapes';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
-import { isFreeDrawing, isShape } from '../utils/shapes';
+import { isFreeDrawing, isShape, isEmptyShape } from '../utils/shapes';
 import { UNDO, REDO, SET, SET_GROUP } from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
@@ -23,13 +23,15 @@ import { changeLineColorInSpecialBrushes } from '../brushes/actions/changeLineCo
 import { IBrushType } from '../../../interfaces/brushes/brush-type';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { PenBrush } from '../brushes/classes/penBrush';
-import { PencilBrush } from 'fabric/fabric-impl';
+import { PencilBrush, Group } from 'fabric/fabric-impl';
 import { MarkerBrush } from '../brushes/classes/markerBrush';
 import { PaintBrush } from '../brushes/classes/paintBrush';
 import { ChalkBrush } from '../brushes/classes/chalkBrush';
 import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
 import { shapePoints } from '../../../assets/shapes-points/index';
 import { IShapePointsIndex } from '../../../interfaces/brushes/shape-points-index';
+import { ICanvasShapeBrush } from '../../../interfaces/brushes/canvas-shape-brush';
+import { setBasePathInNormalBrushes } from '../brushes/utils/setBasePathInNormalBrushes';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -196,6 +198,98 @@ export const useCanvasActions = (
   );
 
   /**
+   * Adds shape with special brush to whiteboard.
+   * @param {string} shape - Indicates shape type that should be added in whiteboard.
+   * @param {IBrushType} brushType - Indicates brush type that sould be drawed the given shape.
+   */
+  const specialShapeSelector = useCallback(
+    async (shape: string, brushType: IBrushType) => {
+      if (!canvas || !userId) return;
+
+      let brush: PenBrush | MarkerBrush | PaintBrush | ChalkBrush;
+      let newShape;
+      const original = shapePoints[shape as keyof IShapePointsIndex];
+
+      switch (brushType) {
+        case 'pen':
+          brush = new PenBrush(canvas, userId);
+
+          const penPoints = original.points.map((point) => {
+            return {
+              x: point.x,
+              y: point.y,
+              width: (brush as PenBrush).getRandomInt(lineWidth / 2, lineWidth),
+            };
+          });
+
+          newShape = brush.createPenPath(
+            'provisional',
+            penPoints,
+            lineWidth,
+            penColor
+          );
+          break;
+
+        case 'marker':
+        case 'felt':
+          brush = new MarkerBrush(canvas, userId, brushType);
+          newShape = brush.createMarkerPath(
+            'provisional',
+            original.points,
+            lineWidth,
+            penColor
+          );
+          break;
+
+        case 'paintbrush':
+          brush = new PaintBrush(canvas, userId);
+          const bristles = brush.makeBrush(penColor, lineWidth);
+          newShape = brush.modifyPaintBrushPath(
+            'provisional',
+            original.points,
+            lineWidth,
+            penColor,
+            bristles
+          );
+          break;
+
+        case 'chalk':
+        case 'crayon':
+          brush = new ChalkBrush(canvas, userId, brushType);
+          const clearRects = brush.createChalkEffect(
+            original.points,
+            lineWidth
+          );
+          await brush
+            .createChalkPath(
+              'provisional',
+              original.points,
+              lineWidth,
+              penColor,
+              clearRects
+            )
+            .then((result) => {
+              newShape = result;
+            });
+          break;
+      }
+
+      if (!newShape) return;
+
+      const scaleX = Number(newShape.width) / 2;
+      const scaleY = Number(newShape.width) / 2;
+
+      newShape.set({
+        scaleX: 1 / scaleX,
+        scaleY: 1 / scaleY,
+      });
+
+      return newShape;
+    },
+    [canvas, lineWidth, penColor, userId]
+  );
+
+  /**
    *
    * @param shape Shape that was added to canvas.
    * @param coordsStart Coordinates of initial click on canvas.
@@ -213,14 +307,24 @@ export const useCanvasActions = (
         canvas.selection = false;
 
         if (specific === 'filledCircle' || specific === 'circle') {
-          setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
+          setCircleSize(
+            shape as fabric.Ellipse,
+            coordsStart,
+            e.pointer,
+            brushType === 'pencil' || brushType === 'dashed'
+          );
         } else if (
           specific === 'filledRectangle' ||
           specific === 'filledTriangle' ||
           specific === 'rectangle' ||
           specific === 'triangle'
         ) {
-          setSize(shape, coordsStart, e.pointer);
+          setSize(
+            shape,
+            coordsStart,
+            e.pointer,
+            brushType === 'pencil' || brushType === 'dashed'
+          );
         } else {
           setPathSize(shape, coordsStart, e.pointer);
         }
@@ -239,7 +343,7 @@ export const useCanvasActions = (
         canvas.renderAll();
       });
     },
-    [canvas]
+    [brushType, canvas]
   );
 
   const clearOnMouseEvent = useCallback((): void => {
@@ -269,14 +373,24 @@ export const useCanvasActions = (
         let size;
 
         if (specific === 'filledCircle' || specific === 'circle') {
-          size = setCircleSize(shape as fabric.Ellipse, coordsStart, e.pointer);
+          size = setCircleSize(
+            shape as fabric.Ellipse,
+            coordsStart,
+            e.pointer,
+            brushType === 'pencil' || brushType === 'dashed'
+          );
         } else if (
           specific === 'filledRectangle' ||
           specific === 'filledTriangle' ||
           specific === 'rectangle' ||
           specific === 'triangle'
         ) {
-          size = setSize(shape, coordsStart, e.pointer);
+          size = setSize(
+            shape,
+            coordsStart,
+            e.pointer,
+            brushType === 'pencil' || brushType === 'dashed'
+          );
         } else {
           size = setPathSize(shape, coordsStart, e.pointer);
         }
@@ -291,7 +405,7 @@ export const useCanvasActions = (
         }
       });
     },
-    [canvas, dispatch]
+    [brushType, canvas, dispatch]
   );
 
   /**
@@ -306,9 +420,12 @@ export const useCanvasActions = (
           return;
         }
 
-        const shape = shapeSelector(specific);
+        let shape;
+
+        shape = shapeSelector(specific);
+
         if (e.pointer) {
-          shape.set({
+          (shape as TypedShape).set({
             top: e.pointer.y,
             left: e.pointer.x,
             shapeType: 'shape',
@@ -387,6 +504,7 @@ export const useCanvasActions = (
 
         let pointer: fabric.Point = e.pointer;
         let biggerDifference: number = 0;
+        let newSize;
 
         if (perfectShapeIsActive) {
           biggerDifference = getBiggerDifference(pointer);
@@ -398,12 +516,69 @@ export const useCanvasActions = (
         }
 
         if (shapeToAdd === 'circle') {
-          return setCircleSize(shape as fabric.Ellipse, startPoint, pointer);
+          newSize = setCircleSize(
+            shape as fabric.Ellipse,
+            startPoint,
+            pointer,
+            brushType === 'pencil' || brushType === 'dashed'
+          );
         } else if (shapeToAdd === 'rectangle' || shapeToAdd === 'triangle') {
-          return setSize(shape, startPoint, pointer);
+          newSize = setSize(
+            shape,
+            startPoint,
+            pointer,
+            brushType === 'pencil' || brushType === 'dashed'
+          );
         } else {
-          return setPathSize(shape, startPoint, pointer);
+          newSize = setPathSize(shape, startPoint, pointer);
         }
+
+        if (brushType === 'marker' || brushType === 'felt') {
+          (shape as Group).forEachObject((line) => {
+            line.set({
+              top: Number(line.top) / Number(shape.scaleY),
+              left: Number(line.left) / Number(shape.scaleX),
+            });
+          });
+
+          shape.set({
+            top: startPoint.y,
+            left: startPoint.x,
+          });
+
+          (shape as Group).addWithUpdate();
+          canvas?.renderAll();
+        }
+
+        if (brushType === 'paintbrush' && canvas && userId) {
+          const brush = new PaintBrush(canvas, userId);
+          const newPoints = ((shape as ICanvasPathBrush).basePath
+            ?.points as ICoordinate[]).map((point) => {
+            return {
+              x: point.x * Number(shape.scaleX),
+              y: point.y * Number(shape.scaleY),
+            };
+          });
+
+          const newPath = brush.modifyPaintBrushPath(
+            String(shape.id),
+            newPoints,
+            Number((shape as ICanvasPathBrush).basePath?.strokeWidth),
+            String((shape as ICanvasPathBrush).basePath?.stroke),
+            (shape as ICanvasBrush).basePath?.bristles || []
+          );
+
+          newPath.set({
+            top: startPoint.y,
+            left: startPoint.x,
+          });
+
+          (shape as ICanvasPathBrush).set({ ...newPath });
+          (shape as Group).addWithUpdate();
+          canvas.renderAll();
+        }
+
+        return newSize;
       };
 
       /**
@@ -426,7 +601,7 @@ export const useCanvasActions = (
           resize = false;
         }
 
-        if (!shape.id) {
+        if (!shape.id || shape.id === 'provisional') {
           canvas?.remove(shape);
         }
       };
@@ -445,7 +620,7 @@ export const useCanvasActions = (
         }
       };
 
-      canvas?.on('mouse:down', (e: fabric.IEvent) => {
+      canvas?.on('mouse:down', async (e: fabric.IEvent) => {
         if (resize) {
           return;
         }
@@ -458,7 +633,17 @@ export const useCanvasActions = (
           });
         }
 
-        shape = shapeSelector(shapeToAdd);
+        if (brushType === 'pencil' || brushType === 'dashed') {
+          shape = shapeSelector(shapeToAdd);
+        } else {
+          await specialShapeSelector(shapeToAdd, brushType).then((result) => {
+            if (!result) return;
+
+            shape = result as TypedShape;
+          });
+        }
+
+        if (!shape) return;
 
         if (e.pointer) {
           shape.set({
@@ -530,7 +715,7 @@ export const useCanvasActions = (
         const id = `${userId}:${uuidv4()}`;
         resize = false;
 
-        if (size && size.width <= 5 && size.height <= 5) {
+        if (size && size.width <= 2 && size.height <= 2) {
           canvas.remove(shape);
         } else {
           if (brushType === 'pencil' || brushType === 'dashed') {
@@ -549,6 +734,8 @@ export const useCanvasActions = (
               lockUniScaling: perfectShapeIsActive,
             });
 
+            setBasePathInNormalBrushes(shape as ICanvasShapeBrush);
+
             canvas.setActiveObject(shape);
             canvas.renderAll();
           } else {
@@ -560,65 +747,20 @@ export const useCanvasActions = (
               const shapeName = String(shape.name);
 
               const setScaledPoint = (point: ICoordinate) => {
-                switch (shapeName) {
-                  case 'rectangle':
-                    return {
-                      x: (point.x * Number(shape.width)) / 570,
-                      y: (point.y * Number(shape.height)) / 570,
-                    };
-
-                  case 'circle':
-                    return {
-                      x: (point.x * Number(shape.width)) / 150,
-                      y: (point.y * Number(shape.height)) / 150,
-                    };
-
-                  case 'triangle':
-                    return {
-                      x: (point.x * Number(shape.width)) / 521,
-                      y: (point.y * Number(shape.height)) / 445,
-                    };
-
-                  case 'arrow':
-                  case 'star':
-                  case 'chatBubble':
-                    return {
-                      x: point.x * Number(shape.scaleX),
-                      y: point.y * Number(shape.scaleY),
-                    };
-
-                  case 'pentagon':
-                    return {
-                      x:
-                        (point.x * Number(shape.width) * Number(shape.scaleX)) /
-                        522,
-                      y:
-                        (point.y *
-                          Number(shape.height) *
-                          Number(shape.scaleY)) /
-                        504,
-                    };
-
-                  case 'hexagon':
-                    return {
-                      x:
-                        (point.x * Number(shape.width) * Number(shape.scaleX)) /
-                        498,
-                      y:
-                        (point.y *
-                          Number(shape.height) *
-                          Number(shape.scaleY)) /
-                        449,
-                    };
-
-                  default:
-                    return point;
-                }
+                return {
+                  x:
+                    (point.x * Number(shape.width) * Number(shape.scaleX)) /
+                    original.width,
+                  y:
+                    (point.y * Number(shape.height) * Number(shape.scaleY)) /
+                    original.height,
+                };
               };
 
-              const points: ICoordinate[] = shapePoints[
-                shapeName as keyof IShapePointsIndex
-              ].map((point) => {
+              const original =
+                shapePoints[shapeName as keyof IShapePointsIndex];
+
+              const points: ICoordinate[] = original.points.map((point) => {
                 return setScaledPoint(point);
               });
 
@@ -701,13 +843,16 @@ export const useCanvasActions = (
 
               if (!newPath) return;
 
-              (newPath as ICanvasBrush).set({
+              ((newPath as ICanvasObject) as ICanvasShapeBrush).set({
                 id: id,
+                name: shapeName,
                 top: shape.top,
                 left: shape.left,
                 angle: shape.angle,
                 flipX: shape.flipX,
                 flipY: shape.flipY,
+                originX: shape.originX,
+                originY: shape.originY,
                 evented: true,
                 hoverCursor: 'default',
                 lockUniScaling: perfectShapeIsActive,
@@ -1018,6 +1163,7 @@ export const useCanvasActions = (
       }
 
       if (!activeObjects) return;
+      canvas.discardActiveObject();
 
       // Iterating over activeObjects
       for (const object of activeObjects) {
@@ -1031,11 +1177,21 @@ export const useCanvasActions = (
           let newPath;
           let id = (object as ICanvasObject).id;
           const basePath = (object as ICanvasBrush).basePath;
-          const points = (basePath?.points as ICoordinate[]).map(
+          let points = (basePath?.points as ICoordinate[]).map(
             (point: ICoordinate) => {
               return new fabric.Point(point.x, point.y);
             }
           );
+
+          if (isEmptyShape(object as TypedShape)) {
+            const original =
+              shapePoints[object.name as keyof IShapePointsIndex];
+            points = original.points.map((point: ICoordinate) => {
+              let scaleX = (point.x / original.width) * Number(object.width);
+              let scaleY = (point.y / original.height) * Number(object.height);
+              return new fabric.Point(scaleX, scaleY);
+            });
+          }
 
           switch (type) {
             case 'dashed':
