@@ -18,6 +18,7 @@ import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { fabricGif } from '../gifs-actions/fabricGif';
 import { addSynchronizationInSpecialBrushes } from '../brushes/actions/addSynchronizationInSpecialBrushes';
+import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -108,7 +109,14 @@ const useSynchronizedAdded = (
 
       switch (type) {
         case 'path':
-          return;
+          if (e.target.basePath.type === 'dashed') {
+            target = {
+              basePath: e.target.basePath,
+              originX: e.target.originX,
+              originY: e.target.originY,
+            };
+          }
+          break;
 
         case 'textbox':
           target = {
@@ -158,7 +166,10 @@ const useSynchronizedAdded = (
       if (
         (canvas && (payload.target as ICanvasObject)?.text?.trim().length) ||
         (canvas && payload.type === 'group') ||
-        (canvas && payload.type === 'image')
+        (canvas && payload.type === 'image') ||
+        (canvas &&
+          payload.type === 'path' &&
+          (payload.target as ICanvasPathBrush).basePath)
       ) {
         const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
@@ -320,7 +331,7 @@ const useSynchronizedAdded = (
         return;
       }
 
-      if (objectType === 'group' && canvas) {
+      if ((objectType === 'group' || objectType === 'path') && canvas) {
         addSynchronizationInSpecialBrushes(
           canvas,
           userId,
@@ -331,7 +342,11 @@ const useSynchronizedAdded = (
 
       let shape = null;
 
-      if (objectType === 'path' && !target.name) {
+      if (
+        objectType === 'path' &&
+        !target.name &&
+        !(target as ICanvasPathBrush).basePath
+      ) {
         const pencil = new fabric.PencilBrush();
         pencil.color = target.stroke || '#000';
         pencil.width = target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH;

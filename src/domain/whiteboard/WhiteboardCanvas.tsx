@@ -89,6 +89,8 @@ import { IBrushType } from '../../interfaces/brushes/brush-type';
 import { ICanvasPathBrush } from '../../interfaces/brushes/canvas-path-brush';
 import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
 import { setBasePathInNormalBrushes } from './brushes/utils/setBasePathInNormalBrushes';
+import { DashedBrush } from './brushes/classes/dashedBrush';
+
 interface IBackgroundImage extends IStaticCanvasOptions {
   id?: string;
 }
@@ -588,10 +590,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           canvas.freeDrawingBrush = new ChalkBrush(canvas, userId, brushType);
           break;
         case 'dashed':
-          canvas.freeDrawingBrush = new fabric.PencilBrush();
-          (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).strokeDashArray = [
-            lineWidth * 2,
-          ];
+          canvas.freeDrawingBrush = new DashedBrush(canvas, userId);
           break;
         default:
           canvas.freeDrawingBrush = new fabric.PencilBrush();
@@ -1822,12 +1821,25 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useEffect(() => {
     if (canvas?.getActiveObjects()) {
       canvas.getActiveObjects().forEach(async (object) => {
-        if (isEmptyShape(object) || isFreeDrawing(object)) {
+        if (
+          isEmptyShape(object) ||
+          (isFreeDrawing(object) &&
+            (object as ICanvasPathBrush).basePath.type !== 'dashed')
+        ) {
           object.set('strokeWidth', lineWidth);
         }
 
+        if ((object as ICanvasPathBrush).basePath.type === 'dashed') {
+          object.set({
+            strokeDashArray: [lineWidth * 2],
+          });
+        }
+
         // Updating basePath
-        if (isFreeDrawing(object)) {
+        if (
+          isFreeDrawing(object) &&
+          (object as ICanvasPathBrush).basePath.type !== 'dashed'
+        ) {
           const basePath = (object as ICanvasPathBrush).basePath;
           (object as ICanvasPathBrush).set({
             basePath: {
@@ -1842,7 +1854,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         // Line Width in Special Brushes
         if (
           (object.type === 'group' && (object as ICanvasBrush).basePath) ||
-          (object.type === 'image' && (object as ICanvasBrush).basePath)
+          (object.type === 'image' && (object as ICanvasBrush).basePath) ||
+          (object.type === 'path' &&
+            (object as ICanvasBrush).basePath?.type === 'dashed')
         ) {
           let payload: ObjectEvent;
 

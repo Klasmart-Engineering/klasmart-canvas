@@ -8,7 +8,7 @@
     "@material-ui/icons": "^4.9.1",
     "@types/tinycolor2": "^1.4.2",
     "d3-path": "^2.0.0",
-    "fabric": "^3.6.3",
+    "fabric": "^3.6.6",
     "fontfaceobserver": "^2.1.0",
     "gifuct-js": "^2.0.0",
     "q-floodfill": "^1.1.1",
