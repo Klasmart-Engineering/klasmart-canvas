@@ -1018,18 +1018,32 @@ export const useCanvasActions = (
    * @param {string} color - new color to change
    */
   const changeStrokeColor = useCallback(
-    (color: string) => {
+    async (color: string) => {
+      let newActives: TypedShape[] = [];
+      let activeObjects: TypedShape[] = [];
+
       updatePenColor(color);
 
-      const activeObjects = canvas?.getActiveObjects();
-      if (!activeObjects) return;
+      if (!canvas) return;
 
-      activeObjects.forEach(async (object: TypedShape) => {
+      const selection = canvas.getActiveObject();
+
+      if (selection?.type === 'activeSelection') {
+        activeObjects = (selection as fabric.ActiveSelection)._objects;
+      } else {
+        activeObjects = canvas.getActiveObjects();
+      }
+
+      if (!activeObjects) return;
+      canvas.discardActiveObject();
+
+      for (const object of activeObjects) {
         if (
           (isShape(object) && object.shapeType === 'shape') ||
           isFreeDrawing(object)
         ) {
           (object as ICanvasPathBrush).set('stroke', color);
+          newActives.push(object);
         }
 
         // Updating basePath
@@ -1052,7 +1066,7 @@ export const useCanvasActions = (
           canvas &&
           userId
         ) {
-          changeLineColorInSpecialBrushes(
+          await changeLineColorInSpecialBrushes(
             canvas,
             userId,
             object as ICanvasBrush,
@@ -1071,12 +1085,21 @@ export const useCanvasActions = (
 
                 eventSerializer?.push('colorChanged', payload);
               }
+
+              newActives.push(newObject as TypedShape);
             })
             .catch((e) => {
               console.warn(e);
             });
         }
-      });
+      }
+
+      if (newActives.length === 1) {
+        canvas?.setActiveObject(newActives[0]);
+      } else if (newActives.length >= 2) {
+        const activesGroup = new fabric.ActiveSelection(newActives);
+        canvas?.setActiveObject(activesGroup);
+      }
 
       const obj = canvas?.getActiveObject() as any;
       if (!obj) return;
@@ -1665,7 +1688,8 @@ export const useCanvasActions = (
       // if the click is made over an object
       if (
         e.target &&
-        !e.target._objects &&
+        (!e.target._objects ||
+          (e.target._objects && (e.target as ICanvasBrush).basePath)) &&
         ((e.target.id && isLocalObject(e.target.id, userId as string)) ||
           !e.target.id)
       ) {
