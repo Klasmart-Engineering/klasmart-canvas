@@ -44,6 +44,7 @@ export const findIntersectedObjects = (
     resolution: number
   ): IPixeledObject => {
     toogleOtherObjects(object, false);
+    debugger;
 
     let pixelMap = [];
     const ctx = canvas.getContext();
@@ -57,23 +58,28 @@ export const findIntersectedObjects = (
 
     for (let y = startPoint.y; y <= startPoint.y + height; y += resolution) {
       for (let x = startPoint.x; x <= startPoint.x + width; x += resolution) {
-        // Fetch pixel at current position
-        var pixel = ctx.getImageData(x, y, resolution, resolution);
-        // Check that opacity is above zero
+        let pixel = ctx.getImageData(
+          x * window.devicePixelRatio,
+          y * window.devicePixelRatio,
+          resolution * window.devicePixelRatio,
+          resolution * window.devicePixelRatio
+        );
+
         if (!isTransparent(pixel)) {
           pixelMap.push({
-            x: x,
-            y: y,
+            x: Math.round(x),
+            y: Math.round(y),
           });
         }
       }
     }
 
     toogleOtherObjects(object, true);
+    debugger;
 
     return {
-      x: startPoint.x,
-      y: startPoint.y,
+      x: Math.round(startPoint.x),
+      y: Math.round(startPoint.y),
       pixelMap: {
         data: pixelMap,
         resolution: resolution,
@@ -88,10 +94,10 @@ export const findIntersectedObjects = (
    */
   const isPixelCollision = (source: IPixel, target: IPixel) => {
     return !(
-      source.y + source.height <= target.y ||
-      source.y >= target.y + target.height ||
-      source.x + source.width <= target.x ||
-      source.x >= target.x + target.width
+      source.y + source.height < target.y ||
+      source.y > target.y + target.height ||
+      source.x + source.width < target.x ||
+      source.x > target.x + target.width
     );
   };
 
@@ -164,7 +170,29 @@ export const findIntersectedObjects = (
     return true;
   };
 
-  const mainObjectPixels: IPixeledObject = pixelMapping(mainObject, 16);
+  mainObject.set({
+    // top: Number(mainObject.top) - 2,
+    // left: Number(mainObject.left) - 2,
+    // scaleX: (Number(mainObject.width) + 4) / Number(mainObject.width),
+    // scaleY: (Number(mainObject.height) + 4) / Number(mainObject.height),
+    // backgroundColor: '#ababab',
+    // top: (Number(mainObject.top) - 1) / window.devicePixelRatio,
+    // left: (Number(mainObject.left) - 1) / window.devicePixelRatio,
+    // scaleX:
+    //   (Number(mainObject.width) + 1) /
+    //   Number(mainObject.width) /
+    //   window.devicePixelRatio,
+    // scaleY:
+    //   (Number(mainObject.width) + 1) /
+    //   Number(mainObject.width) /
+    //   window.devicePixelRatio,
+  });
+  canvas.renderAll();
+
+  console.log(mainObject);
+
+  const mainObjectPixels: IPixeledObject = pixelMapping(mainObject, 8);
+  console.log(mainObjectPixels);
 
   return objectsList.filter((o: TypedShape) => {
     let collision = false;
@@ -172,7 +200,8 @@ export const findIntersectedObjects = (
     if (o === mainObject) return true;
 
     if (mainObject.intersectsWithObject(o) && o !== mainObject) {
-      const pixels = pixelMapping(o, 16);
+      const pixels = pixelMapping(o, 8);
+      console.log(pixels);
 
       collision = findPixelCollision(pixels, mainObjectPixels);
     }
