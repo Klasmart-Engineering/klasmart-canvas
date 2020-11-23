@@ -55,17 +55,24 @@ export class PenBrush extends fabric.PencilBrush {
    * @param {ICoordinate} e - Event Coordinate value
    */
   public onMouseDown(e: ICoordinate) {
+    /*
+      If line is so thinner flood-fill can fail.
+      To avoid this, 2px line will be converted to a 3px line.
+    */
+    const min = this.width === 2 ? this.width : this.width / 2;
+    const max = this.width === 2 ? this.width + 1 : this.width;
+
     this.isDrawing = true;
     this.points.push(
       {
         x: e.x,
         y: e.y,
-        width: this.getRandomInt(this.width / 2, this.width),
+        width: this.getRandomInt(min, max),
       },
       {
         x: e.x,
         y: e.y,
-        width: this.getRandomInt(this.width / 2, this.width),
+        width: this.getRandomInt(min, max),
       }
     );
   }
@@ -76,12 +83,18 @@ export class PenBrush extends fabric.PencilBrush {
    */
   public onMouseMove(e: ICoordinate) {
     if (!this.isDrawing) return;
-
+    /*
+      If line is so thinner flood-fill can fail.
+      To avoid this, 2px line will be converted to a 3px line.
+    */
+    const min = this.width === 2 ? this.width : this.width / 2;
+    const max = this.width === 2 ? this.width + 1 : this.width;
     const ctx = this.canvas.getContext();
+
     this.points.push({
       x: e.x,
       y: e.y,
-      width: this.getRandomInt(this.width / 2, this.width),
+      width: this.getRandomInt(min, max),
     });
 
     for (let i = 1; i < this.points.length; i++) {

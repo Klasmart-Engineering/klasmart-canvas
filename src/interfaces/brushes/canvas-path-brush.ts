@@ -1,6 +1,7 @@
 import { ICoordinate } from './coordinate';
 import { IBrushType } from './brush-type';
 import { ICanvasObject } from '../objects/canvas-object';
+import { IShapeIndex } from '../shapes/shape-index';
 
 export interface ICanvasPathBrush extends ICanvasObject {
   basePath: {
@@ -8,5 +9,7 @@ export interface ICanvasPathBrush extends ICanvasObject {
     points: ICoordinate[];
     stroke: string;
     strokeWidth: number;
+    fill?: string;
+    shape?: keyof IShapeIndex;
   };
 }

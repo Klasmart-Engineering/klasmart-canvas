@@ -41,6 +41,10 @@ const useSynchronizedColorChanged = (
               break;
 
             case 'path':
+            case 'rect':
+            case 'ellipse':
+            case 'triangle':
+            case 'polygon':
               obj.set({
                 stroke: target.stroke,
               });

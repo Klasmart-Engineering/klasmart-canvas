@@ -13,6 +13,7 @@ import {
   PaintEventSerializer,
 } from '../event-serializer/PaintEventSerializer';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
 /**
  * Sets up a temporary canvas to be used for object manipulation
@@ -194,6 +195,22 @@ export const floodFillMouseEvent = async (
 
   fabric.Image.fromURL(tempData, async (image: fabric.Image) => {
     try {
+      const basePath = (event.target as ICanvasBrush).basePath;
+
+      // Adding fill and name properties in target
+      (event.target as ICanvasBrush).set({
+        name: event.target?.name,
+        basePath: {
+          type: basePath?.type || 'pencil',
+          points: basePath?.points || [],
+          stroke: String(basePath?.stroke),
+          strokeWidth: Number(basePath?.strokeWidth),
+          fill: color,
+          bristles: basePath?.bristles,
+          imageData: basePath?.imageData,
+        },
+      });
+
       target = await updateAfterCustomFloodFill(
         id as string,
         image,

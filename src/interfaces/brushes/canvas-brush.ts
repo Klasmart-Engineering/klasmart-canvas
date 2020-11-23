@@ -12,5 +12,6 @@ export interface ICanvasBrush extends fabric.Group {
     strokeWidth: number;
     bristles?: IBristle[];
     imageData?: string;
+    fill?: string;
   };
 }

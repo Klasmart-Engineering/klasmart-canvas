@@ -172,6 +172,7 @@ export class ChalkBrush extends fabric.PencilBrush {
   ): Promise<ICanvasBrush> {
     try {
       let imagePath;
+
       const line = super
         .convertPointsToSVGPath(
           points.map((point) => {
@@ -180,7 +181,7 @@ export class ChalkBrush extends fabric.PencilBrush {
         )
         .join('');
 
-      const path = new fabric.Group([
+      let group = [
         new fabric.Path(line, {
           fill: 'transparent',
           stroke: tinycolor(color)
@@ -203,7 +204,28 @@ export class ChalkBrush extends fabric.PencilBrush {
             globalCompositeOperation: 'destination-out',
           });
         }),
-      ]);
+      ];
+
+      /*
+        Adding a middle line to could close the path
+        and flood-fill works properly
+      */
+      if (width === 2) {
+        group.push(
+          new fabric.Path(line, {
+            fill: 'transparent',
+            stroke: tinycolor(color)
+              .brighten(this.brightness + 5)
+              .toHexString(),
+            strokeWidth: 1,
+            strokeLineJoin: 'round',
+            strokeLineCap: 'round',
+            strokeUniform: true,
+          })
+        );
+      }
+
+      const path = new fabric.Group(group);
 
       const top = path.top;
       const left = path.left;

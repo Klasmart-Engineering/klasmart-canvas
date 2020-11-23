@@ -241,7 +241,7 @@ export const generic = (
     strokeDashArray: dashed ? [thickness * 2] : [],
     padding: 15,
     strokeMiterLimit: 50,
-    strokeLineCap: dashed ? 'round' : 'butt',
+    strokeLineCap: dashed ? 'round' : 'miter',
     strokeLineJoin: dashed ? 'round' : 'miter',
   });
 };

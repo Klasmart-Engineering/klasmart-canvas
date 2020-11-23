@@ -32,6 +32,9 @@ import { shapePoints } from '../../../assets/shapes-points/index';
 import { IShapePointsIndex } from '../../../interfaces/brushes/shape-points-index';
 import { ICanvasShapeBrush } from '../../../interfaces/brushes/canvas-shape-brush';
 import { setBasePathInNormalBrushes } from '../brushes/utils/setBasePathInNormalBrushes';
+import { floodFillMouseEvent } from '../utils/floodFillMouseEvent';
+import { UndoRedo } from '../hooks/useUndoRedoEffect';
+// import { createShapeFromSpecialBrushObject } from '../brushes/utils/createShapeFromSpecialBrushObject';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -63,6 +66,12 @@ export const useCanvasActions = (
     localImage,
     brushType,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
+
+  const { dispatch: undoRedoDispatch } = UndoRedo(
+    canvas as fabric.Canvas,
+    eventSerializer,
+    String(userId)
+  );
 
   /**
    * Adds shape to whiteboard.
@@ -213,12 +222,17 @@ export const useCanvasActions = (
       switch (brushType) {
         case 'pen':
           brush = new PenBrush(canvas, userId);
-
+          /*
+            If line is so thinner flood-fill can fail.
+            To avoid this, 2px line will be converted to a 3px line.
+          */
+          const min = lineWidth === 2 ? lineWidth : lineWidth / 2;
+          const max = lineWidth === 2 ? lineWidth + 1 : lineWidth;
           const penPoints = original.points.map((point) => {
             return {
               x: point.x,
               y: point.y,
-              width: (brush as PenBrush).getRandomInt(lineWidth / 2, lineWidth),
+              width: (brush as PenBrush).getRandomInt(min, max),
             };
           });
 
@@ -767,14 +781,17 @@ export const useCanvasActions = (
               switch (brushType) {
                 case 'pen':
                   brush = new PenBrush(canvas, userId);
+                  /*
+                    If line is so thinner flood-fill can fail.
+                    To avoid this, 2px line will be converted to a 3px line.
+                  */
+                  const min = lineWidth === 2 ? lineWidth : lineWidth / 2;
+                  const max = lineWidth === 2 ? lineWidth + 1 : lineWidth;
                   const penPoints = points.map((point) => {
                     return {
                       x: point.x,
                       y: point.y,
-                      width: (brush as PenBrush).getRandomInt(
-                        lineWidth / 2,
-                        lineWidth
-                      ),
+                      width: (brush as PenBrush).getRandomInt(min, max),
                     };
                   });
 
@@ -878,6 +895,7 @@ export const useCanvasActions = (
 
             const requiredProps = [
               'id',
+              'name',
               'height',
               'width',
               'left',
@@ -1013,6 +1031,36 @@ export const useCanvasActions = (
   );
 
   /**
+   * Uses flood-fill logic recreate shape painting
+   * triggering a click in the center point of the shape
+   * @param {ICanvasShapeBrush} object - Shape to paint
+   * @param {string} color - Color to use
+   */
+  const recreateFloodFill = useCallback(
+    async (object: ICanvasShapeBrush, color: string) => {
+      if (!canvas || !userId) return;
+
+      const event: fabric.IEvent = {
+        e: new Event('mouse:down'),
+        target: object,
+        pointer: object.getCenterPoint(),
+      };
+
+      floodFillMouseEvent(
+        event,
+        canvas,
+        userId,
+        isLocalObject as (p1: string, p2: string) => boolean,
+        color,
+        eventSerializer,
+        undoRedoDispatch
+      );
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [canvas, userId]
+  );
+
+  /**
    * Changes the penColor value and if one or more objects are selected
    * also changes the stroke color in free drawing and empty shape objects
    * @param {string} color - new color to change
@@ -1038,16 +1086,13 @@ export const useCanvasActions = (
       canvas.discardActiveObject();
 
       for (const object of activeObjects) {
+        const fill = (object as ICanvasShapeBrush).basePath.fill;
         if (
           (isShape(object) && object.shapeType === 'shape') ||
           isFreeDrawing(object)
         ) {
           (object as ICanvasPathBrush).set('stroke', color);
-          newActives.push(object);
-        }
 
-        // Updating basePath
-        if (isFreeDrawing(object)) {
           const basePath = (object as ICanvasPathBrush).basePath;
           (object as ICanvasPathBrush).set({
             basePath: {
@@ -1057,6 +1102,8 @@ export const useCanvasActions = (
               strokeWidth: basePath.strokeWidth,
             },
           });
+
+          newActives.push(object);
         }
 
         // Color Change in Special Brushes
@@ -1086,11 +1133,32 @@ export const useCanvasActions = (
                 eventSerializer?.push('colorChanged', payload);
               }
 
+              if (fill && newObject.basePath) {
+                newObject.basePath.fill = fill;
+              }
+
               newActives.push(newObject as TypedShape);
             })
             .catch((e) => {
               console.warn(e);
             });
+        }
+      }
+
+      for (const shape of newActives) {
+        const fill = (shape as ICanvasShapeBrush).basePath.fill;
+
+        if (fill) {
+          if (
+            (shape as ICanvasBrush).basePath?.type === 'pencil' ||
+            (shape as ICanvasBrush).basePath?.type === 'dashed'
+          ) {
+            shape.set({
+              fill: fill,
+            });
+          } else {
+            await recreateFloodFill(shape as ICanvasShapeBrush, fill);
+          }
         }
       }
 
@@ -1157,7 +1225,14 @@ export const useCanvasActions = (
 
       canvas?.renderAll();
     },
-    [updatePenColor, canvas, userId, eventSerializer, dispatch]
+    [
+      updatePenColor,
+      canvas,
+      userId,
+      eventSerializer,
+      recreateFloodFill,
+      dispatch,
+    ]
   );
 
   /**
@@ -1191,6 +1266,10 @@ export const useCanvasActions = (
       // Iterating over activeObjects
       for (const object of activeObjects) {
         if ((object as ICanvasBrush).basePath && canvas && userId) {
+          // Free Drawings filled can not change its brush type
+          if (!object.name && (object as ICanvasPathBrush).basePath.fill)
+            return;
+
           let brush:
             | PencilBrush
             | PenBrush
@@ -1200,6 +1279,7 @@ export const useCanvasActions = (
           let newPath;
           let id = (object as ICanvasObject).id;
           const basePath = (object as ICanvasBrush).basePath;
+          let fill = basePath?.fill;
           let points = (basePath?.points as ICoordinate[]).map(
             (point: ICoordinate) => {
               return new fabric.Point(point.x, point.y);
@@ -1214,6 +1294,10 @@ export const useCanvasActions = (
               let scaleY = (point.y / original.height) * Number(object.height);
               return new fabric.Point(scaleX, scaleY);
             });
+          }
+
+          if (!fill && isEmptyShape(object as TypedShape)) {
+            fill = object.fill?.toString();
           }
 
           switch (type) {
@@ -1241,14 +1325,23 @@ export const useCanvasActions = (
 
             case 'pen':
               brush = new PenBrush(canvas, userId);
+              /*
+                If line is so thinner flood-fill can fail.
+                To avoid this, 2px line will be converted to a 3px line.
+              */
+              const min =
+                Number(basePath?.strokeWidth) === 2
+                  ? Number(basePath?.strokeWidth)
+                  : Number(basePath?.strokeWidth) / 2;
+              const max =
+                Number(basePath?.strokeWidth) === 2
+                  ? Number(basePath?.strokeWidth) + 1
+                  : Number(basePath?.strokeWidth);
               const penPoints = points.map((point) => {
                 return {
                   x: point.x,
                   y: point.y,
-                  width: (brush as PenBrush).getRandomInt(
-                    Number(basePath?.strokeWidth) / 2,
-                    Number(basePath?.strokeWidth)
-                  ),
+                  width: (brush as PenBrush).getRandomInt(min, max),
                 };
               });
 
@@ -1317,7 +1410,8 @@ export const useCanvasActions = (
 
           if (!newPath) return;
 
-          (newPath as ICanvasObject).set({
+          ((newPath as unknown) as ICanvasShapeBrush).set({
+            name: object.name,
             top: object.top,
             left: object.left,
             angle: object.angle,
@@ -1327,7 +1421,10 @@ export const useCanvasActions = (
             flipY: object.flipY,
           });
 
-          // Removing id to don't be detected and remove event wouldn't be sent
+          /*
+            Removing id to don't be detected
+            and remove event can't be sent
+          */
           delete (object as ICanvasObject).id;
           delete (newPath as ICanvasObject).id;
 
@@ -1341,12 +1438,28 @@ export const useCanvasActions = (
           // Pushing new object to select it after creation
           newActives.push(newPath as ICanvasObject);
 
+          if (fill) {
+            if (type === 'dashed' || type === 'pencil') {
+              ((newPath as unknown) as ICanvasPathBrush).set({
+                fill: fill,
+              });
+              canvas.renderAll();
+            } else {
+              ((newPath as unknown) as ICanvasShapeBrush).basePath.fill = fill;
+              await recreateFloodFill(
+                (newPath as unknown) as ICanvasShapeBrush,
+                fill
+              );
+            }
+          }
+
           const payload = {
             id: String((newPath as ICanvasObject).id),
             type: newPath.type,
             target: (newPath as ICanvasBrush).basePath,
           };
 
+          console.log('hola');
           eventSerializer?.push('brushTypeChanged', payload);
         }
       }
@@ -1360,7 +1473,7 @@ export const useCanvasActions = (
 
       canvas?.renderAll();
     },
-    [canvas, eventSerializer, updateBrushType, userId]
+    [canvas, eventSerializer, recreateFloodFill, updateBrushType, userId]
   );
 
   /**
@@ -1857,6 +1970,7 @@ export const useCanvasActions = (
       redo,
       clearWhiteboardAllowClearOthers,
       clearWhiteboardClearMySelf,
+      recreateFloodFill,
     };
 
     return { actions, mouseDown };
@@ -1876,6 +1990,7 @@ export const useCanvasActions = (
     redo,
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
+    recreateFloodFill,
   ]);
 
   return state;

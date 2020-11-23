@@ -950,7 +950,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       // Shape Selected
       if (
         event.target &&
-        isShape(event.target) &&
+        isEmptyShape(event.target) &&
         !shapeIsActive &&
         eventedObjects
       ) {
@@ -1193,12 +1193,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.on('mouse:down', async (event: fabric.IEvent) => {
         // Click out of any object
         if (
-          !event.target ||
-          (event.target &&
-            ((event.target.get('type') === 'path' &&
-              !isEmptyShape(event.target)) ||
-              event.target.get('type') === 'image')) ||
-          (event.target.get('type') && isSpecialFreeDrawing(event.target))
+          floodFill.toString().startsWith('#') &&
+          (!event.target ||
+            (event.target &&
+              ((event.target.get('type') === 'path' &&
+                !isEmptyShape(event.target)) ||
+                event.target.get('type') === 'image')) ||
+            (event.target.get('type') && isSpecialFreeDrawing(event.target)) ||
+            (event.target as ICanvasBrush).basePath?.type === 'dashed')
         ) {
           floodFillMouseEvent(
             event,
@@ -1243,6 +1245,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               fill: floodFill,
               stroke: originalStroke,
             });
+
+            (event.target as ICanvasShapeBrush).basePath.fill = floodFill;
 
             canvas.discardActiveObject();
             canvas.backgroundColor = originalBackground;
@@ -1841,6 +1845,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       for (const object of activeObjects) {
         canvas.discardActiveObject();
+        const fill = (object as ICanvasShapeBrush).basePath?.fill;
+
         if (isEmptyShape(object as TypedShape) || isFreeDrawing(object)) {
           object.set('strokeWidth', lineWidth);
           newActives.push(object);
@@ -1851,9 +1857,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           const basePath = (object as ICanvasPathBrush).basePath;
           (object as ICanvasPathBrush).set({
             basePath: {
-              type: basePath.type,
-              points: basePath.points,
-              stroke: basePath.stroke,
+              type: basePath?.type,
+              points: basePath?.points,
+              stroke: basePath?.stroke,
               strokeWidth: lineWidth,
             },
           });
@@ -1872,7 +1878,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             object as ICanvasBrush,
             lineWidth
           )
-            .then((newObject) => {
+            .then(async (newObject) => {
               newActives.push(newObject as ICanvasObject);
               payload = {
                 type: 'group',
@@ -1889,6 +1895,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               };
 
               eventSerializer?.push('lineWidthChanged', payload);
+
+              if (fill) {
+                ((newObject as unknown) as ICanvasShapeBrush).basePath.fill = fill;
+
+                if (
+                  newObject.basePath?.type === 'pencil' ||
+                  newObject.basePath?.type === 'dashed'
+                ) {
+                  newObject.set({
+                    fill: fill,
+                  });
+                } else {
+                  await actions.recreateFloodFill(
+                    (newObject as unknown) as ICanvasShapeBrush,
+                    fill
+                  );
+                }
+              }
             })
             .catch((e: Error) => {
               if (e.message === 'lineWidth is the same') {
@@ -1913,7 +1937,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (canvas?.getActiveObjects()) {
       changeLineWidth();
     }
-  }, [lineWidth, canvas, userId, eventSerializer]);
+  }, [lineWidth, canvas, userId, eventSerializer, actions]);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {

@@ -295,6 +295,7 @@ const useSynchronizedAdded = (
       // Ids of shapes + userId  uuid()
       if (!shouldHandleRemoteEvent(id)) return;
 
+      console.log('target: ', target);
       if (objectType === 'textbox') {
         let text = new fabric.Textbox(target.text || '', {
           fontSize: 30,
@@ -448,6 +449,7 @@ const useSynchronizedAdded = (
       if (shape) {
         target = {
           ...target,
+          fill: target.fill || 'transparent',
           selectable: false,
           evented: floodFillIsActive,
           hoverCursor: floodFillIsActive ? 'not-allowed' : 'move',

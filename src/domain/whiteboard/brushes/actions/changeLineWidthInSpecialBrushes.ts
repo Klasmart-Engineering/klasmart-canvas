@@ -37,6 +37,8 @@ export const changeLineWidthInSpecialBrushes = async (
     switch (brushType) {
       case 'pen':
         let points: IPenPoint[] = (basePath?.points as IPenPoint[]) || [];
+        const min = lineWidth === 2 ? lineWidth : lineWidth / 2;
+        const max = lineWidth === 2 ? lineWidth + 1 : lineWidth;
 
         brush = new PenBrush(canvas, userId);
 
@@ -45,7 +47,7 @@ export const changeLineWidthInSpecialBrushes = async (
             return {
               x: point.x,
               y: point.y,
-              width: (brush as PenBrush).getRandomInt(lineWidth / 2, lineWidth),
+              width: (brush as PenBrush).getRandomInt(min, max),
             };
           });
         }
@@ -118,6 +120,7 @@ export const changeLineWidthInSpecialBrushes = async (
 
     if (newObject) {
       newObject.set({
+        name: object.name,
         angle: object.angle,
         top: object.top,
         left: object.left,

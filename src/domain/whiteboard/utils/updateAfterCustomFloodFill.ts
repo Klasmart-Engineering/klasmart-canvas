@@ -11,6 +11,7 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { IFloodFillData } from './floodFiller';
 import floodFillCursor from '../../../assets/cursors/flood-fill.png';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
 export interface ITargetObject extends ICanvasObject {
   color: string;
@@ -87,6 +88,15 @@ export const updateAfterCustomFloodFill = async (
         id,
         joinedIds,
       });
+
+      // Setting name and fill properties in new flood-filled object
+      (cloned as ICanvasBrush).set({
+        name: target.name,
+        basePath: ((target as unknown) as ICanvasBrush).basePath,
+      });
+
+      console.log('added painted:', cloned);
+
       canvas.add(cloned);
       canvas.renderAll();
 
@@ -95,6 +105,8 @@ export const updateAfterCustomFloodFill = async (
         target: cloned as ICanvasObject,
         id,
       };
+
+      console.log('el pay: ', payload);
 
       eventSerializer.push('added', payload);
 

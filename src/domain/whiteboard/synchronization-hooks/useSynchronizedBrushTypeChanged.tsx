@@ -10,11 +10,12 @@ import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush'
 import { IBasePath } from '../../../interfaces/brushes/base-path';
 import { IPenPoint } from '../../../interfaces/brushes/pen-point';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
-import { isShape } from '../utils/shapes';
-import { TypedShape } from '../../../interfaces/shapes/shapes';
-import { shapePoints } from '../../../assets/shapes-points';
-import { IShapePointsIndex } from '../../../interfaces/brushes/shape-points-index';
 import { ICanvasShapeBrush } from '../../../interfaces/brushes/canvas-shape-brush';
+// import { shapePoints } from '../../../assets/shapes-points';
+// import { IShapePointsIndex } from '../../../interfaces/brushes/shape-points-index';
+// import { ICanvasShapeBrush } from '../../../interfaces/brushes/canvas-shape-brush';
+// import { TypedShape } from '../../../interfaces/shapes/shapes';
+// import { isShape } from '../utils/shapes';
 
 const useSynchronizedBrushTypeChanged = (
   canvas: fabric.Canvas | undefined,
@@ -50,6 +51,7 @@ const useSynchronizedBrushTypeChanged = (
       delete (oldPath as ICanvasObject).id;
       canvas?.remove(oldPath);
       canvas?.add(path as ICanvasObject);
+      console.log(canvas?.getObjects());
     };
 
     const brushTypeChanged = (id: string, target: IBasePath) => {
@@ -58,7 +60,7 @@ const useSynchronizedBrushTypeChanged = (
       canvas?.forEachObject(async (object: ICanvasObject) => {
         if (object.id && object.id === id) {
           let brush;
-          let newPath;
+          let newPath: ICanvasBrush | fabric.Path | fabric.Image | undefined;
           const basePath = target;
           const type = basePath.type;
           let points = (basePath?.points as ICoordinate[]).map(
@@ -67,18 +69,19 @@ const useSynchronizedBrushTypeChanged = (
             }
           );
 
-          if (
-            isShape(object as TypedShape) &&
-            !(object as ICanvasShapeBrush).basePath
-          ) {
-            const original =
-              shapePoints[object.name as keyof IShapePointsIndex];
-            points = original.points.map((point: ICoordinate) => {
-              let scaleX = (point.x / original.width) * Number(object.width);
-              let scaleY = (point.y / original.height) * Number(object.height);
-              return new fabric.Point(scaleX, scaleY);
-            });
-          }
+          if (!basePath) return;
+          // if (
+          //   isShape(object as TypedShape) &&
+          //   !(object as ICanvasShapeBrush).basePath
+          // ) {
+          //   const original =
+          //     shapePoints[object.name as keyof IShapePointsIndex];
+          //   points = original.points.map((point: ICoordinate) => {
+          //     let scaleX = (point.x / original.width) * Number(object.width);
+          //     let scaleY = (point.y / original.height) * Number(object.height);
+          //     return new fabric.Point(scaleX, scaleY);
+          //   });
+          // }
 
           switch (type) {
             case 'dashed':
@@ -155,7 +158,20 @@ const useSynchronizedBrushTypeChanged = (
 
           if (!newPath) return;
 
+          console.log('adding');
           addPathInCanvas(newPath as ICanvasObject, object);
+
+          if (type === 'dashed' || type === 'pencil') {
+            canvas.forEachObject((obj: ICanvasObject) => {
+              if (obj.id === (newPath as ICanvasObject).id && obj !== newPath) {
+                canvas.remove(obj);
+              }
+            });
+
+            (newPath as ICanvasObject).set({
+              fill: (object as ICanvasShapeBrush).basePath?.fill,
+            });
+          }
         }
       });
 
