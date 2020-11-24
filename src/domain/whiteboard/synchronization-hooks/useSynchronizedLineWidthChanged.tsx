@@ -45,7 +45,13 @@ const useSynchronizedLineWidthChanged = (
                 obj as ICanvasBrush,
                 lineWidth,
                 target as ICanvasBrush
-              );
+              )
+                .then()
+                .catch((e: Error) => {
+                  if (e.message !== 'lineWidth is the same') {
+                    console.warn(e);
+                  }
+                });
             } else {
               obj.set({
                 strokeWidth: target.strokeWidth,

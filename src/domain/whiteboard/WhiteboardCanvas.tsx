@@ -90,7 +90,7 @@ import { ICanvasPathBrush } from '../../interfaces/brushes/canvas-path-brush';
 import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
 import { setBasePathInNormalBrushes } from './brushes/utils/setBasePathInNormalBrushes';
 import { DashedBrush } from './brushes/classes/dashedBrush';
-
+import { ICanvasShapeBrush } from '../../interfaces/brushes/canvas-shape-brush';
 interface IBackgroundImage extends IStaticCanvasOptions {
   id?: string;
 }
@@ -959,6 +959,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           !brushIsActive
         ) {
           updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
+          updateBrushType((event.target as ICanvasShapeBrush).basePath.type);
           updateLineWidth(
             event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH
           );
@@ -1819,14 +1820,32 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * that drawing line width will changes to the selected width on Toolbar
    */
   useEffect(() => {
-    if (canvas?.getActiveObjects()) {
-      canvas.getActiveObjects().forEach(async (object) => {
+    const changeLineWidth = async () => {
+      let newActives: ICanvasObject[] = [];
+      let activeObjects: ICanvasObject[] = [];
+
+      if (!canvas) return;
+
+      const selection = canvas.getActiveObject();
+
+      if (selection?.type === 'activeSelection') {
+        activeObjects = (selection as fabric.ActiveSelection)._objects;
+      } else {
+        activeObjects = canvas.getActiveObjects();
+      }
+
+      if (!activeObjects) return;
+      canvas.discardActiveObject();
+
+      for (const object of activeObjects) {
+        canvas.discardActiveObject();
         if (
-          isEmptyShape(object) ||
+          isEmptyShape(object as TypedShape) ||
           (isFreeDrawing(object) &&
             (object as ICanvasPathBrush).basePath.type !== 'dashed')
         ) {
           object.set('strokeWidth', lineWidth);
+          newActives.push(object);
         }
 
         if ((object as ICanvasPathBrush).basePath.type === 'dashed') {
@@ -1860,13 +1879,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         ) {
           let payload: ObjectEvent;
 
-          changeLineWidthInSpecialBrushes(
+          await changeLineWidthInSpecialBrushes(
             canvas,
             userId,
             object as ICanvasBrush,
             lineWidth
           )
             .then((newObject) => {
+              newActives.push(newObject as ICanvasObject);
               payload = {
                 type: 'group',
                 target: {
@@ -1884,14 +1904,27 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               eventSerializer?.push('lineWidthChanged', payload);
             })
             .catch((e: Error) => {
-              if (e.message !== 'lineWidth is the same') {
+              if (e.message === 'lineWidth is the same') {
+                newActives.push(object);
+              } else {
                 console.warn(e);
               }
             });
         }
-      });
 
-      canvas.renderAll();
+        if (newActives.length === 1) {
+          canvas?.setActiveObject(newActives[0]);
+        } else if (newActives.length >= 2) {
+          const activesGroup = new fabric.ActiveSelection(newActives);
+          canvas?.setActiveObject(activesGroup);
+        }
+
+        canvas.renderAll();
+      }
+    };
+
+    if (canvas?.getActiveObjects()) {
+      changeLineWidth();
     }
   }, [lineWidth, canvas, userId, eventSerializer]);
 

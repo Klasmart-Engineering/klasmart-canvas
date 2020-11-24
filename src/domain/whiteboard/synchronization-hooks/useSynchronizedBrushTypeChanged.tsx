@@ -10,6 +10,11 @@ import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush'
 import { IBasePath } from '../../../interfaces/brushes/base-path';
 import { IPenPoint } from '../../../interfaces/brushes/pen-point';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { isShape } from '../utils/shapes';
+import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { shapePoints } from '../../../assets/shapes-points';
+import { IShapePointsIndex } from '../../../interfaces/brushes/shape-points-index';
+import { ICanvasShapeBrush } from '../../../interfaces/brushes/canvas-shape-brush';
 
 const useSynchronizedBrushTypeChanged = (
   canvas: fabric.Canvas | undefined,
@@ -56,11 +61,24 @@ const useSynchronizedBrushTypeChanged = (
           let newPath;
           const basePath = target;
           const type = basePath.type;
-          const points = (basePath?.points as ICoordinate[]).map(
+          let points = (basePath?.points as ICoordinate[]).map(
             (point: ICoordinate) => {
               return new fabric.Point(point.x, point.y);
             }
           );
+
+          if (
+            isShape(object as TypedShape) &&
+            !(object as ICanvasShapeBrush).basePath
+          ) {
+            const original =
+              shapePoints[object.name as keyof IShapePointsIndex];
+            points = original.points.map((point: ICoordinate) => {
+              let scaleX = (point.x / original.width) * Number(object.width);
+              let scaleY = (point.y / original.height) * Number(object.height);
+              return new fabric.Point(scaleX, scaleY);
+            });
+          }
 
           switch (type) {
             case 'dashed':
