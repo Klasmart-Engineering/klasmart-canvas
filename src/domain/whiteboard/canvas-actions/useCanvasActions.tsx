@@ -1190,7 +1190,12 @@ export const useCanvasActions = (
 
       // Iterating over activeObjects
       for (const object of activeObjects) {
-        if ((object as ICanvasBrush).basePath && canvas && userId) {
+        if (
+          (object as ICanvasBrush).basePath &&
+          canvas &&
+          userId &&
+          !object.fill
+        ) {
           let brush:
             | PencilBrush
             | PenBrush
