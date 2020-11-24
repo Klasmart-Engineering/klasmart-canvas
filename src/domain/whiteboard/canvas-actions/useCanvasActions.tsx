@@ -1012,6 +1012,11 @@ export const useCanvasActions = (
 
     let eraser: any;
 
+    if (partialEraseIsActive) {
+      canvas?.discardActiveObject();
+      canvas?.renderAll();
+    }
+
     if (
       eraseType === 'partial' &&
       canvas &&
@@ -1045,7 +1050,7 @@ export const useCanvasActions = (
       }
     }
 
-    return() => {
+    return () => {
       if (eraser) {
         eraser.destroy();
       }
