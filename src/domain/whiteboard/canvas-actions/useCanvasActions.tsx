@@ -1750,17 +1750,15 @@ export const useCanvasActions = (
 
     let eraser: any;
 
-    if (partialEraseIsActive) {
-      canvas?.discardActiveObject();
-      canvas?.renderAll();
-    }
-
     if (
       eraseType === 'partial' &&
       canvas &&
       toolbarIsEnabled &&
       (allToolbarIsEnabled || serializerToolbarState.partialErase)
     ) {
+      canvas?.discardActiveObject();
+      canvas?.renderAll();
+      
       eraser = new PartialErase(
         userId as string,
         canvas as fabric.Canvas,
