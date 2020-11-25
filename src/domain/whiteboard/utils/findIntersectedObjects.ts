@@ -43,19 +43,23 @@ export const findIntersectedObjects = (
     object: TypedShape,
     resolution: number
   ): IPixeledObject => {
+    // Hiding the the rest of objects to get just iamge data for this object
     toogleOtherObjects(object, false);
-    debugger;
 
     let pixelMap = [];
     const ctx = canvas.getContext();
 
-    const width = object.getScaledWidth();
-    const height = object.getScaledHeight();
+    // Getting bounding rect in case of object is rotated
+    const bound = object.getBoundingRect();
+
+    const width = Number(object.width) * Number(object.scaleX);
+    const height = Number(object.height) * Number(object.scaleY);
     const startPoint = {
-      x: Number(object.left),
-      y: Number(object.top),
+      x: Number(bound.left),
+      y: Number(bound.top),
     };
 
+    // Mapping each pixel in object to get the no transparent pixels
     for (let y = startPoint.y; y <= startPoint.y + height; y += resolution) {
       for (let x = startPoint.x; x <= startPoint.x + width; x += resolution) {
         let pixel = ctx.getImageData(
@@ -66,20 +70,17 @@ export const findIntersectedObjects = (
         );
 
         if (!isTransparent(pixel)) {
-          pixelMap.push({
-            x: Math.round(x),
-            y: Math.round(y),
-          });
+          pixelMap.push({ x, y });
         }
       }
     }
 
+    // Showing again the previous hidden objects
     toogleOtherObjects(object, true);
-    debugger;
 
     return {
-      x: Math.round(startPoint.x),
-      y: Math.round(startPoint.y),
+      x: startPoint.x,
+      y: startPoint.y,
       pixelMap: {
         data: pixelMap,
         resolution: resolution,
@@ -111,24 +112,27 @@ export const findIntersectedObjects = (
     source: IPixeledObject,
     target: IPixeledObject
   ) => {
+    // Checking each colored pixel coordinate in source object
     for (let s = 0; s < source.pixelMap.data.length; s += 1) {
       const sourcePixel = source.pixelMap.data[s];
       const sourceArea: IPixel = {
-        x: sourcePixel.x + source.x,
-        y: sourcePixel.y + source.y,
+        x: sourcePixel.x,
+        y: sourcePixel.y,
         width: target.pixelMap.resolution,
         height: target.pixelMap.resolution,
       };
 
+      // Checking each colored pixel coordinate in target object
       for (let t = 0; t < target.pixelMap.data.length; t += 1) {
         const targetPixel = target.pixelMap.data[t];
         const targetArea: IPixel = {
-          x: targetPixel.x + target.x,
-          y: targetPixel.y + target.y,
+          x: targetPixel.x,
+          y: targetPixel.y,
           width: target.pixelMap.resolution,
           height: target.pixelMap.resolution,
         };
 
+        // Comparing source and target's current pixel
         if (isPixelCollision(sourceArea, targetArea)) {
           return true;
         }
@@ -161,47 +165,29 @@ export const findIntersectedObjects = (
    * @param {ImageData} image - Data to check
    */
   const isTransparent = (image: ImageData) => {
+    // Checking each alpha channel in image data
     for (let i = 0; i < image.data.length; i += 4) {
-      if (image.data[i + 3] !== 0) {
-        return false;
+      if (image.data[i + 3] > 0) {
+        return true;
       }
     }
 
-    return true;
+    return false;
   };
 
-  mainObject.set({
-    // top: Number(mainObject.top) - 2,
-    // left: Number(mainObject.left) - 2,
-    // scaleX: (Number(mainObject.width) + 4) / Number(mainObject.width),
-    // scaleY: (Number(mainObject.height) + 4) / Number(mainObject.height),
-    // backgroundColor: '#ababab',
-    // top: (Number(mainObject.top) - 1) / window.devicePixelRatio,
-    // left: (Number(mainObject.left) - 1) / window.devicePixelRatio,
-    // scaleX:
-    //   (Number(mainObject.width) + 1) /
-    //   Number(mainObject.width) /
-    //   window.devicePixelRatio,
-    // scaleY:
-    //   (Number(mainObject.width) + 1) /
-    //   Number(mainObject.width) /
-    //   window.devicePixelRatio,
-  });
-  canvas.renderAll();
-
-  console.log(mainObject);
-
-  const mainObjectPixels: IPixeledObject = pixelMapping(mainObject, 8);
-  console.log(mainObjectPixels);
+  // Pixels Data in Flood-fill object
+  const mainObjectPixels: IPixeledObject = pixelMapping(mainObject, 2);
 
   return objectsList.filter((o: TypedShape) => {
     let collision = false;
 
+    // if current object is flood-fill object, filter is no needed
     if (o === mainObject) return true;
 
+    // If bounding box collision happens, the next step is check pixel collision
     if (mainObject.intersectsWithObject(o) && o !== mainObject) {
-      const pixels = pixelMapping(o, 8);
-      console.log(pixels);
+      // Pixels Data in current object
+      const pixels = pixelMapping(o, 2);
 
       collision = findPixelCollision(pixels, mainObjectPixels);
     }
