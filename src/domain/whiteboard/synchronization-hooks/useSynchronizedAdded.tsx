@@ -109,7 +109,7 @@ const useSynchronizedAdded = (
 
       switch (type) {
         case 'path':
-          if (e.target.basePath.type === 'dashed') {
+          if (e.target?.basePath?.type === 'dashed') {
             target = {
               basePath: e.target.basePath,
               originX: e.target.originX,
