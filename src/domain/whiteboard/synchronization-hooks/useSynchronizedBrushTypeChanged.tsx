@@ -10,7 +10,7 @@ import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush'
 import { IBasePath } from '../../../interfaces/brushes/base-path';
 import { IPenPoint } from '../../../interfaces/brushes/pen-point';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
-import { isShape } from '../utils/shapes';
+import { isEmptyShape } from '../utils/shapes';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { shapePoints } from '../../../assets/shapes-points';
 import { IShapePointsIndex } from '../../../interfaces/brushes/shape-points-index';
@@ -68,7 +68,7 @@ const useSynchronizedBrushTypeChanged = (
           );
 
           if (
-            isShape(object as TypedShape) &&
+            isEmptyShape(object as TypedShape) &&
             !(object as ICanvasShapeBrush).basePath
           ) {
             const original =

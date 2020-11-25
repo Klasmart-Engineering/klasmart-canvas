@@ -1170,6 +1170,18 @@ export const useCanvasActions = (
       let newActives: ICanvasObject[] = [];
       let activeObjects: ICanvasObject[] = [];
 
+      /**
+       * Checks if the given object is really flood-filled
+       * @param {ICanvasObject} object - Object to check its fill property
+       */
+      const isFloodFilled = (object: ICanvasObject) => {
+        return (
+          object.fill &&
+          object.fill !== 'transparent' &&
+          object.fill !== 'rgb(0,0,0)'
+        );
+      };
+
       // Updating brush type
       updateBrushType(type);
 
@@ -1194,7 +1206,7 @@ export const useCanvasActions = (
           (object as ICanvasBrush).basePath &&
           canvas &&
           userId &&
-          !object.fill
+          !isFloodFilled(object)
         ) {
           let brush:
             | PencilBrush
