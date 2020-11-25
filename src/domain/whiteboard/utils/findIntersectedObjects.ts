@@ -167,12 +167,12 @@ export const findIntersectedObjects = (
   const isTransparent = (image: ImageData) => {
     // Checking each alpha channel in image data
     for (let i = 0; i < image.data.length; i += 4) {
-      if (image.data[i + 3] > 0) {
-        return true;
+      if (image.data[i + 3] !== 0) {
+        return false;
       }
     }
 
-    return false;
+    return true;
   };
 
   // Pixels Data in Flood-fill object
