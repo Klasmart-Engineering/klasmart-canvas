@@ -1022,8 +1022,6 @@ export const useCanvasActions = (
       let newActives: TypedShape[] = [];
       let activeObjects: TypedShape[] = [];
 
-      updatePenColor(color);
-
       if (!canvas) return;
 
       const selection = canvas.getActiveObject();
@@ -1100,6 +1098,8 @@ export const useCanvasActions = (
         const activesGroup = new fabric.ActiveSelection(newActives);
         canvas?.setActiveObject(activesGroup);
       }
+
+      updatePenColor(color);
 
       const obj = canvas?.getActiveObject() as any;
       if (!obj) return;
