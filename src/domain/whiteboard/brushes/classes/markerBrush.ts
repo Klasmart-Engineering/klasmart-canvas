@@ -174,12 +174,13 @@ export class MarkerBrush extends fabric.PencilBrush {
     let markerPath;
 
     if (this.style === 'marker') {
+      const singleWidth = width / (width < 4 ? 2 : 5);
       markerPath = new fabric.Group([
-        this.addSVGLine(1, points, color, width / 5, -width / 8),
-        this.addSVGLine(0.8, points, color, width / 5, -width / 4),
-        this.addSVGLine(0.6, points, color, width / 5, 0),
-        this.addSVGLine(0.4, points, color, width / 5, width / 4),
-        this.addSVGLine(0.2, points, color, width / 5, width / 8),
+        this.addSVGLine(1, points, color, singleWidth, -width / 8),
+        this.addSVGLine(0.8, points, color, singleWidth, -width / 4),
+        this.addSVGLine(0.6, points, color, singleWidth, 0),
+        this.addSVGLine(0.4, points, color, singleWidth, width / 4),
+        this.addSVGLine(0.2, points, color, singleWidth, width / 8),
       ]);
     } else {
       markerPath = new fabric.Group([

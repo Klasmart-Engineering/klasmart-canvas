@@ -214,11 +214,12 @@ export const useCanvasActions = (
         case 'pen':
           brush = new PenBrush(canvas, userId);
 
+          const { min, max } = brush.setMinMaxWidth(lineWidth);
           const penPoints = original.points.map((point) => {
             return {
               x: point.x,
               y: point.y,
-              width: (brush as PenBrush).getRandomInt(lineWidth / 2, lineWidth),
+              width: (brush as PenBrush).getRandomInt(min, max),
             };
           });
 
@@ -767,14 +768,12 @@ export const useCanvasActions = (
               switch (brushType) {
                 case 'pen':
                   brush = new PenBrush(canvas, userId);
+                  const { min, max } = brush.setMinMaxWidth(lineWidth);
                   const penPoints = points.map((point) => {
                     return {
                       x: point.x,
                       y: point.y,
-                      width: (brush as PenBrush).getRandomInt(
-                        lineWidth / 2,
-                        lineWidth
-                      ),
+                      width: (brush as PenBrush).getRandomInt(min, max),
                     };
                   });
 
@@ -1258,14 +1257,15 @@ export const useCanvasActions = (
 
             case 'pen':
               brush = new PenBrush(canvas, userId);
+              const { min, max } = (brush as PenBrush).setMinMaxWidth(
+                Number(basePath?.strokeWidth)
+              );
+
               const penPoints = points.map((point) => {
                 return {
                   x: point.x,
                   y: point.y,
-                  width: (brush as PenBrush).getRandomInt(
-                    Number(basePath?.strokeWidth) / 2,
-                    Number(basePath?.strokeWidth)
-                  ),
+                  width: (brush as PenBrush).getRandomInt(min, max),
                 };
               });
 

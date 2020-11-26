@@ -1842,13 +1842,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         if (
           isEmptyShape(object as TypedShape) ||
           (isFreeDrawing(object) &&
-            (object as ICanvasPathBrush).basePath.type !== 'dashed')
+            (object as ICanvasPathBrush).basePath?.type !== 'dashed')
         ) {
           object.set('strokeWidth', lineWidth);
           newActives.push(object);
         }
 
-        if ((object as ICanvasPathBrush).basePath.type === 'dashed') {
+        if ((object as ICanvasPathBrush).basePath?.type === 'dashed') {
           object.set({
             strokeDashArray: [lineWidth * 2],
           });
