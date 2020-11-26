@@ -49,13 +49,14 @@ export const changeLineWidthInSpecialBrushes = async (
         let points: IPenPoint[] = (basePath?.points as IPenPoint[]) || [];
 
         brush = new PenBrush(canvas, userId);
+        const { min, max } = brush.setMinMaxWidth(lineWidth);
 
         if (!target) {
           points = points.map((point) => {
             return {
               x: point.x,
               y: point.y,
-              width: (brush as PenBrush).getRandomInt(lineWidth / 2, lineWidth),
+              width: (brush as PenBrush).getRandomInt(min, max),
             };
           });
         }

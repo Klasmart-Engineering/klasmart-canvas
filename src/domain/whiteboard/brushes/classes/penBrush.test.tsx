@@ -72,12 +72,13 @@ describe('Pen Brush sould be created', () => {
     const id = `${userId}:${uuidv4()}`;
 
     const penBrush = new PenBrush(canvasTest as fabric.Canvas, userId);
+    const { min, max } = penBrush.setMinMaxWidth(width);
 
     const points = referencePoints.map((point) => {
       return {
         x: point.x,
         y: point.y,
-        width: penBrush.getRandomInt(width / 2, width),
+        width: penBrush.getRandomInt(min, max),
       };
     });
 
