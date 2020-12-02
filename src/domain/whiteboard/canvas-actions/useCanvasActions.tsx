@@ -1048,10 +1048,10 @@ export const useCanvasActions = (
           const basePath = (object as ICanvasPathBrush).basePath;
           (object as ICanvasPathBrush).set({
             basePath: {
-              type: basePath.type,
-              points: basePath.points,
+              type: basePath?.type,
+              points: basePath?.points,
               stroke: color,
-              strokeWidth: basePath.strokeWidth,
+              strokeWidth: basePath?.strokeWidth,
             },
           });
         }

@@ -60,7 +60,7 @@ const useSynchronizedBrushTypeChanged = (
           let brush;
           let newPath;
           const basePath = target;
-          const type = basePath.type;
+          const type = basePath?.type;
           let points = (basePath?.points as ICoordinate[]).map(
             (point: ICoordinate) => {
               return new fabric.Point(point.x, point.y);
@@ -108,7 +108,7 @@ const useSynchronizedBrushTypeChanged = (
 
               newPath = (brush as PenBrush).createPenPath(
                 String((object as ICanvasObject).id),
-                basePath.points as IPenPoint[],
+                basePath?.points as IPenPoint[],
                 Number(basePath?.strokeWidth),
                 String(basePath?.stroke)
               );
@@ -134,7 +134,7 @@ const useSynchronizedBrushTypeChanged = (
                 points,
                 Number(basePath?.strokeWidth),
                 String(basePath?.stroke),
-                basePath.bristles || []
+                basePath?.bristles || []
               );
               break;
 

@@ -959,7 +959,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           !brushIsActive
         ) {
           updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
-          updateBrushType((event.target as ICanvasShapeBrush).basePath.type);
+          updateBrushType((event.target as ICanvasShapeBrush).basePath?.type);
           updateLineWidth(
             event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH
           );
@@ -1857,14 +1857,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         // Updating basePath
         if (
           isFreeDrawing(object) &&
-          (object as ICanvasPathBrush).basePath.type !== 'dashed'
+          (object as ICanvasPathBrush).basePath?.type !== 'dashed'
         ) {
           const basePath = (object as ICanvasPathBrush).basePath;
           (object as ICanvasPathBrush).set({
             basePath: {
-              type: basePath.type,
-              points: basePath.points,
-              stroke: basePath.stroke,
+              type: basePath?.type,
+              points: basePath?.points,
+              stroke: basePath?.stroke,
               strokeWidth: lineWidth,
             },
           });

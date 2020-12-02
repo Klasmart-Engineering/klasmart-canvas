@@ -128,6 +128,7 @@ export const changeLineWidthInSpecialBrushes = async (
     }
 
     if (newObject) {
+      const id = (newObject as ICanvasBrush).id;
       (newObject as ICanvasBrush).set({
         angle: object.angle,
         top: object.top,
@@ -143,9 +144,11 @@ export const changeLineWidthInSpecialBrushes = async (
       });
 
       delete object.id;
+      delete (newObject as ICanvasBrush).id;
       canvas.remove(object);
       canvas.add(newObject);
 
+      (newObject as ICanvasBrush).set({ id: id });
       if (!target) {
         canvas.setActiveObject(newObject);
       }
