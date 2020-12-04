@@ -1897,6 +1897,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         onClose={updateImagePopupIsOpen}
         canvas={canvas as fabric.Canvas}
         backgroundImage={backgroundImage}
+        localImage={localImage}
         width={width}
         height={height}
       ></CanvasDownloadConfirm>
