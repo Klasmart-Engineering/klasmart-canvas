@@ -147,8 +147,12 @@ export const floodFillMouseEvent = async (
 
   let data = await floodFiller.fill(
     {
-      x: Math.round((event.pointer as { x: number; y: number }).x * window.devicePixelRatio),
-      y: Math.round((event.pointer as { x: number; y: number }).y * window.devicePixelRatio),
+      x: Math.round(
+        (event.pointer as { x: number; y: number }).x * window.devicePixelRatio
+      ),
+      y: Math.round(
+        (event.pointer as { x: number; y: number }).y * window.devicePixelRatio
+      ),
     },
     color,
     0
@@ -186,6 +190,7 @@ export const floodFillMouseEvent = async (
   }
 
   const tempData = tempCanvas.toDataURL();
+  console.log(tempData);
   let target: ICanvasObject;
 
   fabric.Image.fromURL(tempData, async (image: fabric.Image) => {
@@ -198,7 +203,7 @@ export const floodFillMouseEvent = async (
         canvas,
         userId,
         data as IFloodFillData,
-        eventSerializer,
+        eventSerializer
       );
 
       const payload: ObjectEvent = {
