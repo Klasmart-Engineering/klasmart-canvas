@@ -1587,17 +1587,20 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
       if (
         !(obj as fabric.Group).getObjects ||
-        !(obj as fabric.Group).getObjects().length
+        !(obj as fabric.Group).getObjects().length ||
+        (obj as ICanvasBrush).basePath
       ) {
         const type = obj?.get('type');
+        const basePath = (obj as ICanvasBrush).basePath;
+        const width = basePath ? basePath.strokeWidth : obj.strokeWidth;
 
         if (type === 'textbox') return;
 
-        if (obj?.strokeWidth === lineWidth) return;
+        if (width === lineWidth) return;
 
         const payload = {
           type,
-          target: { strokeWidth: obj?.strokeWidth },
+          target: { strokeWidth: width },
           id: obj?.id,
         };
 
