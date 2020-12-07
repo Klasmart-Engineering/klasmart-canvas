@@ -41,6 +41,7 @@ type Props = {
   onClose: (open: boolean) => void;
   canvas: fabric.Canvas;
   backgroundImage?: string | File | undefined;
+  localImage?: string | File | undefined;
   width: number;
   height: number;
 };
