@@ -1044,6 +1044,9 @@ export const useCanvasActions = (
       toolbarIsEnabled &&
       (allToolbarIsEnabled || serializerToolbarState.partialErase)
     ) {
+      canvas?.discardActiveObject();
+      canvas?.renderAll();
+      
       eraser = new PartialErase(
         userId as string,
         canvas as fabric.Canvas,

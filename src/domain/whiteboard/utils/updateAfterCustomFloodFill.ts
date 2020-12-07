@@ -1,7 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { findIntersectedObjects } from './findIntersectedObjects';
 import { findLocalObjects } from './findLocalObjects';
-import { findTopLeftOfCollection } from './findTopLeftOfCollection';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
@@ -53,10 +52,12 @@ export const updateAfterCustomFloodFill = async (
     findLocalObjects(userId, canvas.getObjects()),
     canvas
   );
-  const { top, left } = findTopLeftOfCollection(objectsAtPoint);
-
   let singleObject = new fabric.Group(objectsAtPoint);
   let joinedIds: string[] = [];
+
+  const bounds = singleObject.getBoundingRect();
+  const top = bounds.top;
+  const left = bounds.left;
 
   objectsAtPoint.forEach((o: TypedShape) => {
     o.set({
