@@ -92,6 +92,77 @@ const useSynchronizedScaled = (
     [fixPaintBrushLines]
   );
 
+  /**
+   * Remove the given chalk/crayon path from canvas
+   * and add a new one in the correct scale in remote whiteboard
+   * @param {ICanvasBrush} path - Path to remove
+   */
+  const remakePathSync = useCallback(
+    async (path: ICanvasBrush) => {
+      if (!canvas || !userId) return;
+
+      // Data to generate a new chalk/crayon path
+      const basePath = path.basePath;
+
+      // Brush creation
+      const brush = new ChalkBrush(
+        canvas,
+        userId,
+        basePath?.type as 'crayon' | 'chalk'
+      );
+
+      // new points creation based on the new scale
+      const newPoints = (basePath?.points as ICoordinate[]).map((point) => {
+        return {
+          x: point.x * Number(path?.scaleX),
+          y: point.y * Number(path?.scaleY),
+        };
+      });
+
+      // new chalk/crayon effect for the new path
+      const newRects = brush.createChalkEffect(
+        newPoints,
+        Number(basePath?.strokeWidth)
+      );
+
+      // Path creation
+      await brush
+        .createChalkPath(
+          String(path.id),
+          newPoints,
+          Number(basePath?.strokeWidth),
+          String(basePath?.stroke),
+          newRects
+        )
+        .then((newObject) => {
+          if (!path) return;
+
+          const id = path.id;
+          newObject.set({
+            top: path.top,
+            left: path.left,
+            angle: path.angle,
+            flipX: path.flipX,
+            flipY: path.flipY,
+          });
+
+          // Id's are deleted to avoid add and remove event serializing
+          delete path.id;
+          delete newObject.id;
+
+          canvas.remove(path);
+          canvas.add(newObject);
+          canvas.renderAll();
+
+          // Id's are deleted to avoid add and remove event serializing
+          newObject.set({
+            id: id,
+          });
+        });
+    },
+    [canvas, userId]
+  );
+
   /** Register and handle remote event. */
   useEffect(() => {
     const objectScaled = (id: string, target: ICanvasObject) => {
@@ -116,6 +187,10 @@ const useSynchronizedScaled = (
 
             if (object.type === 'group-marker') {
               fixLines(obj as ICanvasBrush);
+            }
+
+            if (object.type === 'image-based') {
+              remakePathSync(obj as ICanvasBrush);
             }
           }
         }
@@ -193,7 +268,14 @@ const useSynchronizedScaled = (
     return () => {
       eventController?.removeListener('scaled', scaled);
     };
-  }, [canvas, eventController, fixLines, shouldHandleRemoteEvent, userId]);
+  }, [
+    canvas,
+    eventController,
+    fixLines,
+    remakePathSync,
+    shouldHandleRemoteEvent,
+    userId,
+  ]);
 
   useEffect(() => {
     const objectScaled = async (e: fabric.IEvent | CanvasEvent) => {
@@ -314,6 +396,7 @@ const useSynchronizedScaled = (
               .then((newObject) => {
                 if (!e.target) return;
 
+                const id = brushTarget.id;
                 newObject.set({
                   top: e.target.top,
                   left: e.target.left,
@@ -322,10 +405,21 @@ const useSynchronizedScaled = (
                   flipY: e.target.flipY,
                 });
 
+                // Id's are deleted to avoid add and remove event serializing
+                delete (e.target as ICanvasBrush).id;
+                delete newObject.id;
+
                 canvas.remove(e.target);
                 canvas.add(newObject);
                 canvas.setActiveObject(newObject);
                 canvas.renderAll();
+
+                // Id's are deleted to avoid add and remove event serializing
+                newObject.set({
+                  id: id,
+                });
+
+                target.type = 'image-based';
               });
             break;
         }

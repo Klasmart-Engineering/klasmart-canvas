@@ -5,6 +5,7 @@ import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { fabric } from 'fabric';
 import { colorChangeSynchronizationInSpecialBrushes } from '../brushes/actions/colorChangeSynchronizationInSpecialBrushes';
+import { ChalkBrush } from '../brushes/classes/chalkBrush';
 
 const useSynchronizedColorChanged = (
   canvas: fabric.Canvas | undefined,
@@ -52,6 +53,55 @@ const useSynchronizedColorChanged = (
                 obj as ICanvasBrush,
                 target
               );
+              break;
+
+            // Chalk/Crayon path case, original is removed and recreated with a new color
+            case 'image':
+              const basePath = (obj as ICanvasBrush).basePath;
+              const brush = new ChalkBrush(
+                canvas,
+                userId,
+                basePath?.type as 'chalk' | 'crayon'
+              );
+
+              const clearRects = brush.createChalkEffect(
+                basePath?.points || [],
+                Number(basePath?.strokeWidth)
+              );
+
+              brush
+                .createChalkPath(
+                  String(target.id),
+                  basePath?.points || [],
+                  Number(basePath?.strokeWidth),
+                  String(target.stroke),
+                  clearRects
+                )
+                .then((newPath) => {
+                  const id = obj.id;
+
+                  newPath.set({
+                    angle: obj.angle,
+                    top: obj.top,
+                    left: obj.left,
+                    flipX: obj.flipX,
+                    flipY: obj.flipY,
+                  });
+
+                  delete obj.id;
+                  delete newPath.id;
+
+                  canvas.remove(obj);
+                  canvas.add(newPath);
+                  canvas.renderAll();
+
+                  newPath.set({
+                    id: id,
+                  });
+                })
+                .catch((error: Error) => {
+                  console.warn(error);
+                });
               break;
           }
         }

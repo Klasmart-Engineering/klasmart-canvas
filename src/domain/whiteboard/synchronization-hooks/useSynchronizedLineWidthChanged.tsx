@@ -27,6 +27,7 @@ const useSynchronizedLineWidthChanged = (
         'polygon',
         'path',
         'group',
+        'image',
       ];
 
       if (id && !shouldHandleRemoteEvent(id)) return;
@@ -34,7 +35,7 @@ const useSynchronizedLineWidthChanged = (
         if (obj.id && obj.id === id) {
           if (validTypes.includes(objectType)) {
             // Line width Synchronization in special brushes
-            if (objectType === 'group') {
+            if (objectType === 'group' || objectType === 'image') {
               const lineWidth = Number(
                 (target as ICanvasBrush).basePath?.strokeWidth
               );

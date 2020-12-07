@@ -959,7 +959,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           !brushIsActive
         ) {
           updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
-          updateBrushType((event.target as ICanvasShapeBrush).basePath.type);
+          updateBrushType((event.target as ICanvasShapeBrush).basePath?.type);
           updateLineWidth(
             event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH
           );
@@ -1586,18 +1586,21 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (!obj) return;
 
       if (
-        !(obj as fabric.Group).getObjects ||
-        !(obj as fabric.Group).getObjects().length
+        (obj as ICanvasBrush).basePath?.type === 'pencil' &&
+        (!(obj as fabric.Group).getObjects ||
+          !(obj as fabric.Group).getObjects().length)
       ) {
         const type = obj?.get('type');
+        const basePath = (obj as ICanvasBrush).basePath;
+        const width = basePath ? basePath.strokeWidth : obj.strokeWidth;
 
         if (type === 'textbox') return;
 
-        if (obj?.strokeWidth === lineWidth) return;
+        if (width === lineWidth) return;
 
         const payload = {
           type,
-          target: { strokeWidth: obj?.strokeWidth },
+          target: { strokeWidth: width },
           id: obj?.id,
         };
 
@@ -1857,14 +1860,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         // Updating basePath
         if (
           isFreeDrawing(object) &&
-          (object as ICanvasPathBrush).basePath.type !== 'dashed'
+          (object as ICanvasPathBrush).basePath?.type !== 'dashed'
         ) {
           const basePath = (object as ICanvasPathBrush).basePath;
           (object as ICanvasPathBrush).set({
             basePath: {
-              type: basePath.type,
-              points: basePath.points,
-              stroke: basePath.stroke,
+              type: basePath?.type,
+              points: basePath?.points,
+              stroke: basePath?.stroke,
               strokeWidth: lineWidth,
             },
           });
@@ -1888,7 +1891,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             .then((newObject) => {
               newActives.push(newObject as ICanvasObject);
               payload = {
-                type: 'group',
+                type: newObject.type as ObjectType,
                 target: {
                   basePath: {
                     points: newObject.basePath?.points || [],
@@ -1902,6 +1905,27 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               };
 
               eventSerializer?.push('lineWidthChanged', payload);
+
+              // Payload for undo/redo dispatcher
+              const undoRedoPayload = {
+                type: newObject.type,
+                target: { strokeWidth: width },
+                id: newObject?.id,
+              };
+
+              // Event for undo/redo dispatcher
+              const event = {
+                event: undoRedoPayload,
+                type: 'lineWidthChanged',
+              };
+
+              // Disptaching line width change for custom paths
+              undoRedoDispatch({
+                type: SET,
+                payload: canvas?.getObjects() as TypedShape[],
+                canvasId: userId,
+                event: (event as unknown) as IUndoRedoEvent,
+              });
             })
             .catch((e: Error) => {
               if (e.message === 'lineWidth is the same') {
@@ -1926,7 +1950,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (canvas?.getActiveObjects()) {
       changeLineWidth();
     }
-  }, [lineWidth, canvas, userId, eventSerializer]);
+  }, [lineWidth, canvas, userId, eventSerializer, width, undoRedoDispatch]);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {

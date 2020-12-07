@@ -1048,10 +1048,10 @@ export const useCanvasActions = (
           const basePath = (object as ICanvasPathBrush).basePath;
           (object as ICanvasPathBrush).set({
             basePath: {
-              type: basePath.type,
-              points: basePath.points,
+              type: basePath?.type,
+              points: basePath?.points,
               stroke: color,
-              strokeWidth: basePath.strokeWidth,
+              strokeWidth: basePath?.strokeWidth,
             },
           });
         }
@@ -1365,6 +1365,16 @@ export const useCanvasActions = (
           };
 
           eventSerializer?.push('brushTypeChanged', payload);
+
+          const event = { event: payload, type: 'brushTypeChanged' };
+
+          // Dispatching Brush Type Change in Custom Paths
+          dispatch({
+            type: SET,
+            payload: canvas?.getObjects() as TypedShape[],
+            canvasId: userId,
+            event: (event as unknown) as IUndoRedoEvent,
+          });
         }
       }
 
@@ -1377,7 +1387,7 @@ export const useCanvasActions = (
 
       canvas?.renderAll();
     },
-    [canvas, eventSerializer, updateBrushType, userId]
+    [canvas, dispatch, eventSerializer, updateBrushType, userId]
   );
 
   /**
