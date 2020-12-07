@@ -1586,9 +1586,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       if (!obj) return;
 
       if (
-        !(obj as fabric.Group).getObjects ||
-        !(obj as fabric.Group).getObjects().length ||
-        (obj as ICanvasBrush).basePath
+        (obj as ICanvasBrush).basePath?.type === 'pencil' &&
+        (!(obj as fabric.Group).getObjects ||
+          !(obj as fabric.Group).getObjects().length)
       ) {
         const type = obj?.get('type');
         const basePath = (obj as ICanvasBrush).basePath;
@@ -1891,7 +1891,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
             .then((newObject) => {
               newActives.push(newObject as ICanvasObject);
               payload = {
-                type: 'group',
+                type: newObject.type as ObjectType,
                 target: {
                   basePath: {
                     points: newObject.basePath?.points || [],
@@ -1905,6 +1905,27 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
               };
 
               eventSerializer?.push('lineWidthChanged', payload);
+
+              // Payload for undo/redo dispatcher
+              const undoRedoPayload = {
+                type: newObject.type,
+                target: { strokeWidth: width },
+                id: newObject?.id,
+              };
+
+              // Event for undo/redo dispatcher
+              const event = {
+                event: undoRedoPayload,
+                type: 'lineWidthChanged',
+              };
+
+              // Disptaching line width change for custom paths
+              undoRedoDispatch({
+                type: SET,
+                payload: canvas?.getObjects() as TypedShape[],
+                canvasId: userId,
+                event: (event as unknown) as IUndoRedoEvent,
+              });
             })
             .catch((e: Error) => {
               if (e.message === 'lineWidth is the same') {
@@ -1929,7 +1950,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (canvas?.getActiveObjects()) {
       changeLineWidth();
     }
-  }, [lineWidth, canvas, userId, eventSerializer]);
+  }, [lineWidth, canvas, userId, eventSerializer, width, undoRedoDispatch]);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {

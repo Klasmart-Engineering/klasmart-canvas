@@ -1365,6 +1365,16 @@ export const useCanvasActions = (
           };
 
           eventSerializer?.push('brushTypeChanged', payload);
+
+          const event = { event: payload, type: 'brushTypeChanged' };
+
+          // Dispatching Brush Type Change in Custom Paths
+          dispatch({
+            type: SET,
+            payload: canvas?.getObjects() as TypedShape[],
+            canvasId: userId,
+            event: (event as unknown) as IUndoRedoEvent,
+          });
         }
       }
 
@@ -1377,7 +1387,7 @@ export const useCanvasActions = (
 
       canvas?.renderAll();
     },
-    [canvas, eventSerializer, updateBrushType, userId]
+    [canvas, dispatch, eventSerializer, updateBrushType, userId]
   );
 
   /**

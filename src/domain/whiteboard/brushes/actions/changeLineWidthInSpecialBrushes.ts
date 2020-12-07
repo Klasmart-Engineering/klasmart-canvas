@@ -99,31 +99,26 @@ export const changeLineWidthInSpecialBrushes = async (
 
       case 'chalk':
       case 'crayon':
-        if (target) {
-          canvas.remove(object);
-          canvas.renderAll();
-        } else {
-          brush = new ChalkBrush(canvas, userId, brushType);
+        brush = new ChalkBrush(canvas, userId, brushType);
 
-          const newClearRects = brush.createChalkEffect(
+        const newClearRects = brush.createChalkEffect(
+          basePath?.points || [],
+          lineWidth
+        );
+
+        await brush
+          .createChalkPath(
+            String(object.id),
             basePath?.points || [],
-            lineWidth
-          );
-
-          await brush
-            .createChalkPath(
-              String(object.id),
-              basePath?.points || [],
-              lineWidth,
-              String(basePath?.stroke),
-              newClearRects
-            )
-            .then((response) => {
-              if (response) {
-                newObject = response;
-              }
-            });
-        }
+            lineWidth,
+            String(basePath?.stroke),
+            newClearRects
+          )
+          .then((response) => {
+            if (response) {
+              newObject = response;
+            }
+          });
         break;
     }
 

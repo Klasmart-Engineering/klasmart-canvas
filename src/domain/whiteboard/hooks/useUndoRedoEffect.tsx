@@ -166,21 +166,26 @@ export const UndoRedo = (
           joinedIds = [...joinedIds, ...(currentIds as string[])];
         }
 
-        let objects = JSON.parse(state.states[state.activeStateIndex as number])
-          .objects;
-        const filteredObjects = objects.filter(
-          (o: ObjectEvent) =>
-            // @ts-ignore  - TS ignoring optional chaining.
-            joinedIds.indexOf(o.id) !== -1
-        );
+        const states = state?.states[state?.activeStateIndex as number];
 
-        let newPayload: ObjectEvent = {
-          id,
-          target: { objects: filteredObjects },
-          type: 'reconstruct',
-        };
+        // If state has states reconstruct event is able to be sent
+        if (states) {
+          let objects = JSON.parse(states).objects;
 
-        eventSerializer?.push('reconstruct', newPayload);
+          const filteredObjects = objects.filter(
+            (o: ObjectEvent) =>
+              // @ts-ignore  - TS ignoring optional chaining.
+              joinedIds?.indexOf(o.id) !== -1
+          );
+
+          let newPayload: ObjectEvent = {
+            id,
+            target: { objects: filteredObjects },
+            type: 'reconstruct',
+          };
+
+          eventSerializer?.push('reconstruct', newPayload);
+        }
       } else if (nextEvent.type !== 'activeSelection') {
         let currentEvent = state.events[state.eventIndex];
         if ((nextEvent?.event as any).type === 'background') {
