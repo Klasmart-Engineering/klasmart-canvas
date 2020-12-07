@@ -286,7 +286,6 @@ export class PartialErase {
       this.canvas.add(image);
       image.bringToFront();
       this.canvas.renderAll();
-      this.canvas.setActiveObject(image);
       image.bringToFront();
     });
   };
