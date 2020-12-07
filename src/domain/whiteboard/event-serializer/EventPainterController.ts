@@ -103,6 +103,8 @@ export class EventPainterController extends EventEmitter
       case 'lineWidthChanged':
         this.lineWidthChanged(event.id, event.objectType, target);
         break;
+      case 'pointer':
+        this.pointer(event.id, target);
     }
   }
 
@@ -168,5 +170,9 @@ export class EventPainterController extends EventEmitter
     target: ICanvasObject
   ) {
     this.emit('lineWidthChanged', id, objectType, target);
+  }
+
+  private pointer(id: string, target: ICanvasObject) {
+    this.emit('pointer', id, target);
   }
 }

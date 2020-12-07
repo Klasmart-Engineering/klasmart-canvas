@@ -36,6 +36,7 @@ import useSynchronizedReconstruct from './synchronization-hooks/useSynchronizedR
 import useSynchronizedPointer from './synchronization-hooks/useSynchronizedPointer';
 import useSynchronizedSetToolbarPermissions from './synchronization-hooks/useSynchronizedSetToolbarPermissions';
 import useSynchronizedFontColorChanged from './synchronization-hooks/useSynchronizedFontColorChanged';
+import useSynchronizedRealtime from './synchronization-hooks/useSynchronizedMovingRealtime';
 
 import { REDO, SET, SET_GROUP, UNDO } from './reducers/undo-redo';
 import { ICanvasFreeDrawingBrush } from '../../interfaces/free-drawing/canvas-free-drawing-brush';
@@ -73,6 +74,7 @@ import {
   createGif,
   createImageAsObject,
 } from './gifs-actions/util';
+import { Realtime } from './realtime/realtime';
 interface IBackgroundImage extends IStaticCanvasOptions {
   id?: string;
 }
@@ -553,6 +555,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
 
     if (brushIsActive && canvas) {
+      let coordinates: any[] = [];
+
       canvas.freeDrawingBrush = new fabric.PencilBrush();
       (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
       canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
@@ -561,13 +565,43 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       canvas.isDrawingMode =
         allToolbarIsEnabled || (toolbarIsEnabled && serializerToolbarState.pen);
 
+
+      canvas?.on('mouse:move', (e:any) => {
+        if ((e.e as MouseEvent).which && (e.e as MouseEvent).buttons && canvas) {
+          coordinates.push(e.pointer);
+
+          console.log('wtf', penColor);
+
+          if (coordinates.length && coordinates.length % 10 === 0) {
+            const payload: ObjectEvent = {
+              type: 'path',
+              target: { 
+                coordinates,
+                color: penColor || DEFAULT_VALUES.PEN_COLOR,
+                lineWidth,
+                id: 'teacher',
+              },
+              id: 'teacher',
+            };
+
+            eventSerializer.push('moving', payload);
+          }
+        } else {
+          coordinates = [];
+        }
+      });
+  
+
+
       canvas.on('path:created', pathCreated);
+      
     } else if (canvas && !brushIsActive && !partialEraseIsActive) {
       canvas.isDrawingMode = false;
     }
 
     return () => {
       canvas?.off('path:created');
+      canvas?.off('mouse:move');
     };
   }, [
     brushIsActive,
@@ -1395,6 +1429,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     userId,
     filterIncomingEvents,
     undoRedoDispatch
+  );
+  useSynchronizedRealtime(
+    canvas,
+    filterIncomingEvents,
+    userId,
   );
 
   /**

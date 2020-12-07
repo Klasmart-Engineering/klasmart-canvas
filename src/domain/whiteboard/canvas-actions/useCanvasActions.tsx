@@ -136,6 +136,9 @@ export const useCanvasActions = (
         }
 
         shape.set(anchor);
+
+        console.log('shape::::: ', shape);
+
         canvas.renderAll();
       });
     },
@@ -227,6 +230,9 @@ export const useCanvasActions = (
 
         clearOnMouseEvent();
         mouseMove(shape, e.pointer, specific);
+
+        console.log('shape:::::::: ', shape, e.pointer, specific);
+
         mouseUp(shape, e.pointer, specific);
         canvas.add(shape);
       });
@@ -413,12 +419,27 @@ export const useCanvasActions = (
         }
 
         shape.set(anchor);
+
         canvas.renderAll();
 
         setShapeInProgress({
           shape: shape,
           startPoint: startPoint,
         });
+
+        let type = shape.type;
+        let target = {
+          type: shape.name,
+          shape
+        };
+
+        let payload = {
+          type,
+          target,
+          id: 'teacher',
+        };
+
+        eventSerializer?.push('moving', payload);
       });
 
       canvas?.on('mouse:up', (e: IEvent) => {

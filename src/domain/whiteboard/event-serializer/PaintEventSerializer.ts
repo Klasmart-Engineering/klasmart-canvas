@@ -30,7 +30,8 @@ export interface ObjectEvent {
     | boolean
     | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean }
     | IToolbarUI
-    | string;
+    | string
+    | { coordinates: { x: number, y: number}[], lineWidth: number, color: string };
 }
 
 export interface IBackgroundImageEvent {

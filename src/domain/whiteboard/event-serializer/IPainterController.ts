@@ -86,6 +86,11 @@ export interface IPainterController {
     listener: () => void
   ): this;
 
+  on(
+    event: 'pointer',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+
   removeListener(
     event: 'added',
     listener: (id: string, objectType: string, target: ICanvasObject) => void
@@ -144,6 +149,10 @@ export interface IPainterController {
   removeListener(
     event: 'refetch',
     listener: () => void
+  ): this;
+  removeListener(
+    event: 'pointer',
+    listener: (id: string, target: ICanvasObject) => void
   ): this;
 
   replayEvents(): Promise<void>;
