@@ -1,211 +1,197 @@
 import { TypedShape } from '../../../interfaces/shapes/shapes';
-import { Canvas, Group } from 'fabric/fabric-impl';
-import { isSpecialFreeDrawing } from './shapes';
-import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
+interface IPixel {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface IPixeledObject {
+  x: number;
+  y: number;
+  pixelMap: IPixelMap;
+}
+
+interface IPixelMap {
+  data: {
+    x: number;
+    y: number;
+  }[];
+  resolution: number;
+}
+
+/**
+ * Checks the objects in objectsList
+ * to know if are really intersecting mainObject
+ * @param {TypedShape} mainObject - Flood-fill object
+ * @param {TypedShape} objectsList - Objects to compare with mainObject
+ * @param {fabric.Canvas} canvas - Canvas in which the objects are
+ */
 export const findIntersectedObjects = (
   mainObject: TypedShape,
   objectsList: TypedShape[],
-  canvas: Canvas
+  canvas: fabric.Canvas
 ) => {
-  /* Color to set in the stroke of the current compared object
-    to could difference it in the mainObject color data */
-  const differentStroke = '#ababab';
-
   /**
-   * Color to set in the mainObject's background to better the algorithm
-   * and exclude that objects that are in the mainObject's area but are not
-   * in the mainObject's fill
+   * Maps the object's ubication to find its pixels
+   * @param {TypedShape} object - Object to find pixels
+   * @param {number} resolution - Resolution image. A bigger number
+   * means better performance but worse precision.
    */
-  const differentBackground = '#acacac';
+  const pixelMapping = (
+    object: TypedShape,
+    resolution: number
+  ): IPixeledObject => {
+    // Hiding the the rest of objects to get just iamge data for this object
+    toogleOtherObjects(object, false);
 
-  /**
-   * Check if really the given object is intersecting the mainObject
-   * @param {TypedShape} object - object to check
-   */
-  const isTouchingMainObject = (object: TypedShape) => {
-    /* If comparation is with same object,
-      this will be pass directly like intersectedObject */
-    if (object === mainObject) return true;
+    let pixelMap = [];
+    const ctx = canvas.getContext();
 
-    if (mainObject.intersectsWithObject(object)) {
-      if (object.type === 'image') {
-        showOtherObjects(false, object);
-        canvas.renderAll();
+    // Getting bounding rect in case of object is rotated
+    const bound = object.getBoundingRect();
 
-        let data = getMainObjectColorData();
+    const width = Number(object.width) * Number(object.scaleX);
+    const height = Number(object.height) * Number(object.scaleY);
+    const startPoint = {
+      x: Number(bound.left),
+      y: Number(bound.top),
+    };
 
-        return imageIsTouching(data, object);
-      } else {
-        let originalStroke = String(
-          isSpecialFreeDrawing(object)
-            ? (object as ICanvasBrush).basePath?.stroke
-            : object.stroke
+    // Mapping each pixel in object to get the no transparent pixels
+    for (let y = startPoint.y; y <= startPoint.y + height; y += resolution) {
+      for (let x = startPoint.x; x <= startPoint.x + width; x += resolution) {
+        let pixel = ctx.getImageData(
+          x * window.devicePixelRatio,
+          y * window.devicePixelRatio,
+          resolution * window.devicePixelRatio,
+          resolution * window.devicePixelRatio
         );
 
-        mainObject.set({
-          backgroundColor: differentBackground,
-        });
-
-        if (isSpecialFreeDrawing(object)) {
-          (object as Group).forEachObject((line) => {
-            line.set({
-              stroke: differentStroke,
-            });
-          });
-        } else {
-          object.set({
-            stroke: differentStroke,
-          });
+        if (!isTransparent(pixel)) {
+          pixelMap.push({ x, y });
         }
-        canvas.renderAll();
-
-        let data = getMainObjectColorData();
-
-        return commonObjectIsTouching(data, object, originalStroke);
       }
     }
 
-    return false;
+    // Showing again the previous hidden objects
+    toogleOtherObjects(object, true);
+
+    return {
+      x: startPoint.x,
+      y: startPoint.y,
+      pixelMap: {
+        data: pixelMap,
+        resolution: resolution,
+      },
+    };
   };
 
   /**
-   * Coverts the given colorData to Hexadecimal Code
-   * @param {number[]} colorData - RGB color values
+   * Checks if exists a collision in the given pixels
+   * @param {IPixel} source - Pixel to compare
+   * @param {IPixel} target - Pixel to compare
    */
-  const rgbaDataToHexadecimalColor = (colorData: number[]) => {
-    return `#${(
-      (1 << 24) +
-      (colorData[0] << 16) +
-      (colorData[1] << 8) +
-      colorData[2]
-    )
-      .toString(16)
-      .slice(1)}`;
+  const isPixelCollision = (source: IPixel, target: IPixel) => {
+    return !(
+      source.y + source.height < target.y ||
+      source.y > target.y + target.height ||
+      source.x + source.width < target.x ||
+      source.x > target.x + target.width
+    );
   };
 
   /**
-   * Executes the necessary evaluations to check
-   * if the given image object is really touching the mainObject
-   * @param {Uint8ClampedArray} colorData - color data to review
-   * @param {TypedShape} currentObject - actual compared object
+   * Compares each source pixel with each target pixel
+   * to find a collision in one of them
+   * @param {IPixeledObject} source - Object to compare
+   * @param {IPixeledObject} target - Object to compare
    */
-  const imageIsTouching = (
-    colorData: Uint8ClampedArray,
-    currentObject: TypedShape
+  const findPixelCollision = (
+    source: IPixeledObject,
+    target: IPixeledObject
   ) => {
-    for (let i = 0; i < colorData.length; i += 4) {
-      let currentColor = [
-        colorData[i],
-        colorData[i + 1],
-        colorData[i + 2],
-        colorData[i + 3],
-      ];
+    // Checking each colored pixel coordinate in source object
+    for (let s = 0; s < source.pixelMap.data.length; s += 1) {
+      const sourcePixel = source.pixelMap.data[s];
+      const sourceArea: IPixel = {
+        x: sourcePixel.x,
+        y: sourcePixel.y,
+        width: target.pixelMap.resolution,
+        height: target.pixelMap.resolution,
+      };
 
-      if (
-        rgbaDataToHexadecimalColor(currentColor) !== canvas.backgroundColor &&
-        colorData[i + 3] !== 0
-      ) {
-        showOtherObjects(true, currentObject);
-        canvas.renderAll();
-        return true;
-      }
-    }
+      // Checking each colored pixel coordinate in target object
+      for (let t = 0; t < target.pixelMap.data.length; t += 1) {
+        const targetPixel = target.pixelMap.data[t];
+        const targetArea: IPixel = {
+          x: targetPixel.x,
+          y: targetPixel.y,
+          width: target.pixelMap.resolution,
+          height: target.pixelMap.resolution,
+        };
 
-    showOtherObjects(true, currentObject);
-    canvas.renderAll();
-    return false;
-  };
-
-  /**
-   * Executes the necessary evaluations to check
-   * if the given object is really touching the mainObject
-   * @param {Uint8ClampedArray} colorData - color data to review
-   * @param {TypedShape} currentObject - actual compared object
-   * @param {string} originalStroke - original stroke color
-   * for the currentObject
-   */
-  const commonObjectIsTouching = (
-    colorData: Uint8ClampedArray,
-    currentObject: TypedShape,
-    originalStroke: string
-  ) => {
-    for (let i = 0; i < colorData.length; i += 4) {
-      let currentColor = [
-        colorData[i],
-        colorData[i + 1],
-        colorData[i + 2],
-        colorData[i + 3],
-      ];
-
-      if (rgbaDataToHexadecimalColor(currentColor) === differentStroke) {
-        mainObject.set({
-          backgroundColor: 'transparent',
-        });
-
-        if (isSpecialFreeDrawing(currentObject)) {
-          const currentBrush =
-            (currentObject as ICanvasBrush).basePath?.bristles || [];
-          (currentObject as Group).forEachObject((line, index) => {
-            line.set({
-              stroke:
-                (currentObject as ICanvasBrush).basePath?.type === 'paintbrush'
-                  ? String(currentBrush[index].color)
-                  : originalStroke,
-            });
-          });
-        } else {
-          currentObject.set({
-            stroke: originalStroke,
-          });
+        // Comparing source and target's current pixel
+        if (isPixelCollision(sourceArea, targetArea)) {
+          return true;
         }
-        canvas.renderAll();
-
-        return true;
       }
     }
 
-    mainObject.set({
-      backgroundColor: 'transparent',
-    });
-
-    currentObject.set({
-      stroke: originalStroke,
-    });
-
-    canvas.renderAll();
     return false;
   };
 
   /**
-   * Show/hide the rest of elements that currently are not compared,
-   * but are intersecting the mainObject
-   * @param {boolean} status - status (true for show, false for hide)
-   * @param {TypedShape} currentObject - current compared object with mainObject
+   * Show/hide all the objects in canvas except the current object
+   * @param {TypedShape} currentObject - Object to ignore
+   * @param {boolean} status - Flag to show or hide objects
+   * (true: show, false: hide)
    */
-  const showOtherObjects = (status: boolean, currentObject: TypedShape) => {
+  const toogleOtherObjects = (currentObject: TypedShape, status: boolean) => {
     objectsList.forEach((obj) => {
-      if (mainObject.intersectsWithObject(obj) && currentObject !== obj) {
+      if (currentObject !== obj) {
         obj.set({
           visible: status,
         });
       }
     });
+
+    canvas.renderAll();
   };
 
   /**
-   * Get the current mainObject color data
+   * Checks the given image data to know if represents a transparent color
+   * @param {ImageData} image - Data to check
    */
-  const getMainObjectColorData = () => {
-    return canvas
-      .getContext()
-      .getImageData(
-        Number(mainObject.aCoords?.tl.x) * window.devicePixelRatio - 1,
-        Number(mainObject.aCoords?.tl.y) * window.devicePixelRatio - 1,
-        Number(mainObject.width) + 1,
-        Number(mainObject.height) + 2
-      ).data;
+  const isTransparent = (image: ImageData) => {
+    // Checking each alpha channel in image data
+    for (let i = 0; i < image.data.length; i += 4) {
+      if (image.data[i + 3] !== 0) {
+        return false;
+      }
+    }
+
+    return true;
   };
 
-  return objectsList.filter((o: TypedShape) => isTouchingMainObject(o));
+  // Pixels Data in Flood-fill object
+  const mainObjectPixels: IPixeledObject = pixelMapping(mainObject, 2);
+
+  return objectsList.filter((o: TypedShape) => {
+    let collision = false;
+
+    // if current object is flood-fill object, filter is no needed
+    if (o === mainObject) return true;
+
+    // If bounding box collision happens, the next step is check pixel collision
+    if (mainObject.intersectsWithObject(o) && o !== mainObject) {
+      // Pixels Data in current object
+      const pixels = pixelMapping(o, 2);
+
+      collision = findPixelCollision(pixels, mainObjectPixels);
+    }
+
+    return collision;
+  });
 };

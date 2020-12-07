@@ -195,7 +195,7 @@ const useSynchronizedAdded = (
         return;
       }
 
-      if (type === 'image' && !e.target.basePath) {
+      if (type === 'image' && !e.target.basePath && isGif) {
         const payload: ObjectEvent = {
           type,
           target: e.target,
