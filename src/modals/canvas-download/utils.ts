@@ -1,5 +1,6 @@
 interface IProps {
   backgroundImage?: string | File;
+  localImage?: string | File;
   width: number;
   height: number;
   canvas: fabric.Canvas;
@@ -32,7 +33,7 @@ const generateLink = (img: string, ext: string, type: string): void => {
  * @param type Type of image, either png or jpg.
  */
 export const downloadCanvas = (props: IProps, type: string) => {
-  if (props.backgroundImage) {
+  if (props.backgroundImage || props.localImage) {
     let canvas = document.createElement('canvas');
     let ctx = canvas.getContext('2d');
 
@@ -40,7 +41,7 @@ export const downloadCanvas = (props: IProps, type: string) => {
     canvas.height = props.height;
 
     var background = new Image();
-    background.src = props.backgroundImage as string;
+    background.src = props.backgroundImage as string || props.localImage as string;
 
     background.onload = () => {
       ctx?.drawImage(background, 0, 0, props.width, props.height);
