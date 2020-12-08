@@ -73,7 +73,7 @@ const useSynchronizedReconstruct = (
         if (object && object.type === 'path') {
           const group: TypedGroup | undefined = canvas
             ?.getObjects()
-            .filter((o: any) => o._objects)[0] as TypedGroup;
+            .filter((o: any) => o._objects && !o.basePath)[0] as TypedGroup;
           if (group && group.id) {
             canvas?.remove(group);
           }
