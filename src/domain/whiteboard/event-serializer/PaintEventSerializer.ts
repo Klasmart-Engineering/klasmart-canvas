@@ -31,7 +31,8 @@ export interface ObjectEvent {
     | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean }
     | IToolbarUI
     | string
-    | { coordinates: { x: number, y: number}[], lineWidth: number, color: string };
+    | { coordinates: { x: number, y: number}[], lineWidth: number, color: string }
+    | { type: string; svg: string };
 }
 
 export interface IBackgroundImageEvent {
@@ -55,7 +56,8 @@ export type ObjectType =
   | 'pointer'
   | 'gif'
   | 'backgroundImage'
-  | 'localImage';
+  | 'localImage'
+  | 'svg';
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {

@@ -19,10 +19,19 @@ export class Realtime {
    */
   public canvas: HTMLCanvasElement;
 
+  /**
+   * Points for path that is in process of being drawn
+   */
   public points: IPoint[];
 
+  /** 
+   * Stroke color, used when adding in realtime 
+   */
   private color!: { r: number; g: number; b: number; };
 
+  /**
+   * Line width of object being added.
+   */
   private lineWidth!: number;
 
   /**
@@ -30,7 +39,9 @@ export class Realtime {
    */
   private context: any;
 
-
+  /**
+   * User / instance id.
+   */
   private id: string;
 
 
@@ -57,6 +68,13 @@ export class Realtime {
     this.tool = null;
   }
 
+  /**
+   * Initiates realtime process for adding elements to canvas.
+   * @param canvas Canavs
+   * @param type type of object being added
+   * @param color Coloro of object being added
+   * @param lineWidth Line width of object being added
+   */
   public init(canvas: fabric.Canvas, type: string, color: string, lineWidth: number) {
     let fabricCanvas = canvas.getElement();
     fabricCanvas.parentNode?.insertBefore(this.canvas, fabricCanvas);
@@ -70,6 +88,9 @@ export class Realtime {
     }
   }
 
+  /**
+   * Checks if instance is initiated.
+   */
   public isInitiated() {
     return this.context !== null;
   }
@@ -90,6 +111,10 @@ export class Realtime {
       : null;
   }
 
+  /**
+   * Draws a path.
+   * @param points Path points
+   */
   public draw(points: IPoint[]) {
     let i = 0;
     this.clear();
@@ -108,6 +133,10 @@ export class Realtime {
     this.context.stroke();
   }
 
+  /**
+   * Draws a shape
+   * @param target Canvas target
+   */
   public shapeDraw(target: any) {
     this.clear();
     this.context.lineWidth = target.shape.strokeWidth;
@@ -115,6 +144,19 @@ export class Realtime {
     this.context.strokeRect(target.shape.left, target.shape.top, target.shape.width, target.shape.height);
   }
 
+  /**
+   * Real time text drawing process.
+   * @param target 
+   */
+  public textDraw(target: any) {
+    // text code here
+    // this.clear();
+    // this.context.strokeText('Hello ', 10, 50);
+  }
+
+  /**
+   * Clears temporary canvas.
+   */
   private clear() {
     this.context.clearRect(
       0,
@@ -124,6 +166,9 @@ export class Realtime {
     );
   }
 
+  /**
+   * Removes / destroys temporary canvas.
+   */
   public remove() {
     if (!this.isInitiated()) {
       return;

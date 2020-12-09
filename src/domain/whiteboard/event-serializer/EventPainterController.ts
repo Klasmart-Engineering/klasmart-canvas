@@ -3,6 +3,12 @@ import { IPainterController } from './IPainterController';
 import { PainterEvent } from './PainterEvent';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
+
+// for testing puroposes
+
+
+// end temporary testing code
+
 /**
  * This class is responsible for receiving remote events and translating that into
  * commands we can use to update the canvas. It needs to understand any optimizations
@@ -13,6 +19,36 @@ import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 export class EventPainterController extends EventEmitter
   implements IPainterController {
   readonly events: PainterEvent[] = [];
+
+  public ws: WebSocket | null;
+
+  constructor() {
+    super();
+
+    // @ts-ignore
+    this.ws = new WebSocket('ws://localhost:6969');
+
+    this.ws.onopen = () => {
+      console.log('opened');
+    }
+
+    this.ws.onmessage = (event) => {
+      let data = JSON.parse(event.data);
+
+      if (data.eventType === 'moving') {
+        this.emit('moving', data.id, data.target);
+      } else if (data.eventType === 'added') {
+        this.emit('added', data.id, data.objectType, data.target);
+      } else if (data.eventType === 'moved') {
+        this.emit('moved', data.id, data.objectType, data.target);
+      }
+    };
+
+
+    this.ws.onclose = () => {
+      this.ws = null;
+    }
+  }
 
   async replayEvents(): Promise<void> {
     for (const event of this.events) {
@@ -110,10 +146,16 @@ export class EventPainterController extends EventEmitter
 
   private added(id: string, objectType: string, target: ICanvasObject) {
     this.emit('added', id, objectType, target);
+
+    // for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, objectType, eventType: 'added', target: { ...target, id }} ));
   }
 
   private moved(id: string, objectType: string, target: ICanvasObject) {
     this.emit('moved', id, objectType, target);
+
+    // for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, objectType, eventType: 'moved', target: { ...target }} ));
   }
 
   private rotated(id: string, objectType: string, target: ICanvasObject) {
@@ -150,6 +192,9 @@ export class EventPainterController extends EventEmitter
 
   private moving(id: string, target: ICanvasObject) {
     this.emit('moving', id, target);
+
+    // for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, target, eventType: 'moving' }));
   }
 
   private setToolbarPermissions(id: string, target: ICanvasObject) {

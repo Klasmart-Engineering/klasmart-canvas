@@ -164,19 +164,25 @@ const useSynchronizedMoved = (
       }
     };
 
+
     canvas?.on('object:moved', objectMoved);
+    canvas?.on('object:moving', objectMoved);
+
 
     return () => {
       canvas?.off('object:moved', objectMoved);
+      canvas?.off('object:moving', objectMoved);
     };
   }, [canvas, eventSerializer, moveSelectedGroup, moveSelectedObject]);
 
   /** Register and handle remote moved event. */
   useEffect(() => {
     const moved = (id: string, objectType: string, target: ICanvasObject) => {
+      console.log('target:::::', target, id);
       if (!shouldHandleRemoteEvent(id)) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
+
         if (obj.id && obj.id === id) {
           if (objectType === 'activeSelection' && target.left && obj.left) {
             obj.set({
@@ -194,6 +200,7 @@ const useSynchronizedMoved = (
             obj.bringToFront();
             obj.setCoords();
           } else {
+
             obj.set({
               angle: target.angle || 0,
               top: target.top,

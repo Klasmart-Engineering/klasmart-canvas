@@ -4,7 +4,6 @@ import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
-import { Laser } from '../utils/laser';
 import { Realtime } from '../realtime/realtime';
 
 /**
@@ -47,23 +46,27 @@ const useSynchronizedRealtime = (
         id: string, 
         type: string,
         shape?: any,
+        eventType?: string,
       },
     ) => {
       if (!shouldHandleRemoteEvent(id)) {
         return;
       }
-      // if (!rt && canvas) {
-      //   rt = new Realtime(canvas?.getWidth() as number, canvas?.getHeight() as number, 'PencilBrush', id);
-      //   rt.init(canvas as fabric.Canvas, target.color, target.lineWidth);
-      // }
 
-      // rt?.draw(target.coordinates);
-
-      if (rt && !rt.isInitiated() && target.type !== 'rectangle') { 
-        rt.init(canvas as fabric.Canvas, 'PencilBrush', target.color, target.lineWidth);
-      } else if (rt && !rt.isInitiated() && target.type === 'rectangle') {
-        console.log('========================', target.shape);
-        rt.init(canvas as fabric.Canvas, 'rectangle', target.shape.stroke, target.lineWidth);
+      if (target.eventType !== 'added') {
+        if (
+          rt && !rt.isInitiated() && target.type !== 'rectangle' && target.type !== 'text'
+        ) { 
+          rt.init(canvas as fabric.Canvas, 'PencilBrush', target.color, target.lineWidth);
+        } else if (rt && !rt.isInitiated() && target.type === 'rectangle') {
+          rt.init(canvas as fabric.Canvas, 'rectangle', target.shape.stroke, target.lineWidth);
+        } else if (rt && !rt.isInitiated() && target.type === 'text') {
+          rt.init(canvas as fabric.Canvas, 'text', '#555555', 3);
+        } else if (rt && target.type === 'location') {
+          rt.init(canvas as fabric.Canvas, 'location', '#555555', 3);
+        }
+      } else if (target.eventType === 'added') {
+        
       }
 
       if (target.type !== 'rectangle') {
@@ -77,7 +80,6 @@ const useSynchronizedRealtime = (
 
     return () => {
       eventController?.removeListener('moving', moved);
-      console.log('return: ', rt, rt?.isInitiated());
       
       if (rt && rt.isInitiated()) {
         rt.remove();
