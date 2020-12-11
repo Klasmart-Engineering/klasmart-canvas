@@ -1,4 +1,5 @@
-import fabric from 'fabric/fabric-impl';
+import { fabric } from 'fabric';
+import * as shapes from '../shapes/shapes';
 
 /**
  * Point interface.
@@ -8,6 +9,16 @@ interface IPoint {
   y: number;
 }
 
+export interface IRealtimeData {
+  type: string;
+  target: fabric.Object;
+  coordinates?: IPoint[];
+  shape?: { [key: string]: string | number | undefined };
+}
+
+/**x
+ * Class to handle realtime creation of objects. 
+ */
 export class Realtime {
   /**
    * Pointer coordinates.
@@ -44,13 +55,35 @@ export class Realtime {
    */
   private id: string;
 
+  /**
+   * Temporary canvas will erasing will take place.
+   */
+  private tempCanvas: fabric.Canvas | null;
 
-  private tool: string | null;
+  /**
+   * Indicates shape to be drawn
+   */
+  private type: string | null;
 
+  /**
+   * Canvas width
+   */
+  private width: number;
+
+  /**
+   * Canvas height
+   */
+  private height: number;
+
+  /**
+   * 
+   * @param width Canvas width
+   * @param height Canvas height
+   * @param id User / instance id
+   */
   constructor(
     width: number,
     height: number,
-    tool: any,
     id: string,
   ) {
     this.canvas = document.createElement('canvas');
@@ -65,7 +98,10 @@ export class Realtime {
     this.pointer = null;
     this.points = [];
     this.context = null;
-    this.tool = null;
+    this.type = null;
+    this.tempCanvas = null;
+    this.width = width;
+    this.height = height;
   }
 
   /**
@@ -76,16 +112,19 @@ export class Realtime {
    * @param lineWidth Line width of object being added
    */
   public init(canvas: fabric.Canvas, type: string, color: string, lineWidth: number) {
+    if (type !== 'PencilBrush' && type !== 'text') {
+      this.tempCanvas = new fabric.Canvas(this.canvas, {
+        width: this.width,
+        height: this.height,
+      });
+    }
+
     let fabricCanvas = canvas.getElement();
     fabricCanvas.parentNode?.insertBefore(this.canvas, fabricCanvas);
     this.context = this.canvas.getContext('2d');
-    this.tool = type;
     this.color = this.hexToRgb(color);
     this.lineWidth = lineWidth;
-
-    if (type === 'rectangle') {
-      this.context.translate(0.5,0.5);
-    }
+    this.type = type;
   }
 
   /**
@@ -104,18 +143,59 @@ export class Realtime {
 
     return parsed
       ? {
-          r: parseInt(parsed[1], 16),
-          g: parseInt(parsed[2], 16),
-          b: parseInt(parsed[3], 16),
-        }
+        r: parseInt(parsed[1], 16),
+        g: parseInt(parsed[2], 16),
+        b: parseInt(parsed[3], 16),
+      }
       : null;
+  }
+
+  /**
+   * 
+   * @param target Contains shape information.
+   */
+  public draw(target: IRealtimeData) {
+    switch (this.type) {
+      case 'PencilBrush': {
+        this.drawPath(target.coordinates as IPoint[]);
+        break;
+      }
+      case 'rectangle': {
+        this.rectDraw(target);
+        break;
+      }
+      case 'circle': {
+        this.ellipseDraw(target);
+        break;
+      }
+      case 'triangle': {
+        this.triangleDraw(target);
+        break;
+      }
+      case 'pentagon': {
+        this.pentagonDraw(target);
+        break;
+      }
+      case 'hexagon': {
+        this.hexagonDraw(target);
+        break;
+      }
+      case 'star': {
+        this.starDraw(target);
+        break;
+      }
+      case 'chatBubble': {
+        this.chatDraw(target);
+        break;
+      }
+    }
   }
 
   /**
    * Draws a path.
    * @param points Path points
    */
-  public draw(points: IPoint[]) {
+  public drawPath(points: IPoint[]) {
     let i = 0;
     this.clear();
 
@@ -137,11 +217,120 @@ export class Realtime {
    * Draws a shape
    * @param target Canvas target
    */
-  public shapeDraw(target: any) {
+  public rectDraw(target: any) {
     this.clear();
-    this.context.lineWidth = target.shape.strokeWidth;
-    this.context.strokeStyle = target.shape.color || '#000000';// ;`rgba(${this.color.r},${this.color.g},${this.color.b},1)`;
-    this.context.strokeRect(target.shape.left, target.shape.top, target.shape.width, target.shape.height);
+    const rect = shapes.rectangle(target.shape.width, target.shape.height, '#000000', false, target.shape.strokeWidth);
+
+    rect.set({
+      top: target.shape.top,
+      left: target.shape.left,
+      originX: target.shape.originX,
+      originY: target.shape.originY,
+    });
+
+    this.tempCanvas?.add(rect);
+    this.tempCanvas?.renderAll();
+  }
+
+  /**
+   * Draws circle
+   * @param target Data of shape to be drawn.
+   */
+  public ellipseDraw(target: any) {
+    this.clear();
+    const ellipse = shapes.circle(target.shape.width, target.shape.height, target.shape.stroke, false, target.shape.strokeWidth);
+    ellipse.set({ top: target.shape.top, left: target.shape.left, originX: target.shape.originX, originY: target.shape.originY });
+    this.tempCanvas?.add(ellipse);
+    this.tempCanvas?.renderAll();
+  }
+
+  public triangleDraw(target: any) {
+    this.tempCanvas?.clear();
+    const triangle = shapes.triangle(
+      target.shape.width,
+      target.shape.height,
+      target.shape.stroke,
+      false,
+      target.shape.strokeWidth
+    );
+
+    triangle.set({
+      top: target.shape.top,
+      left: target.shape.left,
+      originX: target.shape.originX,
+      originY: target.shape.originY,
+    });
+
+    this.tempCanvas?.add(triangle);
+    this.tempCanvas?.renderAll();
+  }
+
+  /**
+   * 
+   * @param target Shape information
+   */
+  private shapeProps(shape: IRealtimeData['shape']) {
+    return {
+      top: shape?.top,
+      left: shape?.left,
+      originX: shape?.originX,
+      originY: shape?.originY,
+      scaleX: shape?.scaleX,
+      scaleY: shape?.scaleY,
+    }
+  }
+
+  public pentagonDraw(target: any) {
+    this.tempCanvas?.clear();
+    const pentagon = shapes.pentagon(
+      target.shape.stroke,
+      false,
+      target.shape.strokeWidth,
+    );
+
+    // @ts-ignore
+    pentagon.set(this.shapeProps(target.shape));
+
+    this.tempCanvas?.add(pentagon);
+    this.tempCanvas?.renderAll();
+  }
+
+  public hexagonDraw(target: any) {
+    this.tempCanvas?.clear();
+    const hexagon = shapes.hexagon(
+      target.shape.stroke,
+      false,
+      target.shape.strokeWidth,
+    );
+
+    // @ts-ignore
+    hexagon.set(this.shapeProps(target));
+    this.tempCanvas?.add(hexagon);
+    this.tempCanvas?.renderAll();
+  }
+
+  public starDraw(target: any) {
+    this.tempCanvas?.clear();
+    const star = shapes.star(2, 2, target.shape.stroke, false, target.shape.strokeWidth);
+
+    // @ts-ignore
+    star.set(this.shapeProps(target));
+    this.tempCanvas?.add(star);
+    this.tempCanvas?.renderAll();
+  }
+
+  public chatDraw(target: any) {
+    this.tempCanvas?.clear();
+    const star = shapes.chat(2, 2, target.shape.stroke, false, target.shape.strokeWidth);
+
+    // @ts-ignore
+    star.set(this.shapeProps(target));
+    this.tempCanvas?.add(star);
+    this.tempCanvas?.renderAll();
+  }
+
+  public arrowDraw(target: any) {
+
   }
 
   /**
@@ -149,9 +338,10 @@ export class Realtime {
    * @param target 
    */
   public textDraw(target: any) {
-    // text code here
-    // this.clear();
-    // this.context.strokeText('Hello ', 10, 50);
+    this.clear();
+    this.context.font = `${target.fontSize}px ${target.fontFamily}`;
+    this.context.fillText(target.text, target.left, target.top + target.height - 7);
+
   }
 
   /**
@@ -164,6 +354,8 @@ export class Realtime {
       this.canvas.width as number,
       this.canvas.height as number
     );
+
+    this.tempCanvas?.clear();
   }
 
   /**

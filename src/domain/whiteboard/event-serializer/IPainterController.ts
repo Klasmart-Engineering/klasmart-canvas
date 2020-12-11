@@ -91,6 +91,16 @@ export interface IPainterController {
     listener: (id: string, target: ICanvasObject) => void
   ): this;
 
+  on(
+    event: 'textEdit',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+
+  on(
+    event: 'partialErase',
+    listener: (id: string, coordinates: {x: number, y: number}[]) => void
+  ): this;
+
   removeListener(
     event: 'added',
     listener: (id: string, objectType: string, target: ICanvasObject) => void
@@ -153,6 +163,16 @@ export interface IPainterController {
   removeListener(
     event: 'pointer',
     listener: (id: string, target: ICanvasObject) => void
+  ): this;
+
+  removeListener(
+    event: 'textEdit',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+
+  removeListener(
+    event: 'partialErase',
+    listener: (id: string, coordinates: {x: number, y: number}[]) => void
   ): this;
 
   replayEvents(): Promise<void>;

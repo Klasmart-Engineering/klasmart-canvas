@@ -218,9 +218,11 @@ const useSynchronizedScaled = (
     };
 
     canvas?.on('object:scaled', objectScaled);
+    canvas?.on('object:scaling', objectScaled);
 
     return () => {
       canvas?.off('object:scaled', objectScaled);
+      canvas?.off('object:scaling', objectScaled);
     };
   }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
 };

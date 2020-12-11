@@ -376,7 +376,6 @@ export class PartialErase {
           target: image as ICanvasObject,
         };
 
-        console.log('ID: ', id);
         this.updateState(payload);
         this.eventSerializer.push('added', payload);
       });

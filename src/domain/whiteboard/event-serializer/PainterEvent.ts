@@ -13,7 +13,8 @@ export type PainterEventType =
   | 'setToolbarPermissions'
   | 'fontColorChanged'
   | 'lineWidthChanged'
-  | 'pointer';
+  | 'pointer'
+  | 'textEdit';
 
 export interface PainterEvent {
   // The event type.

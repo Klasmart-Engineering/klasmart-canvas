@@ -136,9 +136,6 @@ export const useCanvasActions = (
         }
 
         shape.set(anchor);
-
-        console.log('shape::::: ', shape);
-
         canvas.renderAll();
       });
     },

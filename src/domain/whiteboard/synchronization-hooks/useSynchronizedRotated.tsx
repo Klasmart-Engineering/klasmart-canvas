@@ -216,9 +216,11 @@ const useSynchronizedRotated = (
     };
 
     canvas?.on('object:rotated', objectRotated);
+    canvas?.on('object:rotating', objectRotated);
 
     return () => {
       canvas?.off('object:rotated', objectRotated);
+      canvas?.off('object:rotating', objectRotated);
     };
   }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
 };
