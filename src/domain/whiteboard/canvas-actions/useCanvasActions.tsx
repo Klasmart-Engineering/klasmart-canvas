@@ -712,6 +712,58 @@ export const useCanvasActions = (
   );
 
   /**
+   * Set the given visibility in all the controls in the given object.
+   * @param {ICanvasObject} object - Object to set controls visibility.
+   * @param {boolean} visibility - Visibility state.
+   */
+  const setObjectControlsVisibility = useCallback(
+    (object: ICanvasObject, visibility: boolean) => {
+      object.setControlsVisibility({
+        bl: visibility,
+        br: visibility,
+        mb: visibility,
+        ml: visibility,
+        mr: visibility,
+        mt: visibility,
+        tl: visibility,
+        tr: visibility,
+        mtr: visibility,
+      });
+    },
+    []
+  );
+
+  // Flood-fill Feature or maybe could be in CanvasActions.tsx
+  /**
+   * Reorder the current shapes letting the shapes over their container shape
+   */
+  const reorderShapes = useCallback(() => {
+    let temporal;
+    let actualIndex;
+    let compareIndex;
+
+    const getObjectIndex = (object: ICanvasObject, canvas: fabric.Canvas) => {
+      return canvas.getObjects().indexOf(object);
+    };
+
+    canvas?.forEachObject((actual) => {
+      canvas.forEachObject((compare) => {
+        actualIndex = getObjectIndex(actual, canvas);
+        compareIndex = getObjectIndex(compare, canvas);
+
+        if (
+          actual.isContainedWithinObject(compare) &&
+          actualIndex < compareIndex
+        ) {
+          temporal = getObjectIndex(actual, canvas);
+          actual.moveTo(compareIndex);
+          compare.moveTo(temporal);
+        }
+      });
+    });
+  }, [canvas]);
+
+  /**
    * Clears all whiteboard elements
    * */
   const clearWhiteboardClearAll = useCallback(async () => {
@@ -1005,7 +1057,6 @@ export const useCanvasActions = (
   }, [canvas, canvasId, userId]);
 
   useEffect(() => {
-
     if (!canvas) {
       return;
     }
@@ -1020,7 +1071,7 @@ export const useCanvasActions = (
     ) {
       canvas?.discardActiveObject();
       canvas?.renderAll();
-      
+
       eraser = new PartialErase(
         userId as string,
         canvas as fabric.Canvas,
@@ -1056,8 +1107,21 @@ export const useCanvasActions = (
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
       canvas?.off('path:created');
-    }
-  }, [canvas, eraseType, partialEraseIsActive, toolbarIsEnabled, allToolbarIsEnabled, serializerToolbarState.partialErase, userId, lineWidth, eventSerializer, dispatch, serializerToolbarState.erase, eraseObject]);
+    };
+  }, [
+    canvas,
+    eraseType,
+    partialEraseIsActive,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.partialErase,
+    userId,
+    lineWidth,
+    eventSerializer,
+    dispatch,
+    serializerToolbarState.erase,
+    eraseObject,
+  ]);
 
   /**
    * Deselect the actual selected object
@@ -1107,8 +1171,10 @@ export const useCanvasActions = (
       discardActiveObject,
       addShape,
       eraseObject,
+      reorderShapes,
       setCanvasSelection,
       setHoverCursorObjects,
+      setObjectControlsVisibility,
       undo,
       redo,
       clearWhiteboardAllowClearOthers,
@@ -1117,20 +1183,22 @@ export const useCanvasActions = (
 
     return { actions, mouseDown };
   }, [
-    addShape,
+    fillColor,
     changeStrokeColor,
+    textColor,
     clearWhiteboardClearAll,
     discardActiveObject,
+    addShape,
     eraseObject,
-    fillColor,
-    mouseDown,
+    reorderShapes,
     setCanvasSelection,
     setHoverCursorObjects,
-    textColor,
+    setObjectControlsVisibility,
     undo,
     redo,
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
+    mouseDown,
   ]);
 
   return state;
