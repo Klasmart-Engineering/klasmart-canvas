@@ -188,6 +188,10 @@ export class Realtime {
         this.chatDraw(target);
         break;
       }
+      case 'arrow': {
+        this.arrowDraw(target);
+        break;
+      }
     }
   }
 
@@ -219,7 +223,7 @@ export class Realtime {
    */
   public rectDraw(target: any) {
     this.clear();
-    const rect = shapes.rectangle(target.shape.width, target.shape.height, '#000000', false, target.shape.strokeWidth);
+    const rect = shapes.rectangle(target.shape.width, target.shape.height, target.shape.stroke, false, target.shape.strokeWidth);
 
     rect.set({
       top: target.shape.top,
@@ -280,6 +284,10 @@ export class Realtime {
     }
   }
 
+  /**
+   * Draws pentagon
+   * @param target Shape information
+   */
   public pentagonDraw(target: any) {
     this.tempCanvas?.clear();
     const pentagon = shapes.pentagon(
@@ -295,6 +303,10 @@ export class Realtime {
     this.tempCanvas?.renderAll();
   }
 
+  /**
+   * Draws hegaxon
+   * @param target Shape information
+   */
   public hexagonDraw(target: any) {
     this.tempCanvas?.clear();
     const hexagon = shapes.hexagon(
@@ -304,33 +316,51 @@ export class Realtime {
     );
 
     // @ts-ignore
-    hexagon.set(this.shapeProps(target));
+    hexagon.set(this.shapeProps(target.shape));
     this.tempCanvas?.add(hexagon);
     this.tempCanvas?.renderAll();
   }
 
+  /**
+   * Draws star
+   * @param target Shape inforamtion
+   */
   public starDraw(target: any) {
     this.tempCanvas?.clear();
     const star = shapes.star(2, 2, target.shape.stroke, false, target.shape.strokeWidth);
 
     // @ts-ignore
-    star.set(this.shapeProps(target));
+    star.set(this.shapeProps(target.shape));
     this.tempCanvas?.add(star);
     this.tempCanvas?.renderAll();
   }
 
+  /**
+   * Draws chat bubble
+   * @param target Shape information
+   */
   public chatDraw(target: any) {
     this.tempCanvas?.clear();
-    const star = shapes.chat(2, 2, target.shape.stroke, false, target.shape.strokeWidth);
+    const chat = shapes.chat(2, 2, target.shape.stroke, false, target.shape.strokeWidth);
 
     // @ts-ignore
-    star.set(this.shapeProps(target));
-    this.tempCanvas?.add(star);
+    chat.set(this.shapeProps(target.shape));
+    this.tempCanvas?.add(chat);
     this.tempCanvas?.renderAll();
   }
 
+   /**
+   * Draws arrow
+   * @param target Shape information
+   */
   public arrowDraw(target: any) {
+    this.tempCanvas?.clear();
+    const arrow = shapes.arrow(2, 2, target.shape.stroke, false, target.shape.strokeWidth);
 
+    // @ts-ignore
+    arrow.set(this.shapeProps(target.shape));
+    this.tempCanvas?.add(arrow);
+    this.tempCanvas?.renderAll();
   }
 
   /**
@@ -340,6 +370,7 @@ export class Realtime {
   public textDraw(target: any) {
     this.clear();
     this.context.font = `${target.fontSize}px ${target.fontFamily}`;
+    this.context.fillStyle = target.fill || '#000000';
     this.context.fillText(target.text, target.left, target.top + target.height - 7);
 
   }

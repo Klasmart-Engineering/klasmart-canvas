@@ -68,6 +68,10 @@ export class EventPainterController extends EventEmitter
           this.emit('scaled', data.id, data.objectType, data.target);
           break;
         }
+        case 'removed': {
+          this.emit('removed', data.id, data.target);
+          break;
+        }
       }
     };
 
@@ -235,6 +239,9 @@ export class EventPainterController extends EventEmitter
 
   private removed(id: string, target: boolean) {
     this.emit('removed', id, target);
+
+     // TEMPORARY for realtime testing purposes.
+     this.ws?.send(JSON.stringify({ id, target, eventType: 'removed' }));
   }
 
   private moving(id: string, target: ICanvasObject) {

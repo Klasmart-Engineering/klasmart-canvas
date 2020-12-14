@@ -10,6 +10,7 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { TypedGroup } from '../../../interfaces/shapes/group';
+import { IEvent } from 'fabric/fabric-impl';
 
 const useSynchronizedRotated = (
   canvas: fabric.Canvas | undefined,
@@ -123,7 +124,7 @@ const useSynchronizedRotated = (
 
   /** Register and handle local event. */
   useEffect(() => {
-    const objectRotated = (e: fabric.IEvent | CanvasEvent) => {
+    const objectRotated = (e: fabric.IEvent | CanvasEvent, filteredState?: boolean) => {
       if (!e.target) return;
 
       const type = (e.target as ICanvasObject).get('type');
@@ -202,7 +203,7 @@ const useSynchronizedRotated = (
 
         eventSerializer?.push('rotated', payload);
 
-        if (canvas) {
+        if (canvas && !filteredState) {
           const event = { event: payload, type: 'rotated' };
 
           undoRedoDispatch({
@@ -215,12 +216,16 @@ const useSynchronizedRotated = (
       }
     };
 
+    const objectRotating = (e: fabric.IEvent | CanvasEvent) => {
+      objectRotated(e, true);
+    };
+
     canvas?.on('object:rotated', objectRotated);
-    canvas?.on('object:rotating', objectRotated);
+    canvas?.on('object:rotating', objectRotating);
 
     return () => {
       canvas?.off('object:rotated', objectRotated);
-      canvas?.off('object:rotating', objectRotated);
+      canvas?.off('object:rotating', objectRotating);
     };
   }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
 };

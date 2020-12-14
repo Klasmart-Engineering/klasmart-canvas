@@ -227,9 +227,6 @@ export const useCanvasActions = (
 
         clearOnMouseEvent();
         mouseMove(shape, e.pointer, specific);
-
-        console.log('shape:::::::: ', shape, e.pointer, specific);
-
         mouseUp(shape, e.pointer, specific);
         canvas.add(shape);
       });

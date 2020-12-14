@@ -46,32 +46,29 @@ const useSynchronizedRealtime = (
         eventType?: string,
       },
     ) => {
-      if (!shouldHandleRemoteEvent(id)) {
-        return;
-      }
 
       if (target.eventType !== 'added') {
         if (
           rt && !rt.isInitiated() && target.type === 'PencilBrush') { 
           rt.init(canvas as fabric.Canvas, 'PencilBrush', target.color, target.lineWidth);
         } else if (rt && !rt.isInitiated() && target.type === 'rectangle') {
-          rt.init(canvas as fabric.Canvas, 'rectangle', target.shape.stroke, target.lineWidth);
+          rt.init(canvas as fabric.Canvas, 'rectangle', target.shape.stroke, target.shape.strokeWidth);
         } else if (rt && !rt.isInitiated() && target.type === 'circle') {
-          rt.init(canvas as fabric.Canvas, 'circle', target.shape.stroke, target.lineWidth);
+          rt.init(canvas as fabric.Canvas, 'circle', target.shape.stroke, target.shape.strokeWidth);
         } else if (rt && !rt.isInitiated() && target.type === 'text') {
-          rt.init(canvas as fabric.Canvas, 'text', '#555555', 3);
+          rt.init(canvas as fabric.Canvas, 'text', target.shape.stroke, target.shape.strokeWidth);
         } else if (rt && !rt.isInitiated() && target.type === 'triangle') {
-          rt.init(canvas as fabric.Canvas, 'triangle', '#555555', 3);
+          rt.init(canvas as fabric.Canvas, 'triangle', target.shape.stroke, target.shape.strokeWidth);
         } else if (rt && !rt.isInitiated() && target.type === 'pentagon') {
-          rt.init(canvas as fabric.Canvas, 'pentagon', '#555555', 3);
+          rt.init(canvas as fabric.Canvas, 'pentagon', target.shape.stroke, target.shape.strokeWidth);
         } else if (rt && !rt.isInitiated() && target.type === 'hexagon') {
-          rt.init(canvas as fabric.Canvas, 'hexagon', '#555555', 3);
+          rt.init(canvas as fabric.Canvas, 'hexagon', target.shape.stroke, target.shape.strokeWidth);
         } else if (rt && !rt.isInitiated() && target.type === 'arrow') {
-          rt.init(canvas as fabric.Canvas, 'arrow', '#555555', 3);
+          rt.init(canvas as fabric.Canvas, 'arrow', target.shape.stroke, target.shape.strokeWidth);
         } else if (rt && !rt.isInitiated() && target.type === 'star') {
-          rt.init(canvas as fabric.Canvas, 'star', '#555555', 3);
+          rt.init(canvas as fabric.Canvas, 'star', target.shape.stroke, target.shape.strokeWidth);
         } else if (rt && !rt.isInitiated() && target.type === 'chatBubble') {
-          rt.init(canvas as fabric.Canvas, 'chatBubble', '#555555', 3);
+          rt.init(canvas as fabric.Canvas, 'chatBubble', '#555555', target.shape.strokeWidth);
         }
       }
 
@@ -88,10 +85,11 @@ const useSynchronizedRealtime = (
         type: string,
         shape?: any,
         eventType?: string,
+        fill?: string;
       }
     ) => {
       if (rt && !rt.isInitiated() && target.type === 'i-text') {
-        rt.init(canvas as fabric.Canvas, 'text', '#555555', 3);
+        rt.init(canvas as fabric.Canvas, 'text', target.fill as string, target.shape.fontweight);
       }
 
       if (rt) {

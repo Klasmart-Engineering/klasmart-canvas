@@ -121,7 +121,7 @@ const useSynchronizedScaled = (
   }, [canvas, eventController, shouldHandleRemoteEvent, userId]);
 
   useEffect(() => {
-    const objectScaled = (e: fabric.IEvent | CanvasEvent) => {
+    const objectScaled = (e: fabric.IEvent | CanvasEvent, filtered?: boolean) => {
       if (!e.target) return;
 
       const type = (e.target as ICanvasObject).get('type');
@@ -204,7 +204,7 @@ const useSynchronizedScaled = (
 
         eventSerializer?.push('scaled', payload);
 
-        if (canvas) {
+        if (canvas && !filtered) {
           const event = { event: payload, type: 'scaled' };
 
           undoRedoDispatch({
@@ -217,12 +217,16 @@ const useSynchronizedScaled = (
       }
     };
 
+    const scaling = (e: fabric.IEvent | CanvasEvent) => {
+      objectScaled(e, true);
+    };
+
     canvas?.on('object:scaled', objectScaled);
-    canvas?.on('object:scaling', objectScaled);
+    canvas?.on('object:scaling', scaling);
 
     return () => {
       canvas?.off('object:scaled', objectScaled);
-      canvas?.off('object:scaling', objectScaled);
+      canvas?.off('object:scaling', scaling);
     };
   }, [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]);
 };

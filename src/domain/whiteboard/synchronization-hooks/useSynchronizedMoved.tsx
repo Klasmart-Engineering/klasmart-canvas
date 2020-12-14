@@ -25,7 +25,7 @@ const useSynchronizedMoved = (
   } = useSharedEventSerializer();
 
   const moveSelectedObject = useCallback(
-    (type: ObjectType, e: CanvasEvent) => {
+    (type: ObjectType, e: CanvasEvent, filteredState?: boolean) => {
       if (
         !e.target ||
         !e.target.id ||
@@ -53,7 +53,7 @@ const useSynchronizedMoved = (
         id: e.target.id,
       };
 
-      if (canvas) {
+      if (canvas && !filteredState) {
         const event = { event: payload, type: 'moved' };
 
         undoRedoDispatch({
@@ -70,7 +70,7 @@ const useSynchronizedMoved = (
   );
 
   const moveSelectedGroup = useCallback(
-    (type: ObjectType, e: CanvasEvent) => {
+    (type: ObjectType, e: CanvasEvent, filteredState?: boolean) => {
       const activeIds: string[] = [];
 
       if (!e.target || !e.target._objects) return;
@@ -125,28 +125,30 @@ const useSynchronizedMoved = (
         eventSerializer?.push('moved', payload);
       });
 
-      const payload = {
-        type,
-        svg: true,
-        target: null,
-        id: `${userId}:group`,
-      };
+      if (!filteredState) {
+        const payload = {
+          type,
+          svg: true,
+          target: null,
+          id: `${userId}:group`,
+        };
 
-      const event = { event: payload, type: 'activeSelection', activeIds };
+        const event = { event: payload, type: 'activeSelection', activeIds };
 
-      let filtered = canvas?.getObjects().filter((o: any) => {
-        return !o.group;
-      });
+        let filtered = canvas?.getObjects().filter((o: any) => {
+          return !o.group;
+        });
 
-      let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
-      active?.set({ id: `${userId}:group` });
+        let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
+        active?.set({ id: `${userId}:group` });
 
-      undoRedoDispatch({
-        type: SET_GROUP,
-        payload: [...(filtered as any[]), active],
-        canvasId: userId,
-        event: (event as unknown) as IUndoRedoEvent,
-      });
+        undoRedoDispatch({
+          type: SET_GROUP,
+          payload: [...(filtered as any[]), active],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      }
     },
     [canvas, eventSerializer, shouldSerializeEvent, undoRedoDispatch, userId]
   );
@@ -164,14 +166,26 @@ const useSynchronizedMoved = (
       }
     };
 
+    const objectMoving = (e: fabric.IEvent) => {
+      if (!e.target) return;
+
+      const type: ObjectType = (e.target.get('type') || 'path') as ObjectType;
+      if (type === 'activeSelection') {
+        moveSelectedGroup(type, (e as unknown) as CanvasEvent, true);
+      } else {
+        moveSelectedObject(type, (e as unknown) as CanvasEvent, true);
+      }
+    };
+
+
 
     canvas?.on('object:moved', objectMoved);
-    canvas?.on('object:moving', objectMoved);
+    canvas?.on('object:moving', objectMoving);
 
 
     return () => {
       canvas?.off('object:moved', objectMoved);
-      canvas?.off('object:moving', objectMoved);
+      canvas?.off('object:moving', objectMoving);
     };
   }, [canvas, eventSerializer, moveSelectedGroup, moveSelectedObject]);
 
