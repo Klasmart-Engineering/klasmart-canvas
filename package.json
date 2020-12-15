@@ -8,6 +8,7 @@
     "@material-ui/icons": "^4.9.1",
     "@types/tinycolor2": "^1.4.2",
     "d3-path": "^2.0.0",
+    "express": "^4.17.1",
     "fabric": "^3.6.6",
     "fontfaceobserver": "^2.1.0",
     "gifuct-js": "^2.0.0",
@@ -19,14 +20,16 @@
     "resize-observer-polyfill": "^1.5.1",
     "tinycolor2": "^1.4.2",
     "typescript": "^3.9.7",
-    "uuid": "^8.3.0"
+    "uuid": "^8.3.0",
+    "ws": "^7.4.1"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "build:lib": "rimraf ./lib && tsc && cp -R src/assets lib/assets",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "node server/server.js"
   },
   "browserslist": {
     "production": [
