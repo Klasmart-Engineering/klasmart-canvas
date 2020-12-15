@@ -18,7 +18,9 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { TypedGroup } from '../../../interfaces/shapes/group';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { PartialErase } from '../partial-erase/partialErase';
+import { changeLineColorInSpecialBrushes } from '../brushes/actions/changeLineColorInSpecialBrushes';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -555,12 +557,44 @@ export const useCanvasActions = (
       const activeObjects = canvas?.getActiveObjects();
       if (!activeObjects) return;
 
-      activeObjects.forEach((object: TypedShape) => {
+      activeObjects.forEach(async (object: TypedShape) => {
         if (
           (isShape(object) && object.shapeType === 'shape') ||
           isFreeDrawing(object)
         ) {
           object.set('stroke', color);
+        }
+
+        // Color Change in Special Brushes
+        if (
+          ((object.type === 'group' && (object as ICanvasBrush).basePath) ||
+            (object.type === 'image' && (object as ICanvasBrush).basePath)) &&
+          canvas &&
+          userId
+        ) {
+          changeLineColorInSpecialBrushes(
+            canvas,
+            userId,
+            object as ICanvasBrush,
+            color
+          )
+            .then((newObject) => {
+              if (newObject.basePath?.type === 'paintbrush') {
+                const payload: ObjectEvent = {
+                  type: 'group',
+                  target: {
+                    stroke: (object as ICanvasBrush).basePath?.stroke,
+                    bristles: (object as ICanvasBrush).basePath?.bristles,
+                  } as ICanvasObject,
+                  id: String(object.id),
+                };
+
+                eventSerializer?.push('colorChanged', payload);
+              }
+            })
+            .catch((e) => {
+              console.warn(e);
+            });
         }
       });
 
@@ -572,9 +606,11 @@ export const useCanvasActions = (
       if (type === 'textbox') return;
 
       if (obj?.type !== 'activeSelection') {
+        let stroke = type === 'path' ? obj?.stroke : obj?.basePath?.stroke;
+
         const payload = {
           type,
-          target: { stroke: obj?.stroke },
+          target: { stroke: stroke },
           id: obj?.id,
         };
 
@@ -618,7 +654,7 @@ export const useCanvasActions = (
 
       canvas?.renderAll();
     },
-    [canvas, updatePenColor, dispatch, userId]
+    [updatePenColor, canvas, userId, eventSerializer, dispatch]
   );
 
   /**
@@ -879,15 +915,6 @@ export const useCanvasActions = (
     (selection: boolean) => {
       if (canvas) {
         canvas.selection = selection;
-        // canvas.forEachObject((object: fabric.Object) => {
-        // @ts-ignore
-        // if (isLocalObject(object.id, userId)) {
-        //   object.set({
-        //     selectable: selection,
-        //   });
-        // }
-        // });
-
         canvas.renderAll();
       }
     },
@@ -1005,7 +1032,6 @@ export const useCanvasActions = (
   }, [canvas, canvasId, userId]);
 
   useEffect(() => {
-
     if (!canvas) {
       return;
     }
@@ -1056,8 +1082,21 @@ export const useCanvasActions = (
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
       canvas?.off('path:created');
-    }
-  }, [canvas, eraseType, partialEraseIsActive, toolbarIsEnabled, allToolbarIsEnabled, serializerToolbarState.partialErase, userId, lineWidth, eventSerializer, dispatch, serializerToolbarState.erase, eraseObject]);
+    };
+  }, [
+    canvas,
+    eraseType,
+    partialEraseIsActive,
+    toolbarIsEnabled,
+    allToolbarIsEnabled,
+    serializerToolbarState.partialErase,
+    userId,
+    lineWidth,
+    eventSerializer,
+    dispatch,
+    serializerToolbarState.erase,
+    eraseObject,
+  ]);
 
   /**
    * Deselect the actual selected object
