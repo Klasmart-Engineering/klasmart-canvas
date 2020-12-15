@@ -74,7 +74,7 @@ import {
   createGif,
   createImageAsObject,
 } from './gifs-actions/util';
-import { Realtime } from './realtime/realtime';
+
 interface IBackgroundImage extends IStaticCanvasOptions {
   id?: string;
 }

@@ -10,7 +10,6 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { TypedGroup } from '../../../interfaces/shapes/group';
-import { IEvent } from 'fabric/fabric-impl';
 
 const useSynchronizedRotated = (
   canvas: fabric.Canvas | undefined,
