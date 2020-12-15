@@ -192,7 +192,6 @@ const useSynchronizedMoved = (
   /** Register and handle remote moved event. */
   useEffect(() => {
     const moved = (id: string, objectType: string, target: ICanvasObject) => {
-      console.log('target:::::', target, id);
       if (!shouldHandleRemoteEvent(id)) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {

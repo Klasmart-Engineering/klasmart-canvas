@@ -3,12 +3,6 @@ import { IPainterController } from './IPainterController';
 import { PainterEvent } from './PainterEvent';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
-
-// for testing puroposes
-
-
-// end temporary testing code
-
 /**
  * This class is responsible for receiving remote events and translating that into
  * commands we can use to update the canvas. It needs to understand any optimizations
@@ -25,6 +19,7 @@ export class EventPainterController extends EventEmitter
   constructor() {
     super();
 
+    // Websocket is used for test purposes until event emitter is ready. TEMPORARY.
     // @ts-ignore
     this.ws = new WebSocket('ws://localhost:6969');
 

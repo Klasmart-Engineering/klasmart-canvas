@@ -51,11 +51,6 @@ export class Realtime {
   private context: any;
 
   /**
-   * User / instance id.
-   */
-  private id: string;
-
-  /**
    * Temporary canvas will erasing will take place.
    */
   private tempCanvas: fabric.Canvas | null;
@@ -88,7 +83,6 @@ export class Realtime {
   ) {
     this.canvas = document.createElement('canvas');
     this.canvas.id = id;
-    this.id = id;
 
     this.canvas.style.cssText =
       'position: absolute; z-index: 3; pointer-events: none;';
@@ -349,10 +343,10 @@ export class Realtime {
     this.tempCanvas?.renderAll();
   }
 
-   /**
-   * Draws arrow
-   * @param target Shape information
-   */
+  /**
+  * Draws arrow
+  * @param target Shape information
+  */
   public arrowDraw(target: any) {
     this.tempCanvas?.clear();
     const arrow = shapes.arrow(2, 2, target.shape.stroke, false, target.shape.strokeWidth);

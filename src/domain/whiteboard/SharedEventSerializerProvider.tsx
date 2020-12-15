@@ -99,7 +99,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     if (stored !== null) {
       const persistentEvents = JSON.parse(stored);
       console.log(`resubmitting persistent events: ${persistentEvents.length}`);
-      // eventController.handlePainterEvent(persistentEvents);
+      eventController.handlePainterEvent(persistentEvents);
     }
   }, [eventController, eventSerializer, simulateNetworkSynchronization]);
 
@@ -138,7 +138,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     if (stored !== null) {
       const persistentEvents = JSON.parse(stored);
       console.log(`applying simulated persistent events: ${persistentEvents.length}`);
-      // eventController.handlePainterEvent(persistentEvents);
+      eventController.handlePainterEvent(persistentEvents);
     }
 
     let remoteEvents: PainterEvent[] = []
@@ -146,7 +146,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
       const length = remoteEvents.push(payload);
       console.log(`storing simulated persistance events: ${length}`);
 
-      // window.localStorage.setItem('canvas:simulated:events', JSON.stringify(remoteEvents));
+      window.localStorage.setItem('canvas:simulated:events', JSON.stringify(remoteEvents));
     };
 
     eventSerializer.on('event', storeRemoteEvent);

@@ -6,13 +6,8 @@ import { IRealtimeData, Realtime } from '../realtime/realtime';
 /**
  * Handles laser pointer events.
  * @param canvas Canvas
- * @param showPointer Indicates if pointer should be shown.
- * @param universalPermits Indicates if user has universal permits, such as a teacher.
  * @param shouldHandleRemoteEvent Method that checks if an event should be handled.
  * @param userId User ID.
- * @param laserColor Color of laser.
- * @param laserIsActive Indicates if laser tool is sselected.
- * @param allowPointer Indicates if user has permission to use laser pointer.
  */
 const useSynchronizedRealtime = (
   canvas: fabric.Canvas | undefined,
@@ -30,17 +25,19 @@ const useSynchronizedRealtime = (
   useEffect(() => {
 
     /**
-     * Handles moving event for laser pointer. Receives event.
+     * Handles moving event for objects. Receives event.
      * @param id User ID. Used for determining if event should be handled.
-     * @param target Properites for laser pointer.
+     * @param target Properites for object.
      */
     const moved = (
+      // Event emitter automatically sends ID, required but not needed in this case.
+      // @ts-ignore
       id: string,
-      target: { 
-        coordinates: { x: number, y: number}[], 
-        lineWidth: number, 
-        color: string, 
-        id: string, 
+      target: {
+        coordinates: { x: number, y: number }[],
+        lineWidth: number,
+        color: string,
+        id: string,
         type: string,
         shape?: any,
         eventType?: string,
@@ -49,7 +46,7 @@ const useSynchronizedRealtime = (
 
       if (target.eventType !== 'added') {
         if (
-          rt && !rt.isInitiated() && target.type === 'PencilBrush') { 
+          rt && !rt.isInitiated() && target.type === 'PencilBrush') {
           rt.init(canvas as fabric.Canvas, 'PencilBrush', target.color, target.lineWidth);
         } else if (rt && !rt.isInitiated() && target.type === 'rectangle') {
           rt.init(canvas as fabric.Canvas, 'rectangle', target.shape.stroke, target.shape.strokeWidth);
@@ -75,21 +72,29 @@ const useSynchronizedRealtime = (
       rt?.draw(target as unknown as IRealtimeData);
     };
 
+    /**
+     * Real time functionality for text.
+     * @param id ID of objects.
+     * @param target Text properties.
+     */
     const textEdit = (
+      // Event emitter automatically sends ID, required but not needed in this case.
+      // @ts-ignore
       id: string,
-      target: { 
-        coordinates: { x: number, y: number}[], 
-        lineWidth: number, 
-        color: string, 
-        id: string, 
+      target: {
+        coordinates: { x: number, y: number }[],
+        lineWidth: number,
+        color: string,
+        id: string,
         type: string,
         shape?: any,
         eventType?: string,
         fill?: string;
+        fontweight?: number
       }
     ) => {
       if (rt && !rt.isInitiated() && target.type === 'i-text') {
-        rt.init(canvas as fabric.Canvas, 'text', target.fill as string, target.shape.fontweight);
+        rt.init(canvas as fabric.Canvas, 'text', target.fill as string, target.fontweight as number);
       }
 
       if (rt) {
@@ -103,7 +108,7 @@ const useSynchronizedRealtime = (
     return () => {
       eventController?.removeListener('moving', moved);
       eventController?.removeListener('textEdit', textEdit);
-      
+
       if (rt && rt.isInitiated()) {
         rt.remove();
         rt = null;
