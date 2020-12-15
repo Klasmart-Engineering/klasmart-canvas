@@ -1,11 +1,15 @@
 import { ITextOptions } from 'fabric/fabric-impl';
 import { useCallback, useContext, useEffect } from 'react';
-import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
-import { TypedShape } from '../../../interfaces/shapes/shapes';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
 import { isFreeDrawing, isEmptyShape, isShape, isText } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
 
+/**
+ * Handles the logic for change Whiteboard states when an object is selected
+ * @param {fabric.Canvas} canvas - Canvas in which the objects are selected
+ * @param {ICanvasActions} actions - Shared functions that are necessaries
+ * to work this logic
+ */
 export const useObjectSelection = (
   canvas: fabric.Canvas,
   actions: ICanvasActions
@@ -14,11 +18,15 @@ export const useObjectSelection = (
     shapeIsActive,
     brushIsActive,
     eventedObjects,
+    penColor,
     updatePenColor,
+    lineWidth,
     updateLineWidth,
+    shape,
     updateShape,
-    updateShapeColor,
+    fontFamily,
     updateFontFamily,
+    fontColor,
     updateFontColor,
   } = useContext(WhiteboardContext);
 
@@ -29,52 +37,52 @@ export const useObjectSelection = (
    */
   const manageChanges = useCallback(
     (event: fabric.IEvent) => {
+      if (!event.target) return;
+
+      const selected = event.target;
       actions.reorderShapes();
 
-      // Free Drawing Line Selected
+      // Shape or Path selected
       if (
         !shapeIsActive &&
         !brushIsActive &&
         eventedObjects &&
-        ((event.target && isFreeDrawing(event.target)) ||
-          (event.target && isEmptyShape(event.target)))
+        (isFreeDrawing(selected) || isEmptyShape(selected))
       ) {
-        updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
-        updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
-      }
+        // Change pen color
+        if (selected.stroke !== penColor) {
+          updatePenColor(selected.stroke as string);
+        }
 
-      // Shape Selected
-      if (
-        event.target &&
-        isShape(event.target) &&
-        !shapeIsActive &&
-        eventedObjects
-      ) {
-        updateShape(event.target.name || DEFAULT_VALUES.SHAPE);
-
-        if (
-          (event.target as TypedShape).shapeType === 'shape' &&
-          !brushIsActive
-        ) {
-          updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
-          updateLineWidth(
-            event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH
-          );
-        } else if (event.target.fill && !brushIsActive) {
-          updateShapeColor(
-            event.target.fill.toString() || DEFAULT_VALUES.SHAPE_COLOR
-          );
+        // Change line width
+        if (selected.strokeWidth !== lineWidth) {
+          updateLineWidth(selected.strokeWidth as number);
         }
       }
 
-      // Text Selected
-      if (event.target && isText(event.target)) {
-        const newFont = (event.target as ITextOptions).fontFamily;
-        const newFontColor = event.target.fill;
+      // Shape selected, change shape
+      if (
+        isShape(selected) &&
+        !shapeIsActive &&
+        eventedObjects &&
+        selected.name !== shape
+      ) {
+        updateShape(selected.name as string);
+      }
 
-        if (newFont && newFontColor) {
-          updateFontFamily(newFont);
-          updateFontColor(newFontColor.toString());
+      // Text Selected
+      if (isText(selected)) {
+        const newFont = (selected as ITextOptions).fontFamily;
+        const newFontColor = selected.fill;
+
+        // Change font family
+        if (newFont !== fontFamily) {
+          updateFontFamily(newFont as string);
+        }
+
+        // Change text color
+        if (newFontColor !== fontColor) {
+          updateFontColor(newFontColor as string);
         }
       }
     },
@@ -82,17 +90,21 @@ export const useObjectSelection = (
       actions,
       brushIsActive,
       eventedObjects,
+      fontColor,
+      fontFamily,
+      lineWidth,
+      penColor,
+      shape,
       shapeIsActive,
       updateFontColor,
       updateFontFamily,
       updateLineWidth,
       updatePenColor,
       updateShape,
-      updateShapeColor,
     ]
   );
 
-  /** Set up mangeChanges callback. */
+  // Set up mangeChanges callback.
   useEffect(() => {
     if (!canvas) return;
 

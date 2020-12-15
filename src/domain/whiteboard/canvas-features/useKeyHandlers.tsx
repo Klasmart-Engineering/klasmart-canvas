@@ -1,9 +1,16 @@
 import { ITextOptions } from 'fabric/fabric-impl';
-import { useCallback, useContext, KeyboardEvent } from 'react';
+import { useCallback, useContext } from 'react';
 import { ICanvasKeyboardEvent } from '../../../interfaces/canvas-events/canvas-keyboard-event';
 import { UNDO, REDO, CanvasAction } from '../reducers/undo-redo';
 import { WhiteboardContext } from '../WhiteboardContext';
 
+/**
+ * Handles the logic for keyboard events
+ * @param {fabric.Canvas} canvas - Canvas to interact
+ * @param {string} instanceId - Id of the current canvas
+ * @param {(action: CanvasAction) => void} undoRedoDispatch - Dispatcher
+ * to save the following events to make undo/redo over them
+ */
 export const useKeyHandlers = (
   canvas: fabric.Canvas,
   instanceId: string,
@@ -25,30 +32,12 @@ export const useKeyHandlers = (
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
-      if (!undoRedoIsAvailable()) {
-        return;
-      }
+      if (!undoRedoIsAvailable()) return;
 
-      if (
-        ((e as unknown) as KeyboardEvent).keyCode === 90 &&
-        (e as any).ctrlKey &&
-        !(e as any).shiftKey &&
-        activeCanvas.current === instanceId
-      ) {
-        undoRedoDispatch({ type: UNDO, canvasId: instanceId });
-        return;
-      }
-
-      if (
-        ((e as unknown) as KeyboardEvent).keyCode === 89 &&
-        (e as any).ctrlKey &&
-        activeCanvas.current === instanceId
-      ) {
-        undoRedoDispatch({ type: REDO, canvasId: instanceId });
-        return;
-      }
-
-      if ((e as ICanvasKeyboardEvent).key === 'Backspace' && canvas) {
+      /**
+       * Removes the current active objects in canvas
+       */
+      const removeSelectedObjects = () => {
         const objects = canvas.getActiveObjects();
 
         objects.forEach((object: fabric.Object) => {
@@ -57,17 +46,46 @@ export const useKeyHandlers = (
             canvas.discardActiveObject().renderAll();
           }
         });
+      };
+
+      const event = e as ICanvasKeyboardEvent;
+
+      // UNDO Keyboard Shortcut
+      if (
+        event.keyCode === 90 &&
+        event.ctrlKey &&
+        !event.shiftKey &&
+        activeCanvas.current === instanceId
+      ) {
+        undoRedoDispatch({ type: UNDO, canvasId: instanceId });
         return;
       }
 
-      if ((e as ICanvasKeyboardEvent).key === 'Escape' && canvas) {
+      // REDO Keyboard Shortcut
+      if (
+        event.keyCode === 89 &&
+        event.ctrlKey &&
+        activeCanvas.current === instanceId
+      ) {
+        undoRedoDispatch({ type: REDO, canvasId: instanceId });
+        return;
+      }
+
+      // Erase Object Keyboard Shortcut
+      if (event.key === 'Backspace') {
+        removeSelectedObjects();
+        return;
+      }
+
+      // Deselect Active Object Keyboard Shortcut
+      if (event.key === 'Escape') {
         canvas.discardActiveObject();
         canvas.renderAll();
       }
 
+      // Active Perfect Shape
       if (
-        (e as ICanvasKeyboardEvent).key === 'Shift' &&
-        canvas &&
+        event.key === 'Shift' &&
         !perfectShapeIsActive &&
         window.innerWidth > 768 &&
         perfectShapeIsAvailable()
@@ -93,38 +111,21 @@ export const useKeyHandlers = (
    */
   const keyUpHandler = useCallback(
     (e: Event) => {
+      const event = e as ICanvasKeyboardEvent;
+      // Deactive Perfect Shape
       if (
-        (e as ICanvasKeyboardEvent).key === 'Shift' &&
-        canvas &&
+        event.key === 'Shift' &&
         perfectShapeIsActive &&
         window.innerWidth > 768
       ) {
         updatePerfectShapeIsActive(false);
       }
     },
-    [canvas, perfectShapeIsActive, updatePerfectShapeIsActive]
+    [perfectShapeIsActive, updatePerfectShapeIsActive]
   );
 
-  // Will be modified once only one board is visible.
-  const keyDown = (e: KeyboardEvent<HTMLCanvasElement>) => {
-    if (e.key === 'Backspace') {
-      e.preventDefault();
-    }
-
-    if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
-      undoRedoDispatch({ type: UNDO, canvasId: instanceId });
-      return;
-    }
-
-    if (e.which === 89 && e.ctrlKey) {
-      undoRedoDispatch({ type: REDO, canvasId: instanceId });
-      return;
-    }
-  };
-
   return {
-    keyDownHandler: keyDownHandler,
-    keyUpHandler: keyUpHandler,
-    keyDown: keyDown,
+    keyDownHandler,
+    keyUpHandler,
   };
 };

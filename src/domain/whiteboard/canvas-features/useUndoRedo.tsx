@@ -8,30 +8,38 @@ import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { v4 as uuidv4 } from 'uuid';
+import { IObjectOptions } from 'fabric/fabric-impl';
 
+/**
+ * Handles the logic for lineWidth, fontFamily and fontColor undo/redo actions
+ * @param {fabric.Canvas} canvas - Canvas in which the action is made
+ * @param {string} userId - User that will do the action
+ * @param {(action: CanvasAction) => void} undoRedoDispatch - Dispatcher to save
+ * the events to could make undo/redo over them.
+ */
 export const useUndoRedo = (
   canvas: fabric.Canvas,
   userId: string,
   undoRedoDispatch: (action: CanvasAction) => void
 ) => {
-  const { lineWidth, fontFamily } = useContext(WhiteboardContext);
+  const { lineWidth, fontFamily, fontColor } = useContext(WhiteboardContext);
+
   // LineWidth Property undo/redo
   useEffect(() => {
     if (lineWidth && canvas) {
       const obj = canvas.getActiveObject() as ICanvasObject;
+      const type = obj?.get('type');
+      const validSingleTypes = [
+        'path',
+        'rect',
+        'ellipse',
+        'triangle',
+        'polygon',
+      ];
 
       if (!obj) return;
 
-      if (
-        !(obj as fabric.Group).getObjects ||
-        !(obj as fabric.Group).getObjects().length
-      ) {
-        const type = obj?.get('type');
-
-        if (type === 'textbox') return;
-
-        if (obj?.strokeWidth === lineWidth) return;
-
+      if (validSingleTypes.includes(type as string)) {
         const payload = {
           type,
           target: { strokeWidth: obj?.strokeWidth },
@@ -44,15 +52,17 @@ export const useUndoRedo = (
           type: SET,
           payload: canvas?.getObjects() as TypedShape[],
           canvasId: userId,
-          event: (event as unknown) as IUndoRedoEvent,
+          event: event as IUndoRedoEvent,
         });
-      } else {
-        const type = obj?.get('type');
+      } else if (type === 'activeSelection') {
+        // const type = obj?.get('type');
+
         const activeIds: string[] = canvas
           ?.getActiveObject()
           // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
           .getObjects()
           .map((o: TypedShape) => o.id);
+
         const payload = {
           type,
           svg: true,
@@ -62,7 +72,7 @@ export const useUndoRedo = (
 
         const event = { event: payload, type: 'activeSelection', activeIds };
 
-        let filtered = canvas?.getObjects().filter((o: any) => {
+        let filtered = canvas?.getObjects().filter((o: IObjectOptions) => {
           return !o.group;
         });
 
@@ -157,4 +167,34 @@ export const useUndoRedo = (
       }
     }
   }, [canvas, fontFamily, undoRedoDispatch, userId]);
+
+  // FontColor Property undo/redo
+  useEffect(() => {
+    if (fontColor) {
+      const objects = canvas?.getActiveObjects() as ICanvasObject[];
+
+      if (objects && objects.length) {
+        objects.forEach((obj) => {
+          const type = obj?.get('type');
+
+          if (type !== 'textbox') return;
+
+          const payload = {
+            type,
+            target: { fill: obj?.fill },
+            id: obj?.id,
+          };
+
+          const event = { event: payload, type: 'colorChanged' };
+
+          undoRedoDispatch({
+            type: SET,
+            payload: canvas?.getObjects() as TypedShape[],
+            canvasId: userId,
+            event: (event as unknown) as IUndoRedoEvent,
+          });
+        });
+      }
+    }
+  }, [fontColor, canvas, undoRedoDispatch, userId]);
 };

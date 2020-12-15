@@ -78,7 +78,6 @@ import { CanvasDownloadConfirm } from '../../modals/canvas-download/canvasDownlo
 // } from './gifs-actions/util';
 import { useSetCanvas } from './canvas-features/useSetCanvas';
 import { useObjectManipulation } from './canvas-features/useObjectManipulation';
-import { useKeyHandlers } from './canvas-features/useKeyHandlers';
 import { useFreeHandDrawing } from './canvas-features/useFreeHandDrawing';
 import { useShapeFeature } from './canvas-features/useShapeFeature';
 import { useFloodFill } from './canvas-features/useFloodFill';
@@ -208,12 +207,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     userId
   );
 
-  const { keyDown } = useKeyHandlers(
-    canvas as fabric.Canvas,
-    instanceId,
-    undoRedoDispatch
-  );
-
   useSetCanvas(
     instanceId,
     setCanvas,
@@ -262,12 +255,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useChangeLineWidth(canvas as fabric.Canvas);
 
-  useSynchronization(
-    canvas as fabric.Canvas,
-    userId,
-    eventSerializer,
-    undoRedoDispatch
-  );
+  useSynchronization(canvas as fabric.Canvas, userId, eventSerializer);
 
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
 
@@ -2031,7 +2019,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         id={instanceId}
         style={{ ...initialStyle, backgroundColor: 'transparent' }}
         tabIndex={0}
-        onKeyDown={keyDown}
+        // onKeyDown={keyDown}
         onClick={() => {
           actions.addShape(shape);
         }}

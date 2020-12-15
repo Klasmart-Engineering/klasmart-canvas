@@ -2,6 +2,10 @@ import { useContext, useEffect } from 'react';
 import { isEmptyShape, isFreeDrawing } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
 
+/**
+ * Handles the logic for change lineWidth in path and shape objects
+ * @param {fabric.Canvas} canvas - Canvas in which the objects to modify are.
+ */
 export const useChangeLineWidth = (canvas: fabric.Canvas) => {
   const { lineWidth } = useContext(WhiteboardContext);
 

@@ -14,7 +14,7 @@ export const isFreeDrawing = (object: fabric.Object) => {
  * @param {fabric.Object} object - object to check
  */
 export const isShape = (object: fabric.Object) => {
-  if (object.get('type') === 'path') {
+  if (object.get('type') === 'path' && object.name) {
     return true;
   }
 

@@ -13,6 +13,12 @@ interface IBackgroundImage extends IStaticCanvasOptions {
   id?: string;
 }
 
+/**
+ * Handles the logic for upload images on Whiteboard
+ * (image objects and background images)
+ * @param {fabric.Canvas} canvas - Canvas to set the image
+ * @param {string} userId - User that will set the image
+ */
 export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
   const {
     isBackgroundImage,
@@ -68,7 +74,7 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
       return;
     }
 
-    if (isGif) {
+    if (isGif && image) {
       /*
         We use then to avoid inspector warning
         about ignoring the promise returned
@@ -77,15 +83,17 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
       return;
     }
 
-    createImageAsObject(image.toString(), userId, canvas);
+    if (image) {
+      createImageAsObject(image.toString(), userId, canvas);
+    }
   }, [
-    canvas,
-    image,
-    userId,
-    isGif,
-    isBackgroundImage,
     backgroundImage,
     backgroundImageIsPartialErasable,
+    canvas,
+    image,
+    isBackgroundImage,
+    isGif,
     setLocalImage,
+    userId,
   ]);
 };

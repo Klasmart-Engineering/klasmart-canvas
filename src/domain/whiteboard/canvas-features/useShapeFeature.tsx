@@ -5,6 +5,14 @@ import ICanvasActions from '../canvas-actions/ICanvasActions';
 import { isEmptyShape } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
 
+/**
+ * Handles the logic for shape creation
+ * @param {fabric.Canvas} canvas - Canvas to add the shape
+ * @param {string} userId - User that will create the shape
+ * @param {ICanvasActions} actions - Shared functions necessaries
+ * to work shape creation logic
+ * @param {(specific: string, color?: string) => void} mouseDown - Mouse Event
+ */
 export const useShapeFeature = (
   canvas: fabric.Canvas,
   userId: string,
@@ -30,7 +38,7 @@ export const useShapeFeature = (
   } = useContext(WhiteboardContext);
 
   /**
-   * Disables shape canvas mouse events.
+   * Disables canvas mouse events when shape is inactive.
    */
   useEffect(() => {
     if (!shapeIsActive && canvas) {
@@ -176,19 +184,12 @@ export const useShapeFeature = (
   }, [canvas, perfectShapeIsActive, userId]);
 
   /**
-   * Reset perfectShapeIsActive to false when the shape or move tool permissions are revoked
+   * Reset perfectShapeIsActive to false when the shape
+   * or move tool permissions are revoked
    */
   useEffect(() => {
     if (!perfectShapeIsAvailable()) {
       updatePerfectShapeIsActive(false);
     }
-  }, [
-    perfectShapeIsActive,
-    serializerToolbarState.shape,
-    allToolbarIsEnabled,
-    userId,
-    updatePerfectShapeIsActive,
-    serializerToolbarState.move,
-    perfectShapeIsAvailable,
-  ]);
+  }, [perfectShapeIsAvailable, updatePerfectShapeIsActive]);
 };
