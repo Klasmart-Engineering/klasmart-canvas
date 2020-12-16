@@ -24,68 +24,42 @@ export const useUndoRedo = (
 ) => {
   const { lineWidth, fontFamily, fontColor } = useContext(WhiteboardContext);
 
-  // LineWidth Property undo/redo
+  // LineWidth Property undo/redo in group of objects
   useEffect(() => {
     if (lineWidth && canvas) {
       const obj = canvas.getActiveObject() as ICanvasObject;
       const type = obj?.get('type');
-      const validSingleTypes = [
-        'path',
-        'rect',
-        'ellipse',
-        'triangle',
-        'polygon',
-      ];
 
-      if (!obj) return;
+      if (!obj || type !== 'activeSelection') return;
 
-      if (validSingleTypes.includes(type as string)) {
-        const payload = {
-          type,
-          target: { strokeWidth: obj?.strokeWidth },
-          id: obj?.id,
-        };
+      const activeIds: string[] = canvas
+        ?.getActiveObject()
+        // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
+        .getObjects()
+        .map((o: TypedShape) => o.id);
 
-        const event = { event: payload, type: 'lineWidthChanged' };
+      const payload = {
+        type,
+        svg: true,
+        target: null,
+        id: `${userId}:group`,
+      };
 
-        undoRedoDispatch({
-          type: SET,
-          payload: canvas?.getObjects() as TypedShape[],
-          canvasId: userId,
-          event: event as IUndoRedoEvent,
-        });
-      } else if (type === 'activeSelection') {
-        // const type = obj?.get('type');
+      const event = { event: payload, type: 'activeSelection', activeIds };
 
-        const activeIds: string[] = canvas
-          ?.getActiveObject()
-          // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
-          .getObjects()
-          .map((o: TypedShape) => o.id);
+      let filtered = canvas?.getObjects().filter((o: IObjectOptions) => {
+        return !o.group;
+      });
 
-        const payload = {
-          type,
-          svg: true,
-          target: null,
-          id: `${userId}:group`,
-        };
+      let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
+      active?.set({ id: `${userId}:group` });
 
-        const event = { event: payload, type: 'activeSelection', activeIds };
-
-        let filtered = canvas?.getObjects().filter((o: IObjectOptions) => {
-          return !o.group;
-        });
-
-        let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
-        active?.set({ id: `${userId}:group` });
-
-        undoRedoDispatch({
-          type: SET_GROUP,
-          payload: [...(filtered as any[]), active],
-          canvasId: userId,
-          event: (event as unknown) as IUndoRedoEvent,
-        });
-      }
+      undoRedoDispatch({
+        type: SET_GROUP,
+        payload: [...(filtered as any[]), active],
+        canvasId: userId,
+        event: (event as unknown) as IUndoRedoEvent,
+      });
     }
   }, [lineWidth, canvas, undoRedoDispatch, userId]);
 

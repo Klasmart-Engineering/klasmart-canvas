@@ -253,7 +253,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useAddImage(canvas as fabric.Canvas, userId);
 
-  useChangeLineWidth(canvas as fabric.Canvas);
+  useChangeLineWidth(canvas as fabric.Canvas, userId, undoRedoDispatch);
 
   useSynchronization(canvas as fabric.Canvas, userId, eventSerializer);
 
