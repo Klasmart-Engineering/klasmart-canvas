@@ -245,14 +245,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useObjectSelection(canvas as fabric.Canvas, actions);
 
-  useTextObject(
-    canvas as fabric.Canvas,
-    instanceId,
-    userId,
-    eventSerializer,
-    actions,
-    undoRedoDispatch
-  );
+  useTextObject(canvas as fabric.Canvas, instanceId, userId);
 
   useAddImage(canvas as fabric.Canvas, userId);
 

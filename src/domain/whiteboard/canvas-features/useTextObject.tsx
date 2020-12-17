@@ -4,25 +4,28 @@ import { useCallback, useContext, useEffect } from 'react';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { v4 as uuidv4 } from 'uuid';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
-import {
-  ObjectEvent,
-  PaintEventSerializer,
-} from '../event-serializer/PaintEventSerializer';
-import ICanvasActions from '../canvas-actions/ICanvasActions';
+import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { useKeyHandlers } from './useKeyHandlers';
-import { CanvasAction, SET } from '../reducers/undo-redo';
+import { SET } from '../reducers/undo-redo';
 import FontFaceObserver from 'fontfaceobserver';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
+import { UndoRedo } from '../hooks/useUndoRedoEffect';
+import { useCanvasActions } from '../canvas-actions/useCanvasActions';
 
+/**
+ * Manages the logic for text object creation and edition
+ * @param {fabric.Canvas} canvas - Canvas in which text object will be created
+ * @param {string} instanceId - Canvas instance identifier
+ * @param {string} userId - User that will create/edit the text objects
+ */
 export const useTextObject = (
   canvas: fabric.Canvas,
   instanceId: string,
-  userId: string,
-  eventSerializer: PaintEventSerializer,
-  actions: ICanvasActions,
-  undoRedoDispatch: (action: CanvasAction) => void
+  userId: string
 ) => {
+  // Getting context data
   const {
     allToolbarIsEnabled,
     textIsActive,
@@ -35,6 +38,29 @@ export const useTextObject = (
     text,
   } = useContext(WhiteboardContext);
 
+  // Getting Event Serializer
+  const {
+    state: { eventSerializer },
+  } = useSharedEventSerializer();
+
+  // Getting Undo/Redo Dispatcher
+  const { dispatch: undoRedoDispatch } = UndoRedo(
+    canvas as fabric.Canvas,
+    eventSerializer,
+    userId
+  );
+
+  // Getting Canvas Actions
+  const { actions } = useCanvasActions(
+    canvas,
+    undoRedoDispatch,
+    instanceId,
+    eventSerializer,
+    userId,
+    undoRedoDispatch
+  );
+
+  // Getting Key Handlers
   const { keyUpHandler, keyDownHandler } = useKeyHandlers(
     canvas,
     instanceId,
@@ -54,7 +80,7 @@ export const useTextObject = (
           const activeObject = canvas?.getActiveObject() as fabric.IText;
 
           if (activeObject && activeObject.fontFamily !== font) {
-            activeObject.set('fontFamily', font);
+            activeObject.set({ fontFamily: font });
             canvas.requestRenderAll();
 
             const objects = canvas?.getActiveObjects();
@@ -123,18 +149,21 @@ export const useTextObject = (
 
     if (teacherHasPermission || studentHasPermission) {
       canvas.on('mouse:down', (e: fabric.IEvent) => {
-        if (
-          e.target === null ||
-          (e.target?.type !== 'textbox' && e.target?.type !== 'i-text')
-        ) {
+        if (!e.pointer) return;
+
+        const { target, pointer } = e;
+        const type = target?.type;
+
+        // If Click is made over anything except a text object
+        if (!target || (type !== 'textbox' && type !== 'i-text')) {
           let text = new fabric.IText(' ', {
             fontFamily: fontFamily,
             fontSize: 30,
             fontWeight: 400,
             fill: fontColor,
             fontStyle: 'normal',
-            top: e.pointer?.y,
-            left: e.pointer?.x,
+            top: pointer.y,
+            left: pointer.x,
             cursorDuration: 500,
             lockMovementX: true,
             lockMovementY: true,
@@ -147,6 +176,7 @@ export const useTextObject = (
           text.enterEditing();
           text?.hiddenTextarea?.focus();
 
+          // When text edition is out
           text.on('editing:exited', () => {
             const textCopy = text.text?.trim();
             const toObject = text.toObject();
@@ -162,19 +192,26 @@ export const useTextObject = (
             clonedTextObj.hasRotatingPoint = false;
             clonedTextObj.hoverCursor = 'default';
 
+            // IText is converted to Textbox to could resise it
             if (typeof textCopy === 'string') {
               text = new fabric.Textbox(textCopy, clonedTextObj);
             }
 
+            // IText object is removed
             canvas.remove(canvas.getActiveObject());
+
+            // Textbox is added is setted like active object
             canvas.add(text);
             canvas.setActiveObject(text);
 
+            // If Textbox is empty, it will be removed from canvas
             if (text?.text?.replace(/\s/g, '').length === 0) {
               canvas.remove(canvas.getActiveObject());
               return;
             }
 
+            /* If a created Textbox is modified,
+            it will be removed because a new Textbox object was be created */
             text.on('modified', () => {
               if (text?.text?.replace(/\s/g, '').length === 0) {
                 canvas.remove(canvas.getActiveObject());
@@ -191,15 +228,15 @@ export const useTextObject = (
       }
     };
   }, [
+    allToolbarIsEnabled,
     canvas,
-    textIsActive,
+    eraseType,
     fontColor,
     fontFamily,
-    userId,
-    eraseType,
-    toolbarIsEnabled,
-    allToolbarIsEnabled,
     serializerToolbarState.text,
+    textIsActive,
+    toolbarIsEnabled,
+    userId,
   ]);
 
   /**
@@ -287,8 +324,8 @@ export const useTextObject = (
           });
 
           canvas.setActiveObject(currentTextbox);
-          currentTextbox.set('isEditing', true);
-          textboxCopy.set('visible', false);
+          currentTextbox.set({ isEditing: true });
+          textboxCopy.set({ visible: false });
           canvas.discardActiveObject();
           canvas.renderAll();
         }
@@ -302,25 +339,15 @@ export const useTextObject = (
   }, [canvas, textIsActive]);
 
   /**
-   * Is executed when textIsActive changes its value,
-   * basically to deselect any selected object
-   */
-  useEffect(() => {
-    if (!textIsActive) {
-      canvas?.discardActiveObject();
-      canvas?.renderAll();
-    }
-  }, [canvas, textIsActive]);
-
-  /**
    * If the input field (text) has length
+   * or text is not active
    * will unselect whiteboard active objects
    * */
   useEffect(() => {
-    if (text.length) {
+    if (text.length || !textIsActive) {
       actions.discardActiveObject();
     }
-  }, [actions, text]);
+  }, [actions, text, textIsActive]);
 
   /**
    * Add keyboard keydown event listener. It listen keyDownHandler function
