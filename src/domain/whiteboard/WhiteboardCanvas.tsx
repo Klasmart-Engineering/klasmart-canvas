@@ -84,9 +84,11 @@ import { useFloodFill } from './canvas-features/useFloodFill';
 import { useObjectSelection } from './canvas-features/useObjectSelection';
 import { useTextObject } from './canvas-features/useTextObject';
 import { useAddImage } from './canvas-features/useAddImage';
-import { useSynchronization } from './canvas-features/useSynchronization';
-import { useUndoRedo } from './canvas-features/useUndoRedo';
+// import { useSynchronization } from './canvas-features/useSynchronization';
+// import { useUndoRedo } from './canvas-features/useUndoRedo';
 import { useChangeLineWidth } from './canvas-features/useChangeLineWidth';
+import { useUndoRedo } from './canvas-features/useUndoRedo';
+
 // interface IBackgroundImage extends IStaticCanvasOptions {
 //   id?: string;
 // }
@@ -204,7 +206,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     undoRedoDispatch,
     instanceId,
     eventSerializer,
-    userId
+    userId,
+    undoRedoDispatch
   );
 
   useSetCanvas(
@@ -255,7 +258,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useChangeLineWidth(canvas as fabric.Canvas, userId, undoRedoDispatch);
 
-  useSynchronization(canvas as fabric.Canvas, userId, eventSerializer);
+  // useSynchronization(canvas as fabric.Canvas, userId, eventSerializer);
 
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
 

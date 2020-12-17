@@ -5,7 +5,13 @@ import { WhiteboardContext } from '../WhiteboardContext';
 import * as shapes from '../shapes/shapes';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { isFreeDrawing, isShape } from '../utils/shapes';
-import { UNDO, REDO, SET, SET_GROUP } from '../reducers/undo-redo';
+import {
+  UNDO,
+  REDO,
+  SET,
+  SET_GROUP,
+  CanvasAction,
+} from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
 import { IEvent, Point, ITextOptions } from 'fabric/fabric-impl';
@@ -19,13 +25,15 @@ import {
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { PartialErase } from '../partial-erase/partialErase';
+import { useSynchronization } from '../canvas-features/useSynchronization';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
   dispatch?: any,
   canvasId?: string,
   eventSerializer?: any,
-  userId?: string
+  userId?: string,
+  undoRedoDispatch?: (action: CanvasAction) => void
 ) => {
   const {
     shapeIsActive,
@@ -49,6 +57,7 @@ export const useCanvasActions = (
     localImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
+  const { changePenColorSync } = useSynchronization(userId as string);
   /**
    * Adds shape to whiteboard.
    * @param specific Indicates shape type that should be added in whiteboard.
@@ -557,10 +566,12 @@ export const useCanvasActions = (
 
       activeObjects.forEach((object: TypedShape) => {
         if (
-          (isShape(object) && object.shapeType === 'shape') ||
-          isFreeDrawing(object)
+          ((isShape(object) && object.shapeType === 'shape') ||
+            isFreeDrawing(object)) &&
+          color !== object.stroke
         ) {
           object.set('stroke', color);
+          changePenColorSync(object as ICanvasObject);
         }
       });
 
@@ -618,7 +629,9 @@ export const useCanvasActions = (
 
       canvas?.renderAll();
     },
-    [canvas, updatePenColor, dispatch, userId]
+    // If changePenColorSync is added performance is affected
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [updatePenColor, canvas, dispatch, userId]
   );
 
   /**
@@ -677,6 +690,17 @@ export const useCanvasActions = (
           };
 
           eventSerializer?.push('fontColorChanged', payload);
+
+          if (!undoRedoDispatch) return;
+
+          const event = { event: payload, type: 'colorChanged' };
+
+          undoRedoDispatch({
+            type: SET,
+            payload: canvas?.getObjects() as TypedShape[],
+            canvasId: userId,
+            event: (event as unknown) as IUndoRedoEvent,
+          });
         }
         return;
       }
@@ -708,7 +732,7 @@ export const useCanvasActions = (
         }
       });
     },
-    [canvas, updateFontColor, eventSerializer]
+    [updateFontColor, canvas, eventSerializer, undoRedoDispatch, userId]
   );
 
   /**

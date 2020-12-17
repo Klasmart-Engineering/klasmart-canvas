@@ -10,8 +10,10 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
 import { useKeyHandlers } from './useKeyHandlers';
-import { CanvasAction } from '../reducers/undo-redo';
+import { CanvasAction, SET } from '../reducers/undo-redo';
 import FontFaceObserver from 'fontfaceobserver';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import { TypedShape } from '../../../interfaces/shapes/shapes';
 
 export const useTextObject = (
   canvas: fabric.Canvas,
@@ -49,8 +51,10 @@ export const useTextObject = (
       myFont
         .load()
         .then(() => {
-          if (canvas?.getActiveObject()) {
-            (canvas.getActiveObject() as fabric.IText).set('fontFamily', font);
+          const activeObject = canvas?.getActiveObject() as fabric.IText;
+
+          if (activeObject && activeObject.fontFamily !== font) {
+            activeObject.set('fontFamily', font);
             canvas.requestRenderAll();
 
             const objects = canvas?.getActiveObjects();
@@ -73,6 +77,27 @@ export const useTextObject = (
 
                     eventSerializer?.push('fontFamilyChanged', payload);
                   }
+                }
+
+                if (objects.length === 1) {
+                  const target = {
+                    fontFamily,
+                  };
+
+                  const payload = {
+                    type: obj.type,
+                    target,
+                    id: obj?.id,
+                  };
+
+                  const event = { event: payload, type: 'fontFamilyChanged' };
+
+                  undoRedoDispatch({
+                    type: SET,
+                    payload: canvas?.getObjects() as TypedShape[],
+                    canvasId: userId,
+                    event: (event as unknown) as IUndoRedoEvent,
+                  });
                 }
               });
             }

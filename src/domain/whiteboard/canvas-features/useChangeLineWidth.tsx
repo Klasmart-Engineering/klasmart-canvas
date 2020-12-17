@@ -5,6 +5,7 @@ import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { CanvasAction, SET } from '../reducers/undo-redo';
 import { isEmptyShape, isFreeDrawing } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
+import { useSynchronization } from './useSynchronization';
 
 /**
  * Handles the logic for change lineWidth in path and shape objects
@@ -19,6 +20,7 @@ export const useChangeLineWidth = (
   undoRedoDispatch: (action: CanvasAction) => void
 ) => {
   const { lineWidth } = useContext(WhiteboardContext);
+  const { changeLineWidthSync } = useSynchronization(userId);
 
   /**
    * If lineWidth variable changes and a free line drawing is selected
@@ -36,6 +38,7 @@ export const useChangeLineWidth = (
       ) {
         const target = { strokeWidth: lineWidth };
         object.set(target);
+        changeLineWidthSync(object);
 
         if (activeObjects.length === 1) {
           const type = object.get('type');
@@ -57,5 +60,7 @@ export const useChangeLineWidth = (
       }
     });
     canvas.renderAll();
+    // If changeLineWidthSync is added performance is affected
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lineWidth, canvas, undoRedoDispatch, userId]);
 };

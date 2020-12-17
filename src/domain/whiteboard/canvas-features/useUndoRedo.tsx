@@ -1,14 +1,15 @@
 import { fabric } from 'fabric';
-import { useContext, useEffect } from 'react';
+import { useCallback, useContext, useEffect } from 'react';
 import { CANVAS_OBJECT_PROPS } from '../../../config/undo-redo-values';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
-import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
+import { CanvasAction, SET_GROUP } from '../reducers/undo-redo';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { v4 as uuidv4 } from 'uuid';
 import { IObjectOptions } from 'fabric/fabric-impl';
+import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
 
 /**
  * Handles the logic for lineWidth, fontFamily and fontColor undo/redo actions
@@ -23,6 +24,56 @@ export const useUndoRedo = (
   undoRedoDispatch: (action: CanvasAction) => void
 ) => {
   const { lineWidth, fontFamily, fontColor } = useContext(WhiteboardContext);
+
+  /**
+   * Maps the current objects in canvas to set the correct
+   * properties in activeSelection objects
+   */
+  const setMappedObjects = useCallback(
+    (events: IUndoRedoEvent[]) => {
+      return canvas?.getObjects().map((object: ICanvasObject) => {
+        /* If object doesn't belongs to an activeSelection
+        it's just passed directly for the filter */
+        if (!object.group) {
+          return object.toJSON(CANVAS_OBJECT_PROPS);
+        }
+
+        const matrix = object.calcTransformMatrix();
+        const options = fabric.util.qrDecompose(matrix);
+        const transformed = object.toJSON(CANVAS_OBJECT_PROPS);
+
+        // Getting correct top and left properties
+        let top =
+          Number(object.group.height) / 2 +
+          Number(object.top) +
+          Number(object.group.top);
+
+        let left =
+          Number(object.group.width) / 2 +
+          Number(object.left) +
+          Number(object.group.left);
+
+        // Setting correct top and left properties
+        events.forEach((event: IUndoRedoEvent) => {
+          const singleEvent = event.event as IUndoRedoSingleEvent;
+
+          if (singleEvent.id === object.id) {
+            singleEvent.target.top = top;
+            singleEvent.target.left = left;
+          }
+        });
+
+        return {
+          ...transformed,
+          top,
+          left,
+          scaleX: options.scaleX,
+          scaleY: options.scaleY,
+        };
+      });
+    },
+    [canvas]
+  );
 
   // LineWidth Property undo/redo in group of objects
   useEffect(() => {
@@ -63,74 +114,30 @@ export const useUndoRedo = (
     }
   }, [lineWidth, canvas, undoRedoDispatch, userId]);
 
-  // FontFamily Property undo/redo
+  // FontFamily Property undo/redo in group of objects
   useEffect(() => {
-    if (canvas && fontFamily) {
-      const obj = canvas?.getActiveObject() as ICanvasObject;
+    if (fontFamily && canvas) {
+      const obj = canvas.getActiveObject() as ICanvasObject;
       const type = obj?.get('type');
+      const target = { fontFamily };
 
-      if (type === 'textbox' && obj) {
-        const target = {
-          fontFamily,
-        };
+      if (type === 'activeSelection') {
+        let events: IUndoRedoEvent[] = [];
+        const eventId = uuidv4();
 
-        const payload = {
-          type,
-          target,
-          id: obj?.id,
-        };
-
-        const event = { event: payload, type: 'fontFamilyChanged' };
-
-        obj.set({ fontFamily });
-
-        undoRedoDispatch({
-          type: SET,
-          payload: canvas?.getObjects() as TypedShape[],
-          canvasId: userId,
-          event: (event as unknown) as IUndoRedoEvent,
-        });
-      } else if (obj?.type === 'activeSelection') {
-        let events: any[] = [];
-        const eventId: string = uuidv4();
-
-        obj._objects?.forEach((object: any) => {
+        obj._objects?.forEach((object: ICanvasObject) => {
           const payload = {
             type,
-            target: { fontFamily },
+            target,
             id: object.id,
           };
 
           const event = { event: payload, type: 'activeSelection', eventId };
-          events.push(event);
-          object.set({ fontFamily });
+          events.push(event as IUndoRedoEvent);
+          object.set(target);
         });
 
-        let mappedObjects = canvas?.getObjects().map((object: any) => {
-          if (!object.group) {
-            return object.toJSON(CANVAS_OBJECT_PROPS);
-          }
-          const matrix = object.calcTransformMatrix();
-          const options = fabric.util.qrDecompose(matrix);
-          const transformed = object.toJSON(CANVAS_OBJECT_PROPS);
-          let top = object.group.height / 2 + object.top + object.group.top;
-          let left = object.group.width / 2 + object.left + object.group.left;
-
-          events.forEach((event: any) => {
-            if (event.event.id === object.id) {
-              event.event.target.top = top;
-              event.event.target.left = left;
-            }
-          });
-
-          return {
-            ...transformed,
-            top,
-            left,
-            scaleX: options.scaleX,
-            scaleY: options.scaleY,
-          };
-        });
+        let mappedObjects = setMappedObjects(events);
 
         undoRedoDispatch({
           type: SET_GROUP,
@@ -140,35 +147,45 @@ export const useUndoRedo = (
         });
       }
     }
-  }, [canvas, fontFamily, undoRedoDispatch, userId]);
+  }, [canvas, fontFamily, setMappedObjects, undoRedoDispatch, userId]);
 
-  // FontColor Property undo/redo
+  // FontColor Property undo/redo in group of objects
   useEffect(() => {
-    if (fontColor) {
-      const objects = canvas?.getActiveObjects() as ICanvasObject[];
+    if (fontColor && canvas) {
+      const object = canvas.getActiveObject() as ICanvasObject;
+      const type = object?.get('type');
 
-      if (objects && objects.length) {
-        objects.forEach((obj) => {
-          const type = obj?.get('type');
+      canvas.discardActiveObject();
+      if (type === 'activeSelection') {
+        const events: IUndoRedoEvent[] = [];
+        const eventId = uuidv4();
 
-          if (type !== 'textbox') return;
+        (object as fabric.ActiveSelection).forEachObject(
+          (obj: ICanvasObject) => {
+            const type = obj?.get('type');
 
-          const payload = {
-            type,
-            target: { fill: obj?.fill },
-            id: obj?.id,
-          };
+            if (type !== 'textbox') return;
 
-          const event = { event: payload, type: 'colorChanged' };
+            const payload = {
+              type,
+              target: { fill: obj?.fill },
+              id: obj?.id,
+            };
 
-          undoRedoDispatch({
-            type: SET,
-            payload: canvas?.getObjects() as TypedShape[],
-            canvasId: userId,
-            event: (event as unknown) as IUndoRedoEvent,
-          });
+            const event = { event: payload, type: 'activeSelection', eventId };
+            events.push(event as IUndoRedoEvent);
+          }
+        );
+
+        let mappedObjects = setMappedObjects(events);
+
+        undoRedoDispatch({
+          type: SET_GROUP,
+          payload: mappedObjects as TypedShape[],
+          canvasId: userId,
+          event: (events as unknown) as IUndoRedoEvent,
         });
       }
     }
-  }, [fontColor, canvas, undoRedoDispatch, userId]);
+  }, [fontColor, canvas, undoRedoDispatch, userId, setMappedObjects]);
 };
