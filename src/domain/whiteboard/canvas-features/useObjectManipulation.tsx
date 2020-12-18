@@ -1,5 +1,5 @@
 import { Textbox } from 'fabric/fabric-impl';
-import { useContext, useEffect } from 'react';
+import { useCallback, useContext, useEffect } from 'react';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
 import { isText } from '../utils/shapes';
@@ -26,16 +26,65 @@ export const useObjectManipulation = (
     toolbarIsEnabled,
   } = useContext(WhiteboardContext);
 
-  /** Update objects selectable/evented state. */
+  /**
+   * Gets permissions for objects in Objects UseEffect
+   */
+  const getObjectPermissions = useCallback(() => {
+    return {
+      teacherHasPermission: allToolbarIsEnabled && shapesAreSelectable,
+      studentHasPermission: serializerToolbarState.move && shapesAreSelectable,
+      isEvented:
+        (shapesAreSelectable || shapesAreEvented) &&
+        (allToolbarIsEnabled || serializerToolbarState.move),
+    };
+  }, [
+    allToolbarIsEnabled,
+    serializerToolbarState.move,
+    shapesAreEvented,
+    shapesAreSelectable,
+  ]);
+
+  /**
+   * Gets permissions for objects in PointerMove UseEffect
+   */
+  const getPointerMoveToolPermissions = useCallback(() => {
+    return {
+      teacherHasPermission: allToolbarIsEnabled && eventedObjects,
+      studentHasPermission: serializerToolbarState.move && eventedObjects,
+      isEvented: allToolbarIsEnabled || serializerToolbarState.move,
+    };
+  }, [allToolbarIsEnabled, eventedObjects, serializerToolbarState.move]);
+
+  /**
+   * Gets permissions for local objects in LocalObjects UseEffect
+   */
+  const getLocalObjectPermissions = useCallback(() => {
+    const studentHasPermission =
+      toolbarIsEnabled &&
+      (serializerToolbarState.move || serializerToolbarState.erase);
+
+    return {
+      isEvented: allToolbarIsEnabled || studentHasPermission,
+    };
+  }, [
+    allToolbarIsEnabled,
+    serializerToolbarState.erase,
+    serializerToolbarState.move,
+    toolbarIsEnabled,
+  ]);
+
+  /**
+   * Objects UseEffect.
+   * Update objects selectable/evented state.
+   */
   useEffect(() => {
     if (!canvas) return;
 
-    const teacherHasPermission = allToolbarIsEnabled && shapesAreSelectable;
-    const studentHasPermission =
-      serializerToolbarState.move && shapesAreSelectable;
-    const isEvented =
-      (shapesAreSelectable || shapesAreEvented) &&
-      (allToolbarIsEnabled || serializerToolbarState.move);
+    const {
+      teacherHasPermission,
+      studentHasPermission,
+      isEvented,
+    } = getObjectPermissions();
 
     canvas.forEachObject((object: ICanvasObject) => {
       if (object.id && isLocalObject(object.id, userId) && !eraseType) {
@@ -60,20 +109,26 @@ export const useObjectManipulation = (
     userId,
     allToolbarIsEnabled,
     serializerToolbarState.move,
+    getObjectPermissions,
   ]);
 
   /**
-   * Set the objects like evented if you select pointer or move tool
+   * PointerMove UseEffect.
+   * Set the objects like evented if you select pointer or move tool.
    */
   useEffect(() => {
-    const teacherHasPermission = allToolbarIsEnabled && eventedObjects;
-    const studentHasPermission = serializerToolbarState.move && eventedObjects;
+    const {
+      teacherHasPermission,
+      studentHasPermission,
+      isEvented,
+    } = getPointerMoveToolPermissions();
+
     if (teacherHasPermission || studentHasPermission) {
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
           object.set({
-            evented: allToolbarIsEnabled || serializerToolbarState.move,
-            selectable: allToolbarIsEnabled || serializerToolbarState.move,
+            evented: isEvented,
+            selectable: isEvented,
             lockMovementX: false,
             lockMovementY: false,
           });
@@ -90,10 +145,11 @@ export const useObjectManipulation = (
     userId,
     allToolbarIsEnabled,
     serializerToolbarState.move,
+    getPointerMoveToolPermissions,
   ]);
 
   /**
-   * Manage the states for settting local objects like selectable/modifiable
+   * Manage the states for setting local objects like selectable/modifiable.
    */
   useEffect(() => {
     if (
@@ -105,17 +161,16 @@ export const useObjectManipulation = (
     ) {
       canvas.forEachObject((object: ICanvasObject) => {
         const isTextObject = Boolean(isText(object));
+        const isEvented = eventedObjects || (isTextObject && textIsActive);
+        const isEditable = isTextObject && textIsActive;
 
         if (object.id && isLocalObject(object.id, userId)) {
-          actions.setObjectControlsVisibility(
-            object,
-            eventedObjects || (isTextObject && textIsActive)
-          );
+          actions.setObjectControlsVisibility(object, isEvented);
           (object as Textbox).set({
-            evented: eventedObjects || (isTextObject && textIsActive),
-            selectable: eventedObjects || (isTextObject && textIsActive),
-            hasBorders: eventedObjects || (isTextObject && textIsActive),
-            editable: isTextObject && textIsActive,
+            evented: isEvented,
+            selectable: isEvented,
+            hasBorders: isEvented,
+            editable: isEditable,
             lockMovementX: !eventedObjects,
             lockMovementY: !eventedObjects,
             hasRotatingPoint: eventedObjects,
@@ -147,12 +202,12 @@ export const useObjectManipulation = (
   }, [pointerEvents, canvas]);
 
   /**
+   * LocalObjects UseEffect.
    * Makes local objects unselectable when toolbar is disabled by the teacher.
    * */
   useEffect(() => {
-    const studentHasPermission =
-      toolbarIsEnabled &&
-      (serializerToolbarState.move || serializerToolbarState.erase);
+    const { isEvented } = getLocalObjectPermissions();
+
     canvas?.forEachObject((object: ICanvasObject) => {
       if (
         object.id &&
@@ -160,8 +215,8 @@ export const useObjectManipulation = (
         shapesAreSelectable
       ) {
         object.set({
-          evented: allToolbarIsEnabled || studentHasPermission,
-          selectable: allToolbarIsEnabled || studentHasPermission,
+          evented: isEvented,
+          selectable: isEvented,
         });
       }
     });
@@ -174,5 +229,6 @@ export const useObjectManipulation = (
     serializerToolbarState.move,
     serializerToolbarState.erase,
     shapesAreSelectable,
+    getLocalObjectPermissions,
   ]);
 };

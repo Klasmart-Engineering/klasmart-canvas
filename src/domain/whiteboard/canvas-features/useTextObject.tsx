@@ -339,12 +339,22 @@ export const useTextObject = (
   }, [canvas, textIsActive]);
 
   /**
+   * Is executed when textIsActive changes its value,
+   * basically to deselect any selected object
+   */
+  useEffect(() => {
+    if (!textIsActive) {
+      canvas?.discardActiveObject();
+      canvas?.renderAll();
+    }
+  }, [canvas, textIsActive]);
+
+  /**
    * If the input field (text) has length
-   * or text is not active
    * will unselect whiteboard active objects
    * */
   useEffect(() => {
-    if (text.length || !textIsActive) {
+    if (text.length) {
       actions.discardActiveObject();
     }
   }, [actions, text, textIsActive]);
