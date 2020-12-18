@@ -233,7 +233,13 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   useFreeHandDrawing(canvas as fabric.Canvas);
 
-  useShapeFeature(canvas as fabric.Canvas, userId, actions, mouseDown);
+  useShapeFeature(
+    canvas as fabric.Canvas,
+    userId,
+    actions,
+    mouseDown,
+    undoRedoDispatch
+  );
 
   useFloodFill(
     canvas as fabric.Canvas,

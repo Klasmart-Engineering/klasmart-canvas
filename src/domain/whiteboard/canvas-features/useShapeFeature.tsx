@@ -1,7 +1,14 @@
 import { useCallback, useContext, useEffect } from 'react';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
+import {
+  ObjectEvent,
+  ObjectType,
+} from '../event-serializer/PaintEventSerializer';
+import { CanvasAction, SET } from '../reducers/undo-redo';
+import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { isEmptyShape } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
 
@@ -12,13 +19,17 @@ import { WhiteboardContext } from '../WhiteboardContext';
  * @param {ICanvasActions} actions - Shared functions necessaries
  * to work shape creation logic
  * @param {(specific: string, color?: string) => void} mouseDown - Mouse Event
+ * @param {(action: CanvasAction) => void} undoRedoDispatch - Dispatcher
+ * to save shapes states and could make und/redo over them
  */
 export const useShapeFeature = (
   canvas: fabric.Canvas,
   userId: string,
   actions: ICanvasActions,
-  mouseDown: (specific: string, color?: string) => void
+  mouseDown: (specific: string, color?: string) => void,
+  undoRedoDispatch: (action: CanvasAction) => void
 ) => {
+  // Getting context variables
   const {
     shapeIsActive,
     allToolbarIsEnabled,
@@ -36,6 +47,11 @@ export const useShapeFeature = (
     perfectShapeIsAvailable,
     updatePerfectShapeIsActive,
   } = useContext(WhiteboardContext);
+
+  // Getting event serializer to synchronize objects
+  const {
+    state: { eventSerializer },
+  } = useSharedEventSerializer();
 
   /**
    * Multiplies the width by scaleX of the given shape
@@ -55,18 +71,31 @@ export const useShapeFeature = (
     return Number(shape.height) * Number(shape.scaleY);
   };
 
-  const isLocalShape = (shape: TypedShape) => {
-    return shape.id && isEmptyShape(shape) && isLocalObject(shape.id, userId);
-  };
+  /**
+   * Checks if the given object is a local shape
+   * @param {TypedShape} shape - Object to check
+   */
+  const isLocalShape = useCallback(
+    (shape: TypedShape) => {
+      return shape.id && isEmptyShape(shape) && isLocalObject(shape.id, userId);
+    },
+    [isLocalObject, userId]
+  );
 
-  const activeShapeCanBePerfectSized = () => {
+  /**
+   * Checks if is possible resize the active object perfectly
+   */
+  const activeShapeCanBePerfectSized = useCallback(() => {
     return (
       perfectShapeIsActive &&
       canvas.getActiveObject() &&
       isEmptyShape(canvas.getActiveObject())
     );
-  };
+  }, [canvas, perfectShapeIsActive]);
 
+  /**
+   * Get the permissions for students and teacher to use shape feature.
+   */
   const getPermissions = useCallback(() => {
     return {
       teacherHasPermission:
@@ -84,6 +113,47 @@ export const useShapeFeature = (
     shapeIsActive,
     toolbarIsEnabled,
   ]);
+
+  /**
+   * Synchronizes and dispatches undo/redo for pperfect shape scaling
+   */
+  const syncAndDispatchPerfectShapeScaling = useCallback(
+    (shape: TypedShape) => {
+      const id = String(shape.id);
+      const type = shape.get('type') as ObjectType;
+      const target = {
+        top: shape.top,
+        left: shape.left,
+        angle: shape.angle,
+        scaleX: shape.scaleX,
+        scaleY: shape.scaleY,
+        flipX: shape.flipX,
+        flipY: shape.flipY,
+        originX: shape.originX,
+        originY: shape.originY,
+      } as ICanvasObject;
+
+      const payload: ObjectEvent = {
+        id,
+        type,
+        target: { eTarget: target, isGroup: false },
+      };
+
+      eventSerializer.push('scaled', payload);
+
+      if (canvas) {
+        const event = { event: payload, type: 'scaled' };
+
+        undoRedoDispatch({
+          type: SET,
+          payload: canvas.getObjects(),
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      }
+    },
+    [canvas, eventSerializer, undoRedoDispatch, userId]
+  );
 
   /**
    * Disables canvas mouse events when shape is inactive.
@@ -196,10 +266,7 @@ export const useShapeFeature = (
 
       if (scaling) {
         shapeToFix.set(scaling);
-
-        canvas.trigger('object:scaled', {
-          target: shapeToFix,
-        });
+        syncAndDispatchPerfectShapeScaling(shapeToFix);
       }
 
       shapeToFix.setCoords();
