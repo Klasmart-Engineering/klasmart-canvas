@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { useCallback, useContext, useEffect } from 'react';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
@@ -38,6 +38,54 @@ export const useShapeFeature = (
   } = useContext(WhiteboardContext);
 
   /**
+   * Multiplies the width by scaleX of the given shape
+   * to obtain the real current width
+   * @param {TypedShape} shape - Shape to calculate its real width
+   */
+  const getShapeRealWidth = (shape: TypedShape) => {
+    return Number(shape.width) * Number(shape.scaleX);
+  };
+
+  /**
+   * Multiplies the height by scaleY of the given shape
+   * to obtain the real current height
+   * @param {TypedShape} shape - Shape to calculate its real height
+   */
+  const getShapeRealHeight = (shape: TypedShape) => {
+    return Number(shape.height) * Number(shape.scaleY);
+  };
+
+  const isLocalShape = (shape: TypedShape) => {
+    return shape.id && isEmptyShape(shape) && isLocalObject(shape.id, userId);
+  };
+
+  const activeShapeCanBePerfectSized = () => {
+    return (
+      perfectShapeIsActive &&
+      canvas.getActiveObject() &&
+      isEmptyShape(canvas.getActiveObject())
+    );
+  };
+
+  const getPermissions = useCallback(() => {
+    return {
+      teacherHasPermission:
+        allToolbarIsEnabled && shape && shapeIsActive && toolbarIsEnabled,
+      studentHasPermission:
+        shape &&
+        shapeIsActive &&
+        toolbarIsEnabled &&
+        serializerToolbarState.shape,
+    };
+  }, [
+    allToolbarIsEnabled,
+    serializerToolbarState.shape,
+    shape,
+    shapeIsActive,
+    toolbarIsEnabled,
+  ]);
+
+  /**
    * Disables canvas mouse events when shape is inactive.
    */
   useEffect(() => {
@@ -48,17 +96,12 @@ export const useShapeFeature = (
   }, [shapeIsActive, canvas]);
 
   /**
-   * Activates the mouseDown event if shape exists and shapeIsActive is true
-   * Handles logic to add shape to whiteboard
+   * Sets local objects like no evented and no selectable
+   * to could draw shapes over whiteboard
    */
   useEffect(() => {
-    const teacherHasPermission =
-      allToolbarIsEnabled && shape && shapeIsActive && toolbarIsEnabled;
-    const studentHasPermission =
-      shape &&
-      shapeIsActive &&
-      toolbarIsEnabled &&
-      serializerToolbarState.shape;
+    const { teacherHasPermission, studentHasPermission } = getPermissions();
+
     if (teacherHasPermission || studentHasPermission) {
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
@@ -100,8 +143,12 @@ export const useShapeFeature = (
     toolbarIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState.shape,
+    getPermissions,
   ]);
 
+  /**
+   * Starts shape creation when a shape is selected in Toolbar
+   */
   useEffect(() => {
     if (shape && shapeIsActive) {
       mouseDown(shape, shapeColor);
@@ -111,6 +158,7 @@ export const useShapeFeature = (
       if (!textIsActive) {
         canvas?.off('mouse:down');
       }
+
       canvas?.off('mouse:move');
       canvas?.off('mouse:up');
     };
@@ -120,56 +168,34 @@ export const useShapeFeature = (
    * Set a selected shape like perfect if perfectShapeIsActive
    */
   useEffect(() => {
-    /**
-     * Multiplies the width by scaleX of the given shape
-     * to obtain the real current width
-     * @param {TypedShape} shape - Shape to calculate its real width
-     */
-    const getShapeRealWidth = (shape: TypedShape) => {
-      return Number(shape.width) * Number(shape.scaleX);
-    };
+    if (!canvas) return;
 
-    /**
-     * Multiplies the height by scaleY of the given shape
-     * to obtain the real current height
-     * @param {TypedShape} shape - Shape to calculate its real height
-     */
-    const getShapeRealHeight = (shape: TypedShape) => {
-      return Number(shape.height) * Number(shape.scaleY);
-    };
-
-    canvas?.forEachObject((object: ICanvasObject) => {
-      if (
-        isEmptyShape(object as TypedShape) &&
-        object.id &&
-        isLocalObject(object.id, userId)
-      ) {
+    /*
+      Hide/Show resize middle controls in local shapes.
+      When perfectShapeIsActive controls will be hidden
+      and when not will be showed
+    */
+    canvas.forEachObject((object: ICanvasObject) => {
+      if (isLocalShape(object as TypedShape)) {
         object.set('lockUniScaling', perfectShapeIsActive);
       }
     });
 
-    if (
-      canvas?.getActiveObject() &&
-      perfectShapeIsActive &&
-      isEmptyShape(canvas.getActiveObject())
-    ) {
+    // Resets active shape like perfect
+    if (activeShapeCanBePerfectSized()) {
+      let scaling;
       const shapeToFix = canvas.getActiveObject();
-      if (getShapeRealWidth(shapeToFix) > getShapeRealHeight(shapeToFix)) {
-        shapeToFix.set(
-          'scaleY',
-          getShapeRealWidth(shapeToFix) / Number(shapeToFix.height)
-        );
+      const width = getShapeRealWidth(shapeToFix);
+      const heigth = getShapeRealHeight(shapeToFix);
 
-        canvas.trigger('object:scaled', {
-          target: shapeToFix,
-        });
-      } else if (
-        getShapeRealHeight(shapeToFix) > getShapeRealWidth(shapeToFix)
-      ) {
-        shapeToFix.set(
-          'scaleX',
-          getShapeRealHeight(shapeToFix) / Number(shapeToFix.width)
-        );
+      if (width > heigth) {
+        scaling = { scaleY: width / Number(shapeToFix.height) };
+      } else if (heigth > width) {
+        scaling = { scaleX: heigth / Number(shapeToFix.width) };
+      }
+
+      if (scaling) {
+        shapeToFix.set(scaling);
 
         canvas.trigger('object:scaled', {
           target: shapeToFix,
@@ -178,6 +204,7 @@ export const useShapeFeature = (
 
       shapeToFix.setCoords();
     }
+
     /* If isLocalObject is added on dependencies
     an unexpected event is triggered */
     // eslint-disable-next-line react-hooks/exhaustive-deps
