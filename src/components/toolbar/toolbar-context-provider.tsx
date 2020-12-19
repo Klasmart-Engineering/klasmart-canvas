@@ -48,7 +48,7 @@ export interface IToolbarActions {
 }
 
 export interface IToolbarState {
-  tools: Record<ToolType, { id: string, options: OptionalToolOptions }>;
+  tools: Record<ToolType, { id: string; options: OptionalToolOptions }>;
   colors: IStyleOption[];
   thickness: IThicknessStyle[];
 }
@@ -66,7 +66,9 @@ export interface IToolbarContext {
   actions: IToolbarActions;
 }
 
-export const Context = createContext<IToolbarContext>(undefined as unknown as IToolbarContext);
+export const Context = createContext<IToolbarContext>(
+  (undefined as unknown) as IToolbarContext
+);
 
 export type Props = {
   children?: ReactChild | ReactChildren | undefined;
@@ -76,11 +78,18 @@ export default function ToolbarContextProvider({
   children,
 }: Props): JSX.Element {
   const [tools, setTools] = useState(toolsSection);
-  const [selectedTool, setSelectedTool] = useState<ToolType | undefined>(undefined);
-  const [selectedColor, setSelectedColor] = useState<string | undefined>(undefined);
-  const [selectedOption, setSelectedOption] = useState<IToolbarSelectorOption | undefined>(undefined);
+  const [selectedTool, setSelectedTool] = useState<ToolType | undefined>(
+    undefined
+  );
+  const [selectedColor, setSelectedColor] = useState<string | undefined>(
+    undefined
+  );
+  const [selectedOption, setSelectedOption] = useState<
+    IToolbarSelectorOption | undefined
+  >(undefined);
 
-  const { updateEraseType,
+  const {
+    updateEraseType,
     discardActiveObject,
     textIsActive,
     updateTextIsActive,
@@ -93,7 +102,7 @@ export default function ToolbarContextProvider({
     updateShapesAreSelectable,
     updateShapesAreEvented,
     updatePointer,
-    updatePenLine,
+    updateBrushType,
     updateLineWidth,
     updateFloodFill,
     updateFontFamily,
@@ -109,12 +118,23 @@ export default function ToolbarContextProvider({
     clearWhiteboardClearAll: clearWhiteboardAll,
   } = useContext(WhiteboardContext);
 
-  const toolsLookup = useMemo<Record<ToolType, { id: string, options: OptionalToolOptions }>>(() => {
+  const toolsLookup = useMemo<
+    Record<ToolType, { id: string; options: OptionalToolOptions }>
+  >(() => {
     return {
       select: { id: 'pointers', options: selectorOptionsWithId('pointers') },
-      pointer: { id: 'laser_pointer', options: selectorOptionsWithId('laser_pointer') },
-      move: { id: 'move_objects', options: selectorOptionsWithId('move_objects') },
-      eraser: { id: 'erase_type', options: selectorOptionsWithId('erase_type') },
+      pointer: {
+        id: 'laser_pointer',
+        options: selectorOptionsWithId('laser_pointer'),
+      },
+      move: {
+        id: 'move_objects',
+        options: selectorOptionsWithId('move_objects'),
+      },
+      eraser: {
+        id: 'erase_type',
+        options: selectorOptionsWithId('erase_type'),
+      },
       line: { id: 'line_type', options: selectorOptionsWithId('line_type') },
       fill: { id: 'flood_fill', options: selectorOptionsWithId('flood_fill') },
       text: { id: 'add_text', options: selectorOptionsWithId('add_text') },
@@ -126,12 +146,12 @@ export default function ToolbarContextProvider({
   const colorsLookup = useMemo(() => {
     return colorPaletteOptions.reduce((map, color) => {
       return map.set(color.id, color);
-    }, new Map<string, IStyleOption>())
+    }, new Map<string, IStyleOption>());
   }, []);
 
   const colors = useMemo(() => {
     return Array.from(colorsLookup.values());
-  }, [colorsLookup])
+  }, [colorsLookup]);
 
   const thicknessLookup = useMemo(() => {
     return selectorStyleOptionsWithId('line_width')
@@ -140,133 +160,175 @@ export default function ToolbarContextProvider({
       })
       .reduce((map, style) => {
         return map.set(style.id, style);
-      }, new Map<string, IThicknessStyle>())
+      }, new Map<string, IThicknessStyle>());
   }, []);
 
   const thickness = useMemo(() => {
     return Array.from(thicknessLookup.values());
-  }, [thicknessLookup])
+  }, [thicknessLookup]);
 
-  const selectToolOption = useCallback((toolId: string, option: IToolbarSelectorOption) => {
-    switch (toolId) {
-      case ELEMENTS.POINTERS_TOOL:
-        updatePointer(option.value);
-        break;
+  const selectToolOption = useCallback(
+    (toolId: string, option: IToolbarSelectorOption) => {
+      switch (toolId) {
+        case ELEMENTS.POINTERS_TOOL:
+          updatePointer(option.value);
+          break;
 
-      case ELEMENTS.LINE_TYPE_TOOL:
-        updatePenLine(option.value);
-        break;
+        case ELEMENTS.LINE_TYPE_TOOL:
+          updateBrushType(option.value);
+          break;
 
-      case ELEMENTS.LINE_WIDTH_TOOL:
-        updateLineWidth(Number(option.value));
-        break;
+        case ELEMENTS.LINE_WIDTH_TOOL:
+          updateLineWidth(Number(option.value));
+          break;
 
-      case ELEMENTS.FLOOD_FILL_TOOL:
-        updateFloodFill(option.value);
-        break;
+        case ELEMENTS.FLOOD_FILL_TOOL:
+          updateFloodFill(option.value);
+          break;
 
-      case ELEMENTS.ADD_TEXT_TOOL:
-        updateFontFamily(option.value);
-        break;
+        case ELEMENTS.ADD_TEXT_TOOL:
+          updateFontFamily(option.value);
+          break;
 
-      case ELEMENTS.ADD_SHAPE_TOOL:
-        updateShape(option.value);
-        break;
+        case ELEMENTS.ADD_SHAPE_TOOL:
+          updateShape(option.value);
+          break;
 
-      case ELEMENTS.ADD_STAMP_TOOL:
-        updateStamp(option.value);
-        break;
+        case ELEMENTS.ADD_STAMP_TOOL:
+          updateStamp(option.value);
+          break;
 
-      case ELEMENTS.ERASE_TYPE_TOOL:
-        updateEraseType(option.value);
-        break;
-    }
-  }, [updateEraseType, updateFloodFill, updateFontFamily, updateLineWidth, updatePenLine, updatePointer, updateShape, updateStamp]);
+        case ELEMENTS.ERASE_TYPE_TOOL:
+          updateEraseType(option.value);
+          break;
+      }
+    },
+    [
+      updateBrushType,
+      updateEraseType,
+      updateFloodFill,
+      updateFontFamily,
+      updateLineWidth,
+      updatePointer,
+      updateShape,
+      updateStamp,
+    ]
+  );
 
-  const selectToolAction = useCallback((toolType: ToolType, option?: IToolbarSelectorOption) => {
-    const tool = toolsLookup[toolType];
+  const selectToolAction = useCallback(
+    (toolType: ToolType, option?: IToolbarSelectorOption) => {
+      const tool = toolsLookup[toolType];
 
-    updateEraseType(null);
+      updateEraseType(null);
 
-    if (
-      (tool.id !== ELEMENTS.ERASE_TYPE_TOOL &&
-        tool.id !== ELEMENTS.ADD_TEXT_TOOL &&
-        tool.id !== ELEMENTS.LINE_TYPE_TOOL &&
-        tool.id !== ELEMENTS.LINE_WIDTH_TOOL) ||
-      (textIsActive && tool.id !== ELEMENTS.ADD_TEXT_TOOL)
-    ) {
-      discardActiveObject();
-    }
+      if (
+        (tool.id !== ELEMENTS.ERASE_TYPE_TOOL &&
+          tool.id !== ELEMENTS.ADD_TEXT_TOOL &&
+          tool.id !== ELEMENTS.LINE_TYPE_TOOL &&
+          tool.id !== ELEMENTS.LINE_WIDTH_TOOL) ||
+        (textIsActive && tool.id !== ELEMENTS.ADD_TEXT_TOOL)
+      ) {
+        discardActiveObject();
+      }
 
-    updateTextIsActive(tool.id === ELEMENTS.ADD_TEXT_TOOL);
-    updateShapeIsActive(tool.id === ELEMENTS.ADD_SHAPE_TOOL);
-    updateBrushIsActive(tool.id === ELEMENTS.LINE_TYPE_TOOL);
-    updateFloodFillIsActive(tool.id === ELEMENTS.FLOOD_FILL_TOOL);
-    updateLaserIsActive(tool.id === ELEMENTS.LASER_TOOL);
-    setPointerEvents(tool.id !== ELEMENTS.POINTERS_TOOL);
+      updateTextIsActive(tool.id === ELEMENTS.ADD_TEXT_TOOL);
+      updateShapeIsActive(tool.id === ELEMENTS.ADD_SHAPE_TOOL);
+      updateBrushIsActive(tool.id === ELEMENTS.LINE_TYPE_TOOL);
+      updateFloodFillIsActive(tool.id === ELEMENTS.FLOOD_FILL_TOOL);
+      updateLaserIsActive(tool.id === ELEMENTS.LASER_TOOL);
+      setPointerEvents(tool.id !== ELEMENTS.POINTERS_TOOL);
 
-    updateEventedObjects(
-      tool.id === ELEMENTS.POINTERS_TOOL || tool.id === ELEMENTS.MOVE_OBJECTS_TOOL
-    );
+      updateEventedObjects(
+        tool.id === ELEMENTS.POINTERS_TOOL ||
+          tool.id === ELEMENTS.MOVE_OBJECTS_TOOL
+      );
 
-    if (
-      tool.id === ELEMENTS.POINTERS_TOOL ||
-      tool.id === ELEMENTS.MOVE_OBJECTS_TOOL
-    ) {
-      updateShapesAreSelectable(true);
-    } else {
-      updateShapesAreSelectable(false);
-    }
+      if (
+        tool.id === ELEMENTS.POINTERS_TOOL ||
+        tool.id === ELEMENTS.MOVE_OBJECTS_TOOL
+      ) {
+        updateShapesAreSelectable(true);
+      } else {
+        updateShapesAreSelectable(false);
+      }
 
-    updateShapesAreEvented(
-      tool.id === ELEMENTS.FLOOD_FILL_TOOL || tool.id === ELEMENTS.ERASE_TYPE_TOOL
-    );
+      updateShapesAreEvented(
+        tool.id === ELEMENTS.FLOOD_FILL_TOOL ||
+          tool.id === ELEMENTS.ERASE_TYPE_TOOL
+      );
 
-    setTools({ active: tool.id, elements: [...tools.elements] });
+      setTools({ active: tool.id, elements: [...tools.elements] });
 
-    setSelectedTool(toolType);
-    setSelectedOption(option);
+      setSelectedTool(toolType);
+      setSelectedOption(option);
 
-    if (option) {
-      selectToolOption(tool.id, option);
-    }
-  }, [discardActiveObject, selectToolOption, setPointerEvents, textIsActive, tools.elements, toolsLookup, updateBrushIsActive, updateEraseType, updateEventedObjects, updateFloodFillIsActive, updateLaserIsActive, updateShapeIsActive, updateShapesAreEvented, updateShapesAreSelectable, updateTextIsActive]);
+      if (option) {
+        selectToolOption(tool.id, option);
+      }
+    },
+    [
+      discardActiveObject,
+      selectToolOption,
+      setPointerEvents,
+      textIsActive,
+      tools.elements,
+      toolsLookup,
+      updateBrushIsActive,
+      updateEraseType,
+      updateEventedObjects,
+      updateFloodFillIsActive,
+      updateLaserIsActive,
+      updateShapeIsActive,
+      updateShapesAreEvented,
+      updateShapesAreSelectable,
+      updateTextIsActive,
+    ]
+  );
 
-  const selectColorByValueAction = useCallback((color: string) => {
-    // TODO: There might be bugs in this action, I'm not sure in which
-    // condition the 'updateFloodFill/fillColor/changeStrokeColor/textColor' 
-    // should be called. I think from the user's perspective they should
-    // select one color and that color is used based on which tool is 
-    // selected.
+  const selectColorByValueAction = useCallback(
+    (color: string) => {
+      // TODO: There might be bugs in this action, I'm not sure in which
+      // condition the 'updateFloodFill/fillColor/changeStrokeColor/textColor'
+      // should be called. I think from the user's perspective they should
+      // select one color and that color is used based on which tool is
+      // selected.
 
-    updateFloodFill(color);
+      updateFloodFill(color);
 
-    // NOTE: Added this conditional because without it selected
-    // lines would get filled (not just stroked) whenever the color was selected.
-    if (selectedTool === "shape") {
-      fillColor(color);
-    } else {
-      changeStrokeColor(color);
-      textColor(color);
-    }
+      // NOTE: Added this conditional because without it selected
+      // lines would get filled (not just stroked) whenever the color was selected.
+      if (selectedTool === 'shape') {
+        fillColor(color);
+      } else {
+        changeStrokeColor(color);
+        textColor(color);
+      }
 
-    setSelectedColor(color);
-  }, [changeStrokeColor, fillColor, selectedTool, textColor, updateFloodFill]);
+      setSelectedColor(color);
+    },
+    [changeStrokeColor, fillColor, selectedTool, textColor, updateFloodFill]
+  );
 
-  const selectColorByNameAction = useCallback((colorName: string) => {
-    const color = colorsLookup.get(colorName);
-    if (!color) return;
+  const selectColorByNameAction = useCallback(
+    (colorName: string) => {
+      const color = colorsLookup.get(colorName);
+      if (!color) return;
 
-    selectColorByValueAction(String(color.value));
-  }, [colorsLookup, selectColorByValueAction]);
+      selectColorByValueAction(String(color.value));
+    },
+    [colorsLookup, selectColorByValueAction]
+  );
 
-  const clearAction = useCallback((filter?: string) => {
-    if (filter) {
-      clearWhiteboardOther(filter);
-    } else {
-      clearWhiteboard();
-    }
-  }, [clearWhiteboard, clearWhiteboardOther]);
+  const clearAction = useCallback(
+    (filter?: string) => {
+      if (filter) {
+        clearWhiteboardOther(filter);
+      } else {
+        clearWhiteboard();
+      }
+    },
+    [clearWhiteboard, clearWhiteboardOther]
+  );
 
   const clearAllAction = useCallback(() => {
     clearWhiteboardAll();
@@ -298,7 +360,11 @@ export default function ToolbarContextProvider({
 
   return (
     <Context.Provider
-      value={{ state: { tools: toolsLookup, colors, thickness }, status, actions }}
+      value={{
+        state: { tools: toolsLookup, colors, thickness },
+        status,
+        actions,
+      }}
     >
       {children}
     </Context.Provider>
@@ -306,5 +372,5 @@ export default function ToolbarContextProvider({
 }
 
 export function useToolbarContext(): IToolbarContext {
-  return useContext(Context)
+  return useContext(Context);
 }

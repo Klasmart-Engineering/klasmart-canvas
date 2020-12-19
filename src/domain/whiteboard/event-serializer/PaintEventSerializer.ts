@@ -2,6 +2,7 @@ import { PainterEvent, PainterEventType } from './PainterEvent';
 import { EventEmitter } from 'events';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { IToolbarUI } from '../../../interfaces/toolbar/toolbar-ui';
+import { IBrushSyncTarget } from '../../../interfaces/brushes/brush-sync-target';
 import { Image } from 'fabric/fabric-impl';
 
 // TODO: This service should probably implement some sort of
@@ -30,6 +31,7 @@ export interface ObjectEvent {
     | boolean
     | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean }
     | IToolbarUI
+    | IBrushSyncTarget
     | string;
 }
 
@@ -52,6 +54,7 @@ export type ObjectType =
   | 'background'
   | 'image'
   | 'pointer'
+  | 'group'
   | 'gif'
   | 'backgroundImage'
   | 'localImage';

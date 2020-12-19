@@ -4,7 +4,7 @@ import { usePerfectShapeIsActive } from './perfectShapeIsActive';
 test('should set perfectShapeIsActive from initial value', () => {
   const { result } = renderHook(() => usePerfectShapeIsActive());
   expect(result.current.perfectShapeIsActive).toBe(false);
-  expect(typeof result.current.perfectShapeIsActive).toBe('function');
+  expect(typeof result.current.updatePerfectShapeIsActive).toBe('function');
 });
 
 test('should update perfectShapeIsActive', () => {

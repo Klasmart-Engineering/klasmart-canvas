@@ -22,8 +22,11 @@ import { useCanvasActions } from './canvas-actions/useCanvasActions';
 import useSynchronizedAdded from './synchronization-hooks/useSynchronizedAdded';
 import useSynchronizedMoved from './synchronization-hooks/useSynchronizedMoved';
 // import {
-//   isEmptyShape,
-//   isFreeDrawing /* isShape, isText */,
+//   // isEmptyShape,
+//   // isFreeDrawing,
+//   // isShape,
+//   //isText,
+//   isSpecialFreeDrawing,
 // } from './utils/shapes';
 // import { TypedShape } from '../../interfaces/shapes/shapes';
 
@@ -69,6 +72,10 @@ import useFixedAspectScaling, {
 // import { TypedGroup } from '../../interfaces/shapes/group';
 
 // import { floodFillMouseEvent } from './utils/floodFillMouseEvent';
+// import { PenBrush } from './brushes/classes/penBrush';
+// import { MarkerBrush } from './brushes/classes/markerBrush';
+// import { ICanvasBrush } from '../../interfaces/brushes/canvas-brush';
+// import { PaintBrush } from './brushes/classes/paintBrush';
 // import { CANVAS_OBJECT_PROPS } from '../../config/undo-redo-values';
 import { CanvasDownloadConfirm } from '../../modals/canvas-download/canvasDownload';
 // import {
@@ -76,6 +83,8 @@ import { CanvasDownloadConfirm } from '../../modals/canvas-download/canvasDownlo
 //   createGif,
 //   createImageAsObject,
 // } from './gifs-actions/util';
+// import { ChalkBrush } from './brushes/classes/chalkBrush';
+// import { changeLineWidthInSpecialBrushes } from './brushes/actions/changeLineWidthInSpecialBrushes';
 import { useSetCanvas } from './canvas-features/useSetCanvas';
 import { useObjectManipulation } from './canvas-features/useObjectManipulation';
 import { useFreeHandDrawing } from './canvas-features/useFreeHandDrawing';
@@ -84,11 +93,8 @@ import { useFloodFill } from './canvas-features/useFloodFill';
 import { useObjectSelection } from './canvas-features/useObjectSelection';
 import { useTextObject } from './canvas-features/useTextObject';
 import { useAddImage } from './canvas-features/useAddImage';
-// import { useSynchronization } from './canvas-features/useSynchronization';
-// import { useUndoRedo } from './canvas-features/useUndoRedo';
 import { useChangeLineWidth } from './canvas-features/useChangeLineWidth';
 import { useUndoRedo } from './canvas-features/useUndoRedo';
-
 // interface IBackgroundImage extends IStaticCanvasOptions {
 //   id?: string;
 // }
@@ -184,6 +190,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setSerializerToolbarState,
     allToolbarIsEnabled,
     // lineWidthIsActive,
+    // brushType,
+    // updateBrushType,
     imagePopupIsOpen,
     updateImagePopupIsOpen,
     // activeCanvas,
@@ -206,8 +214,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     undoRedoDispatch,
     instanceId,
     eventSerializer,
-    userId,
-    undoRedoDispatch
+    userId
   );
 
   useSetCanvas(
@@ -223,6 +230,794 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     display,
     initialStyle
   );
+
+  // /**
+  //  * Creates Canvas/Whiteboard instance
+  //  */
+  // useEffect(() => {
+  //   const canvasInstance = new fabric.Canvas(instanceId, {
+  //     backgroundColor: undefined,
+  //     isDrawingMode: false,
+  //     allowTouchScrolling: false,
+  //     selectionBorderColor: 'rgba(100, 100, 255, 1)',
+  //     selectionLineWidth: 2,
+  //     selectionColor: 'rgba(100, 100, 255, 0.1)',
+  //     selectionDashArray: [10],
+  //   });
+
+  //   setCanvas(canvasInstance);
+  // }, [instanceId]);
+
+  // /**
+  //  * Enable or disable allow touch scroll based on pointer events.
+  //  */
+  // useEffect(() => {
+  //   if (!canvas) return;
+  //   canvas.allowTouchScrolling = !pointerEvents;
+  // }, [pointerEvents, canvas]);
+
+  // /**
+  //  * Request all events to be resent after canvas is created.
+  //  */
+  // useEffect(() => {
+  //   if (!canvas) return;
+
+  //   requestAllEvents();
+  // }, [canvas, requestAllEvents]);
+
+  // /**
+  //  * Retrieve references to elements created by fabricjs. We'll need these to
+  //  * tweak the style after canvas have been initialized.
+  //  */
+  // useEffect(() => {
+  //   if (!canvas) return;
+
+  //   const lowerCanvas = document.getElementById(instanceId);
+  //   const wrapper = lowerCanvas?.parentElement;
+  //   const upperCanvas = wrapper?.getElementsByClassName('upper-canvas')[0];
+
+  //   if (wrapper) {
+  //     setWrapper(wrapper);
+
+  //     // TODO: We may want to make the position style
+  //     // controlled by property or variable.
+  //     wrapper.style.position = 'absolute';
+
+  //     if (initialStyle && initialStyle.zIndex) {
+  //       wrapper.style.zIndex = String(initialStyle.zIndex);
+  //     }
+  //   }
+  //   if (lowerCanvas) setLowerCanvas(lowerCanvas as HTMLCanvasElement);
+  //   if (upperCanvas) setUpperCanvas(upperCanvas as HTMLCanvasElement);
+  // }, [canvas, initialStyle, instanceId]);
+
+  // /**
+  //  * Update wrapper display state.
+  //  */
+  // useEffect(() => {
+  //   if (!wrapper) return;
+
+  //   if (display === false) {
+  //     wrapper.style.display = 'none';
+  //   } else {
+  //     wrapper.style.removeProperty('display');
+  //   }
+  // }, [wrapper, display]);
+
+  // /**
+  //  * Update the CSS Width/Height
+  //  */
+  // useEffect(() => {
+  //   if (wrapper && lowerCanvas && upperCanvas) {
+  //     const widthStyle = `${width}px`;
+  //     wrapper.style.width = widthStyle;
+  //     lowerCanvas.style.width = widthStyle;
+  //     upperCanvas.style.width = widthStyle;
+
+  //     const heightStyle = `${height}px`;
+  //     wrapper.style.height = heightStyle;
+  //     lowerCanvas.style.height = heightStyle;
+  //     upperCanvas.style.height = heightStyle;
+
+  //     const wrapperTransform = `translate(${left}px, ${top}px)`;
+  //     wrapper.style.transform = wrapperTransform;
+
+  //     wrapper.style.top = '0px';
+  //     wrapper.style.left = '0px';
+  //   }
+  // }, [wrapper, lowerCanvas, upperCanvas, width, height, left, top]);
+
+  // /**
+  //  * Update the pointer events to make canvas click through.
+  //  */
+  // useEffect(() => {
+  //   if (wrapper && lowerCanvas && upperCanvas) {
+  //     const pointerEventsStyle = pointerEvents ? 'auto' : 'none';
+
+  //     wrapper.style.pointerEvents = pointerEventsStyle;
+  //     lowerCanvas.style.pointerEvents = pointerEventsStyle;
+  //     upperCanvas.style.pointerEvents = pointerEventsStyle;
+  //   }
+  // }, [lowerCanvas, pointerEvents, upperCanvas, wrapper]);
+
+  // /** Update objects selectable/evented state. */
+  // useEffect(() => {
+  //   if (!canvas) {
+  //     return;
+  //   }
+
+  //   const teacherHasPermission = allToolbarIsEnabled && shapesAreSelectable;
+  //   const studentHasPermission =
+  //     serializerToolbarState.move && shapesAreSelectable;
+
+  //   canvas.getObjects().forEach((object: ICanvasObject) => {
+  //     if (
+  //       ((object.id && isLocalObject(object.id, userId)) || !object.id) &&
+  //       !eraseType
+  //     ) {
+  //       object.set({
+  //         selectable: teacherHasPermission || studentHasPermission,
+  //         evented:
+  //           (allToolbarIsEnabled &&
+  //             (shapesAreSelectable || shapesAreEvented)) ||
+  //           (serializerToolbarState.move &&
+  //             (shapesAreSelectable || shapesAreEvented)),
+  //         lockMovementX: !shapesAreSelectable,
+  //         lockMovementY: !shapesAreSelectable,
+  //         hoverCursor: shapesAreSelectable ? 'move' : 'default',
+  //       });
+  //     }
+  //   });
+
+  //   canvas.selection = shapesAreSelectable;
+  //   canvas.renderAll();
+  // }, [
+  //   canvas,
+  //   eraseType,
+  //   isLocalObject,
+  //   shapesAreEvented,
+  //   shapesAreSelectable,
+  //   userId,
+  //   allToolbarIsEnabled,
+  //   serializerToolbarState.move,
+  // ]);
+
+  // /**
+  //  * Handles the logic to write text on the whiteboard
+  //  * */
+  // useEffect(() => {
+  //   const teacherHasPermission = allToolbarIsEnabled && textIsActive;
+  //   const studentHasPermission =
+  //     toolbarIsEnabled && serializerToolbarState.text && textIsActive;
+  //   if (teacherHasPermission || studentHasPermission) {
+  //     canvas?.on('mouse:down', (e: fabric.IEvent) => {
+  //       if (
+  //         (e && e.target === null) ||
+  //         (e.target?.type !== 'textbox' && e.target?.type !== 'i-text')
+  //       ) {
+  //         let text = new fabric.IText(' ', {
+  //           fontFamily: fontFamily,
+  //           fontSize: 30,
+  //           fontWeight: 400,
+  //           fill: fontColor,
+  //           fontStyle: 'normal',
+  //           top: e.pointer?.y,
+  //           left: e.pointer?.x,
+  //           cursorDuration: 500,
+  //           lockMovementX: true,
+  //           lockMovementY: true,
+  //           hasRotatingPoint: false,
+  //           hoverCursor: 'default',
+  //         });
+
+  //         canvas.add(text);
+  //         canvas.setActiveObject(text);
+  //         text.enterEditing();
+  //         text?.hiddenTextarea?.focus();
+
+  //         text.on('editing:exited', () => {
+  //           const textCopy = text.text?.trim();
+  //           const toObject = text.toObject();
+  //           delete toObject.text;
+  //           delete toObject.type;
+  //           const clonedTextObj = JSON.parse(JSON.stringify(toObject));
+  //           clonedTextObj.id = `${userId}:${uuidv4()}`;
+  //           clonedTextObj.lockMovementX = true;
+  //           clonedTextObj.lockMovementY = true;
+  //           clonedTextObj.hasRotatingPoint = false;
+  //           clonedTextObj.hoverCursor = 'default';
+
+  //           if (typeof textCopy === 'string') {
+  //             text = new fabric.Textbox(textCopy, clonedTextObj);
+  //           }
+
+  //           canvas.remove(canvas.getActiveObject());
+  //           canvas.add(text);
+  //           canvas.setActiveObject(text);
+
+  //           if (text?.text?.replace(/\s/g, '').length === 0) {
+  //             canvas.remove(canvas.getActiveObject());
+  //             return;
+  //           }
+
+  //           text.on('modified', () => {
+  //             if (text?.text?.replace(/\s/g, '').length === 0) {
+  //               canvas.remove(canvas.getActiveObject());
+  //             }
+  //           });
+  //         });
+  //       }
+  //     });
+  //   }
+
+  //   return () => {
+  //     if (!eraseType) {
+  //       canvas?.off('mouse:down');
+  //     }
+  //   };
+  // }, [
+  //   canvas,
+  //   textIsActive,
+  //   fontColor,
+  //   fontFamily,
+  //   updateFontFamily,
+  //   updateFontColor,
+  //   userId,
+  //   eraseType,
+  //   toolbarIsEnabled,
+  //   allToolbarIsEnabled,
+  //   serializerToolbarState.text,
+  // ]);
+
+  // /**
+  //  * Handles the logic to set the Textbox auto grownable and text responsive
+  //  */
+  // useEffect(() => {
+  //   let currentTextbox: Textbox;
+  //   let textboxCopy: IText;
+
+  //   if (textIsActive) {
+  //     /**
+  //      * Entering to edit a text object
+  //      * Textbox transformed in IText
+  //      */
+  //     canvas?.on('text:editing:entered', (e: IEvent) => {
+  //       if (e.target?.type === 'textbox') {
+  //         let counter = 0;
+  //         let textCopy = '';
+
+  //         /**
+  //          * Emulates the aspect of a Textbox keeping the lines
+  //          * that this had in the new IText object
+  //          */
+  //         const setLines = () => {
+  //           currentTextbox.textLines.forEach((line, index) => {
+  //             let separator =
+  //               currentTextbox.text?.charCodeAt(counter + line.length) === 10
+  //                 ? '\n'
+  //                 : ' \n';
+
+  //             if (index === currentTextbox.textLines.length - 1) {
+  //               separator = '';
+  //             }
+
+  //             textCopy += `${line}${separator}`;
+  //             counter += line.length + 1;
+  //           });
+  //         };
+
+  //         canvas.remove(textboxCopy);
+  //         currentTextbox = e.target as Textbox;
+  //         setLines();
+
+  //         // Preparing Textbox properties to be setted in IText object
+  //         const textboxProps = JSON.parse(JSON.stringify(currentTextbox));
+  //         delete textboxProps.text;
+  //         delete textboxProps.type;
+  //         textboxProps.type = 'i-text';
+  //         textboxProps.visible = true;
+  //         textboxProps.width = currentTextbox.width;
+  //         textboxProps.height = currentTextbox.height;
+
+  //         // Adding the IText and hiding the Textbox
+  //         if (typeof textCopy === 'string') {
+  //           textboxCopy = new fabric.IText(textCopy.trim(), textboxProps);
+  //           canvas.add(textboxCopy);
+  //           canvas.setActiveObject(textboxCopy);
+  //           textboxCopy.enterEditing();
+  //           currentTextbox.set({
+  //             visible: false,
+  //           });
+
+  //           canvas.renderAll();
+  //         }
+  //       }
+  //     });
+
+  //     /**
+  //      * Text Edition finished on IText object
+  //      * IText transformed in Textbox
+  //      */
+  //     canvas?.on('text:editing:exited', (e: IEvent) => {
+  //       if (!textboxCopy || !textboxCopy.width) return;
+
+  //       const textboxWidth: number = textboxCopy.width;
+
+  //       // Updating/showing the Textbox and hiding the IText
+  //       if (currentTextbox && e.target?.type === 'i-text') {
+  //         textboxCopy.set('isEditing', false);
+  //         currentTextbox.set({
+  //           width: textboxWidth + 10,
+  //           height: textboxCopy.height,
+  //           visible: true,
+  //           text: textboxCopy.text?.trim(),
+  //         });
+
+  //         canvas.setActiveObject(currentTextbox);
+  //         currentTextbox.set('isEditing', true);
+  //         textboxCopy.set('visible', false);
+  //         canvas.discardActiveObject();
+  //         canvas.renderAll();
+  //       }
+  //     });
+  //   }
+
+  //   return () => {
+  //     canvas?.off('text:editing:entered');
+  //     canvas?.off('text:editing:exited');
+  //   };
+  // }, [canvas, textIsActive]);
+
+  // /**
+  //  * Is executed when textIsActive changes its value,
+  //  * basically to deselect any selected object
+  //  */
+  // useEffect(() => {
+  //   if (!textIsActive) {
+  //     canvas?.discardActiveObject();
+  //     canvas?.renderAll();
+  //   }
+  // }, [canvas, pointerEvents, textIsActive]);
+
+  // /**
+  //  * !! Is modified
+  //  * !!!!!! Add the type of brushes
+  //  * Activates or deactivates drawing mode.
+  //  */
+  // useEffect(() => {
+  //   const pathCreated = (e: ICanvasDrawingEvent) => {
+  //     if (e.path) {
+  //       e.path.strokeUniform = true;
+  //       canvas?.renderAll();
+  //     }
+  //   };
+
+  //   if (brushIsActive && canvas) {
+  //     switch (brushType) {
+  //       case 'pen':
+  //         canvas.freeDrawingBrush = new PenBrush(canvas, userId);
+  //         break;
+  //       case 'marker':
+  //       case 'felt':
+  //         canvas.freeDrawingBrush = new MarkerBrush(canvas, userId, brushType);
+  //         break;
+  //       case 'paintbrush':
+  //         canvas.freeDrawingBrush = new PaintBrush(canvas, userId);
+  //         break;
+  //       case 'chalk':
+  //       case 'crayon':
+  //         canvas.freeDrawingBrush = new ChalkBrush(canvas, userId, brushType);
+  //         break;
+  //       case 'dashed':
+  //         canvas.freeDrawingBrush = new fabric.PencilBrush();
+  //         (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).strokeDashArray = [
+  //           lineWidth * 2,
+  //         ];
+  //         break;
+  //       default:
+  //         canvas.freeDrawingBrush = new fabric.PencilBrush();
+  //         break;
+  //     }
+
+  //     (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).canvas = canvas;
+  //     canvas.freeDrawingBrush.color = penColor || DEFAULT_VALUES.PEN_COLOR;
+  //     canvas.freeDrawingBrush.width = lineWidth;
+  //     canvas.freeDrawingCursor = 'crosshair';
+  //     canvas.isDrawingMode =
+  //       allToolbarIsEnabled || (toolbarIsEnabled && serializerToolbarState.pen);
+
+  //     canvas.on('path:created', pathCreated);
+  //   } else if (canvas && !brushIsActive && !partialEraseIsActive) {
+  //     canvas.isDrawingMode = false;
+  //   }
+
+  //   return () => {
+  //     canvas?.off('path:created');
+  //   };
+  // }, [
+  //   brushIsActive,
+  //   canvas,
+  //   lineWidth,
+  //   penColor,
+  //   toolbarIsEnabled,
+  //   allToolbarIsEnabled,
+  //   serializerToolbarState.pen,
+  //   brushType,
+  //   partialEraseIsActive,
+  //   userId,
+  // ]);
+
+  // /**
+  //  * Disables shape canvas mouse events.
+  //  */
+  // useEffect(() => {
+  //   if (!shapeIsActive && canvas) {
+  //     canvas.off('mouse:move');
+  //     canvas.off('mouse:up');
+  //   }
+  // }, [shapeIsActive, canvas]);
+
+  // /**
+  //  * Activates the mouseDown event if shape exists and shapeIsActive is true
+  //  * Handles logic to add shape to whiteboard
+  //  */
+  // useEffect(() => {
+  //   const teacherHasPermission =
+  //     allToolbarIsEnabled && shape && shapeIsActive && toolbarIsEnabled;
+  //   const studentHasPermission =
+  //     shape &&
+  //     shapeIsActive &&
+  //     toolbarIsEnabled &&
+  //     serializerToolbarState.shape;
+  //   if (teacherHasPermission || studentHasPermission) {
+  //     canvas?.forEachObject((object: ICanvasObject) => {
+  //       if (object.id && isLocalObject(object.id, userId)) {
+  //         object.set({
+  //           evented: false,
+  //           selectable: false,
+  //         });
+  //       }
+  //     });
+
+  //     actions.addShape(shape);
+  //   }
+
+  //   return () => {
+  //     if (
+  //       !textIsActive &&
+  //       !floodFillIsActive &&
+  //       !shapesAreEvented &&
+  //       !brushIsActive
+  //     ) {
+  //       canvas?.off('mouse:down');
+  //     }
+
+  //     if (eraseType !== 'object' && !brushIsActive) {
+  //       canvas?.off('mouse:up');
+  //     }
+
+  //     if (!laserIsActive && !brushIsActive) {
+  //       canvas?.off('mouse:move');
+  //     }
+  //   };
+  // }, [
+  //   canvas,
+  //   shape,
+  //   shapeIsActive,
+  //   mouseDown,
+  //   penColor,
+  //   shapeColor,
+  //   actions,
+  //   textIsActive,
+  //   userId,
+  //   floodFillIsActive,
+  //   shapesAreSelectable,
+  //   eraseType,
+  //   shapesAreEvented,
+  //   isLocalObject,
+  //   laserIsActive,
+  //   toolbarIsEnabled,
+  //   allToolbarIsEnabled,
+  //   serializerToolbarState.shape,
+  //   brushIsActive,
+  // ]);
+
+  // /**
+  //  * General handler for keydown keyboard events
+  //  * 'Backspace' event for removing selected element from whiteboard.
+  //  * 'Escape' event for deselect active objects.
+  //  * 'Shift' event for active the perfect shapes creation.
+  //  * */
+  // const keyDownHandler = useCallback(
+  //   (e: Event) => {
+  //     if (!undoRedoIsAvailable()) {
+  //       return;
+  //     }
+
+  //     if (
+  //       ((e as unknown) as KeyboardEvent).keyCode === 90 &&
+  //       (e as any).ctrlKey &&
+  //       !(e as any).shiftKey &&
+  //       activeCanvas.current === instanceId
+  //     ) {
+  //       undoRedoDispatch({ type: UNDO, canvasId: instanceId });
+  //       return;
+  //     }
+
+  //     if (
+  //       ((e as unknown) as KeyboardEvent).keyCode === 89 &&
+  //       (e as any).ctrlKey &&
+  //       activeCanvas.current === instanceId
+  //     ) {
+  //       undoRedoDispatch({ type: REDO, canvasId: instanceId });
+  //       return;
+  //     }
+
+  //     if ((e as ICanvasKeyboardEvent).key === 'Backspace' && canvas) {
+  //       const objects = canvas.getActiveObjects();
+
+  //       objects.forEach((object: fabric.Object) => {
+  //         if (!(object as ITextOptions)?.isEditing) {
+  //           canvas.remove(object);
+  //           canvas.discardActiveObject().renderAll();
+  //         }
+  //       });
+  //       return;
+  //     }
+
+  //     if ((e as ICanvasKeyboardEvent).key === 'Escape' && canvas) {
+  //       canvas.discardActiveObject();
+  //       canvas.renderAll();
+  //     }
+
+  //     if (
+  //       (e as ICanvasKeyboardEvent).key === 'Shift' &&
+  //       canvas &&
+  //       !perfectShapeIsActive &&
+  //       window.innerWidth > 768 &&
+  //       perfectShapeIsAvailable()
+  //     ) {
+  //       updatePerfectShapeIsActive(true);
+  //     }
+  //   },
+  //   [
+  //     canvas,
+  //     undoRedoDispatch,
+  //     activeCanvas,
+  //     instanceId,
+  //     perfectShapeIsActive,
+  //     perfectShapeIsAvailable,
+  //     updatePerfectShapeIsActive,
+  //     undoRedoIsAvailable,
+  //   ]
+  // );
+
+  // /**
+  //  * General handler for keyup keyboard events
+  //  * 'Shift' event for deactive the perfect shapes creation
+  //  */
+  // const keyUpHandler = useCallback(
+  //   (e: Event) => {
+  //     if (
+  //       (e as ICanvasKeyboardEvent).key === 'Shift' &&
+  //       canvas &&
+  //       perfectShapeIsActive &&
+  //       window.innerWidth > 768
+  //     ) {
+  //       updatePerfectShapeIsActive(false);
+  //     }
+  //   },
+  //   [canvas, perfectShapeIsActive, updatePerfectShapeIsActive]
+  // );
+
+  // /**
+  //  * Loads selected font. Default is Arial
+  //  * Send synchronization event for fontFamily changes.
+  //  * */
+  // const fontFamilyLoader = useCallback(
+  //   (font: string) => {
+  //     const myFont = new FontFaceObserver(font);
+  //     myFont
+  //       .load()
+  //       .then(() => {
+  //         if (canvas?.getActiveObject()) {
+  //           (canvas.getActiveObject() as fabric.IText).set('fontFamily', font);
+  //           canvas.requestRenderAll();
+
+  //           const objects = canvas?.getActiveObjects();
+
+  //           if (objects && objects.length) {
+  //             objects.forEach((obj: ICanvasObject) => {
+  //               if (obj.id && isLocalObject(obj.id, userId)) {
+  //                 const type = obj.get('type');
+
+  //                 if (type === 'textbox') {
+  //                   const target = {
+  //                     fontFamily: obj.fontFamily,
+  //                   } as ICanvasObject;
+
+  //                   const payload: ObjectEvent = {
+  //                     type,
+  //                     target,
+  //                     id: obj.id,
+  //                   };
+
+  //                   eventSerializer?.push('fontFamilyChanged', payload);
+  //                 }
+  //               }
+  //             });
+  //           }
+  //         }
+  //       })
+  //       .catch((e: IEvent) => {
+  //         console.log(e);
+  //       });
+  //   },
+  //   /* If isLocalObject is added on dependencies,
+  //   an unecessary event is triggered */
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  //   [canvas, eventSerializer, userId]
+  // );
+
+  // /**
+  //  * Get the color of the clicked area in the Whiteboard
+  //  * and returns it in hexadecimal code
+  //  * @param {IEvent} event - click event
+  //  */
+  // const getColorInCoord = useCallback(
+  //   (x: number, y: number): string | null => {
+  //     if (canvas) {
+  //       const colorData = canvas
+  //         .getContext()
+  //         .getImageData(
+  //           x * window.devicePixelRatio,
+  //           y * window.devicePixelRatio,
+  //           1,
+  //           1
+  //         )
+  //         .data.slice(0, 3);
+  //       return (
+  //         '#' +
+  //         (
+  //           (1 << 24) +
+  //           (colorData[0] << 16) +
+  //           (colorData[1] << 8) +
+  //           colorData[2]
+  //         )
+  //           .toString(16)
+  //           .slice(1)
+  //       );
+  //     }
+
+  //     return null;
+  //   },
+  //   [canvas]
+  // );
+
+  // /**
+  //  * Reorder the current shapes letting the shapes over their container shape
+  //  */
+  // const reorderShapes = useCallback(() => {
+  //   let temporal;
+  //   let actualIndex;
+  //   let compareIndex;
+
+  //   const getObjectIndex = (object: ICanvasObject, canvas: Canvas) => {
+  //     return canvas.getObjects().indexOf(object);
+  //   };
+
+  //   canvas?.forEachObject((actual) => {
+  //     canvas.forEachObject((compare) => {
+  //       actualIndex = getObjectIndex(actual, canvas);
+  //       compareIndex = getObjectIndex(compare, canvas);
+
+  //       if (
+  //         actual.isContainedWithinObject(compare) &&
+  //         actualIndex < compareIndex
+  //       ) {
+  //         temporal = getObjectIndex(actual, canvas);
+  //         actual.moveTo(compareIndex);
+  //         compare.moveTo(temporal);
+  //       }
+  //     });
+  //   });
+  // }, [canvas]);
+
+  // /**
+  //  * !! Is modified
+  //  * Trigger the changes in the required variables
+  //  * when a certain object is selected
+  //  * @param {IEvent} event - event that contains the selected object
+  //  */
+  // const manageChanges = useCallback(
+  //   (event: fabric.IEvent) => {
+  //     reorderShapes();
+
+  //     // Free Drawing Line Selected
+  //     // !!!! brushIsActive
+  //     if (
+  //       !shapeIsActive &&
+  //       !brushIsActive &&
+  //       eventedObjects &&
+  //       ((event.target && isFreeDrawing(event.target)) ||
+  //         (event.target && isEmptyShape(event.target)))
+  //     ) {
+  //       updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
+  //       updateLineWidth(event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH);
+  //       // !!!!!! updateBRushType
+  //       updateBrushType(event.target.strokeDashArray ? 'dashed' : 'pencil');
+  //     }
+
+  //     // Special Free Drawing Line Selected
+  //     if (
+  //       !shapeIsActive &&
+  //       !brushIsActive &&
+  //       eventedObjects &&
+  //       event.target &&
+  //       isSpecialFreeDrawing(event.target)
+  //     ) {
+  //       updatePenColor(
+  //         (event.target as ICanvasBrush).basePath?.stroke ||
+  //           DEFAULT_VALUES.PEN_COLOR
+  //       );
+  //       updateLineWidth(
+  //         (event.target as ICanvasBrush).basePath?.strokeWidth ||
+  //           DEFAULT_VALUES.LINE_WIDTH
+  //       );
+  //       updateBrushType(
+  //         (event.target as ICanvasBrush).basePath?.type ||
+  //           DEFAULT_VALUES.PEN_LINE
+  //       );
+  //     }
+
+  //     // Shape Selected
+  //     if (
+  //       event.target &&
+  //       isShape(event.target) &&
+  //       !shapeIsActive &&
+  //       eventedObjects
+  //     ) {
+  //       updateShape(event.target.name || DEFAULT_VALUES.SHAPE);
+
+  //       if (
+  //         (event.target as TypedShape).shapeType === 'shape' &&
+  //         !brushIsActive
+  //       ) {
+  //         updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
+  //         updateLineWidth(
+  //           event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH
+  //         );
+  //       } else if (event.target.fill && !brushIsActive) {
+  //         updateShapeColor(
+  //           event.target.fill.toString() || DEFAULT_VALUES.SHAPE_COLOR
+  //         );
+  //       }
+  //     }
+
+  //     // Text Selected
+  //     if (event.target && isText(event.target)) {
+  //       const newFont = (event.target as ITextOptions).fontFamily;
+  //       const newFontColor = event.target.fill;
+
+  //       if (newFont && newFontColor) {
+  //         updateFontFamily(newFont);
+  //         updateFontColor(newFontColor.toString());
+  //       }
+  //     }
+  //   },
+  //   [
+  //     brushIsActive,
+  //     eventedObjects,
+  //     reorderShapes,
+  //     shapeIsActive,
+  //     updateBrushType,
+  //     updateFontColor,
+  //     updateFontFamily,
+  //     updateLineWidth,
+  //     updatePenColor,
+  //     updateShape,
+  //     updateShapeColor,
+  //   ]
 
   useObjectManipulation(
     canvas as fabric.Canvas,
@@ -248,6 +1043,207 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     eventSerializer,
     undoRedoDispatch
   );
+
+  // /**
+  //  * Memoized laserIsActive prop.
+  //  */
+  // const laserPointerIsActive = useMemo(() => laserIsActive, [laserIsActive]);
+
+  // /**
+  //  * ! Is modified
+  //  * !!!!!!!! Add code related to custom brushes
+  //  * Manages the logic for Flood-fill Feature
+  //  */
+  // useEffect(() => {
+  //   let originalStroke = null;
+  //   let originalFill = null;
+  //   let originalBackground = null;
+  //   let clickedColor: string | null = null;
+  //   const differentFill = '#dcdcdc';
+  //   const differentStroke = '#dbdbdb';
+  //   const differentBackground = '#dadada';
+
+  //   const isLocalShape = (shape: TypedShape) => {
+  //     return shape.id && isLocalObject(shape.id, userId);
+  //   };
+
+  //   const teacherHasPermission =
+  //     allToolbarIsEnabled && floodFillIsActive && toolbarIsEnabled;
+  //   const studentHasPermission =
+  //     floodFillIsActive && toolbarIsEnabled && serializerToolbarState.floodFill;
+
+  //   if ((canvas && teacherHasPermission) || (canvas && studentHasPermission)) {
+  //     canvas.defaultCursor = `url("${floodFillCursor}") 2 15, default`;
+  //     canvas.forEachObject((object: TypedShape) => {
+  //       setObjectControlsVisibility(object as ICanvasObject, false);
+
+  //       if (!isLocalShape(object)) {
+  //         return;
+  //       }
+
+  //       object.set({
+  //         evented: true,
+  //         selectable: object.get('type') !== 'image' ? true : false,
+  //         lockMovementX: true,
+  //         lockMovementY: true,
+  //         hasBorders: false,
+  //         hoverCursor: isLocalShape(object)
+  //           ? `url("${floodFillCursor}") 2 15, default`
+  //           : `url("${floodFillCursor}") 2 15, default`,
+  //         perPixelTargetFind: isShape(object) ? false : true,
+  //       });
+  //     });
+
+  //     reorderShapes();
+  //     canvas.renderAll();
+
+  //     canvas.on('mouse:down', async (event: fabric.IEvent) => {
+  //       // Click out of any object
+  //       if (
+  //         !event.target ||
+  //         (event.target &&
+  //           ((event.target.get('type') === 'path' &&
+  //             !isEmptyShape(event.target)) ||
+  //             event.target.get('type') === 'image')) ||
+  //         (event.target.get('type') && isSpecialFreeDrawing(event.target))
+  //       ) {
+  //         floodFillMouseEvent(
+  //           event,
+  //           canvas,
+  //           userId,
+  //           isLocalObject as (p1: string, p2: string) => boolean,
+  //           floodFill,
+  //           eventSerializer,
+  //           undoRedoDispatch
+  //         );
+  //         return;
+  //       }
+
+  //       // Click on object shape
+  //       if (
+  //         event.target &&
+  //         event.pointer &&
+  //         isEmptyShape(event.target) &&
+  //         (event.target as ICanvasObject).id
+  //       ) {
+  //         // Store the current stroke and fill colors to reset them
+  //         originalStroke = event.target.stroke;
+  //         originalFill = event.target.fill;
+  //         originalBackground = canvas.backgroundColor;
+
+  //         // Change stroke to a provisional color to be identified
+  //         event.target.set({
+  //           stroke: differentStroke,
+  //           fill: differentFill,
+  //         });
+  //         canvas.backgroundColor = differentBackground;
+  //         canvas.renderAll();
+
+  //         clickedColor = getColorInCoord(event.pointer.x, event.pointer.y);
+
+  //         if (
+  //           clickedColor === differentFill &&
+  //           (event.target as ICanvasObject).id
+  //         ) {
+  //           // If user click inside of the shape
+  //           event.target.set({
+  //             fill: floodFill,
+  //             stroke: originalStroke,
+  //           });
+
+  //           canvas.discardActiveObject();
+  //           canvas.backgroundColor = originalBackground;
+
+  //           const payload: ObjectEvent = {
+  //             type: 'shape',
+  //             target: {
+  //               fill: event.target.fill,
+  //               objectsOrdering: canvas
+  //                 .getObjects()
+  //                 .map((obj: ICanvasObject, index) => {
+  //                   return { id: obj.id, index: index };
+  //                 }),
+  //             } as ICanvasObject,
+  //             id: (event.target as ICanvasObject).id || '',
+  //           };
+
+  //           const eventState = {
+  //             event: payload,
+  //             type: 'colorChanged',
+  //           } as IUndoRedoEvent;
+
+  //           undoRedoDispatch({
+  //             type: SET,
+  //             payload: canvas.getObjects(),
+  //             canvasId: userId,
+  //             event: eventState,
+  //           });
+
+  //           eventSerializer?.push('colorChanged', payload);
+  //         } else if (clickedColor === differentStroke) {
+  //           // If user click in the border of the shape
+  //           event.target.set({
+  //             stroke: originalStroke,
+  //             fill: originalFill,
+  //           });
+  //           canvas.backgroundColor = originalBackground;
+  //         } else {
+  //           // If user click outside of the shape
+  //           event.target.set({
+  //             stroke: originalStroke,
+  //             fill: originalFill,
+  //           });
+  //           canvas.backgroundColor = originalBackground;
+
+  //           if (event.e) {
+  //             manageShapeOutsideClick(event);
+  //           }
+  //         }
+  //       }
+
+  //       canvas.renderAll();
+  //     });
+  //   }
+
+  //   return () => {
+  //     if (canvas) {
+  //       canvas.defaultCursor = 'default';
+  //     }
+
+  //     if (!floodFillIsActive && eraseType !== 'object') {
+  //       canvas?.forEachObject((object: ICanvasObject) => {
+  //         object.set({
+  //           hoverCursor: laserPointerIsActive ? 'none' : 'default',
+  //           evented: false,
+  //           perPixelTargetFind: false,
+  //         });
+  //       });
+  //     }
+
+  //     if (!textIsActive && eraseType !== 'object' && !brushIsActive) {
+  //       canvas?.off('mouse:down');
+  //     }
+  //   };
+  // }, [
+  //   reorderShapes,
+  //   eraseType,
+  //   undoRedoDispatch,
+  //   toolbarIsEnabled,
+  //   laserPointerIsActive,
+  //   allToolbarIsEnabled,
+  //   serializerToolbarState.floodFill,
+  //   brushIsActive,
+  // ]);
+
+  // /**
+  //  * If the input field (text) has length
+  //  * will unselect whiteboard active objects
+  //  * */
+  // useEffect(() => {
+  //   if (text.length) {
+  //     actions.discardActiveObject();
+  //   }
+  // }, [actions, text]);
 
   useObjectSelection(canvas as fabric.Canvas, actions);
 
@@ -1499,6 +2495,541 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     undoRedoDispatch
   );
+
+  /**
+   * !! Is Modified
+   * !!!! Add logic about custom brushes
+   * Send synchronization event for penColor changes.
+   * */
+  // useEffect(() => {
+  //   const objects = canvas?.getActiveObjects();
+  //   if (objects && objects.length) {
+  //     objects.forEach((obj: ICanvasObject) => {
+  //       const type: ObjectType = obj.get('type') as ObjectType;
+  //       const basePath = (obj as ICanvasBrush).basePath;
+
+  //       if (
+  //         obj.id &&
+  //         isLocalObject(obj.id, userId) &&
+  //         type !== 'textbox' &&
+  //         basePath?.type !== 'paintbrush'
+  //       ) {
+  //         const stroke = type === 'path' ? obj.stroke : basePath?.stroke;
+  //         const target = () => {
+  //           return { stroke: stroke };
+  //         };
+
+  //         const payload: ObjectEvent = {
+  //           type,
+  //           target: target() as ICanvasObject,
+  //           id: obj.id,
+  //         };
+
+  //         eventSerializer?.push('colorChanged', payload);
+  //       }
+  //     });
+  //   }
+  //   /* If isLocalObject is added on dependencies,
+  //   an unecessary colorChange event is triggered */
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [canvas, eventSerializer, userId, penColor, fontColor, undoRedoDispatch]);
+
+  // /**
+  //  * Send synchronization event for lineWidth changes
+  //  */
+  // useEffect(() => {
+  //   const objects = canvas?.getActiveObjects();
+  //   const validTypes: string[] = [
+  //     'rect',
+  //     'ellipse',
+  //     'triangle',
+  //     'polygon',
+  //     'path',
+  //   ];
+
+  //   if (objects && objects.length) {
+  //     objects.forEach((obj: ICanvasObject) => {
+  //       const type: ObjectType = obj.get('type') as ObjectType;
+
+  //       if (
+  //         obj.id &&
+  //         isLocalObject(obj.id, userId) &&
+  //         validTypes.includes(type)
+  //       ) {
+  //         const target = () => {
+  //           return { strokeWidth: lineWidth };
+  //         };
+
+  //         const payload: ObjectEvent = {
+  //           type,
+  //           target: target() as ICanvasObject,
+  //           id: obj.id,
+  //         };
+
+  //         eventSerializer?.push('lineWidthChanged', payload);
+  //       }
+  //     });
+  //   }
+  //   // If isLocalObject is added on dependencies, a unecessary event is emmited
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [canvas, eventSerializer, lineWidth, userId]);
+
+  // useEffect(() => {
+  //   if (fontColor && canvas) {
+  //     const obj = canvas.getActiveObject() as ICanvasObject;
+
+  //     if (!obj) return;
+
+  //     const type = obj?.get('type');
+
+  //     if (type !== 'textbox') return;
+
+  //     const payload = {
+  //       type,
+  //       target: { fill: obj?.fill },
+  //       id: obj?.id,
+  //     };
+
+  //     const event = { event: payload, type: 'colorChanged' };
+
+  //     undoRedoDispatch({
+  //       type: SET,
+  //       payload: canvas?.getObjects() as TypedShape[],
+  //       canvasId: userId,
+  //       event: (event as unknown) as IUndoRedoEvent,
+  //     });
+  //   }
+  // }, [fontColor, canvas, undoRedoDispatch, userId]);
+
+  // !! Is modified
+  // !!!!! Add logic related to custom brushes
+  // useEffect(() => {
+  //   if (lineWidth && canvas) {
+  //     const obj = canvas.getActiveObject() as ICanvasObject;
+
+  //     if (!obj) return;
+
+  //     if (
+  //       !(obj as fabric.Group).getObjects ||
+  //       !(obj as fabric.Group).getObjects().length
+  //     ) {
+  //       const type = obj?.get('type');
+
+  //       if (type === 'textbox') return;
+
+  //       if (obj?.strokeWidth === lineWidth) return;
+
+  //       const payload = {
+  //         type,
+  //         target: { strokeWidth: obj?.strokeWidth },
+  //         id: obj?.id,
+  //       };
+
+  //       const event = { event: payload, type: 'lineWidthChanged' };
+
+  //       undoRedoDispatch({
+  //         type: SET,
+  //         payload: canvas?.getObjects() as TypedShape[],
+  //         canvasId: userId,
+  //         event: (event as unknown) as IUndoRedoEvent,
+  //       });
+  //     } else if (!(obj as ICanvasBrush).basePath) {
+  //       const type = obj?.get('type');
+  //       const activeIds: string[] = canvas
+  //         ?.getActiveObject()
+  //         // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
+  //         .getObjects()
+  //         .map((o: TypedShape) => o.id);
+  //       const payload = {
+  //         type,
+  //         svg: true,
+  //         target: null,
+  //         id: `${userId}:group`,
+  //       };
+
+  //       const event = { event: payload, type: 'activeSelection', activeIds };
+
+  //       let filtered = canvas?.getObjects().filter((o: any) => {
+  //         return !o.group;
+  //       });
+
+  //       let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
+  //       active?.set({ id: `${userId}:group` });
+
+  //       undoRedoDispatch({
+  //         type: SET_GROUP,
+  //         payload: [...(filtered as any[]), active],
+  //         canvasId: userId,
+  //         event: (event as unknown) as IUndoRedoEvent,
+  //       });
+  //     }
+  //   }
+  // }, [lineWidth, canvas, undoRedoDispatch, userId]);
+
+  // useEffect(() => {
+  //   if (canvas && fontFamily) {
+  //     const obj = canvas?.getActiveObject() as ICanvasObject;
+  //     const type = obj?.get('type');
+
+  //     if (type === 'textbox' && obj) {
+  //       const target = {
+  //         fontFamily,
+  //       };
+
+  //       const payload = {
+  //         type,
+  //         target,
+  //         id: obj?.id,
+  //       };
+
+  //       const event = { event: payload, type: 'fontFamilyChanged' };
+
+  //       obj.set({ fontFamily });
+
+  //       undoRedoDispatch({
+  //         type: SET,
+  //         payload: canvas?.getObjects() as TypedShape[],
+  //         canvasId: userId,
+  //         event: (event as unknown) as IUndoRedoEvent,
+  //       });
+  //     } else if (obj?.type === 'activeSelection') {
+  //       let events: any[] = [];
+  //       const eventId: string = uuidv4();
+
+  //       obj._objects?.forEach((object: any) => {
+  //         const payload = {
+  //           type,
+  //           target: { fontFamily },
+  //           id: object.id,
+  //         };
+
+  //         const event = { event: payload, type: 'activeSelection', eventId };
+  //         events.push(event);
+  //         object.set({ fontFamily });
+  //       });
+
+  //       let mappedObjects = canvas?.getObjects().map((object: any) => {
+  //         if (!object.group) {
+  //           return object.toJSON(CANVAS_OBJECT_PROPS);
+  //         }
+  //         const matrix = object.calcTransformMatrix();
+  //         const options = fabric.util.qrDecompose(matrix);
+  //         const transformed = object.toJSON(CANVAS_OBJECT_PROPS);
+  //         let top = object.group.height / 2 + object.top + object.group.top;
+  //         let left = object.group.width / 2 + object.left + object.group.left;
+
+  //         events.forEach((event: any) => {
+  //           if (event.event.id === object.id) {
+  //             event.event.target.top = top;
+  //             event.event.target.left = left;
+  //           }
+  //         });
+
+  //         return {
+  //           ...transformed,
+  //           top,
+  //           left,
+  //           scaleX: options.scaleX,
+  //           scaleY: options.scaleY,
+  //         };
+  //       });
+
+  //       undoRedoDispatch({
+  //         type: SET_GROUP,
+  //         payload: mappedObjects as TypedShape[],
+  //         canvasId: userId,
+  //         event: (events as unknown) as IUndoRedoEvent,
+  //       });
+  //     }
+  //   }
+  // }, [canvas, fontFamily, undoRedoDispatch, userId]);
+
+  // /**
+  //  * If pointerEvents changes to false, all the selected objects
+  //  * will be unselected
+  //  */
+  // useEffect(() => {
+  //   if (!pointerEvents && canvas) {
+  //     canvas.discardActiveObject().renderAll();
+  //   }
+  // }, [pointerEvents, canvas]);
+
+  /**
+   * Handles the logic to add images and gifs as objects
+   * and background images to the whiteboard.
+   */
+  // useEffect(() => {
+  //   if (isBackgroundImage && canvas) {
+  //     if (backgroundImageIsPartialErasable) {
+  //       createBackgroundImage(backgroundImage.toString(), userId, canvas).then(
+  //         () => {
+  //           if (canvas.backgroundImage) {
+  //             const payload: IBackgroundImageEvent = {
+  //               id: (canvas.backgroundImage as IBackgroundImage).id,
+  //               type: 'backgroundImage',
+  //               target: canvas.backgroundImage,
+  //             };
+
+  //             canvas.trigger('object:added', payload);
+  //           }
+  //         }
+  //       );
+  //       return;
+  //     }
+
+  //     (async function () {
+  //       try {
+  //         await setLocalImage(backgroundImage);
+  //         const id = `${userId}:${uuidv4()}`;
+  //         const payload: IBackgroundImageEvent = {
+  //           type: 'localImage',
+  //           target: { backgroundImage, id },
+  //           id,
+  //         };
+  //         canvas.trigger('object:added', payload);
+  //       } catch (e) {
+  //         console.error(e);
+  //       }
+  //     })();
+
+  //     return;
+  //   }
+
+  //   if (isGif && canvas) {
+  //     // We use then to avoid inspector warning about ignoring the promise returned
+  //     createGif(image, userId, canvas).then();
+  //     return;
+  //   }
+
+  //   if (canvas) {
+  //     createImageAsObject(image.toString(), userId, canvas);
+  //   }
+  // }, [
+  //   canvas,
+  //   image,
+  //   userId,
+  //   isGif,
+  //   isBackgroundImage,
+  //   backgroundImage,
+  //   backgroundImageIsPartialErasable,
+  //   setLocalImage,
+  //   eventSerializer,
+  //   localImage,
+  // ]);
+
+  // useEffect(() => {
+  //   if (shape && shapeIsActive) {
+  //     mouseDown(shape, shapeColor);
+  //   }
+
+  //   return () => {
+  //     if (!textIsActive && !brushIsActive) {
+  //       canvas?.off('mouse:down');
+  //     }
+  //     canvas?.off('mouse:move');
+  //     canvas?.off('mouse:up');
+  //   };
+  // }, [
+  //   canvas,
+  //   shape,
+  //   shapeIsActive,
+  //   mouseDown,
+  //   shapeColor,
+  //   textIsActive,
+  //   brushIsActive,
+  // ]);
+
+  /**
+   * !!!! Is modified
+   * !!!! Add logic related to custom brushes
+   * If lineWidth variable changes and a free line drawing is selected
+   * that drawing line width will changes to the selected width on Toolbar
+   */
+  // useEffect(() => {
+  //   if (canvas?.getActiveObjects()) {
+  //     canvas.getActiveObjects().forEach(async (object) => {
+  //       if (isEmptyShape(object) || isFreeDrawing(object)) {
+  //         object.set('strokeWidth', lineWidth);
+  //       }
+
+  //       // Line Width in Special Brushes
+  //       if (
+  //         (object.type === 'group' && (object as ICanvasBrush).basePath) ||
+  //         (object.type === 'image' && (object as ICanvasBrush).basePath)
+  //       ) {
+  //         let payload: ObjectEvent;
+
+  //         changeLineWidthInSpecialBrushes(
+  //           canvas,
+  //           userId,
+  //           object as ICanvasBrush,
+  //           lineWidth
+  //         )
+  //           .then((newObject) => {
+  //             payload = {
+  //               type: 'group',
+  //               target: {
+  //                 basePath: {
+  //                   points: newObject.basePath?.points || [],
+  //                   strokeWidth: Number(newObject.basePath?.strokeWidth),
+  //                   stroke: String(newObject.basePath?.stroke),
+  //                   bristles: newObject.basePath?.bristles,
+  //                   imageData: newObject.basePath?.imageData,
+  //                 },
+  //               },
+  //               id: String(newObject.id),
+  //             };
+
+  //             eventSerializer?.push('lineWidthChanged', payload);
+  //           })
+  //           .catch((e: Error) => {
+  //             if (e.message !== 'lineWidth is the same') {
+  //               console.warn(e);
+  //             }
+  //           });
+  //       }
+  //     });
+
+  //     canvas.renderAll();
+  //   }
+  // }, [lineWidth, canvas, userId, eventSerializer]);
+
+  // NOTE: Register canvas actions with context.
+  // useEffect(() => {
+  //   updateCanvasActions(actions);
+  // }, [actions, updateCanvasActions]);
+
+  // Will be modified once only one board is visible.
+  // const keyDown = (e: KeyboardEvent<HTMLCanvasElement>) => {
+  //   if (e.key === 'Backspace') {
+  //     e.preventDefault();
+  //   }
+
+  //   if (e.which === 90 && e.ctrlKey && !e.shiftKey) {
+  //     undoRedoDispatch({ type: UNDO, canvasId: instanceId });
+  //     return;
+  //   }
+
+  //   if (e.which === 89 && e.ctrlKey) {
+  //     undoRedoDispatch({ type: REDO, canvasId: instanceId });
+  //     return;
+  //   }
+  // };
+
+  /**
+   * Makes local objects unselectable when toolbar is disabled by the teacher.
+   * */
+
+  // useEffect(() => {
+  //   const studentHasPermission =
+  //     toolbarIsEnabled &&
+  //     (serializerToolbarState.move || serializerToolbarState.erase);
+  //   canvas?.forEachObject((object: ICanvasObject) => {
+  //     if (
+  //       object.id &&
+  //       isLocalObject(object.id, userId) &&
+  //       shapesAreSelectable
+  //     ) {
+  //       object.set({
+  //         evented: allToolbarIsEnabled || studentHasPermission,
+  //         selectable: allToolbarIsEnabled || studentHasPermission,
+  //       });
+  //     }
+  //   });
+  // }, [
+  //   canvas,
+  //   toolbarIsEnabled,
+  //   isLocalObject,
+  //   userId,
+  //   allToolbarIsEnabled,
+  //   serializerToolbarState.move,
+  //   serializerToolbarState.erase,
+  //   shapesAreSelectable,
+  // ]);
+
+  /**
+   * Set a selected shape like perfect if perfectShapeIsActive
+   */
+  // useEffect(() => {
+  //   /**
+  //    * Multiplies the width by scaleX of the given shape
+  //    * to obtain the real current width
+  //    * @param {TypedShape} shape - Shape to calculate its real width
+  //    */
+  //   const getShapeRealWidth = (shape: TypedShape) => {
+  //     return Number(shape.width) * Number(shape.scaleX);
+  //   };
+
+  //   /**
+  //    * Multiplies the height by scaleY of the given shape
+  //    * to obtain the real current height
+  //    * @param {TypedShape} shape - Shape to calculate its real height
+  //    */
+  //   const getShapeRealHeight = (shape: TypedShape) => {
+  //     return Number(shape.height) * Number(shape.scaleY);
+  //   };
+
+  //   canvas?.forEachObject((object: ICanvasObject) => {
+  //     if (
+  //       isEmptyShape(object as TypedShape) &&
+  //       object.id &&
+  //       isLocalObject(object.id, userId)
+  //     ) {
+  //       object.set('lockUniScaling', perfectShapeIsActive);
+  //     }
+  //   });
+
+  //   if (
+  //     canvas?.getActiveObject() &&
+  //     perfectShapeIsActive &&
+  //     isEmptyShape(canvas.getActiveObject())
+  //   ) {
+  //     const shapeToFix = canvas.getActiveObject();
+  //     if (getShapeRealWidth(shapeToFix) > getShapeRealHeight(shapeToFix)) {
+  //       shapeToFix.set(
+  //         'scaleY',
+  //         getShapeRealWidth(shapeToFix) / Number(shapeToFix.height)
+  //       );
+
+  //       canvas.trigger('object:scaled', {
+  //         target: shapeToFix,
+  //       });
+  //     } else if (
+  //       getShapeRealHeight(shapeToFix) > getShapeRealWidth(shapeToFix)
+  //     ) {
+  //       shapeToFix.set(
+  //         'scaleX',
+  //         getShapeRealHeight(shapeToFix) / Number(shapeToFix.width)
+  //       );
+
+  //       canvas.trigger('object:scaled', {
+  //         target: shapeToFix,
+  //       });
+  //     }
+
+  //     shapeToFix.setCoords();
+  //   }
+  //   /* If isLocalObject is added on dependencies
+  //   an unexpected event is triggered */
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [canvas, perfectShapeIsActive, userId]);
+
+  // /**
+  //  * Reset perfectShapeIsActive to false when the shape or move tool permissions are revoked
+  //  */
+  // useEffect(() => {
+  //   if (!perfectShapeIsAvailable()) {
+  //     updatePerfectShapeIsActive(false);
+  //   }
+  // }, [
+  //   perfectShapeIsActive,
+  //   serializerToolbarState.shape,
+  //   allToolbarIsEnabled,
+  //   userId,
+  //   updatePerfectShapeIsActive,
+  //   serializerToolbarState.move,
+  //   perfectShapeIsAvailable,
+  // ]);
   useSynchronizedAdded(
     canvas,
     userId,

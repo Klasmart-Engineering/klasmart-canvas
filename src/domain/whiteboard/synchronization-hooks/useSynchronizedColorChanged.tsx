@@ -2,6 +2,9 @@ import { useEffect } from 'react';
 import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { fabric } from 'fabric';
+import { colorChangeSynchronizationInSpecialBrushes } from '../brushes/actions/colorChangeSynchronizationInSpecialBrushes';
 
 const useSynchronizedColorChanged = (
   canvas: fabric.Canvas | undefined,
@@ -26,15 +29,30 @@ const useSynchronizedColorChanged = (
       }
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
-        if (obj.id && obj.id === id && objectType !== 'textbox') {
-          if (objectType === 'shape') {
-            obj.set({
-              fill: target.fill,
-            });
-          } else {
-            obj.set({
-              stroke: target.stroke,
-            });
+        if (obj.id && obj.id === id) {
+          switch (objectType) {
+            case 'textbox':
+              return;
+
+            case 'shape':
+              obj.set({
+                fill: target.fill,
+              });
+              break;
+
+            case 'path':
+              obj.set({
+                stroke: target.stroke,
+              });
+              break;
+
+            // Color change in special brushes
+            case 'group':
+              colorChangeSynchronizationInSpecialBrushes(
+                obj as ICanvasBrush,
+                target
+              );
+              break;
           }
         }
 
