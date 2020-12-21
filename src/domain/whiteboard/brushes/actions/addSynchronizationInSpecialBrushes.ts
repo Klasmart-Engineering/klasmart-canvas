@@ -4,6 +4,7 @@ import { PaintBrush } from '../classes/paintBrush';
 import { ICanvasBrush } from '../../../../interfaces/brushes/canvas-brush';
 import { IPenPoint } from '../../../../interfaces/brushes/pen-point';
 import { ICoordinate } from '../../../../interfaces/brushes/coordinate';
+import { DashedBrush } from '../classes/dashedBrush';
 
 /**
  * Logic for synchronize special brushes creation
@@ -18,12 +19,22 @@ export const addSynchronizationInSpecialBrushes = (
   id: string,
   target: ICanvasBrush
 ) => {
-  let brush: PenBrush | MarkerBrush | PaintBrush;
+  let brush: PenBrush | MarkerBrush | PaintBrush | DashedBrush;
   let path;
   const basePath = target.basePath;
   const brushType = target.basePath?.type;
 
   switch (brushType) {
+    case 'dashed':
+      brush = new DashedBrush(canvas, userId);
+      path = brush.createDashedPath(
+        id,
+        (basePath?.points as ICoordinate[]) || [],
+        Number(basePath?.strokeWidth),
+        String(basePath?.stroke)
+      );
+      break;
+
     case 'pen':
       brush = new PenBrush(canvas, userId);
       path = brush.createPenPath(
@@ -59,7 +70,11 @@ export const addSynchronizationInSpecialBrushes = (
 
   if (!path) return;
 
-  path.set({
+  (path as ICanvasBrush).set({
+    top: target.top,
+    left: target.left,
+    originX: target.originX,
+    originY: target.originY,
     selectable: false,
     evented: false,
   });

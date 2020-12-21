@@ -5,6 +5,7 @@ import { ChalkBrush } from '../classes/chalkBrush';
 import { ICanvasBrush } from '../../../../interfaces/brushes/canvas-brush';
 import { IPenPoint } from '../../../../interfaces/brushes/pen-point';
 import { IBristle } from '../../../../interfaces/brushes/bristle';
+import { DashedBrush } from '../classes/dashedBrush';
 
 /**
  * Logic for change lineWidth in special brushes local and remote
@@ -21,8 +22,8 @@ export const changeLineWidthInSpecialBrushes = async (
   lineWidth: number,
   target?: ICanvasBrush
 ): Promise<ICanvasBrush> => {
-  let brush: PenBrush | MarkerBrush | PaintBrush | ChalkBrush;
-  let newObject: ICanvasBrush | null = null;
+  let brush: PenBrush | MarkerBrush | PaintBrush | ChalkBrush | DashedBrush;
+  let newObject: ICanvasBrush | fabric.Path | null = null;
   let basePath = object.basePath;
   const brushType = object.basePath?.type;
 
@@ -35,17 +36,27 @@ export const changeLineWidthInSpecialBrushes = async (
     }
 
     switch (brushType) {
+      case 'dashed':
+        brush = new DashedBrush(canvas, userId);
+        newObject = brush.createDashedPath(
+          String(object.id),
+          basePath?.points || [],
+          lineWidth,
+          String(basePath?.stroke)
+        );
+        break;
       case 'pen':
         let points: IPenPoint[] = (basePath?.points as IPenPoint[]) || [];
 
         brush = new PenBrush(canvas, userId);
+        const { min, max } = brush.setMinMaxWidth(lineWidth);
 
         if (!target) {
           points = points.map((point) => {
             return {
               x: point.x,
               y: point.y,
-              width: (brush as PenBrush).getRandomInt(lineWidth / 2, lineWidth),
+              width: (brush as PenBrush).getRandomInt(min, max),
             };
           });
         }
@@ -117,7 +128,7 @@ export const changeLineWidthInSpecialBrushes = async (
     }
 
     if (newObject) {
-      newObject.set({
+      (newObject as ICanvasBrush).set({
         angle: object.angle,
         top: object.top,
         left: object.left,
@@ -144,7 +155,7 @@ export const changeLineWidthInSpecialBrushes = async (
 
     canvas.renderAll();
 
-    return newObject || object;
+    return (newObject as ICanvasBrush) || object;
   } catch (e) {
     throw e;
   }

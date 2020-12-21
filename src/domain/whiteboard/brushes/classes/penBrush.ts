@@ -51,21 +51,41 @@ export class PenBrush extends fabric.PencilBrush {
   }
 
   /**
+   * Sets minimum and maximum values to set valid widths
+   * for a pen line with the given linewidth
+   * @param {number} lineWidth - stroke width for the line
+   */
+  public setMinMaxWidth(lineWidth: number) {
+    if (lineWidth < 4) {
+      return {
+        min: 2,
+        max: 3,
+      };
+    }
+
+    return {
+      min: lineWidth / 2,
+      max: lineWidth,
+    };
+  }
+
+  /**
    * Mouse Down Event, starts to draw in the canvas
    * @param {ICoordinate} e - Event Coordinate value
    */
   public onMouseDown(e: ICoordinate) {
+    const { min, max } = this.setMinMaxWidth(this.width);
     this.isDrawing = true;
     this.points.push(
       {
         x: e.x,
         y: e.y,
-        width: this.getRandomInt(this.width / 2, this.width),
+        width: this.getRandomInt(min, max),
       },
       {
         x: e.x,
         y: e.y,
-        width: this.getRandomInt(this.width / 2, this.width),
+        width: this.getRandomInt(min, max),
       }
     );
   }
@@ -77,11 +97,12 @@ export class PenBrush extends fabric.PencilBrush {
   public onMouseMove(e: ICoordinate) {
     if (!this.isDrawing) return;
 
+    const { min, max } = this.setMinMaxWidth(this.width);
     const ctx = this.canvas.getContext();
     this.points.push({
       x: e.x,
       y: e.y,
-      width: this.getRandomInt(this.width / 2, this.width),
+      width: this.getRandomInt(min, max),
     });
 
     for (let i = 1; i < this.points.length; i++) {

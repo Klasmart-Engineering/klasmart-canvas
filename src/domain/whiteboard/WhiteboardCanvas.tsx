@@ -1,5 +1,6 @@
 import { fabric } from 'fabric';
 import floodFillCursor from '../../assets/cursors/flood-fill.png';
+import { connect } from 'react-redux';
 
 import { v4 as uuidv4 } from 'uuid';
 import React, {
@@ -85,7 +86,12 @@ import {
 } from './gifs-actions/util';
 import { ChalkBrush } from './brushes/classes/chalkBrush';
 import { changeLineWidthInSpecialBrushes } from './brushes/actions/changeLineWidthInSpecialBrushes';
-import { connect } from 'react-redux';
+import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { ICanvasPathBrush } from '../../interfaces/brushes/canvas-path-brush';
+import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
+import { setBasePathInNormalBrushes } from './brushes/utils/setBasePathInNormalBrushes';
+import { DashedBrush } from './brushes/classes/dashedBrush';
+import { ICanvasShapeBrush } from '../../interfaces/brushes/canvas-shape-brush';
 interface IBackgroundImage extends IStaticCanvasOptions {
   id?: string;
 }
@@ -561,6 +567,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = (props: any): JSX.Element => 
   useEffect(() => {
     const pathCreated = (e: ICanvasDrawingEvent) => {
       if (e.path) {
+        setBasePathInNormalBrushes(e.path as ICanvasPathBrush);
         e.path.strokeUniform = true;
         canvas?.renderAll();
       }
@@ -583,10 +590,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = (props: any): JSX.Element => 
           canvas.freeDrawingBrush = new ChalkBrush(canvas, userId, brushType);
           break;
         case 'dashed':
-          canvas.freeDrawingBrush = new fabric.PencilBrush();
-          (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).strokeDashArray = [
-            lineWidth * 2,
-          ];
+          canvas.freeDrawingBrush = new DashedBrush(canvas, userId);
           break;
         default:
           canvas.freeDrawingBrush = new fabric.PencilBrush();
@@ -938,7 +942,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = (props: any): JSX.Element => 
             DEFAULT_VALUES.LINE_WIDTH
         );
         updateBrushType(
-          (event.target as ICanvasBrush).basePath?.type ||
+          ((event.target as ICanvasBrush).basePath?.type as IBrushType) ||
             DEFAULT_VALUES.PEN_LINE
         );
       }
@@ -957,6 +961,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = (props: any): JSX.Element => 
           !brushIsActive
         ) {
           updatePenColor(event.target.stroke || DEFAULT_VALUES.PEN_COLOR);
+          updateBrushType((event.target as ICanvasShapeBrush).basePath.type);
           updateLineWidth(
             event.target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH
           );
@@ -1469,6 +1474,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = (props: any): JSX.Element => 
     filterIncomingEvents,
     undoRedoDispatch
   );
+  useSynchronizedBrushTypeChanged(canvas, userId, filterIncomingEvents);
 
   /**
    * Send synchronization event for penColor changes.
@@ -1814,26 +1820,73 @@ const WhiteboardCanvas: FunctionComponent<Props> = (props: any): JSX.Element => 
    * that drawing line width will changes to the selected width on Toolbar
    */
   useEffect(() => {
-    if (canvas?.getActiveObjects()) {
-      canvas.getActiveObjects().forEach(async (object) => {
-        if (isEmptyShape(object) || isFreeDrawing(object)) {
+    const changeLineWidth = async () => {
+      let newActives: ICanvasObject[] = [];
+      let activeObjects: ICanvasObject[] = [];
+
+      if (!canvas) return;
+
+      const selection = canvas.getActiveObject();
+
+      if (selection?.type === 'activeSelection') {
+        activeObjects = (selection as fabric.ActiveSelection)._objects;
+      } else {
+        activeObjects = canvas.getActiveObjects();
+      }
+
+      if (!activeObjects) return;
+      canvas.discardActiveObject();
+
+      for (const object of activeObjects) {
+        canvas.discardActiveObject();
+        if (
+          isEmptyShape(object as TypedShape) ||
+          (isFreeDrawing(object) &&
+            (object as ICanvasPathBrush).basePath?.type !== 'dashed')
+        ) {
           object.set('strokeWidth', lineWidth);
+          newActives.push(object);
+        }
+
+        if ((object as ICanvasPathBrush).basePath?.type === 'dashed') {
+          object.set({
+            strokeDashArray: [lineWidth * 2],
+          });
+        }
+
+        // Updating basePath
+        if (
+          isFreeDrawing(object) &&
+          (object as ICanvasPathBrush).basePath.type !== 'dashed'
+        ) {
+          const basePath = (object as ICanvasPathBrush).basePath;
+          (object as ICanvasPathBrush).set({
+            basePath: {
+              type: basePath.type,
+              points: basePath.points,
+              stroke: basePath.stroke,
+              strokeWidth: lineWidth,
+            },
+          });
         }
 
         // Line Width in Special Brushes
         if (
           (object.type === 'group' && (object as ICanvasBrush).basePath) ||
-          (object.type === 'image' && (object as ICanvasBrush).basePath)
+          (object.type === 'image' && (object as ICanvasBrush).basePath) ||
+          (object.type === 'path' &&
+            (object as ICanvasBrush).basePath?.type === 'dashed')
         ) {
           let payload: ObjectEvent;
 
-          changeLineWidthInSpecialBrushes(
+          await changeLineWidthInSpecialBrushes(
             canvas,
             userId,
             object as ICanvasBrush,
             lineWidth
           )
             .then((newObject) => {
+              newActives.push(newObject as ICanvasObject);
               payload = {
                 type: 'group',
                 target: {
@@ -1851,14 +1904,27 @@ const WhiteboardCanvas: FunctionComponent<Props> = (props: any): JSX.Element => 
               eventSerializer?.push('lineWidthChanged', payload);
             })
             .catch((e: Error) => {
-              if (e.message !== 'lineWidth is the same') {
+              if (e.message === 'lineWidth is the same') {
+                newActives.push(object);
+              } else {
                 console.warn(e);
               }
             });
         }
-      });
 
-      canvas.renderAll();
+        if (newActives.length === 1) {
+          canvas?.setActiveObject(newActives[0]);
+        } else if (newActives.length >= 2) {
+          const activesGroup = new fabric.ActiveSelection(newActives);
+          canvas?.setActiveObject(activesGroup);
+        }
+
+        canvas.renderAll();
+      }
+    };
+
+    if (canvas?.getActiveObjects()) {
+      changeLineWidth();
     }
   }, [lineWidth, canvas, userId, eventSerializer]);
 

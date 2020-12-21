@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect, useMemo } from 'react';
+import { connect } from 'react-redux';
 import ToolbarSection from './toolbar-section/ToolbarSection';
 import '../../assets/style/toolbar.css';
 import ToolbarButton from './toolbar-button/ToolbarButton';
@@ -18,7 +19,7 @@ import { ELEMENTS } from '../../config/toolbar-element-names';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
 import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 import { mappedActionElements, mappedToolElements } from './permissions-mapper';
-import { connect } from 'react-redux';
+import { IBrushType } from '../../interfaces/brushes/brush-type';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -61,6 +62,7 @@ function Toolbar(props: any) {
     updatePointer,
     penColor,
     changeStrokeColor,
+    changeBrushType,
     stamp,
     updateStamp,
     updateShapesAreSelectable,
@@ -72,7 +74,6 @@ function Toolbar(props: any) {
     allToolbarIsEnabled,
     updateLineWidthIsActive,
     brushType,
-    updateBrushType,
     updateImagePopupIsOpen,
     updatePartialEraseIsActive,
     openUploadFileModal,
@@ -260,7 +261,7 @@ function Toolbar(props: any) {
         break;
 
       case ELEMENTS.LINE_TYPE_TOOL:
-        updateBrushType(option);
+        changeBrushType(option as IBrushType);
         break;
 
       case ELEMENTS.LINE_WIDTH_TOOL:
