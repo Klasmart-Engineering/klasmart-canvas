@@ -1,7 +1,15 @@
 import { ITextOptions } from 'fabric/fabric-impl';
 import { useCallback, useContext, useEffect } from 'react';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { TypedShape } from '../../../interfaces/shapes/shapes';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
-import { isFreeDrawing, isEmptyShape, isShape, isText } from '../utils/shapes';
+import {
+  isFreeDrawing,
+  isEmptyShape,
+  isShape,
+  isText,
+  isSpecialFreeDrawing,
+} from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
 
 /**
@@ -14,6 +22,7 @@ export const useObjectSelection = (
   canvas: fabric.Canvas,
   actions: ICanvasActions
 ) => {
+  // Getting the necessary context variables
   const {
     shapeIsActive,
     brushIsActive,
@@ -22,6 +31,8 @@ export const useObjectSelection = (
     updatePenColor,
     lineWidth,
     updateLineWidth,
+    brushType,
+    updateBrushType,
     shape,
     updateShape,
     fontFamily,
@@ -29,6 +40,27 @@ export const useObjectSelection = (
     fontColor,
     updateFontColor,
   } = useContext(WhiteboardContext);
+
+  /**
+   * Gets stroke, strokeWidth and brushType properties
+   * from path and custom path objects
+   * @param {ICanvasBrush} object - Object to get its properties
+   */
+  const getBrushObjectProperties = useCallback((object: ICanvasBrush) => {
+    if (isFreeDrawing(object) || isEmptyShape(object as TypedShape)) {
+      return {
+        objectStroke: String(object.stroke),
+        objectStrokeWidth: Number(object.strokeWidth),
+        objectBrushType: object.strokeDashArray ? 'dashed' : 'pencil',
+      };
+    }
+
+    return {
+      objectStroke: String(object.basePath?.stroke),
+      objectStrokeWidth: Number(object.basePath?.strokeWidth),
+      objectBrushType: String(object.basePath?.type),
+    };
+  }, []);
 
   /**
    * Trigger the changes in the required variables
@@ -47,16 +79,29 @@ export const useObjectSelection = (
         !shapeIsActive &&
         !brushIsActive &&
         eventedObjects &&
-        (isFreeDrawing(selected) || isEmptyShape(selected))
+        (isFreeDrawing(selected) ||
+          isEmptyShape(selected) ||
+          isSpecialFreeDrawing(selected))
       ) {
+        const {
+          objectStroke,
+          objectStrokeWidth,
+          objectBrushType,
+        } = getBrushObjectProperties(selected as ICanvasBrush);
+
         // Change pen color
-        if (selected.stroke !== penColor) {
-          updatePenColor(selected.stroke as string);
+        if (objectStroke !== penColor) {
+          updatePenColor(objectStroke);
         }
 
         // Change line width
-        if (selected.strokeWidth !== lineWidth) {
-          updateLineWidth(selected.strokeWidth as number);
+        if (objectStrokeWidth !== lineWidth) {
+          updateLineWidth(objectStrokeWidth);
+        }
+
+        // Change brush type
+        if (objectBrushType !== brushType) {
+          updateBrushType(objectBrushType);
         }
       }
 
@@ -89,13 +134,16 @@ export const useObjectSelection = (
     [
       actions,
       brushIsActive,
+      brushType,
       eventedObjects,
       fontColor,
       fontFamily,
+      getBrushObjectProperties,
       lineWidth,
       penColor,
       shape,
       shapeIsActive,
+      updateBrushType,
       updateFontColor,
       updateFontFamily,
       updateLineWidth,
@@ -104,7 +152,7 @@ export const useObjectSelection = (
     ]
   );
 
-  // Set up mangeChanges callback.
+  // Set up manageChanges callback.
   useEffect(() => {
     if (!canvas) return;
 

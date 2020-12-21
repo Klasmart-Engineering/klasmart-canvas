@@ -589,19 +589,17 @@ export const useCanvasActions = (
             object as ICanvasBrush,
             color
           )
-            .then((newObject) => {
-              if (newObject.basePath?.type === 'paintbrush') {
-                const payload: ObjectEvent = {
-                  type: 'group',
-                  target: {
-                    stroke: (object as ICanvasBrush).basePath?.stroke,
-                    bristles: (object as ICanvasBrush).basePath?.bristles,
-                  } as ICanvasObject,
-                  id: String(object.id),
-                };
+            .then(() => {
+              const payload: ObjectEvent = {
+                type: 'group',
+                target: {
+                  stroke: (object as ICanvasBrush).basePath?.stroke,
+                  bristles: (object as ICanvasBrush).basePath?.bristles,
+                } as ICanvasObject,
+                id: String(object.id),
+              };
 
-                eventSerializer?.push('colorChanged', payload);
-              }
+              eventSerializer?.push('colorChanged', payload);
             })
             .catch((e) => {
               console.warn(e);
