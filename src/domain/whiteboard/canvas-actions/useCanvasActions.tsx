@@ -557,11 +557,11 @@ export const useCanvasActions = (
           const brush = new PaintBrush(canvas, userId);
           const newPoints = ((shape as ICanvasPathBrush).basePath
             ?.points as ICoordinate[]).map((point) => {
-            return {
-              x: point.x * Number(shape.scaleX),
-              y: point.y * Number(shape.scaleY),
-            };
-          });
+              return {
+                x: point.x * Number(shape.scaleX),
+                y: point.y * Number(shape.scaleY),
+              };
+            });
 
           const newPath = brush.modifyPaintBrushPath(
             String(shape.id),

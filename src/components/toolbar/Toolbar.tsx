@@ -20,6 +20,7 @@ import { CSSProperties } from '@material-ui/core/styles/withStyles';
 import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 import { mappedActionElements, mappedToolElements } from './permissions-mapper';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { IPermissions } from '../../interfaces/permissions/permissions';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -30,7 +31,11 @@ type ToolbarElementTypes =
 /**
  * Render the toolbar that will be used in the whiteboard
  */
-function Toolbar(props: any) {
+function Toolbar(
+  props: {
+    toolbarIsEnabled?: (state: { permissionsState: { [key: string]: boolean } }) => boolean,
+    permissions: IPermissions
+  }) {
   const [tools, setTools] = useState(toolsSection);
   const [actions] = useState(actionsSection);
 
@@ -519,7 +524,6 @@ function Toolbar(props: any) {
       });
     }
   }, [
-    // DELETE
     pointerIsEnabled,
     getActiveTool,
     getToolElements,
@@ -561,8 +565,6 @@ function Toolbar(props: any) {
     props.permissions
   );
 
-  console.log('toolElements', toolElements);
-
   return (
     <div style={toolbarContainerStyle}>
       <div style={toolbarStyle}>
@@ -576,16 +578,16 @@ function Toolbar(props: any) {
             ) =>
               determineIfIsToolbarButton(tool)
                 ? createToolbarButton(
-                    tool.id,
-                    tool.title,
-                    tool.iconSrc,
-                    tool.iconName,
-                    tools.active === tool.id,
-                    handleToolsElementClick,
-                    tool.enabled
-                  )
+                  tool.id,
+                  tool.title,
+                  tool.iconSrc,
+                  tool.iconName,
+                  tools.active === tool.id,
+                  handleToolsElementClick,
+                  tool.enabled
+                )
                 : determineIfIsToolbarSelector(tool)
-                ? createToolbarSelector(
+                  ? createToolbarSelector(
                     tool.id,
                     tool.options,
                     tools.active === tool.id,
@@ -596,18 +598,18 @@ function Toolbar(props: any) {
                     setColorPalette(tool),
                     tool.enabled
                   )
-                : determineIfIsSpecialSelector(tool)
-                ? createSpecialSelector(
-                    tool.id,
-                    tool.icon,
-                    tools.active === tool.id,
-                    setSelectedOptionSelector(tool.id),
-                    tool.styleOptions,
-                    handleToolsElementClick,
-                    handleToolSelectorChange,
-                    tool.enabled
-                  )
-                : null
+                  : determineIfIsSpecialSelector(tool)
+                    ? createSpecialSelector(
+                      tool.id,
+                      tool.icon,
+                      tools.active === tool.id,
+                      setSelectedOptionSelector(tool.id),
+                      tool.styleOptions,
+                      handleToolsElementClick,
+                      handleToolSelectorChange,
+                      tool.enabled
+                    )
+                    : null
           )}
         </ToolbarSection>
 
@@ -615,14 +617,14 @@ function Toolbar(props: any) {
           {actionElements.map((action) =>
             determineIfIsToolbarButton(action)
               ? createToolbarButton(
-                  action.id,
-                  action.title,
-                  action.iconSrc,
-                  action.iconName,
-                  actions.active === action.id,
-                  handleActionsElementClick,
-                  action.enabled
-                )
+                action.id,
+                action.title,
+                action.iconSrc,
+                action.iconName,
+                actions.active === action.id,
+                handleActionsElementClick,
+                action.enabled
+              )
               : null
           )}
         </ToolbarSection>
@@ -771,18 +773,22 @@ function determineIfIsSpecialSelector(
 ): toBeDetermined is IBasicSpecialSelector {
   return !!(toBeDetermined as IBasicSpecialSelector).icon;
 }
-
-const mapStateToProps = (state: any, ownProps: any) => ({
+/**
+ * Maps state to props.
+ * @param state Redux state
+ * @param ownProps Own properties
+ */
+const mapStateToProps = (state: { permissionsState: IPermissions }, ownProps: { toolbarIsEnabled?: boolean }) => ({
   ...ownProps,
   permissions: state.permissionsState,
-  toolbarIsEnabled: (state: any) => {
+  toolbarIsEnabled: (state: { permissionsState: { [key: string]: boolean } }) => {
 
     for (const key in state.permissionsState) {
       if (state.permissionsState[key] === true) {
         return true;
       }
     }
-  
+
     return false;
   }
 });

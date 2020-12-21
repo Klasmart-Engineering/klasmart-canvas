@@ -61,7 +61,6 @@ function Whiteboard() {
     <>
       <WhiteboardProvider
         clearWhiteboardPermissions={teacher}
-        // userId={'teacher'}
         allToolbarIsEnabled={true}
         activeCanvas={activeCanvas}
       >
@@ -95,7 +94,6 @@ function Whiteboard() {
       </WhiteboardProvider>
       <WhiteboardProvider
         clearWhiteboardPermissions={student}
-        // userId={'student'}
         allToolbarIsEnabled={false}
         activeCanvas={activeCanvas}
       >
@@ -128,7 +126,6 @@ function Whiteboard() {
       </WhiteboardProvider>
       <WhiteboardProvider
         clearWhiteboardPermissions={student}
-        // userId={'student2'}
         allToolbarIsEnabled={false}
         activeCanvas={activeCanvas}
       >

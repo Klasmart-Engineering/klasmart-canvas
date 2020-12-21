@@ -1,9 +1,9 @@
 import IBasicToolbarSelector from '../../interfaces/toolbar/toolbar-selector/basic-toolbar-selector';
 import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
-// import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import IBasicToolbarButton from '../../interfaces/toolbar/toolbar-button/basic-toolbar-button';
 import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elements/basic-special-selector';
 import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
+import { IPermissions } from '../../interfaces/permissions/permissions';
 
 /**
  * Maps permissions to action tools.
@@ -14,7 +14,7 @@ import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/to
 export const mappedActionElements = (
   actions: IBasicToolbarSection,
   allToolbarIsEnabled: boolean,
-  serializerToolbarState: any
+  serializerToolbarState: IPermissions
 ) =>
   actions.elements.map(
     (
@@ -58,7 +58,7 @@ export const mappedActionElements = (
 export const mappedToolElements = (
   tools: IBasicToolbarSection,
   allToolbarIsEnabled: boolean,
-  serializerToolbarState: any,
+  serializerToolbarState: IPermissions,
 ) =>
   tools.elements.map(
     (
@@ -78,8 +78,6 @@ export const mappedToolElements = (
             allToolbarIsEnabled ||
             serializerToolbarState.erase ||
             serializerToolbarState.partialErase;
-
-          console.log('erase: ', serializerToolbarState.erase, serializerToolbarState.partialErase);
 
           elmnt = {
             ...elmnt,

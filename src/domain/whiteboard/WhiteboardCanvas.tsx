@@ -935,15 +935,15 @@ const WhiteboardCanvas: FunctionComponent<Props> = (props: any): JSX.Element => 
       ) {
         updatePenColor(
           (event.target as ICanvasBrush).basePath?.stroke ||
-            DEFAULT_VALUES.PEN_COLOR
+          DEFAULT_VALUES.PEN_COLOR
         );
         updateLineWidth(
           (event.target as ICanvasBrush).basePath?.strokeWidth ||
-            DEFAULT_VALUES.LINE_WIDTH
+          DEFAULT_VALUES.LINE_WIDTH
         );
         updateBrushType(
           ((event.target as ICanvasBrush).basePath?.type as IBrushType) ||
-            DEFAULT_VALUES.PEN_LINE
+          DEFAULT_VALUES.PEN_LINE
         );
       }
 
@@ -2117,10 +2117,10 @@ const WhiteboardCanvas: FunctionComponent<Props> = (props: any): JSX.Element => 
   );
 };
 
-const mapStateToProps = (state:any, ownProps: any) => ({
+const mapStateToProps = (state: any, ownProps: any) => ({
   ...ownProps,
   permissions:
-  state.permissionsState,
+    state.permissionsState,
   toolbarIsEnabled: (state: any) => {
 
     for (const key in state.permissionsState) {
@@ -2128,7 +2128,7 @@ const mapStateToProps = (state:any, ownProps: any) => ({
         return true;
       }
     }
-  
+
     return false;
   },
 });

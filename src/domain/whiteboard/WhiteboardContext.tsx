@@ -353,17 +353,17 @@ export const WhiteboardProvider = ({
         Clear student
       </button>
       {(window.innerWidth <= 768 || window.innerHeight <= 768) &&
-      perfectShapeIsAvailable() ? (
-        <WhiteboardToggle
-          label="Perfect Shape Creation"
-          state={perfectShapeIsActive}
-          onStateChange={(value: boolean) => {
-            if (perfectShapeIsAvailable()) {
-              updatePerfectShapeIsActive(value);
-            }
-          }}
-        />
-      ) : null}
+        perfectShapeIsAvailable() ? (
+          <WhiteboardToggle
+            label="Perfect Shape Creation"
+            state={perfectShapeIsActive}
+            onStateChange={(value: boolean) => {
+              if (perfectShapeIsAvailable()) {
+                updatePerfectShapeIsActive(value);
+              }
+            }}
+          />
+        ) : null}
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />
