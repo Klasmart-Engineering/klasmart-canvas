@@ -1,4 +1,5 @@
 import { combineReducers, createStore } from 'redux'
+import { IPermissions } from '../../../interfaces/permissions/permissions';
 import {
   UPDATE_CLEAR_WHITEBOARD,
   UPDATE_DOWNLOAD_CANVAS,
@@ -15,27 +16,9 @@ import {
   UPDATE_UPLOAD_IMAGE,
 } from './actions';
 
-export interface IPermissions {
-  pointer: boolean;
-  move: boolean;
-  erase: boolean;
-  partialErase: boolean;
-  pen: boolean;
-  floodFill: boolean;
-  text: boolean;
-  shape: boolean;
-  undoRedo: boolean;
-  clearWhiteboard: boolean;
-  downloadCanvas: boolean;
-  uploadImage: boolean;
-}
-
-export interface IUser {
-  [key: string]: {
-    admin: boolean;
-  }
-}
-
+/**
+ * Default permissions state.
+ */
 const permissionsState: IPermissions = {
   pointer: false,
   move: false,
@@ -51,6 +34,11 @@ const permissionsState: IPermissions = {
   uploadImage: false,
 }
 
+/**
+ * Reducer
+ * @param state Redux state
+ * @param action Action
+ */
 function permissionsReducer(state: IPermissions = permissionsState, action: { type: string, payload: boolean | IPermissions } ) {
   switch (action.type) {
     case UPDATE_POINTER: {
@@ -97,21 +85,16 @@ function permissionsReducer(state: IPermissions = permissionsState, action: { ty
   }
 }
 
-// function userReducer(state: IUser = userState, action: { type: string, payload: any }) {
-//   switch(action.type) {
-//     case UPDATE_USER: {
-//       return { ...state, [action.payload.id]: { admin: action.payload.admin }};
-//     }
-//     default: {
-//       return state;
-//     }
-//   }
-// }
-
+/**
+ * Root reducer
+ */
 const rootReducer = combineReducers({
   permissionsState: permissionsReducer,
-  //  userState: userReducer,
 });
 
+/**
+ * Redux store
+ */
 const store = createStore(rootReducer)
+
 export default store;

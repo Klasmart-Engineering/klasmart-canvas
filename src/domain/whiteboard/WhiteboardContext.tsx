@@ -22,11 +22,9 @@ import { useLineWidth } from './hooks/useLineWidth';
 import { useFloodFill } from './hooks/useFloodFill';
 import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 import { useLaserIsActive } from './hooks/useLaserIsActive';
-import { useToolbarPermissions } from './hooks/useToolbarPermissions';
 import ICanvasActions from './canvas-actions/ICanvasActions';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
-// import AuthMenu from '../../components/AuthMenu';
 import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
@@ -36,21 +34,20 @@ import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
 import WhiteboardToggle from '../../components/WhiteboardToogle';
 import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 import { useUploadFileModal } from './hooks/useUploadFileModal';
-import store, { IPermissions } from './redux/store';
+import store from './redux/store';
 import { getToolbarIsEnabled } from './redux/utils';
+import { IPermissions } from '../../interfaces/permissions/permissions';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
 export const WhiteboardProvider = ({
   children,
   clearWhiteboardPermissions,
-  // userId,
   allToolbarIsEnabled,
   activeCanvas,
 }: {
   children: React.ReactNode;
   clearWhiteboardPermissions: IClearWhiteboardPermissions;
-  // userId: string;
   allToolbarIsEnabled: boolean;
   activeCanvas: MutableRefObject<string | null>;
 }) => {
@@ -228,9 +225,6 @@ export const WhiteboardProvider = ({
   /**
    * Returns boolean indicating if undo / redo feature is available.
    */
-  // const undoRedoIsAvailable = (): boolean => {
-  //   return allToolbarIsEnabled || serializerToolbarState.undoRedo;
-  // };
   /**
    * List of available colors in toolbar
    * */

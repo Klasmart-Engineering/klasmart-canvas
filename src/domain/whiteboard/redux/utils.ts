@@ -1,4 +1,5 @@
-import store, { IPermissions } from './store';
+import { IPermissions } from '../../../interfaces/permissions/permissions';
+import store from './store';
 
 export const getToolbarIsEnabled = () => {
   const permissions = store.getState().permissionsState;

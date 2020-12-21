@@ -21,8 +21,9 @@ import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { PartialErase } from '../partial-erase/partialErase';
 import { changeLineColorInSpecialBrushes } from '../brushes/actions/changeLineColorInSpecialBrushes';
-import store, { IPermissions } from '../../whiteboard/redux/store';
+import store from '../../whiteboard/redux/store';
 import { getToolbarIsEnabled } from '../redux/utils';
+import { IPermissions } from '../../../interfaces/permissions/permissions';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,

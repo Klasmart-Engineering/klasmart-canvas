@@ -40,7 +40,6 @@ function Toolbar(props: any) {
     fontFamily,
     fontColor,
     updateFontFamily,
-    // openClearWhiteboardModal,
     setPointerEvents,
     textIsActive,
     updateTextIsActive,
@@ -69,10 +68,8 @@ function Toolbar(props: any) {
     redo,
     updateShapesAreEvented,
     updateLaserIsActive,
-    // toolbarIsEnabled,
     pointerIsEnabled,
     allToolbarIsEnabled,
-    // serializerToolbarState,
     updateLineWidthIsActive,
     brushType,
     updateBrushType,
@@ -91,8 +88,6 @@ function Toolbar(props: any) {
     allToolbarIsEnabled || props.permissions.floodFill;
   const textToolIsActive = allToolbarIsEnabled || props.permissions.text;
   const shapeToolIsActive = allToolbarIsEnabled || props.permissions.shape;
-
-  console.log('serial: ', props);
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -373,13 +368,21 @@ function Toolbar(props: any) {
    * Set the parent's definedOptionName in the given tool
    * @param {string} tool - Tool to set the definedOption
    */
-  function setSelectedOptionSelector(tool: string): string | number | null {
+  function setSelectedOptionSelector(tool: string, props?: IBasicToolbarSelector): string | number | null {
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
         return pointer;
 
-      case ELEMENTS.ERASE_TYPE_TOOL:
+      case ELEMENTS.ERASE_TYPE_TOOL: {
+        let allowed = props?.options.filter((options: any) => (options.enabled));
+
+        if (allowed?.length === 1 && allowed[0].value !== eraseType) {
+          updateEraseType(allowed[0].value);
+          return allowed[0].value;
+        }
+
         return eraseType;
+      }
 
       case ELEMENTS.LINE_TYPE_TOOL:
         return brushType;
@@ -557,6 +560,8 @@ function Toolbar(props: any) {
     props.permissions
   );
 
+  console.log('toolElements', toolElements);
+
   return (
     <div style={toolbarContainerStyle}>
       <div style={toolbarStyle}>
@@ -586,7 +591,7 @@ function Toolbar(props: any) {
                     handleToolsElementClick,
                     handleToolSelectorChange,
                     handleToolsElementAction,
-                    setSelectedOptionSelector(tool.id),
+                    setSelectedOptionSelector(tool.id, tool),
                     setColorPalette(tool),
                     tool.enabled
                   )

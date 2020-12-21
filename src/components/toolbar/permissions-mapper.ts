@@ -79,6 +79,8 @@ export const mappedToolElements = (
             serializerToolbarState.erase ||
             serializerToolbarState.partialErase;
 
+          console.log('erase: ', serializerToolbarState.erase, serializerToolbarState.partialErase);
+
           elmnt = {
             ...elmnt,
             options: (elmnt as IBasicToolbarSelector).options.map(
