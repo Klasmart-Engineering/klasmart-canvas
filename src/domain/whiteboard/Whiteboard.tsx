@@ -2,9 +2,14 @@ import React, { CSSProperties, useEffect, useRef } from 'react';
 import '../../assets/style/whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
-import { WhiteboardCanvas } from './WhiteboardCanvas';
+import WhiteboardCanvas from './WhiteboardCanvas';
 import { ICanvasKeyboardEvent } from '../../interfaces/canvas-events/canvas-keyboard-event';
 import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardContainer';
+
+// Redux
+import { Provider } from 'react-redux'
+import store from './redux/store'
+import AuthMenu from '../../components/AuthMenu';
 
 const teacher = {
   allowClearAll: true,
@@ -56,96 +61,103 @@ function Whiteboard() {
     <>
       <WhiteboardProvider
         clearWhiteboardPermissions={teacher}
-        userId={'teacher'}
+        // userId={'teacher'}
         allToolbarIsEnabled={true}
         activeCanvas={activeCanvas}
       >
-        <div
-          className="whiteboard"
-          onClick={() => {
-            activeCanvas.current = 'canvas1';
-          }}
-        >
-          <Toolbar />
-          <WhiteboardContainer
-            width={whiteboardWidth}
-            height={whiteboardHeight}
+        <Provider store={store}>
+          <AuthMenu userId={'teacher'} />
+          <div
+            className="whiteboard"
+            onClick={() => {
+              activeCanvas.current = 'canvas1';
+            }}
           >
-            <WhiteboardCanvas
-              instanceId="canvas1"
-              userId="teacher"
-              initialStyle={canvasStyle}
-              pointerEvents={true}
-              clearWhiteboardPermissions={teacher}
-              pixelWidth={whiteboardWidth}
-              pixelHeight={whiteboardHeight}
+            <Toolbar />
+            <WhiteboardContainer
+              width={whiteboardWidth}
+              height={whiteboardHeight}
             >
-              <button>Teacher</button>
-            </WhiteboardCanvas>
-          </WhiteboardContainer>
-        </div>
+              <WhiteboardCanvas
+                instanceId="canvas1"
+                userId="teacher"
+                initialStyle={canvasStyle}
+                pointerEvents={true}
+                clearWhiteboardPermissions={teacher}
+                pixelWidth={whiteboardWidth}
+                pixelHeight={whiteboardHeight}
+              >
+                <button>Teacher</button>
+              </WhiteboardCanvas>
+            </WhiteboardContainer>
+          </div>
+        </Provider>
       </WhiteboardProvider>
       <WhiteboardProvider
         clearWhiteboardPermissions={student}
-        userId={'student'}
+        // userId={'student'}
         allToolbarIsEnabled={false}
         activeCanvas={activeCanvas}
       >
-        <div
-          className="whiteboard"
-          onClick={() => {
-            activeCanvas.current = 'canvas2';
-          }}
-        >
-          <Toolbar />
-          <WhiteboardContainer
-            width={whiteboardWidth}
-            height={whiteboardHeight}
+        <Provider store={store}>
+          <div
+            className="whiteboard"
+            onClick={() => {
+              activeCanvas.current = 'canvas2';
+            }}
           >
-            <WhiteboardCanvas
-              instanceId="canvas2"
-              userId="student"
-              initialStyle={canvasStyle}
-              pointerEvents={true}
-              clearWhiteboardPermissions={student}
-              pixelWidth={whiteboardWidth}
-              pixelHeight={whiteboardHeight}
+            <Toolbar />
+            <WhiteboardContainer
+              width={whiteboardWidth}
+              height={whiteboardHeight}
             >
-              <button>Student</button>
-            </WhiteboardCanvas>
-          </WhiteboardContainer>
-        </div>
+              <WhiteboardCanvas
+                instanceId="canvas2"
+                userId="student"
+                initialStyle={canvasStyle}
+                pointerEvents={true}
+                clearWhiteboardPermissions={student}
+                pixelWidth={whiteboardWidth}
+                pixelHeight={whiteboardHeight}
+              >
+                <button>Student</button>
+              </WhiteboardCanvas>
+            </WhiteboardContainer>
+          </div>
+        </Provider>
       </WhiteboardProvider>
       <WhiteboardProvider
         clearWhiteboardPermissions={student}
-        userId={'student2'}
+        // userId={'student2'}
         allToolbarIsEnabled={false}
         activeCanvas={activeCanvas}
       >
-        <div
-          className="whiteboard"
-          onClick={() => {
-            activeCanvas.current = 'canvas3';
-          }}
-        >
-          <Toolbar />
-          <WhiteboardContainer
-            width={whiteboardWidth}
-            height={whiteboardHeight}
+        <Provider store={store}>
+          <div
+            className="whiteboard"
+            onClick={() => {
+              activeCanvas.current = 'canvas3';
+            }}
           >
-            <WhiteboardCanvas
-              instanceId="canvas3"
-              userId="student2"
-              initialStyle={canvasStyle}
-              pointerEvents={true}
-              clearWhiteboardPermissions={student}
-              pixelWidth={whiteboardWidth}
-              pixelHeight={whiteboardHeight}
+            <Toolbar />
+            <WhiteboardContainer
+              width={whiteboardWidth}
+              height={whiteboardHeight}
             >
-              <button>Student</button>
-            </WhiteboardCanvas>
-          </WhiteboardContainer>
-        </div>
+              <WhiteboardCanvas
+                instanceId="canvas3"
+                userId="student2"
+                initialStyle={canvasStyle}
+                pointerEvents={true}
+                clearWhiteboardPermissions={student}
+                pixelWidth={whiteboardWidth}
+                pixelHeight={whiteboardHeight}
+              >
+                <button>Student</button>
+              </WhiteboardCanvas>
+            </WhiteboardContainer>
+          </div>
+        </Provider>
       </WhiteboardProvider>
     </>
   );

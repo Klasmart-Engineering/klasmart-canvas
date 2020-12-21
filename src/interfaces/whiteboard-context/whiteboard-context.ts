@@ -19,7 +19,6 @@ export interface IWhiteboardContext {
   updateShapeColor: (color: string) => void;
   fillColor: (color: string) => void;
   textColor: (color: string) => void;
-  openClearWhiteboardModal: () => void;
   closeModal: () => void;
   penColor: string;
   updatePenColor: (color: string) => void;
@@ -61,41 +60,9 @@ export interface IWhiteboardContext {
   clearWhiteboard: () => void;
   clearWhiteboardAllowClearOthers: (userId: string) => void;
   clearWhiteboardClearAll: () => void;
-  toolbarIsEnabled: boolean;
-  setToolbarIsEnabled: (enabled: boolean) => void;
   pointerIsEnabled: boolean;
-  setPointerIsEnabled: (enabled: boolean) => void;
   clearIsActive: boolean;
   updateClearIsActive: (active: boolean) => void;
-  serializerToolbarState: {
-    pointer: boolean;
-    move: boolean;
-    erase: boolean;
-    partialErase: boolean;
-    pen: boolean;
-    floodFill: boolean;
-    text: boolean;
-    shape: boolean;
-    undoRedo: boolean;
-    clearWhiteboard: boolean;
-    downloadCanvas: boolean;
-    uploadImage: boolean;
-  };
-  setSerializerToolbarState: (enabled: {
-    [p: string]: boolean;
-    pointer: boolean;
-    move: boolean;
-    erase: boolean;
-    partialErase: boolean;
-    pen: boolean;
-    floodFill: boolean;
-    text: boolean;
-    shape: boolean;
-    undoRedo: boolean;
-    clearWhiteboard: boolean;
-    downloadCanvas: boolean;
-    uploadImage: boolean;
-  }) => void;
   allToolbarIsEnabled: boolean;
   lineWidthIsActive: boolean;
   updateLineWidthIsActive: (active: boolean) => void;
@@ -106,7 +73,6 @@ export interface IWhiteboardContext {
   activeCanvas: MutableRefObject<string | null>;
   perfectShapeIsActive: boolean;
   updatePerfectShapeIsActive: (active: boolean) => void;
-  perfectShapeIsAvailable: () => boolean;
   partialEraseIsActive: boolean;
   updatePartialEraseIsActive: (status: boolean) => void;
   openUploadFileModal: () => void;
@@ -123,5 +89,4 @@ export interface IWhiteboardContext {
   setIsBackgroundImage: (status: boolean) => void;
   localImage: string | File;
   setLocalImage: (image: string | File) => void;
-  undoRedoIsAvailable: () => boolean;
 }

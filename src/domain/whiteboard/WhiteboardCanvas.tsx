@@ -85,6 +85,7 @@ import {
 } from './gifs-actions/util';
 import { ChalkBrush } from './brushes/classes/chalkBrush';
 import { changeLineWidthInSpecialBrushes } from './brushes/actions/changeLineWidthInSpecialBrushes';
+import { connect } from 'react-redux';
 interface IBackgroundImage extends IStaticCanvasOptions {
   id?: string;
 }
@@ -113,21 +114,27 @@ export type Props = {
   display?: boolean;
 };
 
-export const WhiteboardCanvas: FunctionComponent<Props> = ({
-  children,
-  instanceId,
-  userId,
-  initialStyle,
-  pointerEvents,
-  pixelWidth,
-  pixelHeight,
-  scaleMode,
-  display,
-}: Props): JSX.Element => {
+const WhiteboardCanvas: FunctionComponent<Props> = (props: any): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
   const [wrapper, setWrapper] = useState<HTMLElement>();
   const [lowerCanvas, setLowerCanvas] = useState<HTMLCanvasElement>();
   const [upperCanvas, setUpperCanvas] = useState<HTMLCanvasElement>();
+
+  const {
+    children,
+    instanceId,
+    userId,
+    initialStyle,
+    pointerEvents,
+    pixelWidth,
+    pixelHeight,
+    scaleMode,
+    display,
+    permissions,
+    toolbarIsEnabled,
+  } = props;
+
+  const serializerToolbarState = permissions;
 
   const { width, height, top, left } = useFixedAspectScaling(
     wrapper?.parentElement,
@@ -173,11 +180,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     updateShapeColor,
     floodFill,
     laserIsActive,
-    toolbarIsEnabled,
-    setToolbarIsEnabled,
-    setPointerIsEnabled,
-    serializerToolbarState,
-    setSerializerToolbarState,
     allToolbarIsEnabled,
     lineWidthIsActive,
     brushType,
@@ -187,7 +189,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     activeCanvas,
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
-    perfectShapeIsAvailable,
     partialEraseIsActive,
     image,
     isGif,
@@ -196,7 +197,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     backgroundImageIsPartialErasable,
     localImage,
     setLocalImage,
-    undoRedoIsAvailable,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { actions, mouseDown } = useCanvasActions(
@@ -324,7 +324,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     const teacherHasPermission = allToolbarIsEnabled && shapesAreSelectable;
     const studentHasPermission =
-      serializerToolbarState.move && shapesAreSelectable;
+      props.permissions.move && shapesAreSelectable;
 
     canvas.getObjects().forEach((object: ICanvasObject) => {
       if (
@@ -336,7 +336,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           evented:
             (allToolbarIsEnabled &&
               (shapesAreSelectable || shapesAreEvented)) ||
-            (serializerToolbarState.move &&
+            (props.permissions.move &&
               (shapesAreSelectable || shapesAreEvented)),
           lockMovementX: !shapesAreSelectable,
           lockMovementY: !shapesAreSelectable,
@@ -355,7 +355,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     shapesAreSelectable,
     userId,
     allToolbarIsEnabled,
-    serializerToolbarState.move,
+    props.permissions.move,
   ]);
 
   /**
@@ -704,7 +704,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
-      if (!undoRedoIsAvailable()) {
+      if (!permissions.undoRedo && !allToolbarIsEnabled) {
         return;
       }
 
@@ -749,7 +749,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
         canvas &&
         !perfectShapeIsActive &&
         window.innerWidth > 768 &&
-        perfectShapeIsAvailable()
+        (allToolbarIsEnabled || serializerToolbarState.shape || serializerToolbarState.move)
       ) {
         updatePerfectShapeIsActive(true);
       }
@@ -760,9 +760,11 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
       activeCanvas,
       instanceId,
       perfectShapeIsActive,
-      perfectShapeIsAvailable,
       updatePerfectShapeIsActive,
-      undoRedoIsAvailable,
+      allToolbarIsEnabled,
+      permissions.undoRedo,
+      serializerToolbarState.move,
+      serializerToolbarState.shape,
     ]
   );
 
@@ -1453,9 +1455,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     canvas,
     userId,
     filterIncomingEvents,
-    setToolbarIsEnabled,
-    setPointerIsEnabled,
-    setSerializerToolbarState
+    mapDispatchToProps
   );
   useSynchronizedFontColorChanged(
     canvas,
@@ -1986,9 +1986,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
    * Reset perfectShapeIsActive to false when the shape or move tool permissions are revoked
    */
   useEffect(() => {
-    if (!perfectShapeIsAvailable()) {
-      updatePerfectShapeIsActive(false);
-    }
+    // if (!perfectShapeIsAvailable()) {
+    //   updatePerfectShapeIsActive(false);
+    // }
   }, [
     perfectShapeIsActive,
     serializerToolbarState.shape,
@@ -1996,7 +1996,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     userId,
     updatePerfectShapeIsActive,
     serializerToolbarState.move,
-    perfectShapeIsAvailable,
+    // perfectShapeIsAvailable,
   ]);
   useSynchronizedAdded(
     canvas,
@@ -2010,9 +2010,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     canvas,
     userId,
     filterIncomingEvents,
-    setToolbarIsEnabled,
-    setPointerIsEnabled,
-    setSerializerToolbarState
+    props.updatePermissions,
   );
 
   return (
@@ -2052,3 +2050,24 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     </>
   );
 };
+
+const mapStateToProps = (state:any, ownProps: any) => ({
+  ...ownProps,
+  permissions:
+  state.permissionsState,
+  toolbarIsEnabled: (state: any) => {
+
+    for (const key in state.permissionsState) {
+      if (state.permissionsState[key] === true) {
+        return true;
+      }
+    }
+  
+    return false;
+  },
+});
+const mapDispatchToProps = (dispatch: any) => ({
+  updatePermissions: (tool: string, payload: boolean) => dispatch({ type: tool, payload })
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(WhiteboardCanvas);

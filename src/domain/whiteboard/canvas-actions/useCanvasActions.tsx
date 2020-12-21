@@ -21,13 +21,15 @@ import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { PartialErase } from '../partial-erase/partialErase';
 import { changeLineColorInSpecialBrushes } from '../brushes/actions/changeLineColorInSpecialBrushes';
+import store, { IPermissions } from '../../whiteboard/redux/store';
+import { getToolbarIsEnabled } from '../redux/utils';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
   dispatch?: any,
   canvasId?: string,
   eventSerializer?: any,
-  userId?: string
+  userId?: string,
 ) => {
   const {
     shapeIsActive,
@@ -41,9 +43,7 @@ export const useCanvasActions = (
     lineWidth,
     isLocalObject,
     updateClearIsActive,
-    toolbarIsEnabled,
     allToolbarIsEnabled,
-    serializerToolbarState,
     perfectShapeIsActive,
     partialEraseIsActive,
     eraseType,
@@ -789,6 +789,8 @@ export const useCanvasActions = (
    * Clears all whiteboard elements
    * */
   const clearWhiteboardClearMySelf = useCallback(async () => {
+    const toolbarIsEnabled = getToolbarIsEnabled();
+    const serializerToolbarState = store.getState().permissionsState as IPermissions;
     const teacherHasPermission = allToolbarIsEnabled;
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
@@ -864,9 +866,7 @@ export const useCanvasActions = (
     canvasId,
     eventSerializer,
     updateClearIsActive,
-    toolbarIsEnabled,
     allToolbarIsEnabled,
-    serializerToolbarState.clearWhiteboard,
     dispatch,
     userId,
     localImage,
@@ -1036,6 +1036,8 @@ export const useCanvasActions = (
       return;
     }
 
+    const toolbarIsEnabled = getToolbarIsEnabled();
+    const serializerToolbarState = store.getState().permissionsState as IPermissions;
     let eraser: any;
 
     if (
@@ -1087,14 +1089,11 @@ export const useCanvasActions = (
     canvas,
     eraseType,
     partialEraseIsActive,
-    toolbarIsEnabled,
     allToolbarIsEnabled,
-    serializerToolbarState.partialErase,
     userId,
     lineWidth,
     eventSerializer,
     dispatch,
-    serializerToolbarState.erase,
     eraseObject,
   ]);
 
@@ -1106,6 +1105,8 @@ export const useCanvasActions = (
   }, [canvas]);
 
   const undo = useCallback(() => {
+    const toolbarIsEnabled = getToolbarIsEnabled();
+    const serializerToolbarState = store.getState().permissionsState as IPermissions;
     const teacherHasPermission = allToolbarIsEnabled;
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.undoRedo;
@@ -1116,12 +1117,12 @@ export const useCanvasActions = (
   }, [
     dispatch,
     canvasId,
-    toolbarIsEnabled,
     allToolbarIsEnabled,
-    serializerToolbarState.undoRedo,
   ]);
 
   const redo = useCallback(() => {
+    const toolbarIsEnabled = getToolbarIsEnabled();
+    const serializerToolbarState = store.getState().permissionsState as IPermissions;
     const teacherHasPermission = allToolbarIsEnabled;
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.undoRedo;
@@ -1132,9 +1133,7 @@ export const useCanvasActions = (
   }, [
     dispatch,
     canvasId,
-    toolbarIsEnabled,
     allToolbarIsEnabled,
-    serializerToolbarState.undoRedo,
   ]);
 
   const state = useMemo(() => {

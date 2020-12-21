@@ -18,6 +18,7 @@ import { ELEMENTS } from '../../config/toolbar-element-names';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
 import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 import { mappedActionElements, mappedToolElements } from './permissions-mapper';
+import { connect } from 'react-redux';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -28,7 +29,7 @@ type ToolbarElementTypes =
 /**
  * Render the toolbar that will be used in the whiteboard
  */
-function Toolbar() {
+function Toolbar(props: any) {
   const [tools, setTools] = useState(toolsSection);
   const [actions] = useState(actionsSection);
 
@@ -39,7 +40,7 @@ function Toolbar() {
     fontFamily,
     fontColor,
     updateFontFamily,
-    openClearWhiteboardModal,
+    // openClearWhiteboardModal,
     setPointerEvents,
     textIsActive,
     updateTextIsActive,
@@ -68,10 +69,10 @@ function Toolbar() {
     redo,
     updateShapesAreEvented,
     updateLaserIsActive,
-    toolbarIsEnabled,
+    // toolbarIsEnabled,
     pointerIsEnabled,
     allToolbarIsEnabled,
-    serializerToolbarState,
+    // serializerToolbarState,
     updateLineWidthIsActive,
     brushType,
     updateBrushType,
@@ -80,15 +81,18 @@ function Toolbar() {
     openUploadFileModal,
   } = useContext(WhiteboardContext);
 
+  const toolbarIsEnabled = props.toolbarIsEnabled;
   const pointerToolIsActive =
-    allToolbarIsEnabled || serializerToolbarState.pointer;
-  const moveToolIsActive = allToolbarIsEnabled || serializerToolbarState.move;
-  const eraseToolIsActive = allToolbarIsEnabled || serializerToolbarState.erase;
-  const penToolIsActive = allToolbarIsEnabled || serializerToolbarState.pen;
+    allToolbarIsEnabled || props.permissions.pointer;
+  const moveToolIsActive = allToolbarIsEnabled || props.permissions.move;
+  const eraseToolIsActive = allToolbarIsEnabled || props.permissions.erase;
+  const penToolIsActive = allToolbarIsEnabled || props.permissions.pen;
   const floodFillToolIsActive =
-    allToolbarIsEnabled || serializerToolbarState.floodFill;
-  const textToolIsActive = allToolbarIsEnabled || serializerToolbarState.text;
-  const shapeToolIsActive = allToolbarIsEnabled || serializerToolbarState.shape;
+    allToolbarIsEnabled || props.permissions.floodFill;
+  const textToolIsActive = allToolbarIsEnabled || props.permissions.text;
+  const shapeToolIsActive = allToolbarIsEnabled || props.permissions.shape;
+
+  console.log('serial: ', props);
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -215,12 +219,12 @@ function Toolbar() {
 
     const teacherHasPermission = allToolbarIsEnabled;
     const studentHasPermission =
-      toolbarIsEnabled && serializerToolbarState.undoRedo;
+      toolbarIsEnabled && props.permissions.undoRedo;
 
     if (toolbarIsEnabled) {
       switch (tool) {
         case ELEMENTS.CLEAR_WHITEBOARD_ACTION:
-          openClearWhiteboardModal();
+          // openClearWhiteboardModal();
           break;
 
         case ELEMENTS.UNDO_ACTION:
@@ -240,7 +244,7 @@ function Toolbar() {
         case ELEMENTS.ADD_IMAGE_ACTION:
           if (
             teacherHasPermission ||
-            (toolbarIsEnabled && serializerToolbarState.uploadImage)
+            (toolbarIsEnabled && props.permissions.uploadImage)
           ) {
             openUploadFileModal();
           }
@@ -442,7 +446,7 @@ function Toolbar() {
     }
 
     if (
-      !serializerToolbarState.pointer &&
+      !props.permissions.pointer &&
       getActiveTool === ELEMENTS.LASER_TOOL
     ) {
       setTools({
@@ -452,7 +456,7 @@ function Toolbar() {
     }
 
     if (
-      !serializerToolbarState.move &&
+      !props.permissions.move &&
       getActiveTool === ELEMENTS.MOVE_OBJECTS_TOOL
     ) {
       setTools({
@@ -462,7 +466,7 @@ function Toolbar() {
     }
 
     if (
-      !serializerToolbarState.erase &&
+      !props.permissions.erase &&
       getActiveTool === ELEMENTS.ERASE_TYPE_TOOL
     ) {
       setTools({
@@ -472,7 +476,7 @@ function Toolbar() {
     }
 
     if (
-      !serializerToolbarState.pen &&
+      !props.permissions.pen &&
       getActiveTool === ELEMENTS.LINE_TYPE_TOOL
     ) {
       setTools({
@@ -482,7 +486,7 @@ function Toolbar() {
     }
 
     if (
-      !serializerToolbarState.floodFill &&
+      !props.permissions.floodFill &&
       getActiveTool === ELEMENTS.FLOOD_FILL_TOOL
     ) {
       setTools({
@@ -492,7 +496,7 @@ function Toolbar() {
     }
 
     if (
-      !serializerToolbarState.text &&
+      !props.permissions.text &&
       getActiveTool === ELEMENTS.ADD_TEXT_TOOL
     ) {
       setTools({
@@ -502,7 +506,7 @@ function Toolbar() {
     }
 
     if (
-      !serializerToolbarState.shape &&
+      !props.permissions.shape &&
       getActiveTool === ELEMENTS.ADD_SHAPE_TOOL
     ) {
       setTools({
@@ -511,19 +515,20 @@ function Toolbar() {
       });
     }
   }, [
+    // DELETE
     pointerIsEnabled,
     getActiveTool,
     getToolElements,
     allToolbarIsEnabled,
-    serializerToolbarState.pointer,
-    serializerToolbarState.move,
-    serializerToolbarState.erase,
-    serializerToolbarState.pen,
-    serializerToolbarState.floodFill,
-    serializerToolbarState.text,
-    serializerToolbarState.shape,
-    serializerToolbarState.undoRedo,
-    serializerToolbarState.clearWhiteboard,
+    props.permissions.pointer,
+    props.permissions.move,
+    props.permissions.erase,
+    props.permissions.pen,
+    props.permissions.floodFill,
+    props.permissions.text,
+    props.permissions.shape,
+    props.permissions.undoRedo,
+    props.permissions.clearWhiteboard,
   ]);
 
   const toolbarContainerStyle: CSSProperties = {
@@ -543,13 +548,13 @@ function Toolbar() {
   const actionElements = mappedActionElements(
     actions,
     allToolbarIsEnabled,
-    serializerToolbarState
+    props.permissions
   );
 
   const toolElements = mappedToolElements(
     tools,
     allToolbarIsEnabled,
-    serializerToolbarState
+    props.permissions
   );
 
   return (
@@ -761,4 +766,19 @@ function determineIfIsSpecialSelector(
   return !!(toBeDetermined as IBasicSpecialSelector).icon;
 }
 
-export default Toolbar;
+const mapStateToProps = (state: any, ownProps: any) => ({
+  ...ownProps,
+  permissions: state.permissionsState,
+  toolbarIsEnabled: (state: any) => {
+
+    for (const key in state.permissionsState) {
+      if (state.permissionsState[key] === true) {
+        return true;
+      }
+    }
+  
+    return false;
+  }
+});
+
+export default connect(mapStateToProps)(Toolbar);
