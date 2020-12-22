@@ -10,13 +10,22 @@ import { MarkerBrush } from '../brushes/classes/markerBrush';
 import { PaintBrush } from '../brushes/classes/paintBrush';
 import { PenBrush } from '../brushes/classes/penBrush';
 import { setBasePathInNormalBrushes } from '../brushes/utils/setBasePathInNormalBrushes';
+import {
+  ObjectEvent,
+  PaintEventSerializer,
+} from '../event-serializer/PaintEventSerializer';
+// import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { WhiteboardContext } from '../WhiteboardContext';
 
 /**
  * Handles logic for Free Hand Drawing Feature
  * @param {fabric.Canvas} canvas - Canvas to draw
  */
-export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
+export const useFreeHandDrawing = (
+  canvas: fabric.Canvas,
+  userId: string,
+  eventSerializer: PaintEventSerializer
+) => {
   // Getting necessary context variables
   const {
     brushIsActive,
@@ -28,6 +37,10 @@ export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
     serializerToolbarState,
     partialEraseIsActive,
   } = useContext(WhiteboardContext);
+
+  // const {
+  //   state: { eventSerializer },
+  // } = useSharedEventSerializer();
 
   /**
    * Checks current brushType selected
@@ -78,6 +91,7 @@ export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
     /* When free hand drawing option is selected on toolbar,
     freeDrawingBrush is created */
     if (brushIsActive) {
+      let coordinates: any[] = [];
       const canDraw =
         allToolbarIsEnabled || (toolbarIsEnabled && serializerToolbarState.pen);
 
@@ -89,6 +103,34 @@ export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
       canvas.freeDrawingCursor = 'crosshair';
       canvas.isDrawingMode = canDraw;
 
+      canvas?.on('mouse:move', (e: any) => {
+        if (
+          (e.e as MouseEvent).which &&
+          (e.e as MouseEvent).buttons &&
+          canvas
+        ) {
+          coordinates.push(e.pointer);
+
+          if (coordinates.length && coordinates.length % 10 === 0) {
+            const payload: ObjectEvent = {
+              type: 'path',
+              target: {
+                coordinates,
+                color: penColor || DEFAULT_VALUES.PEN_COLOR,
+                lineWidth,
+                id: 'teacher',
+                type: 'PencilBrush',
+              },
+              id: 'teacher',
+            };
+
+            eventSerializer.push('moving', payload);
+          }
+        } else {
+          coordinates = [];
+        }
+      });
+
       canvas.on('path:created', pathCreated);
     } else if (canvas && !brushIsActive && !partialEraseIsActive) {
       canvas.isDrawingMode = false;
@@ -96,12 +138,14 @@ export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
 
     return () => {
       canvas?.off('path:created');
+      canvas?.off('mouse:move');
     };
   }, [
     allToolbarIsEnabled,
     brushIsActive,
     brushType,
     canvas,
+    eventSerializer,
     lineWidth,
     partialEraseIsActive,
     penColor,

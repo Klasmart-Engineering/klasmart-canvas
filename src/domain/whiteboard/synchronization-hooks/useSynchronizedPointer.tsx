@@ -56,7 +56,7 @@ const useSynchronizedPointer = (
           id,
         };
 
-        eventSerializer.push('moving', payload);
+        eventSerializer.push('pointer', payload);
       } else if (trail && canvas && !trail.clear) {
         canvas.defaultCursor = 'default';
         canvas?.getObjects().forEach((o: any) => {
@@ -69,7 +69,7 @@ const useSynchronizedPointer = (
           id,
         };
 
-        eventSerializer.push('moving', payload);
+        eventSerializer.push('pointer', payload);
         trail.clearPointer();
       }
     };
@@ -90,7 +90,7 @@ const useSynchronizedPointer = (
           id,
         };
 
-        eventSerializer.push('moving', payload);
+        eventSerializer.push('pointer', payload);
       }
 
       canvas?.off('mouse:move', move);
@@ -140,10 +140,10 @@ const useSynchronizedPointer = (
       trail?.update({ x: target.left, y: target.top });
     };
 
-    eventController?.on('moving', moved);
+    eventController?.on('pointer', moved);
 
     return () => {
-      eventController?.removeListener('moving', moved);
+      eventController?.removeListener('pointer', moved);
     };
   }, [canvas, eventController, allowPointer, shouldHandleRemoteEvent]);
 };

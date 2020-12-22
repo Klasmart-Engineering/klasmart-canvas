@@ -289,6 +289,10 @@ export const useTextObject = (
           textboxProps.width = currentTextbox.width;
           textboxProps.height = currentTextbox.height;
 
+          if ((currentTextbox as TypedShape).id) {
+            textboxProps.id = (currentTextbox as TypedShape).id;
+          }
+
           // Adding the IText and hiding the Textbox
           if (typeof textCopy === 'string') {
             textboxCopy = new fabric.IText(textCopy.trim(), textboxProps);
@@ -301,6 +305,29 @@ export const useTextObject = (
 
             canvas.renderAll();
           }
+        }
+      });
+
+      /**
+       * Text has been changed is some Text Object in canvas
+       */
+      canvas?.on('text:changed', (e: IEvent) => {
+        if (!(e?.target as TypedShape).id) {
+          // use native canvas to show new text box in realtime
+          const payload: ObjectEvent = {
+            type: 'textbox',
+            target: e.target,
+            id: 'teacher',
+          };
+          eventSerializer.push('textEdit', payload);
+        } else {
+          const payload: ObjectEvent = {
+            type: 'textbox',
+            target: e.target,
+            id: (e.target as ICanvasObject).id as string,
+          };
+
+          eventSerializer.push('modified', payload);
         }
       });
 
@@ -336,7 +363,7 @@ export const useTextObject = (
       canvas?.off('text:editing:entered');
       canvas?.off('text:editing:exited');
     };
-  }, [canvas, textIsActive]);
+  }, [canvas, eventSerializer, textIsActive]);
 
   /**
    * Is executed when textIsActive changes its value,

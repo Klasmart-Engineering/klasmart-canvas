@@ -709,12 +709,27 @@ export const useCanvasActions = (
         }
 
         shape.set(anchor);
+
         canvas.renderAll();
 
         setShapeInProgress({
           shape: shape,
           startPoint: startPoint,
         });
+
+        let type = shape.type;
+        let target = {
+          type: shape.name,
+          shape
+        };
+
+        let payload = {
+          type,
+          target,
+          id: 'teacher',
+        };
+
+        eventSerializer?.push('moving', payload);
       });
 
       canvas?.on('mouse:up', async (e: fabric.IEvent) => {
