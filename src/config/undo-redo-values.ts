@@ -7,4 +7,5 @@ export const CANVAS_OBJECT_PROPS = [
   'shapeType',
   'joinedIds',
   'isPartialErased',
+  'basePath',
 ];

@@ -79,12 +79,13 @@ export interface IPainterController {
   ): this;
   on(
     event: 'lineWidthChanged',
-    listener: (id: string, objectType: string, target: ICanvasObject) => void): this;
-
-  on(
-    event: 'refetch',
-    listener: () => void
+    listener: (id: string, objectType: string, target: ICanvasObject) => void
   ): this;
+  on(
+    event: 'brushTypeChanged',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+  on(event: 'refetch', listener: () => void): this;
 
   on(
     event: 'pointer',
@@ -98,7 +99,7 @@ export interface IPainterController {
 
   on(
     event: 'partialErase',
-    listener: (id: string, coordinates: {x: number, y: number}[]) => void
+    listener: (id: string, coordinates: { x: number; y: number }[]) => void
   ): this;
 
   removeListener(
@@ -155,10 +156,7 @@ export interface IPainterController {
   ): this;
   removeListener(
     event: 'lineWidthChanged',
-    listener: (id: string, objectType: string, target: ICanvasObject) => void): this;
-  removeListener(
-    event: 'refetch',
-    listener: () => void
+    listener: (id: string, target: ICanvasObject) => void
   ): this;
   removeListener(
     event: 'pointer',
@@ -172,8 +170,9 @@ export interface IPainterController {
 
   removeListener(
     event: 'partialErase',
-    listener: (id: string, coordinates: {x: number, y: number}[]) => void
+    listener: (id: string, coordinates: { x: number; y: number }[]) => void
   ): this;
+  removeListener(event: 'refetch', listener: () => void): this;
 
   replayEvents(): Promise<void>;
 }

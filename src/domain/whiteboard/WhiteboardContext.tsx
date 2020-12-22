@@ -30,11 +30,13 @@ import AuthMenu from '../../components/AuthMenu';
 import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
+import { useBrushType } from './hooks/useBrushType';
 import { canvasImagePopup } from './hooks/canvasImagePopup';
 import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
 import WhiteboardToggle from '../../components/WhiteboardToogle';
 import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 import { useUploadFileModal } from './hooks/useUploadFileModal';
+import { IBrushType } from '../../interfaces/brushes/brush-type';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -77,6 +79,7 @@ export const WhiteboardProvider = ({
     updatePartialEraseIsActive,
   } = usePartialEraseIsActive();
   const { lineWidthIsActive, updateLineWidthIsActive } = useLineWidthIsActive();
+  const { brushType, updateBrushType } = useBrushType();
   const {
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
@@ -104,7 +107,6 @@ export const WhiteboardProvider = ({
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
-  const [penLine, updatePenLine] = useState(DEFAULT_VALUES.PEN_LINE);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
 
@@ -155,6 +157,13 @@ export const WhiteboardProvider = ({
   const changeStrokeColorAction = useCallback(
     (color: string) => {
       canvasActions?.changeStrokeColor(color);
+    },
+    [canvasActions]
+  );
+
+  const changeBrushTypeAction = useCallback(
+    (type: IBrushType) => {
+      canvasActions?.changeBrushType(type);
     },
     [canvasActions]
   );
@@ -278,8 +287,6 @@ export const WhiteboardProvider = ({
     // Just for control selectors' value they can be modified in the future
     pointer,
     updatePointer,
-    penLine,
-    updatePenLine,
     penColor,
     updatePenColor,
     stamp,
@@ -299,6 +306,8 @@ export const WhiteboardProvider = ({
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
     isLocalObject,
+    brushType,
+    updateBrushType,
     // NOTE: Actions that will get invoked based on registered handler.
     fillColor: fillColorAction,
     textColor: textColorAction,
@@ -309,6 +318,7 @@ export const WhiteboardProvider = ({
     clearWhiteboardClearAll: clearWhiteboardActionClearAll,
     eraseObject: eraseObjectAction,
     changeStrokeColor: changeStrokeColorAction,
+    changeBrushType: changeBrushTypeAction,
     setCanvasSelection: setCanvasSelectionAction,
     undo: undoAction,
     redo: redoAction,

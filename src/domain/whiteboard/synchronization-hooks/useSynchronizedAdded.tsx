@@ -14,7 +14,11 @@ import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-dr
 import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { WhiteboardContext } from '../WhiteboardContext';
+import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { fabricGif } from '../gifs-actions/fabricGif';
+import { addSynchronizationInSpecialBrushes } from '../brushes/actions/addSynchronizationInSpecialBrushes';
+import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -44,6 +48,8 @@ const useSynchronizedAdded = (
         stroke: e.path.stroke,
         strokeWidth: e.path.strokeWidth,
         path: e.path.path,
+        strokeDashArray: ((e.path as unknown) as ICanvasFreeDrawingBrush)
+          .strokeDashArray,
         isPartialErased: e.path.isPartialErased,
       } as ICanvasObject;
 
@@ -87,6 +93,7 @@ const useSynchronizedAdded = (
       if (e.target.fromJSON) return;
       if (!shouldSerializeEvent(e.target.id)) return;
 
+      let target;
       if (e.type === 'localImage') {
         const payload: ObjectEvent = {
           type: e.type,
@@ -100,20 +107,51 @@ const useSynchronizedAdded = (
 
       const type: ObjectType = (e.target.get('type') || 'path') as ObjectType;
 
-      if (type === 'path') {
-        return;
-      }
+      switch (type) {
+        case 'path':
+          if (e.target?.basePath?.type === 'dashed') {
+            target = {
+              basePath: e.target.basePath,
+              originX: e.target.originX,
+              originY: e.target.originY,
+            };
+          }
+          break;
 
-      const target = {
-        ...(type === 'textbox' && {
-          text: e.target.text,
-          fontFamily: e.target.fontFamily,
-          stroke: e.target.fill,
-          top: e.target.top,
-          left: e.target.left,
-          width: e.target.width,
-        }),
-      } as ICanvasObject;
+        case 'textbox':
+          target = {
+            text: e.target.text,
+            fontFamily: e.target.fontFamily,
+            stroke: e.target.fill,
+            top: e.target.top,
+            left: e.target.left,
+            width: e.target.width,
+          };
+          break;
+
+        case 'group':
+          target = {
+            basePath: e.target.basePath,
+            originX: e.target.originX,
+            originY: e.target.originY,
+          };
+          break;
+
+        case 'image':
+          if (e.target.basePath) {
+            target = {
+              basePath: e.target.basePath,
+              scaleX: e.target.scaleX,
+              scaleY: e.target.scaleY,
+              angle: e.target.angle,
+              flipX: e.target.flipX,
+              flipY: e.target.flipY,
+              originX: e.target.originX,
+              originY: e.target.originY,
+            };
+          }
+          break;
+      }
 
       const payload: ObjectEvent = {
         type,
@@ -125,7 +163,14 @@ const useSynchronizedAdded = (
         id: e.target.id,
       };
 
-      if (canvas && (payload.target as ICanvasObject)?.text?.trim().length) {
+      if (
+        (canvas && (payload.target as ICanvasObject)?.text?.trim().length) ||
+        (canvas && payload.type === 'group') ||
+        (canvas && payload.type === 'image') ||
+        (canvas &&
+          payload.type === 'path' &&
+          (payload.target as ICanvasPathBrush).basePath)
+      ) {
         const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
         undoRedoDispatch({
@@ -161,7 +206,7 @@ const useSynchronizedAdded = (
         return;
       }
 
-      if (type === 'image' && isGif) {
+      if (type === 'image' && !e.target.basePath && isGif) {
         const payload: ObjectEvent = {
           type,
           target: e.target,
@@ -200,7 +245,8 @@ const useSynchronizedAdded = (
           target.height as number,
           target.stroke as string,
           target.filled as boolean,
-          target.strokeWidth as number
+          target.strokeWidth as number,
+          target.strokeDashArray as boolean
         );
       }
       case 'star': {
@@ -209,21 +255,24 @@ const useSynchronizedAdded = (
           target.height as number,
           target.stroke as string,
           target.filled as boolean,
-          target.strokeWidth as number
+          target.strokeWidth as number,
+          target.strokeDashArray as boolean
         );
       }
       case 'hexagon': {
         return hexagon(
           target.stroke as string,
           target.filled as boolean,
-          target.strokeWidth as number
+          target.strokeWidth as number,
+          target.strokeDashArray as boolean
         );
       }
       case 'pentagon': {
         return pentagon(
           target.stroke as string,
           target.filled as boolean,
-          target.strokeWidth as number
+          target.strokeWidth as number,
+          target.strokeDashArray as boolean
         );
       }
       default: {
@@ -232,7 +281,8 @@ const useSynchronizedAdded = (
           target.height as number,
           target.stroke as string,
           target.filled as boolean,
-          target.strokeWidth as number
+          target.strokeWidth as number,
+          target.strokeDashArray as boolean
         );
       }
     }
@@ -281,12 +331,26 @@ const useSynchronizedAdded = (
         return;
       }
 
+      if ((objectType === 'group' || objectType === 'path') && canvas) {
+        addSynchronizationInSpecialBrushes(
+          canvas,
+          userId,
+          id,
+          target as ICanvasBrush
+        );
+      }
+
       let shape = null;
 
-      if (objectType === 'path' && !target.name) {
+      if (
+        objectType === 'path' &&
+        !target.name &&
+        !(target as ICanvasPathBrush).basePath
+      ) {
         const pencil = new fabric.PencilBrush();
         pencil.color = target.stroke || '#000';
         pencil.width = target.strokeWidth || DEFAULT_VALUES.LINE_WIDTH;
+        pencil.strokeDashArray = target.strokeDashArray || [];
 
         // Convert Points to SVG Path
         const res = pencil.createPath((target.path as string) || '');
@@ -322,16 +386,30 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'image') {
-        fabric.Image.fromURL(target.src as string, (data: fabric.Image) => {
+        const src = (target as ICanvasBrush).basePath?.imageData || target.src;
+
+        fabric.Image.fromURL(src as string, (data: fabric.Image) => {
           (data as TypedShape).set({
             id,
             top: target.top,
             left: target.left,
+            angle: target.angle,
             scaleX: target.scaleX,
             scaleY: target.scaleY,
+            flipX: target.flipX,
+            flipY: target.flipY,
+            originX: target.originX,
+            originY: target.originY,
             selectable: false,
             evented: false,
           });
+
+          if ((target as ICanvasBrush).basePath) {
+            ((data as unknown) as ICanvasBrush).set({
+              basePath: (target as ICanvasBrush).basePath,
+            });
+          }
+
           canvas?.add(data);
           canvas?.renderAll();
 

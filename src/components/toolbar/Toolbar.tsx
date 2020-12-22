@@ -18,6 +18,7 @@ import { ELEMENTS } from '../../config/toolbar-element-names';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
 import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 import { mappedActionElements, mappedToolElements } from './permissions-mapper';
+import { IBrushType } from '../../interfaces/brushes/brush-type';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -59,10 +60,9 @@ function Toolbar() {
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
-    penLine,
-    updatePenLine,
     penColor,
     changeStrokeColor,
+    changeBrushType,
     stamp,
     updateStamp,
     updateShapesAreSelectable,
@@ -75,6 +75,7 @@ function Toolbar() {
     allToolbarIsEnabled,
     serializerToolbarState,
     updateLineWidthIsActive,
+    brushType,
     updateImagePopupIsOpen,
     updatePartialEraseIsActive,
     openUploadFileModal,
@@ -261,7 +262,7 @@ function Toolbar() {
         break;
 
       case ELEMENTS.LINE_TYPE_TOOL:
-        updatePenLine(option);
+        changeBrushType(option as IBrushType);
         break;
 
       case ELEMENTS.LINE_WIDTH_TOOL:
@@ -378,7 +379,7 @@ function Toolbar() {
         return eraseType;
 
       case ELEMENTS.LINE_TYPE_TOOL:
-        return penLine;
+        return brushType;
 
       case ELEMENTS.LINE_WIDTH_TOOL:
         return lineWidth;
@@ -540,49 +541,63 @@ function Toolbar() {
     borderRadius: '8px',
   };
 
-  const actionElements = mappedActionElements(actions, allToolbarIsEnabled, serializerToolbarState);
+  const actionElements = mappedActionElements(
+    actions,
+    allToolbarIsEnabled,
+    serializerToolbarState
+  );
 
-  const toolElements = mappedToolElements(tools, allToolbarIsEnabled, serializerToolbarState);
+  const toolElements = mappedToolElements(
+    tools,
+    allToolbarIsEnabled,
+    serializerToolbarState
+  );
 
   return (
     <div style={toolbarContainerStyle}>
       <div style={toolbarStyle}>
         <ToolbarSection>
-          {toolElements.map((tool: IBasicToolbarButton | IBasicToolbarSelector | IBasicSpecialSelector) =>
-            determineIfIsToolbarButton(tool)
-              ? createToolbarButton(
-                  tool.id,
-                  tool.title,
-                  tool.iconSrc,
-                  tool.iconName,
-                  tools.active === tool.id,
-                  handleToolsElementClick,
-                  tool.enabled
-                )
-              : determineIfIsToolbarSelector(tool)
-              ? createToolbarSelector(
-                  tool.id,
-                  tool.options,
-                  tools.active === tool.id,
-                  handleToolsElementClick,
-                  handleToolSelectorChange,
-                  handleToolsElementAction,
-                  setSelectedOptionSelector(tool.id),
-                  setColorPalette(tool),
-                  tool.enabled
-                )
-              : determineIfIsSpecialSelector(tool)
-              ? createSpecialSelector(
-                  tool.id,
-                  tool.icon,
-                  tools.active === tool.id,
-                  setSelectedOptionSelector(tool.id),
-                  tool.styleOptions,
-                  handleToolsElementClick,
-                  handleToolSelectorChange,
-                  tool.enabled
-                )
-              : null
+          {toolElements.map(
+            (
+              tool:
+                | IBasicToolbarButton
+                | IBasicToolbarSelector
+                | IBasicSpecialSelector
+            ) =>
+              determineIfIsToolbarButton(tool)
+                ? createToolbarButton(
+                    tool.id,
+                    tool.title,
+                    tool.iconSrc,
+                    tool.iconName,
+                    tools.active === tool.id,
+                    handleToolsElementClick,
+                    tool.enabled
+                  )
+                : determineIfIsToolbarSelector(tool)
+                ? createToolbarSelector(
+                    tool.id,
+                    tool.options,
+                    tools.active === tool.id,
+                    handleToolsElementClick,
+                    handleToolSelectorChange,
+                    handleToolsElementAction,
+                    setSelectedOptionSelector(tool.id),
+                    setColorPalette(tool),
+                    tool.enabled
+                  )
+                : determineIfIsSpecialSelector(tool)
+                ? createSpecialSelector(
+                    tool.id,
+                    tool.icon,
+                    tools.active === tool.id,
+                    setSelectedOptionSelector(tool.id),
+                    tool.styleOptions,
+                    handleToolsElementClick,
+                    handleToolSelectorChange,
+                    tool.enabled
+                  )
+                : null
           )}
         </ToolbarSection>
 

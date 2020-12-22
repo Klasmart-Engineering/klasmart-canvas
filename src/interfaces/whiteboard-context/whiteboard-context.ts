@@ -1,5 +1,6 @@
 import { MutableRefObject } from 'react';
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
+import { IBrushType } from '../brushes/brush-type';
 
 export interface IWhiteboardContext {
   pointer: string;
@@ -21,8 +22,6 @@ export interface IWhiteboardContext {
   textColor: (color: string) => void;
   openClearWhiteboardModal: () => void;
   closeModal: () => void;
-  penLine: string;
-  updatePenLine: (pen: string) => void;
   penColor: string;
   updatePenColor: (color: string) => void;
   lineWidth: number;
@@ -56,6 +55,7 @@ export interface IWhiteboardContext {
   ) => boolean | undefined;
   discardActiveObject: () => void;
   changeStrokeColor: (color: string) => void;
+  changeBrushType: (type: IBrushType) => void;
   addShape: (shape: string) => void;
   eraseObject: () => void;
   undo: () => void;
@@ -101,6 +101,8 @@ export interface IWhiteboardContext {
   allToolbarIsEnabled: boolean;
   lineWidthIsActive: boolean;
   updateLineWidthIsActive: (active: boolean) => void;
+  brushType: IBrushType;
+  updateBrushType: (type: IBrushType) => void;
   imagePopupIsOpen: boolean;
   updateImagePopupIsOpen: (open: boolean) => void;
   activeCanvas: MutableRefObject<string | null>;

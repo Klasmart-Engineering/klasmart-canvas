@@ -1,5 +1,6 @@
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { ITextOptions } from 'fabric/fabric-impl';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
 /**
  * Check if the given object is a free drawing object
@@ -7,6 +8,13 @@ import { ITextOptions } from 'fabric/fabric-impl';
  */
 export const isFreeDrawing = (object: fabric.Object) => {
   return object.strokeLineCap === 'round';
+};
+
+export const isSpecialFreeDrawing = (object: fabric.Object) => {
+  return (
+    (object.type === 'group' && (object as ICanvasBrush).basePath) ||
+    (object.type === 'image' && (object as ICanvasBrush).basePath)
+  );
 };
 
 /**

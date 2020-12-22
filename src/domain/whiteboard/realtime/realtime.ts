@@ -17,7 +17,7 @@ export interface IRealtimeData {
 }
 
 /**x
- * Class to handle realtime creation of objects. 
+ * Class to handle realtime creation of objects.
  */
 export class Realtime {
   /**
@@ -35,10 +35,10 @@ export class Realtime {
    */
   public points: IPoint[];
 
-  /** 
-   * Stroke color, used when adding in realtime 
+  /**
+   * Stroke color, used when adding in realtime
    */
-  private color!: { r: number; g: number; b: number; };
+  private color!: { r: number; g: number; b: number };
 
   /**
    * Line width of object being added.
@@ -71,16 +71,12 @@ export class Realtime {
   private height: number;
 
   /**
-   * 
+   *
    * @param width Canvas width
    * @param height Canvas height
    * @param id User / instance id
    */
-  constructor(
-    width: number,
-    height: number,
-    id: string,
-  ) {
+  constructor(width: number, height: number, id: string) {
     this.canvas = document.createElement('canvas');
     this.canvas.id = id;
 
@@ -105,7 +101,12 @@ export class Realtime {
    * @param color Coloro of object being added
    * @param lineWidth Line width of object being added
    */
-  public init(canvas: fabric.Canvas, type: string, color: string, lineWidth: number) {
+  public init(
+    canvas: fabric.Canvas,
+    type: string,
+    color: string,
+    lineWidth: number
+  ) {
     if (type !== 'PencilBrush' && type !== 'text') {
       this.tempCanvas = new fabric.Canvas(this.canvas, {
         width: this.width,
@@ -137,15 +138,15 @@ export class Realtime {
 
     return parsed
       ? {
-        r: parseInt(parsed[1], 16),
-        g: parseInt(parsed[2], 16),
-        b: parseInt(parsed[3], 16),
-      }
+          r: parseInt(parsed[1], 16),
+          g: parseInt(parsed[2], 16),
+          b: parseInt(parsed[3], 16),
+        }
       : null;
   }
 
   /**
-   * 
+   *
    * @param target Contains shape information.
    */
   public draw(target: IRealtimeData) {
@@ -217,7 +218,14 @@ export class Realtime {
    */
   public rectDraw(target: any) {
     this.clear();
-    const rect = shapes.rectangle(target.shape.width, target.shape.height, target.shape.stroke, false, target.shape.strokeWidth);
+    const rect = shapes.rectangle(
+      target.shape.width,
+      target.shape.height,
+      target.shape.stroke,
+      false,
+      target.shape.strokeWidth,
+      target.shape.strokeDashArray.length
+    );
 
     rect.set({
       top: target.shape.top,
@@ -236,8 +244,20 @@ export class Realtime {
    */
   public ellipseDraw(target: any) {
     this.clear();
-    const ellipse = shapes.circle(target.shape.width, target.shape.height, target.shape.stroke, false, target.shape.strokeWidth);
-    ellipse.set({ top: target.shape.top, left: target.shape.left, originX: target.shape.originX, originY: target.shape.originY });
+    const ellipse = shapes.circle(
+      target.shape.width,
+      target.shape.height,
+      target.shape.stroke,
+      false,
+      target.shape.strokeWidth,
+      target.shape.strokeDashArray.length
+    );
+    ellipse.set({
+      top: target.shape.top,
+      left: target.shape.left,
+      originX: target.shape.originX,
+      originY: target.shape.originY,
+    });
     this.tempCanvas?.add(ellipse);
     this.tempCanvas?.renderAll();
   }
@@ -249,7 +269,8 @@ export class Realtime {
       target.shape.height,
       target.shape.stroke,
       false,
-      target.shape.strokeWidth
+      target.shape.strokeWidth,
+      target.shape.strokeDashArray.length
     );
 
     triangle.set({
@@ -264,7 +285,7 @@ export class Realtime {
   }
 
   /**
-   * 
+   *
    * @param target Shape information
    */
   private shapeProps(shape: IRealtimeData['shape']) {
@@ -275,7 +296,7 @@ export class Realtime {
       originY: shape?.originY,
       scaleX: shape?.scaleX,
       scaleY: shape?.scaleY,
-    }
+    };
   }
 
   /**
@@ -288,6 +309,7 @@ export class Realtime {
       target.shape.stroke,
       false,
       target.shape.strokeWidth,
+      target.shape.strokeDashArray.length
     );
 
     // @ts-ignore
@@ -307,6 +329,7 @@ export class Realtime {
       target.shape.stroke,
       false,
       target.shape.strokeWidth,
+      target.shape.strokeDashArray.length
     );
 
     // @ts-ignore
@@ -321,7 +344,14 @@ export class Realtime {
    */
   public starDraw(target: any) {
     this.tempCanvas?.clear();
-    const star = shapes.star(2, 2, target.shape.stroke, false, target.shape.strokeWidth);
+    const star = shapes.star(
+      2,
+      2,
+      target.shape.stroke,
+      false,
+      target.shape.strokeWidth,
+      target.shape.strokeDashArray.length
+    );
 
     // @ts-ignore
     star.set(this.shapeProps(target.shape));
@@ -335,7 +365,14 @@ export class Realtime {
    */
   public chatDraw(target: any) {
     this.tempCanvas?.clear();
-    const chat = shapes.chat(2, 2, target.shape.stroke, false, target.shape.strokeWidth);
+    const chat = shapes.chat(
+      2,
+      2,
+      target.shape.stroke,
+      false,
+      target.shape.strokeWidth,
+      target.shape.strokeWidth
+    );
 
     // @ts-ignore
     chat.set(this.shapeProps(target.shape));
@@ -344,12 +381,19 @@ export class Realtime {
   }
 
   /**
-  * Draws arrow
-  * @param target Shape information
-  */
+   * Draws arrow
+   * @param target Shape information
+   */
   public arrowDraw(target: any) {
     this.tempCanvas?.clear();
-    const arrow = shapes.arrow(2, 2, target.shape.stroke, false, target.shape.strokeWidth);
+    const arrow = shapes.arrow(
+      2,
+      2,
+      target.shape.stroke,
+      false,
+      target.shape.strokeWidth,
+      target.shape.strokeWidth
+    );
 
     // @ts-ignore
     arrow.set(this.shapeProps(target.shape));
@@ -359,14 +403,17 @@ export class Realtime {
 
   /**
    * Real time text drawing process.
-   * @param target 
+   * @param target
    */
   public textDraw(target: any) {
     this.clear();
     this.context.font = `${target.fontSize}px ${target.fontFamily}`;
     this.context.fillStyle = target.fill || '#000000';
-    this.context.fillText(target.text, target.left, target.top + target.height - 7);
-
+    this.context.fillText(
+      target.text,
+      target.left,
+      target.top + target.height - 7
+    );
   }
 
   /**

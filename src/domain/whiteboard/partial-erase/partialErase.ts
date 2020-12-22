@@ -13,6 +13,7 @@ import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-even
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { PaintEventSerializer } from '../../../poc/whiteboard/event-serializer/PaintEventSerializer';
 import { Pattern, Point } from 'fabric/fabric-impl';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
 /**
  * Class that handles all partial erasure methods.
@@ -262,7 +263,7 @@ export class PartialErase {
         if (this.isOwned(this.id, o.id as string)) {
           (o as TypedShape).set({ selectable: true, evented: true });
 
-          if ((o as TypedGroup)._objects) {
+          if ((o as TypedGroup)._objects && !(o as ICanvasBrush).basePath) {
             (o as TypedGroup).toActiveSelection();
             this.canvas.discardActiveObject();
           }
@@ -281,6 +282,7 @@ export class PartialErase {
         left: group.left,
         id: id || this.generateId(),
       });
+
       this.canvas.add(image);
       image.bringToFront();
       this.canvas.renderAll();
