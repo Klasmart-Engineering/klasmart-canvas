@@ -1,5 +1,6 @@
 import { ITextOptions } from 'fabric/fabric-impl';
 import { useCallback, useContext, useEffect } from 'react';
+import { IBrushType } from '../../../interfaces/brushes/brush-type';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
@@ -101,7 +102,7 @@ export const useObjectSelection = (
 
         // Change brush type
         if (objectBrushType !== brushType) {
-          updateBrushType(objectBrushType);
+          updateBrushType(objectBrushType as IBrushType);
         }
       }
 

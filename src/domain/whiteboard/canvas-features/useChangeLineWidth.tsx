@@ -1,5 +1,7 @@
+import { fabric } from 'fabric';
 import { useCallback, useContext, useEffect } from 'react';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
@@ -38,43 +40,43 @@ export const useChangeLineWidth = (
    * Checks if the given object is a common path object
    * @param {ICanvasObject} object - Object to check
    */
-  const isCommonBrush = useCallback(
-    (object: ICanvasObject) => {
-      return (
-        lineWidth !== object.strokeWidth &&
-        (isEmptyShape(object as TypedShape) || isFreeDrawing(object))
-      );
-    },
-    [lineWidth]
-  );
+  const isCommonBrush = useCallback((object: ICanvasObject) => {
+    return isEmptyShape(object as TypedShape) || isFreeDrawing(object);
+  }, []);
 
   /**
    * Checks if the given object is a custom path object
    * @param {ICanvasBrush} object - Object to check
    */
-  const isCustomBrush = useCallback(
-    (object: ICanvasBrush) => {
-      return (
-        lineWidth !== (object as ICanvasBrush).basePath?.strokeWidth &&
-        ((object.type === 'group' && (object as ICanvasBrush).basePath) ||
-          (object.type === 'image' && (object as ICanvasBrush).basePath))
-      );
-    },
-    [lineWidth]
-  );
+  const isCustomBrush = useCallback((object: ICanvasBrush) => {
+    return (
+      (object.type === 'group' && (object as ICanvasBrush).basePath) ||
+      (object.type === 'image' && (object as ICanvasBrush).basePath) ||
+      (object.type === 'path' &&
+        (object as ICanvasBrush).basePath?.type === 'dashed')
+    );
+  }, []);
 
   /**
-   * Handles the logic for change strokeWidth property
-   * in a custom path object
-   * @param {ICanvasBrush} object - Custom Path Object to change its width
+   * If lineWidth variable changes and a free line drawing is selected
+   * that drawing line width will change to the selected width on Toolbar
    */
-  const customBrushChange = useCallback(
-    (object: ICanvasBrush) => {
+  useEffect(() => {
+    let newActives: ICanvasObject[] = [];
+    let activeObjects: ICanvasObject[] = [];
+
+    /**
+     * Handles the logic for change strokeWidth property
+     * in a custom path object
+     * @param {ICanvasBrush} object - Custom Path Object to change its width
+     */
+    const customBrushChange = async (object: ICanvasBrush) => {
       let payload: ObjectEvent;
 
-      changeLineWidthInSpecialBrushes(canvas, userId, object, lineWidth)
+      await changeLineWidthInSpecialBrushes(canvas, userId, object, lineWidth)
         .then((newObject) => {
           const basePath = newObject.basePath;
+          newActives.push(newObject as fabric.Object);
 
           payload = {
             type: 'group',
@@ -93,27 +95,49 @@ export const useChangeLineWidth = (
           eventSerializer?.push('lineWidthChanged', payload);
         })
         .catch((e: Error) => {
-          if (e.message !== 'lineWidth is the same') {
+          if (e.message === 'lineWidth is the same') {
+            newActives.push(object as fabric.Object);
+          } else {
             console.warn(e);
           }
         });
-    },
-    [canvas, eventSerializer, lineWidth, userId]
-  );
+    };
 
-  /**
-   * Handles the logic for change strokeWidth property
-   * in a common path object
-   * @param {ICanvasObject} object - Path Object to change its width
-   * @param {boolean} isUnique - Flag to know if is a single active object
-   * or has sibling active objects
-   */
-  const commonBrushChange = useCallback(
-    (object: ICanvasObject, isUnique: boolean) => {
+    /**
+     * Handles the logic for change strokeWidth property
+     * in a common path object
+     * @param {ICanvasObject} object - Path Object to change its width
+     * @param {boolean} isUnique - Flag to know if is a single active object
+     * or has sibling active objects
+     */
+    const commonBrushChange = (object: ICanvasObject, isUnique: boolean) => {
       const target = { strokeWidth: lineWidth };
 
       object.set(target);
+      newActives.push(object);
       changeLineWidthSync(object);
+
+      if ((object as ICanvasPathBrush).basePath?.type === 'dashed') {
+        object.set({
+          strokeDashArray: [lineWidth * 2],
+        });
+      }
+
+      // Updating basePath
+      if (
+        isFreeDrawing(object) &&
+        (object as ICanvasPathBrush).basePath.type !== 'dashed'
+      ) {
+        const basePath = (object as ICanvasPathBrush).basePath;
+        (object as ICanvasPathBrush).set({
+          basePath: {
+            type: basePath.type,
+            points: basePath.points,
+            stroke: basePath.stroke,
+            strokeWidth: lineWidth,
+          },
+        });
+      }
 
       if (isUnique) {
         const type = object.get('type');
@@ -132,29 +156,93 @@ export const useChangeLineWidth = (
           event: event as IUndoRedoEvent,
         });
       }
-    },
-    [canvas, changeLineWidthSync, lineWidth, undoRedoDispatch, userId]
-  );
+    };
 
-  /**
-   * If lineWidth variable changes and a free line drawing is selected
-   * that drawing line width will change to the selected width on Toolbar
-   */
-  useEffect(() => {
-    if (!canvas) return;
+    const changeLineWidth = async () => {
+      if (!canvas) return;
 
-    const activeObjects = canvas.getActiveObjects();
-    const isUniqueObject = activeObjects.length === 1;
+      const selection = canvas.getActiveObject();
+      const isUniqueObject = activeObjects.length === 1;
 
-    activeObjects.forEach((object: ICanvasObject) => {
-      if (isCommonBrush(object)) {
-        commonBrushChange(object, isUniqueObject);
-      } else if (isCustomBrush(object as ICanvasBrush)) {
-        customBrushChange(object as ICanvasBrush);
+      if (selection?.type === 'activeSelection') {
+        activeObjects = (selection as fabric.ActiveSelection)._objects;
+      } else {
+        activeObjects = canvas.getActiveObjects();
       }
-    });
 
-    canvas.renderAll();
+      if (!activeObjects) return;
+      canvas.discardActiveObject();
+
+      for (const object of activeObjects) {
+        canvas.discardActiveObject();
+
+        if (isCommonBrush(object)) {
+          commonBrushChange(object, isUniqueObject);
+        } else if (isCustomBrush(object as ICanvasBrush)) {
+          await customBrushChange(object as ICanvasBrush);
+        }
+      }
+
+      if (newActives.length === 1) {
+        canvas?.setActiveObject(newActives[0]);
+      } else if (newActives.length >= 2) {
+        const activesGroup = new fabric.ActiveSelection(newActives);
+        canvas?.setActiveObject(activesGroup);
+      }
+
+      // activeObjects.forEach((object: ICanvasObject) => {
+      //   if (isCommonBrush(object)) {
+      //     commonBrushChange(object, isUniqueObject);
+      //   } else if (isCustomBrush(object as ICanvasBrush)) {
+      //     customBrushChange(object as ICanvasBrush);
+      //   }
+      // });
+
+      canvas.renderAll();
+    };
+
+    changeLineWidth();
+
+    // if (!canvas) return;
+
+    // const selection = canvas.getActiveObject();
+    // const isUniqueObject = activeObjects.length === 1;
+
+    // if (selection?.type === 'activeSelection') {
+    //   activeObjects = (selection as fabric.ActiveSelection)._objects;
+    // } else {
+    //   activeObjects = canvas.getActiveObjects();
+    // }
+
+    // if (!activeObjects) return;
+    // canvas.discardActiveObject();
+
+    // for (const object of activeObjects) {
+    //   canvas.discardActiveObject();
+
+    //   if (isCommonBrush(object)) {
+    //     commonBrushChange(object, isUniqueObject);
+    //   } else if (isCustomBrush(object as ICanvasBrush)) {
+    //     await customBrushChange(object as ICanvasBrush);
+    //   }
+    // }
+
+    // if (newActives.length === 1) {
+    //   canvas?.setActiveObject(newActives[0]);
+    // } else if (newActives.length >= 2) {
+    //   const activesGroup = new fabric.ActiveSelection(newActives);
+    //   canvas?.setActiveObject(activesGroup);
+    // }
+
+    // // activeObjects.forEach((object: ICanvasObject) => {
+    // //   if (isCommonBrush(object)) {
+    // //     commonBrushChange(object, isUniqueObject);
+    // //   } else if (isCustomBrush(object as ICanvasBrush)) {
+    // //     customBrushChange(object as ICanvasBrush);
+    // //   }
+    // // });
+
+    // canvas.renderAll();
 
     /* If commonBrushChange is added on dependencies
     useEffect is loading more than the necesary times
@@ -167,6 +255,6 @@ export const useChangeLineWidth = (
     userId,
     isCommonBrush,
     isCustomBrush,
-    customBrushChange,
+    eventSerializer,
   ]);
 };

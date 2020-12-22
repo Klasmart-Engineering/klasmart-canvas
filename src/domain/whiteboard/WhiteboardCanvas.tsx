@@ -95,6 +95,7 @@ import { useTextObject } from './canvas-features/useTextObject';
 import { useAddImage } from './canvas-features/useAddImage';
 import { useChangeLineWidth } from './canvas-features/useChangeLineWidth';
 import { useUndoRedo } from './canvas-features/useUndoRedo';
+import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
 // interface IBackgroundImage extends IStaticCanvasOptions {
 //   id?: string;
 // }
@@ -2495,6 +2496,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     undoRedoDispatch
   );
+  useSynchronizedBrushTypeChanged(canvas, userId, filterIncomingEvents);
 
   /**
    * !! Is Modified

@@ -1,12 +1,15 @@
 import { fabric } from 'fabric';
 import { useCallback, useContext, useEffect } from 'react';
 import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
+import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
 import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-drawing-event';
 import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ChalkBrush } from '../brushes/classes/chalkBrush';
+import { DashedBrush } from '../brushes/classes/dashedBrush';
 import { MarkerBrush } from '../brushes/classes/markerBrush';
 import { PaintBrush } from '../brushes/classes/paintBrush';
 import { PenBrush } from '../brushes/classes/penBrush';
+import { setBasePathInNormalBrushes } from '../brushes/utils/setBasePathInNormalBrushes';
 import { WhiteboardContext } from '../WhiteboardContext';
 
 /**
@@ -47,16 +50,13 @@ export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
         canvas.freeDrawingBrush = new ChalkBrush(canvas, userId, brushType);
         break;
       case 'dashed':
-        canvas.freeDrawingBrush = new fabric.PencilBrush();
-        (canvas.freeDrawingBrush as ICanvasFreeDrawingBrush).strokeDashArray = [
-          lineWidth * 2,
-        ];
+        canvas.freeDrawingBrush = new DashedBrush(canvas, userId);
         break;
       default:
         canvas.freeDrawingBrush = new fabric.PencilBrush();
         break;
     }
-  }, [brushType, canvas, lineWidth, userId]);
+  }, [brushType, canvas, userId]);
 
   /**
    * Activates or deactivates drawing mode.
@@ -69,6 +69,7 @@ export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
      */
     const pathCreated = (e: ICanvasDrawingEvent) => {
       if (e.path) {
+        setBasePathInNormalBrushes(e.path as ICanvasPathBrush);
         e.path.strokeUniform = true;
         canvas.renderAll();
       }

@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { createCanvas } from 'canvas';
-import { PenBrush } from './penBrush';
+import { DashedBrush } from './dashedBrush';
 import { fabric } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
 import { referencePoints } from './referencePoints';
@@ -42,7 +42,7 @@ const mockCanvas = {
   clip: function () {},
 };
 
-describe('Pen Brush sould be created', () => {
+describe('Dashed Brush sould be created', () => {
   it('Should have the correct properties and values', () => {
     window.HTMLCanvasElement.prototype.getContext = () => jest.fn();
     const canvasTest = {
@@ -71,36 +71,32 @@ describe('Pen Brush sould be created', () => {
     const width = 8;
     const id = `${userId}:${uuidv4()}`;
 
-    const penBrush = new PenBrush(canvasTest as fabric.Canvas, userId);
-    const { min, max } = penBrush.setMinMaxWidth(width);
+    const dashedBrush = new DashedBrush(canvasTest as fabric.Canvas, userId);
 
-    const points = referencePoints.map((point) => {
-      return {
-        x: point.x,
-        y: point.y,
-        width: penBrush.getRandomInt(min, max),
-      };
+    const dashedPath = dashedBrush.createDashedPath(
+      id,
+      referencePoints,
+      width,
+      color
+    );
+
+    expect(dashedPath.basePath?.type).toBe('dashed');
+    expect(dashedPath.basePath?.stroke).toBe(color);
+    expect(dashedPath.basePath?.strokeWidth).toBe(width);
+    expect(dashedPath.basePath?.points.length).toBe(referencePoints.length);
+
+    expect(dashedPath.type).toBe('path');
+    expect(dashedPath.stroke).toBe(color);
+    expect(dashedPath.strokeWidth).toBe(width);
+
+    dashedPath.strokeDashArray?.forEach((element) => {
+      expect(typeof element).toBe('number');
+      expect(element).toBe(width * 2);
     });
 
-    const penPath = penBrush.createPenPath(id, points, width, color);
-
-    expect(penPath.basePath?.type).toBe('pen');
-    expect(penPath.basePath?.stroke).toBe(color);
-    expect(penPath.basePath?.strokeWidth).toBe(width);
-    expect(penPath.basePath?.points.length).toBe(referencePoints.length);
-    expect(penPath._objects.length).toBe(referencePoints.length - 1);
-
-    penPath.basePath?.points.forEach((point, index) => {
+    dashedPath.basePath?.points.forEach((point, index) => {
       expect(point.x).toBe(referencePoints[index].x);
       expect(point.y).toBe(referencePoints[index].y);
-      expect(point.width).toBeGreaterThanOrEqual(width / 2);
-      expect(point.width).toBeLessThanOrEqual(width);
-    });
-
-    penPath._objects.forEach((line) => {
-      expect(line.stroke).toBe(color);
-      expect(line.strokeWidth).toBeGreaterThanOrEqual(width / 2);
-      expect(line.strokeWidth).toBeLessThanOrEqual(width);
     });
   });
 });

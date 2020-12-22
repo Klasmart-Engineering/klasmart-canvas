@@ -36,6 +36,7 @@ import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
 import WhiteboardToggle from '../../components/WhiteboardToogle';
 import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 import { useUploadFileModal } from './hooks/useUploadFileModal';
+import { IBrushType } from '../../interfaces/brushes/brush-type';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -156,6 +157,13 @@ export const WhiteboardProvider = ({
   const changeStrokeColorAction = useCallback(
     (color: string) => {
       canvasActions?.changeStrokeColor(color);
+    },
+    [canvasActions]
+  );
+
+  const changeBrushTypeAction = useCallback(
+    (type: IBrushType) => {
+      canvasActions?.changeBrushType(type);
     },
     [canvasActions]
   );
@@ -310,6 +318,7 @@ export const WhiteboardProvider = ({
     clearWhiteboardClearAll: clearWhiteboardActionClearAll,
     eraseObject: eraseObjectAction,
     changeStrokeColor: changeStrokeColorAction,
+    changeBrushType: changeBrushTypeAction,
     setCanvasSelection: setCanvasSelectionAction,
     undo: undoAction,
     redo: redoAction,
