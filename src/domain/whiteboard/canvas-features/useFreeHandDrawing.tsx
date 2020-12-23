@@ -1,7 +1,9 @@
 import { fabric } from 'fabric';
+import { IEvent } from 'fabric/fabric-impl';
 import { useCallback, useContext, useEffect } from 'react';
 import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
 import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
+import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-drawing-event';
 import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
 import { ChalkBrush } from '../brushes/classes/chalkBrush';
@@ -10,10 +12,8 @@ import { MarkerBrush } from '../brushes/classes/markerBrush';
 import { PaintBrush } from '../brushes/classes/paintBrush';
 import { PenBrush } from '../brushes/classes/penBrush';
 import { setBasePathInNormalBrushes } from '../brushes/utils/setBasePathInNormalBrushes';
-import {
-  ObjectEvent,
-  PaintEventSerializer,
-} from '../event-serializer/PaintEventSerializer';
+import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
+import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 // import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { WhiteboardContext } from '../WhiteboardContext';
 
@@ -21,11 +21,7 @@ import { WhiteboardContext } from '../WhiteboardContext';
  * Handles logic for Free Hand Drawing Feature
  * @param {fabric.Canvas} canvas - Canvas to draw
  */
-export const useFreeHandDrawing = (
-  canvas: fabric.Canvas,
-  userId: string,
-  eventSerializer: PaintEventSerializer
-) => {
+export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
   // Getting necessary context variables
   const {
     brushIsActive,
@@ -38,9 +34,9 @@ export const useFreeHandDrawing = (
     partialEraseIsActive,
   } = useContext(WhiteboardContext);
 
-  // const {
-  //   state: { eventSerializer },
-  // } = useSharedEventSerializer();
+  const {
+    state: { eventSerializer },
+  } = useSharedEventSerializer();
 
   /**
    * Checks current brushType selected
@@ -75,6 +71,8 @@ export const useFreeHandDrawing = (
    * Activates or deactivates drawing mode.
    */
   useEffect(() => {
+    let coordinates: ICoordinate[] = [];
+
     /**
      * When a path object is recently created set its stroke like uniform
      * @param {ICanvasDrawingEvent} e - Event that contains
@@ -88,12 +86,36 @@ export const useFreeHandDrawing = (
       }
     };
 
+    const realTimePath = (e: IEvent) => {
+      if ((e.e as MouseEvent).which && (e.e as MouseEvent).buttons && canvas) {
+        coordinates.push(e.pointer as ICoordinate);
+
+        if (coordinates.length && coordinates.length % 10 === 0) {
+          const payload: ObjectEvent = {
+            type: 'path',
+            target: {
+              coordinates,
+              color: penColor || DEFAULT_VALUES.PEN_COLOR,
+              lineWidth,
+              id: 'teacher',
+              type: 'PencilBrush',
+            },
+            id: 'teacher',
+          };
+
+          eventSerializer.push('moving', payload);
+        }
+      } else {
+        coordinates = [];
+      }
+    };
+
     /* When free hand drawing option is selected on toolbar,
     freeDrawingBrush is created */
-    if (brushIsActive) {
-      let coordinates: any[] = [];
+    if (brushIsActive && canvas) {
       const canDraw =
         allToolbarIsEnabled || (toolbarIsEnabled && serializerToolbarState.pen);
+      coordinates = [];
 
       setBrushType();
 
@@ -103,33 +125,7 @@ export const useFreeHandDrawing = (
       canvas.freeDrawingCursor = 'crosshair';
       canvas.isDrawingMode = canDraw;
 
-      canvas?.on('mouse:move', (e: any) => {
-        if (
-          (e.e as MouseEvent).which &&
-          (e.e as MouseEvent).buttons &&
-          canvas
-        ) {
-          coordinates.push(e.pointer);
-
-          if (coordinates.length && coordinates.length % 10 === 0) {
-            const payload: ObjectEvent = {
-              type: 'path',
-              target: {
-                coordinates,
-                color: penColor || DEFAULT_VALUES.PEN_COLOR,
-                lineWidth,
-                id: 'teacher',
-                type: 'PencilBrush',
-              },
-              id: 'teacher',
-            };
-
-            eventSerializer.push('moving', payload);
-          }
-        } else {
-          coordinates = [];
-        }
-      });
+      canvas.on('mouse:move', realTimePath);
 
       canvas.on('path:created', pathCreated);
     } else if (canvas && !brushIsActive && !partialEraseIsActive) {

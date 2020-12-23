@@ -111,7 +111,7 @@ export const changeBrushTypeAction = async (
               type === 'dashed' ? [Number(basePath?.strokeWidth) * 2] : [],
             basePath: {
               type: type,
-              points: basePath?.points || [],
+              points: points || [],
               stroke: String(basePath?.stroke),
               strokeWidth: Number(basePath?.strokeWidth),
             },

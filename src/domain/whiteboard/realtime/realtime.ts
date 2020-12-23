@@ -224,7 +224,7 @@ export class Realtime {
       target.shape.stroke,
       false,
       target.shape.strokeWidth,
-      target.shape.strokeDashArray.length
+      target.shape.strokeDashArray?.length
     );
 
     rect.set({
@@ -250,7 +250,7 @@ export class Realtime {
       target.shape.stroke,
       false,
       target.shape.strokeWidth,
-      target.shape.strokeDashArray.length
+      target.shape.strokeDashArray?.length
     );
     ellipse.set({
       top: target.shape.top,
@@ -270,7 +270,7 @@ export class Realtime {
       target.shape.stroke,
       false,
       target.shape.strokeWidth,
-      target.shape.strokeDashArray.length
+      target.shape.strokeDashArray?.length
     );
 
     triangle.set({
@@ -309,7 +309,7 @@ export class Realtime {
       target.shape.stroke,
       false,
       target.shape.strokeWidth,
-      target.shape.strokeDashArray.length
+      target.shape.strokeDashArray?.length
     );
 
     // @ts-ignore
@@ -329,7 +329,7 @@ export class Realtime {
       target.shape.stroke,
       false,
       target.shape.strokeWidth,
-      target.shape.strokeDashArray.length
+      target.shape.strokeDashArray?.length
     );
 
     // @ts-ignore
@@ -350,7 +350,7 @@ export class Realtime {
       target.shape.stroke,
       false,
       target.shape.strokeWidth,
-      target.shape.strokeDashArray.length
+      target.shape.strokeDashArray?.length
     );
 
     // @ts-ignore

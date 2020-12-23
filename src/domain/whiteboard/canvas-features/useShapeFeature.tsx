@@ -32,6 +32,7 @@ export const useShapeFeature = (
   // Getting context variables
   const {
     shapeIsActive,
+    brushIsActive,
     allToolbarIsEnabled,
     toolbarIsEnabled,
     serializerToolbarState,
@@ -194,7 +195,7 @@ export const useShapeFeature = (
         canvas?.off('mouse:up');
       }
 
-      if (!laserIsActive) {
+      if (!laserIsActive && !brushIsActive) {
         canvas?.off('mouse:move');
       }
     };
@@ -214,6 +215,7 @@ export const useShapeFeature = (
     allToolbarIsEnabled,
     serializerToolbarState.shape,
     getPermissions,
+    brushIsActive,
   ]);
 
   /**

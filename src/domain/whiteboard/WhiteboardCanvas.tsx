@@ -1028,7 +1028,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     pointerEvents
   );
 
-  useFreeHandDrawing(canvas as fabric.Canvas, userId, eventSerializer);
+  useFreeHandDrawing(canvas as fabric.Canvas, userId);
 
   useShapeFeature(
     canvas as fabric.Canvas,

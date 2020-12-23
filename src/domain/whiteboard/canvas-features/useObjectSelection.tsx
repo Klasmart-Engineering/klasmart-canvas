@@ -52,7 +52,7 @@ export const useObjectSelection = (
       return {
         objectStroke: String(object.stroke),
         objectStrokeWidth: Number(object.strokeWidth),
-        objectBrushType: object.strokeDashArray ? 'dashed' : 'pencil',
+        objectBrushType: object.strokeDashArray?.length ? 'dashed' : 'pencil',
       };
     }
 

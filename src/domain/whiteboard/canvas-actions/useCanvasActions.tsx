@@ -647,11 +647,13 @@ export const useCanvasActions = (
         if (brushType === 'pencil' || brushType === 'dashed') {
           shape = shapeSelector(shapeToAdd);
         } else {
-          await specialShapeSelector(shapeToAdd, brushType).then((result) => {
-            if (!result) return;
+          await specialShapeSelector(shapeToAdd, brushType as IBrushType).then(
+            (result) => {
+              if (!result) return;
 
-            shape = result as TypedShape;
-          });
+              shape = result as TypedShape;
+            }
+          );
         }
 
         if (!shape) return;
@@ -720,7 +722,7 @@ export const useCanvasActions = (
         let type = shape.type;
         let target = {
           type: shape.name,
-          shape
+          shape,
         };
 
         let payload = {
