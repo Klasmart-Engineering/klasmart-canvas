@@ -134,7 +134,6 @@ export const UndoRedo = (
       const mapped: { [key: string]: any } = mapActiveState(
         state.activeState as string
       );
-
       loadFromJSON(canvas, mapped, instanceId, state);
     }
 
@@ -188,6 +187,7 @@ export const UndoRedo = (
         }
       } else if (nextEvent.type !== 'activeSelection') {
         let currentEvent = state.events[state.eventIndex];
+
         if ((nextEvent?.event as any).type === 'background') {
           const fill = getPreviousBackground(state.eventIndex, state.events);
           canvas.backgroundColor = fill;
@@ -264,7 +264,9 @@ export const UndoRedo = (
 
           if (
             state.events[state.eventIndex + 1].type === 'activeSelection' &&
-            state.events[state.eventIndex].type === 'added'
+            state.events[state.eventIndex].type === 'added' &&
+            ((state.events[state.eventIndex].event as unknown) as fabric.Object)
+              .type !== 'textbox'
           ) {
             eventSerializer.push('removed', {
               id: (state.events[state.eventIndex + 1]
