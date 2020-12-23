@@ -31,6 +31,7 @@ export const useFloodFill = (
   eventSerializer: PaintEventSerializer,
   undoRedoDispatch: (action: CanvasAction) => void
 ) => {
+  // Getting context variables
   const {
     isLocalObject,
     allToolbarIsEnabled,

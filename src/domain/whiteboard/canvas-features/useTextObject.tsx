@@ -56,8 +56,7 @@ export const useTextObject = (
     undoRedoDispatch,
     instanceId,
     eventSerializer,
-    userId,
-    undoRedoDispatch
+    userId
   );
 
   // Getting Key Handlers

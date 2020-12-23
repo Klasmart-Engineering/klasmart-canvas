@@ -20,6 +20,7 @@ interface IBackgroundImage extends IStaticCanvasOptions {
  * @param {string} userId - User that will set the image
  */
 export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
+  // Getting context variables
   const {
     isBackgroundImage,
     backgroundImageIsPartialErasable,

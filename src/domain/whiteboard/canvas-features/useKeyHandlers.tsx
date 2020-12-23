@@ -16,6 +16,7 @@ export const useKeyHandlers = (
   instanceId: string,
   undoRedoDispatch: (action: CanvasAction) => void
 ) => {
+  // Getting context variables
   const {
     undoRedoIsAvailable,
     activeCanvas,

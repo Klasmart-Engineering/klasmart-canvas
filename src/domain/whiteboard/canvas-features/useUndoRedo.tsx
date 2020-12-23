@@ -23,6 +23,7 @@ export const useUndoRedo = (
   userId: string,
   undoRedoDispatch: (action: CanvasAction) => void
 ) => {
+  // Getting context variables
   const { lineWidth, fontFamily, fontColor } = useContext(WhiteboardContext);
 
   /**

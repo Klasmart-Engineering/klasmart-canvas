@@ -20,6 +20,7 @@ import { WhiteboardContext } from '../WhiteboardContext';
 /**
  * Handles logic for Free Hand Drawing Feature
  * @param {fabric.Canvas} canvas - Canvas to draw
+ * @param {string} userId - User that will draw in Whiteboard
  */
 export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
   // Getting necessary context variables
@@ -34,6 +35,7 @@ export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
     partialEraseIsActive,
   } = useContext(WhiteboardContext);
 
+  // Getting event serializer for synchronize objects in remote whiteboards
   const {
     state: { eventSerializer },
   } = useSharedEventSerializer();

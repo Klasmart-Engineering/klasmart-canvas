@@ -42,12 +42,11 @@ import { setBasePathInNormalBrushes } from '../brushes/utils/setBasePathInNormal
 import { changeBrushTypeAction } from './feature-actions/changeBrushTypeAction';
 
 export const useCanvasActions = (
-  canvas?: fabric.Canvas,
-  dispatch?: any,
-  canvasId?: string,
-  eventSerializer?: any,
-  userId?: string,
-  undoRedoDispatch?: (action: CanvasAction) => void
+  canvas: fabric.Canvas,
+  dispatch: (action: CanvasAction) => void,
+  canvasId: string,
+  eventSerializer: any,
+  userId: string
 ) => {
   const {
     shapeIsActive,
@@ -729,7 +728,7 @@ export const useCanvasActions = (
           type,
           target,
           id: 'teacher',
-        };
+        } as ObjectEvent;
 
         eventSerializer?.push('moving', payload);
       });
@@ -927,9 +926,12 @@ export const useCanvasActions = (
               id,
             };
 
-            eventSerializer?.push('added', payload);
+            eventSerializer?.push('added', payload as ObjectEvent);
 
-            const event = { event: payload, type: 'added' };
+            const event = {
+              event: payload,
+              type: 'added',
+            } as IUndoRedoEvent;
 
             dispatch({
               type: SET,
@@ -1010,9 +1012,9 @@ export const useCanvasActions = (
               };
             }
 
-            eventSerializer?.push('added', payload);
+            eventSerializer?.push('added', payload as ObjectEvent);
 
-            const event = { event: payload, type: 'added' };
+            const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
             dispatch({
               type: SET,
@@ -1254,15 +1256,13 @@ export const useCanvasActions = (
             type: 'textbox',
             target: { fill: color },
             id: object.id,
-          };
+          } as ObjectEvent;
 
           eventSerializer?.push('fontColorChanged', payload);
 
-          if (!undoRedoDispatch) return;
-
           const event = { event: payload, type: 'colorChanged' };
 
-          undoRedoDispatch({
+          dispatch({
             type: SET,
             payload: canvas?.getObjects() as TypedShape[],
             canvasId: userId,
@@ -1299,7 +1299,7 @@ export const useCanvasActions = (
         }
       });
     },
-    [updateFontColor, canvas, eventSerializer, undoRedoDispatch, userId]
+    [updateFontColor, canvas, eventSerializer, dispatch, userId]
   );
 
   /**
@@ -1378,7 +1378,7 @@ export const useCanvasActions = (
     const event = {
       event: { id: `${userId}:clearWhiteboard` },
       type: 'clearedWhiteboard',
-    };
+    } as IUndoRedoEvent;
 
     // Add cleared whiteboard to undo / redo state.
 
@@ -1451,7 +1451,7 @@ export const useCanvasActions = (
       const event = {
         event: { id: `${userId}:clearWhiteboard` },
         type: 'clearedWhiteboard',
-      };
+      } as IUndoRedoEvent;
 
       // Add cleared whiteboard to undo / redo state.
       dispatch({
