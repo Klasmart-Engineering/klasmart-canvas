@@ -46,6 +46,7 @@ import { useAddImage } from './canvas-features/useAddImage';
 import { useChangeLineWidth } from './canvas-features/useChangeLineWidth';
 import { useUndoRedo } from './canvas-features/useUndoRedo';
 import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -88,6 +89,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
   const [wrapper, setWrapper] = useState<HTMLElement>();
+  const [generatedBy, setGeneratedBy] = useState<string>(uuidv4());
 
   const { width, height } = useFixedAspectScaling(
     wrapper?.parentElement,
@@ -97,7 +99,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // Event serialization for synchronizing whiteboard state.
   const {
-    state: { eventSerializer },
+    state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
 
   // Undo/Redo dispatcher
@@ -170,6 +172,30 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     },
     [isLocalObject, userId]
   );
+
+  /**
+   * Reset the canvas state in case the event controller will replay all events.
+   */
+  useEffect(() => {
+    if (!canvas) return;
+    if (!eventController) return;
+
+    const reset = () => {
+      canvas.clear();
+
+      // NOTE: Regenerate generatedBy so our own events gets applied again after the clear.
+      setGeneratedBy(uuidv4());
+
+      // This is just to avoid typescript unused variables error
+      console.log(generatedBy);
+    };
+
+    eventController.on('aboutToReplayAll', reset);
+
+    return () => {
+      eventController.removeListener('aboutToReplayAll', reset);
+    };
+  }, [canvas, eventController, generatedBy]);
 
   // useEffects and logic to set canvas properties
   useSetCanvas(
