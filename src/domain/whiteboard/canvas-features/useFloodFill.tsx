@@ -259,7 +259,7 @@ export const useFloodFill = (
     };
 
     const teacherHasPermission =
-      allToolbarIsEnabled && floodFillIsActive && toolbarIsEnabled;
+      allToolbarIsEnabled && floodFillIsActive;
 
     const studentHasPermission =
       floodFillIsActive && toolbarIsEnabled && serializerToolbarState.floodFill;

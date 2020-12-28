@@ -1646,7 +1646,7 @@ export const useCanvasActions = (
       return;
     }
 
-    const toolbarIsEnabled = getToolbarIsEnabled();
+    const toolbarIsEnabled = getToolbarIsEnabled(userId);
     const serializerToolbarState = store.getState().permissionsState as IPermissions;
     let eraser: any;
 

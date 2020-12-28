@@ -102,7 +102,7 @@ export const useShapeFeature = (
     const toolbarIsEnabled = getToolbarIsEnabled();
     return {
       teacherHasPermission:
-        allToolbarIsEnabled && shape && shapeIsActive && toolbarIsEnabled,
+        allToolbarIsEnabled && shape && shapeIsActive,
       studentHasPermission:
         shape &&
         shapeIsActive &&
