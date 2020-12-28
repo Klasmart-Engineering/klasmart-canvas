@@ -75,6 +75,7 @@ export interface IWhiteboardContext {
   activeCanvas: MutableRefObject<string | null>;
   perfectShapeIsActive: boolean;
   updatePerfectShapeIsActive: (active: boolean) => void;
+  perfectShapeIsAvailable: () => boolean;
   partialEraseIsActive: boolean;
   updatePartialEraseIsActive: (status: boolean) => void;
   openUploadFileModal: () => void;
