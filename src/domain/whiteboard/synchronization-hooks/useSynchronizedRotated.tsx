@@ -65,7 +65,7 @@ const useSynchronizedRotated = (
       }
 
       const localObjects: any[] = canvas?.getObjects() || [];
-      const objectsToGroup = [];
+      const objectsToGroup: ICanvasObject[] = [];
 
       for (let i = 0; i < localObjects.length; i++) {
         if (target.activeIds) {
@@ -73,6 +73,11 @@ const useSynchronizedRotated = (
             objectsToGroup.push(localObjects[i]);
           }
         }
+      }
+
+      for (let i = 0; i < objectsToGroup.length; i++) {
+        let match = target?.eTarget?.objects?.filter((o: any) => o.id === objectsToGroup[i].id)[0] || {};
+        objectsToGroup[i].set(match);
       }
 
       const props = target?.eTarget;
@@ -139,43 +144,49 @@ const useSynchronizedRotated = (
           activeIds.push(activeObject.id as string);
         });
 
+        const groupPayloadData = e.target.toJSON([
+          'id'
+        ]);
+
         const groupPayload: ObjectEvent = {
           id: userId,
           type,
-          target: { activeIds, eTarget: e.target, isGroup: true },
+          target: { activeIds, eTarget: groupPayloadData, isGroup: true },
         };
         eventSerializer?.push('rotated', groupPayload);
 
-        const activeObjects = canvas?.getActiveObjects();
-        canvas?.discardActiveObject();
-        const activeSelection = new fabric.ActiveSelection(activeObjects, {
-          canvas: canvas,
-        });
-        canvas?.setActiveObject(activeSelection);
-        canvas?.renderAll();
+        if (!filteredState) {
+          const activeObjects = canvas?.getActiveObjects();
+          canvas?.discardActiveObject();
+          const activeSelection = new fabric.ActiveSelection(activeObjects, {
+            canvas: canvas,
+          });
+          canvas?.setActiveObject(activeSelection);
+          canvas?.renderAll();
 
-        const payload = {
-          type,
-          svg: true,
-          target: null,
-          id: `${userId}:group`,
-        };
+          const payload = {
+            type,
+            svg: true,
+            target: null,
+            id: `${userId}:group`,
+          };
 
-        const event = { event: payload, type: 'activeSelection', activeIds };
+          const event = { event: payload, type: 'activeSelection', activeIds };
 
-        let filtered = canvas?.getObjects().filter((o: any) => {
-          return !o.group;
-        });
+          let filtered = canvas?.getObjects().filter((o: any) => {
+            return !o.group;
+          });
 
-        let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
-        active?.set({ id: `${userId}:group` });
+          let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
+          active?.set({ id: `${userId}:group` });
 
-        undoRedoDispatch({
-          type: SET_GROUP,
-          payload: [...(filtered as any[]), active],
-          canvasId: userId,
-          event: (event as unknown) as IUndoRedoEvent,
-        });
+          undoRedoDispatch({
+            type: SET_GROUP,
+            payload: [...(filtered as any[]), active],
+            canvasId: userId,
+            event: (event as unknown) as IUndoRedoEvent,
+          });
+        }
       } else {
         if (!(e.target as ICanvasObject).id) {
           return;
