@@ -4,8 +4,14 @@ import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 import { WhiteboardContext } from '../WhiteboardContext';
 import * as shapes from '../shapes/shapes';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
-import { isFreeDrawing, isShape, isEmptyShape } from '../utils/shapes';
-import { UNDO, REDO, SET, SET_GROUP } from '../reducers/undo-redo';
+import { isFreeDrawing, isShape } from '../utils/shapes';
+import {
+  UNDO,
+  REDO,
+  SET,
+  SET_GROUP,
+  CanvasAction,
+} from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
@@ -19,11 +25,12 @@ import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-even
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { PartialErase } from '../partial-erase/partialErase';
+import { useSynchronization } from '../canvas-features/useSynchronization';
 import { changeLineColorInSpecialBrushes } from '../brushes/actions/changeLineColorInSpecialBrushes';
 import { IBrushType } from '../../../interfaces/brushes/brush-type';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { PenBrush } from '../brushes/classes/penBrush';
-import { PencilBrush, Group } from 'fabric/fabric-impl';
+import { Group } from 'fabric/fabric-impl';
 import { MarkerBrush } from '../brushes/classes/markerBrush';
 import { PaintBrush } from '../brushes/classes/paintBrush';
 import { ChalkBrush } from '../brushes/classes/chalkBrush';
@@ -32,13 +39,14 @@ import { shapePoints } from '../../../assets/shapes-points/index';
 import { IShapePointsIndex } from '../../../interfaces/brushes/shape-points-index';
 import { ICanvasShapeBrush } from '../../../interfaces/brushes/canvas-shape-brush';
 import { setBasePathInNormalBrushes } from '../brushes/utils/setBasePathInNormalBrushes';
+import { changeBrushTypeAction } from './feature-actions/changeBrushTypeAction';
 
 export const useCanvasActions = (
-  canvas?: fabric.Canvas,
-  dispatch?: any,
-  canvasId?: string,
-  eventSerializer?: any,
-  userId?: string
+  canvas: fabric.Canvas,
+  dispatch: (action: CanvasAction) => void,
+  canvasId: string,
+  eventSerializer: any,
+  userId: string
 ) => {
   const {
     shapeIsActive,
@@ -64,6 +72,7 @@ export const useCanvasActions = (
     brushType,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
+  const { changePenColorSync } = useSynchronization(userId as string);
   /**
    * Adds shape to whiteboard.
    * @param specific Indicates shape type that should be added in whiteboard.
@@ -637,11 +646,13 @@ export const useCanvasActions = (
         if (brushType === 'pencil' || brushType === 'dashed') {
           shape = shapeSelector(shapeToAdd);
         } else {
-          await specialShapeSelector(shapeToAdd, brushType).then((result) => {
-            if (!result) return;
+          await specialShapeSelector(shapeToAdd, brushType as IBrushType).then(
+            (result) => {
+              if (!result) return;
 
-            shape = result as TypedShape;
-          });
+              shape = result as TypedShape;
+            }
+          );
         }
 
         if (!shape) return;
@@ -699,12 +710,27 @@ export const useCanvasActions = (
         }
 
         shape.set(anchor);
+
         canvas.renderAll();
 
         setShapeInProgress({
           shape: shape,
           startPoint: startPoint,
         });
+
+        let type = shape.type;
+        let target = {
+          type: shape.name,
+          shape,
+        };
+
+        let payload = {
+          type,
+          target,
+          id: 'teacher',
+        } as ObjectEvent;
+
+        eventSerializer?.push('moving', payload);
       });
 
       canvas?.on('mouse:up', async (e: fabric.IEvent) => {
@@ -900,9 +926,12 @@ export const useCanvasActions = (
               id,
             };
 
-            eventSerializer?.push('added', payload);
+            eventSerializer?.push('added', payload as ObjectEvent);
 
-            const event = { event: payload, type: 'added' };
+            const event = {
+              event: payload,
+              type: 'added',
+            } as IUndoRedoEvent;
 
             dispatch({
               type: SET,
@@ -983,9 +1012,9 @@ export const useCanvasActions = (
               };
             }
 
-            eventSerializer?.push('added', payload);
+            eventSerializer?.push('added', payload as ObjectEvent);
 
-            const event = { event: payload, type: 'added' };
+            const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
             dispatch({
               type: SET,
@@ -1032,15 +1061,18 @@ export const useCanvasActions = (
       }
 
       if (!activeObjects) return;
+
       canvas.discardActiveObject();
 
       for (const object of activeObjects) {
         if (
-          (isShape(object) && object.shapeType === 'shape') ||
-          isFreeDrawing(object)
+          ((isShape(object) && object.shapeType === 'shape') ||
+            isFreeDrawing(object)) &&
+          color !== object.stroke
         ) {
           (object as ICanvasPathBrush).set('stroke', color);
           newActives.push(object);
+          changePenColorSync(object as ICanvasObject);
         }
 
         // Updating basePath
@@ -1070,19 +1102,16 @@ export const useCanvasActions = (
             color
           )
             .then((newObject) => {
-              if (newObject.basePath?.type === 'paintbrush') {
-                const payload: ObjectEvent = {
-                  type: 'group',
-                  target: {
-                    stroke: (object as ICanvasBrush).basePath?.stroke,
-                    bristles: (object as ICanvasBrush).basePath?.bristles,
-                  } as ICanvasObject,
-                  id: String(object.id),
-                };
+              const payload: ObjectEvent = {
+                type: 'group',
+                target: {
+                  stroke: (object as ICanvasBrush).basePath?.stroke,
+                  bristles: (object as ICanvasBrush).basePath?.bristles,
+                } as ICanvasObject,
+                id: String(object.id),
+              };
 
-                eventSerializer?.push('colorChanged', payload);
-              }
-
+              eventSerializer?.push('colorChanged', payload);
               newActives.push(newObject as TypedShape);
             })
             .catch((e) => {
@@ -1156,238 +1185,22 @@ export const useCanvasActions = (
 
       canvas?.renderAll();
     },
+    // If changePenColorSync is added performance is affected
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [updatePenColor, canvas, userId, eventSerializer, dispatch]
   );
 
-  /**
-   * Changes brushType value and if one or more objects are selected
-   * also changes its brush style on them
-   * @param {IBrushType} type - Brush type to change
-   */
   const changeBrushType = useCallback(
-    async (type: IBrushType) => {
-      let newActives: ICanvasObject[] = [];
-      let activeObjects: ICanvasObject[] = [];
-
-      /**
-       * Checks if the given object is really flood-filled
-       * @param {ICanvasObject} object - Object to check its fill property
-       */
-      const isFloodFilled = (object: ICanvasObject) => {
-        return (
-          object.fill &&
-          object.fill !== 'transparent' &&
-          object.fill !== 'rgb(0,0,0)'
-        );
-      };
-
-      // Updating brush type
-      updateBrushType(type);
-
-      if (!canvas) return;
-
-      // Getting the current active objects
-      const selection = canvas?.getActiveObject();
-
-      // Saving activeObjects
-      if (selection?.type === 'activeSelection') {
-        activeObjects = (selection as fabric.ActiveSelection)._objects;
-      } else {
-        activeObjects = canvas.getActiveObjects();
-      }
-
-      if (!activeObjects) return;
-      canvas.discardActiveObject();
-
-      // Iterating over activeObjects
-      for (const object of activeObjects) {
-        if (
-          (object as ICanvasBrush).basePath &&
-          canvas &&
-          userId &&
-          !isFloodFilled(object)
-        ) {
-          let brush:
-            | PencilBrush
-            | PenBrush
-            | MarkerBrush
-            | PaintBrush
-            | ChalkBrush;
-          let newPath;
-          let id = (object as ICanvasObject).id;
-          const basePath = (object as ICanvasBrush).basePath;
-          let points = (basePath?.points as ICoordinate[]).map(
-            (point: ICoordinate) => {
-              return new fabric.Point(point.x, point.y);
-            }
-          );
-
-          if (isEmptyShape(object as TypedShape)) {
-            const original =
-              shapePoints[object.name as keyof IShapePointsIndex];
-            points = original.points.map((point: ICoordinate) => {
-              let scaleX = (point.x / original.width) * Number(object.width);
-              let scaleY = (point.y / original.height) * Number(object.height);
-              return new fabric.Point(scaleX, scaleY);
-            });
-          }
-
-          switch (type) {
-            case 'dashed':
-            case 'pencil':
-              brush = new fabric.PencilBrush();
-              newPath = brush.createPath(
-                brush.convertPointsToSVGPath(points).join('')
-              );
-
-              ((newPath as ICanvasObject) as ICanvasPathBrush).set({
-                stroke: basePath?.stroke,
-                strokeWidth: basePath?.strokeWidth,
-                strokeUniform: true,
-                strokeDashArray:
-                  type === 'dashed' ? [Number(basePath?.strokeWidth) * 2] : [],
-                basePath: {
-                  type: type,
-                  points: basePath?.points || [],
-                  stroke: String(basePath?.stroke),
-                  strokeWidth: Number(basePath?.strokeWidth),
-                },
-              });
-              break;
-
-            case 'pen':
-              brush = new PenBrush(canvas, userId);
-              const { min, max } = (brush as PenBrush).setMinMaxWidth(
-                Number(basePath?.strokeWidth)
-              );
-
-              const penPoints = points.map((point) => {
-                return {
-                  x: point.x,
-                  y: point.y,
-                  width: (brush as PenBrush).getRandomInt(min, max),
-                };
-              });
-
-              newPath = (brush as PenBrush).createPenPath(
-                String((object as ICanvasObject).id),
-                penPoints,
-                Number(basePath?.strokeWidth),
-                String(basePath?.stroke)
-              );
-              break;
-
-            case 'marker':
-            case 'felt':
-              brush = new MarkerBrush(canvas, userId, type);
-
-              newPath = (brush as MarkerBrush).createMarkerPath(
-                String((object as ICanvasObject).id),
-                points,
-                Number(basePath?.strokeWidth),
-                String(basePath?.stroke)
-              );
-              break;
-
-            case 'paintbrush':
-              brush = new PaintBrush(canvas, userId);
-
-              const bristles = (brush as PaintBrush).makeBrush(
-                String(basePath?.stroke),
-                Number(basePath?.strokeWidth)
-              );
-
-              newPath = (brush as PaintBrush).modifyPaintBrushPath(
-                String((object as ICanvasObject).id),
-                points,
-                Number(basePath?.strokeWidth),
-                String(basePath?.stroke),
-                bristles
-              );
-              break;
-
-            case 'chalk':
-            case 'crayon':
-              brush = new ChalkBrush(canvas, userId, type);
-
-              const clearRects = (brush as ChalkBrush).createChalkEffect(
-                points,
-                Number(basePath?.strokeWidth)
-              );
-
-              await (brush as ChalkBrush)
-                .createChalkPath(
-                  String((object as ICanvasObject).id),
-                  points,
-                  Number(basePath?.strokeWidth),
-                  String(basePath?.stroke),
-                  clearRects
-                )
-                .then((image) => {
-                  newPath = image;
-                })
-                .catch((error) => {
-                  console.warn(error);
-                });
-              break;
-          }
-
-          if (!newPath) return;
-
-          (newPath as ICanvasObject).set({
-            top: object.top,
-            left: object.left,
-            angle: object.angle,
-            scaleX: object.scaleX,
-            scaleY: object.scaleY,
-            flipX: object.flipX,
-            flipY: object.flipY,
-          });
-
-          // Removing id to don't be detected and remove event wouldn't be sent
-          delete (object as ICanvasObject).id;
-          delete (newPath as ICanvasObject).id;
-
-          canvas.remove(object);
-          canvas.add(newPath as ICanvasObject);
-
-          (newPath as ICanvasObject).set({
-            id: id,
-          });
-
-          // Pushing new object to select it after creation
-          newActives.push(newPath as ICanvasObject);
-
-          const payload = {
-            id: String((newPath as ICanvasObject).id),
-            type: newPath.type,
-            target: (newPath as ICanvasBrush).basePath,
-          };
-
-          eventSerializer?.push('brushTypeChanged', payload);
-
-          const event = { event: payload, type: 'brushTypeChanged' };
-
-          // Dispatching Brush Type Change in Custom Paths
-          dispatch({
-            type: SET,
-            payload: canvas?.getObjects() as TypedShape[],
-            canvasId: userId,
-            event: (event as unknown) as IUndoRedoEvent,
-          });
-        }
-      }
-
-      if (newActives.length === 1) {
-        canvas?.setActiveObject(newActives[0]);
-      } else if (newActives.length >= 2) {
-        const activesGroup = new fabric.ActiveSelection(newActives);
-        canvas?.setActiveObject(activesGroup);
-      }
-
-      canvas?.renderAll();
+    (type: IBrushType) => {
+      changeBrushTypeAction(
+        canvas as fabric.Canvas,
+        userId as string,
+        eventSerializer,
+        updateBrushType,
+        type
+      );
     },
-    [canvas, dispatch, eventSerializer, updateBrushType, userId]
+    [canvas, eventSerializer, updateBrushType, userId]
   );
 
   /**
@@ -1443,9 +1256,18 @@ export const useCanvasActions = (
             type: 'textbox',
             target: { fill: color },
             id: object.id,
-          };
+          } as ObjectEvent;
 
           eventSerializer?.push('fontColorChanged', payload);
+
+          const event = { event: payload, type: 'colorChanged' };
+
+          dispatch({
+            type: SET,
+            payload: canvas?.getObjects() as TypedShape[],
+            canvasId: userId,
+            event: (event as unknown) as IUndoRedoEvent,
+          });
         }
         return;
       }
@@ -1477,8 +1299,60 @@ export const useCanvasActions = (
         }
       });
     },
-    [canvas, updateFontColor, eventSerializer]
+    [updateFontColor, canvas, eventSerializer, dispatch, userId]
   );
+
+  /**
+   * Set the given visibility in all the controls in the given object.
+   * @param {ICanvasObject} object - Object to set controls visibility.
+   * @param {boolean} visibility - Visibility state.
+   */
+  const setObjectControlsVisibility = useCallback(
+    (object: ICanvasObject, visibility: boolean) => {
+      object.setControlsVisibility({
+        bl: visibility,
+        br: visibility,
+        mb: visibility,
+        ml: visibility,
+        mr: visibility,
+        mt: visibility,
+        tl: visibility,
+        tr: visibility,
+        mtr: visibility,
+      });
+    },
+    []
+  );
+
+  // Flood-fill Feature or maybe could be in CanvasActions.tsx
+  /**
+   * Reorder the current shapes letting the shapes over their container shape
+   */
+  const reorderShapes = useCallback(() => {
+    let temporal;
+    let actualIndex;
+    let compareIndex;
+
+    const getObjectIndex = (object: ICanvasObject, canvas: fabric.Canvas) => {
+      return canvas.getObjects().indexOf(object);
+    };
+
+    canvas?.forEachObject((actual) => {
+      canvas.forEachObject((compare) => {
+        actualIndex = getObjectIndex(actual, canvas);
+        compareIndex = getObjectIndex(compare, canvas);
+
+        if (
+          actual.isContainedWithinObject(compare) &&
+          actualIndex < compareIndex
+        ) {
+          temporal = getObjectIndex(actual, canvas);
+          actual.moveTo(compareIndex);
+          compare.moveTo(temporal);
+        }
+      });
+    });
+  }, [canvas]);
 
   /**
    * Clears all whiteboard elements
@@ -1504,7 +1378,7 @@ export const useCanvasActions = (
     const event = {
       event: { id: `${userId}:clearWhiteboard` },
       type: 'clearedWhiteboard',
-    };
+    } as IUndoRedoEvent;
 
     // Add cleared whiteboard to undo / redo state.
 
@@ -1577,7 +1451,7 @@ export const useCanvasActions = (
       const event = {
         event: { id: `${userId}:clearWhiteboard` },
         type: 'clearedWhiteboard',
-      };
+      } as IUndoRedoEvent;
 
       // Add cleared whiteboard to undo / redo state.
       dispatch({
@@ -1780,7 +1654,7 @@ export const useCanvasActions = (
     ) {
       canvas?.discardActiveObject();
       canvas?.renderAll();
-      
+
       eraser = new PartialErase(
         userId as string,
         canvas as fabric.Canvas,
@@ -1881,8 +1755,10 @@ export const useCanvasActions = (
       discardActiveObject,
       addShape,
       eraseObject,
+      reorderShapes,
       setCanvasSelection,
       setHoverCursorObjects,
+      setObjectControlsVisibility,
       undo,
       redo,
       clearWhiteboardAllowClearOthers,
@@ -1891,21 +1767,23 @@ export const useCanvasActions = (
 
     return { actions, mouseDown };
   }, [
-    addShape,
+    fillColor,
     changeStrokeColor,
+    textColor,
     changeBrushType,
     clearWhiteboardClearAll,
     discardActiveObject,
+    addShape,
     eraseObject,
-    fillColor,
-    mouseDown,
+    reorderShapes,
     setCanvasSelection,
     setHoverCursorObjects,
-    textColor,
+    setObjectControlsVisibility,
     undo,
     redo,
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
+    mouseDown,
   ]);
 
   return state;

@@ -190,7 +190,6 @@ export const floodFillMouseEvent = async (
   }
 
   const tempData = tempCanvas.toDataURL();
-  console.log(tempData);
   let target: ICanvasObject;
 
   fabric.Image.fromURL(tempData, async (image: fabric.Image) => {
