@@ -1906,26 +1906,28 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
               eventSerializer?.push('lineWidthChanged', payload);
 
-              // Payload for undo/redo dispatcher
-              const undoRedoPayload = {
-                type: newObject.type,
-                target: { strokeWidth: width },
-                id: newObject?.id,
-              };
+              if (activeObjects.length === 1) {
+                // Payload for undo/redo dispatcher
+                const undoRedoPayload = {
+                  type: newObject.type,
+                  target: { strokeWidth: width },
+                  id: newObject?.id,
+                };
 
-              // Event for undo/redo dispatcher
-              const event = {
-                event: undoRedoPayload,
-                type: 'lineWidthChanged',
-              };
+                // Event for undo/redo dispatcher
+                const event = {
+                  event: undoRedoPayload,
+                  type: 'lineWidthChanged',
+                };
 
-              // Disptaching line width change for custom paths
-              undoRedoDispatch({
-                type: SET,
-                payload: canvas?.getObjects() as TypedShape[],
-                canvasId: userId,
-                event: (event as unknown) as IUndoRedoEvent,
-              });
+                // Disptaching line width change for custom paths
+                undoRedoDispatch({
+                  type: SET,
+                  payload: canvas?.getObjects() as TypedShape[],
+                  canvasId: userId,
+                  event: (event as unknown) as IUndoRedoEvent,
+                });
+              }
             })
             .catch((e: Error) => {
               if (e.message === 'lineWidth is the same') {
