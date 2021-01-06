@@ -173,7 +173,7 @@ const useSynchronizedAdded = (
           (payload.target as ICanvasBrush)?.basePath) ||
         (canvas &&
           payload.type === 'path' &&
-          (payload.target as ICanvasPathBrush).basePath)
+          (payload.target as ICanvasPathBrush)?.basePath)
       ) {
         const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
