@@ -132,7 +132,8 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
   // events being sent from the server when the user reloads the page.
   useEffect(() => {
     if (!eventSerializer || !eventController) return;
-    if (!simulateNetworkSynchronization) return;
+    // changed from simulateNetworkSynchronization, needed network synch, but not persistence, which localStorage is for.
+    if (!simulatePersistence) return;
 
     const stored = window.localStorage.getItem('canvas:simulated:events');
     if (stored !== null) {

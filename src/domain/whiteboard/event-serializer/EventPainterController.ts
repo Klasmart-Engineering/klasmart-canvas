@@ -30,7 +30,7 @@ export class EventPainterController extends EventEmitter
     this.ws.onmessage = (event) => {
       let data = JSON.parse(event.data);
 
-      switch(data.eventType) {
+      switch (data.eventType) {
         case 'moving': {
           this.emit('moving', data.id, data.target);
           break;
@@ -43,7 +43,7 @@ export class EventPainterController extends EventEmitter
           this.emit('moved', data.id, data.objectType, data.target);
           break;
         }
-        case 'lineWidthChanged' : {
+        case 'lineWidthChanged': {
           this.emit('lineWidthChanged', data.id, data.objectType, data.target);
           break;
         }
@@ -65,6 +65,26 @@ export class EventPainterController extends EventEmitter
         }
         case 'removed': {
           this.emit('removed', data.id, data.target);
+          break;
+        }
+        case 'skewed': {
+          this.emit('skewed', data.id, data.target);
+          break;
+        }
+        case 'colorChanged': {
+          this.emit('colorChanged', data.id, data.objectType, data.target);
+          break;
+        }
+        case 'fontFamilyChanged': {
+          this.emit('fontFamilyChanged', data.id, data.target);
+          break;
+        }
+        case 'pointer': {
+          this.emit('pointer', data.id, data.target);
+          break;
+        }
+        case 'setToolbarPermissions': {
+          this.emit('setToolbarPermissions', data.id, data.target);
           break;
         }
       }
@@ -171,6 +191,13 @@ export class EventPainterController extends EventEmitter
       case 'textEdit':
         this.textEdit(event.id, target);
         break;
+      case 'fontColorChanged': {
+        this.emit('fontColorChanged', event.id, event.objectType, target);
+        break;
+      }
+      case 'reconstruct': {
+        this.emit('reconstruct', event.id, target);
+      }
     }
   }
 
@@ -178,43 +205,49 @@ export class EventPainterController extends EventEmitter
     this.emit('textEdit', id, target);
 
     // TEMPORARY for realtime testing purposes.
-    this.ws?.send(JSON.stringify({ id, eventType: 'textEdit', target: { ...target, id }} ));
+    this.ws?.send(JSON.stringify({ id, eventType: 'textEdit', target: { ...target, id } }));
   }
 
   private added(id: string, objectType: string, target: ICanvasObject) {
     this.emit('added', id, objectType, target);
 
     // TEMPORARY for realtime testing purposes.
-    this.ws?.send(JSON.stringify({ id, objectType, eventType: 'added', target: { ...target, id }} ));
+    this.ws?.send(JSON.stringify({ id, objectType, eventType: 'added', target: { ...target, id } }));
   }
 
   private moved(id: string, objectType: string, target: ICanvasObject) {
     this.emit('moved', id, objectType, target);
 
     // TEMPORARY for realtime testing purposes.
-    this.ws?.send(JSON.stringify({ id, objectType, eventType: 'moved', target: { ...target }} ));
+    this.ws?.send(JSON.stringify({ id, objectType, eventType: 'moved', target: { ...target } }));
   }
 
   private rotated(id: string, objectType: string, target: ICanvasObject) {
     this.emit('rotated', id, objectType, target);
 
     // TEMPORARY for realtime testing purposes.
-    this.ws?.send(JSON.stringify({ id, objectType, eventType: 'rotated', target: { ...target }} ));
+    this.ws?.send(JSON.stringify({ id, objectType, eventType: 'rotated', target: { ...target } }));
   }
 
   private scaled(id: string, objectType: string, target: ICanvasObject) {
     this.emit('scaled', id, objectType, target);
 
     // TEMPORARY for realtime testing purposes.
-    this.ws?.send(JSON.stringify({ id, objectType, eventType: 'scaled', target } ));
+    this.ws?.send(JSON.stringify({ id, objectType, eventType: 'scaled', target }));
   }
 
   private skewed(id: string, target: ICanvasObject) {
     this.emit('skewed', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, eventType: 'skewed', target }));
   }
 
   private colorChanged(id: string, objectType: string, target: ICanvasObject) {
     this.emit('colorChanged', id, objectType, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, objectType, eventType: 'colorChanged', target }));
   }
 
   private modified(id: string, objectType: string, target: ICanvasObject) {
@@ -226,17 +259,23 @@ export class EventPainterController extends EventEmitter
 
   private fontFamilyChanged(id: string, target: ICanvasObject) {
     this.emit('fontFamilyChanged', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, target, eventType: 'fontFamilyChanged' }));
   }
 
   private reconstruct(id: string, target: PainterEvent) {
     this.emit('reconstruct', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, target, eventType: 'reconstruct' }));
   }
 
   private removed(id: string, target: boolean) {
     this.emit('removed', id, target);
 
-     // TEMPORARY for realtime testing purposes.
-     this.ws?.send(JSON.stringify({ id, target, eventType: 'removed' }));
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, target, eventType: 'removed' }));
   }
 
   private moving(id: string, target: ICanvasObject) {
@@ -248,6 +287,9 @@ export class EventPainterController extends EventEmitter
 
   private setToolbarPermissions(id: string, target: ICanvasObject) {
     this.emit('setToolbarPermissions', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, target, eventType: 'setToolbarPermissions' }));
   }
 
   private fontColorChanged(
@@ -256,6 +298,9 @@ export class EventPainterController extends EventEmitter
     target: ICanvasObject
   ) {
     this.emit('fontColorChanged', id, objectType, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, objectType, eventType: 'fontColorChanged', target }));
   }
 
   private lineWidthChanged(
@@ -271,5 +316,8 @@ export class EventPainterController extends EventEmitter
 
   private pointer(id: string, target: ICanvasObject) {
     this.emit('pointer', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, eventType: 'pointer', target }));
   }
 }
