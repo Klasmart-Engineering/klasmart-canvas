@@ -218,6 +218,11 @@ export class Realtime {
    */
   public rectDraw(target: any) {
     this.clear();
+
+    if (!target || !target.shape) {
+      return;
+    }
+
     const rect = shapes.rectangle(
       target.shape.width,
       target.shape.height,
