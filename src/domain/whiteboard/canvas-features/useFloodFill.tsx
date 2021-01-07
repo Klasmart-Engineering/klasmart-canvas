@@ -12,6 +12,7 @@ import { isEmptyShape, isFreeDrawing, isShape } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
 import floodFillCursor from '../../../assets/cursors/flood-fill.png';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
 /**
  * Handles the logic for Flood-fill Feature
@@ -72,6 +73,8 @@ export const useFloodFill = (
     return (
       !event.target ||
       (event.target.get('type') === 'path' && !isEmptyShape(event.target)) ||
+      (event.target.get('type') === 'group' &&
+        (event.target as ICanvasBrush).basePath) ||
       event.target.get('type') === 'image'
     );
   };
