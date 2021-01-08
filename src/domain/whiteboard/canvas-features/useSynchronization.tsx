@@ -25,7 +25,7 @@ export const useSynchronization = (userId: string) => {
    * @param {ICanvasObject} obj - Object to change stroke property
    */
   const changePenColorSync = (obj: ICanvasObject) => {
-    const type = obj.get('type') as ObjectType;
+    const type = obj.name ? 'shape' : (obj.get('type') as ObjectType);
 
     if (obj.id && isLocalObject(obj.id, userId) && type !== 'textbox') {
       const target = { stroke: obj.stroke };

@@ -1066,13 +1066,15 @@ export const useCanvasActions = (
 
       for (const object of activeObjects) {
         if (
-          ((isShape(object) && object.shapeType === 'shape') ||
-            isFreeDrawing(object)) &&
-          color !== object.stroke
+          (isShape(object) && object.shapeType === 'shape') ||
+          isFreeDrawing(object)
         ) {
-          (object as ICanvasPathBrush).set('stroke', color);
           newActives.push(object);
-          changePenColorSync(object as ICanvasObject);
+
+          if (color !== object.stroke) {
+            (object as ICanvasPathBrush).set('stroke', color);
+            changePenColorSync(object as ICanvasObject);
+          }
         }
 
         // Updating basePath

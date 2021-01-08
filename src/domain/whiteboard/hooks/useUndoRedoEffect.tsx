@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import {
   useUndoRedo,
   UNDO,
@@ -16,6 +16,8 @@ import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-red
 import { IPathTarget } from '../../../interfaces/canvas-events/path-target';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { WhiteboardContext } from '../WhiteboardContext';
 
 // This file is a work in progress. Multiple events need to be considered,
 // such as group events, that are currently not function (or break functionality).
@@ -114,6 +116,7 @@ export const UndoRedo = (
   instanceId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
+  const { shapesAreSelectable } = useContext(WhiteboardContext);
 
   useEffect(() => {
     if (!state || !canvas) {
@@ -134,7 +137,24 @@ export const UndoRedo = (
       const mapped: { [key: string]: any } = mapActiveState(
         state.activeState as string
       );
+
       loadFromJSON(canvas, mapped, instanceId, state);
+
+      if (mapped.length === 1 && mapped[0].type === 'activeSelection') {
+        canvas?.forEachObject((object: ICanvasObject) => {
+          object.set({
+            selectable:
+              isLocalObject(object.id as string, instanceId) &&
+              shapesAreSelectable,
+            evented:
+              isLocalObject(object.id as string, instanceId) &&
+              shapesAreSelectable,
+            strokeUniform: true,
+          });
+        });
+
+        canvas.renderAll();
+      }
     }
 
     if (state.actionType === UNDO) {
@@ -355,7 +375,14 @@ export const UndoRedo = (
         eventSerializer?.push('reconstruct', payload);
       }
     }
-  }, [state, canvas, dispatch, eventSerializer, instanceId]);
+  }, [
+    state,
+    canvas,
+    dispatch,
+    eventSerializer,
+    instanceId,
+    shapesAreSelectable,
+  ]);
 
   return { state, dispatch };
 };
