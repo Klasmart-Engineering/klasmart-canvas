@@ -1245,62 +1245,56 @@ export const useCanvasActions = (
   const textColor = useCallback(
     (color: string) => {
       updateFontColor(color);
-      if (
-        canvas?.getActiveObject() &&
-        (canvas.getActiveObject() as fabric.IText).text
-      ) {
-        canvas.getActiveObject().set('fill', color);
-        canvas.renderAll();
 
-        const object: ICanvasObject = canvas?.getActiveObject();
+      let actives: fabric.Object[] = [];
+
+      if (!canvas) return;
+
+      const selection = canvas.getActiveObject();
+
+      if (selection?.type === 'activeSelection') {
+        actives = (selection as fabric.ActiveSelection)._objects;
+      } else {
+        actives = canvas.getActiveObjects();
+      }
+
+      if (!actives) return;
+
+      canvas.discardActiveObject();
+
+      for (const object of actives) {
+        if ((object as fabric.IText).text) {
+          object.set({ fill: color });
+        }
 
         if (!(object as fabric.ITextOptions).isEditing) {
           const payload = {
             type: 'textbox',
             target: { fill: color },
-            id: object.id,
+            id: (object as ICanvasObject).id,
           } as ObjectEvent;
 
           eventSerializer?.push('fontColorChanged', payload);
 
-          const event = { event: payload, type: 'colorChanged' };
+          if (actives.length === 1) {
+            const event = { event: payload, type: 'colorChanged' };
 
-          dispatch({
-            type: SET,
-            payload: canvas?.getObjects() as TypedShape[],
-            canvasId: userId,
-            event: (event as unknown) as IUndoRedoEvent,
-          });
-        }
-        return;
-      }
-
-      canvas?.getActiveObjects().forEach((obj: ICanvasObject) => {
-        if (obj.id) {
-          const type: ObjectType = obj.get('type') as ObjectType;
-          if (type === 'textbox') {
-            const target = (type: string) => {
-              if (type === 'textbox') {
-                return {
-                  fill: color,
-                };
-              }
-            };
-
-            obj.set({
-              fill: color,
+            dispatch({
+              type: SET,
+              payload: canvas?.getObjects() as TypedShape[],
+              canvasId: userId,
+              event: (event as unknown) as IUndoRedoEvent,
             });
-
-            const payload: ObjectEvent = {
-              type,
-              target: target(type) as ICanvasObject,
-              id: obj.id,
-            };
-
-            eventSerializer?.push('fontColorChanged', payload);
           }
         }
-      });
+      }
+
+      if (actives.length === 1) {
+        canvas?.setActiveObject(actives[0]);
+      } else if (actives.length >= 2) {
+        const activesGroup = new fabric.ActiveSelection(actives);
+        canvas?.setActiveObject(activesGroup);
+      }
     },
     [updateFontColor, canvas, eventSerializer, dispatch, userId]
   );
