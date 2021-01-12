@@ -303,6 +303,10 @@ function Toolbar() {
       case ELEMENTS.ADD_TEXT_TOOL:
         updateFontFamily(specific);
         break;
+
+      case ELEMENTS.ADD_SHAPE_TOOL:
+        updateShape(specific);
+        break;
     }
   }
 

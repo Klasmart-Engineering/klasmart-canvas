@@ -1,5 +1,10 @@
 import { useEffect } from 'react';
-import { useUndoRedo, UNDO, REDO, CanvasHistoryState } from '../reducers/undo-redo';
+import {
+  useUndoRedo,
+  UNDO,
+  REDO,
+  CanvasHistoryState,
+} from '../reducers/undo-redo';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { TypedShape, TypedPolygon } from '../../../interfaces/shapes/shapes';
 import { Canvas } from 'fabric/fabric-impl';
@@ -38,7 +43,10 @@ const isLocalObject = (id: string, canvasId: string): boolean => {
  * @param currentIndex Current event index.
  * @param events List of events.
  */
-const getPreviousBackground = (currentIndex: number, events: IUndoRedoEvent[]): string => {
+const getPreviousBackground = (
+  currentIndex: number,
+  events: IUndoRedoEvent[]
+): string => {
   let i = currentIndex;
 
   if (i < 0) {
@@ -54,44 +62,44 @@ const getPreviousBackground = (currentIndex: number, events: IUndoRedoEvent[]): 
   return '#fff';
 };
 
-const mapActiveState = (activeState: string) => (JSON.parse(activeState).objects.map(
-  (object: TypedShape | TypedGroup) => {
+const mapActiveState = (activeState: string) =>
+  JSON.parse(activeState).objects.map((object: TypedShape | TypedGroup) => {
     if ((object as TypedGroup).objects) {
       let _objects = (object as TypedGroup).objects;
-      let mappedObjects = (_objects as TypedShape[]).map(
-        (o: TypedShape) => {
-          return { ...o, fromJSON: true };
-        }
-      );
+      let mappedObjects = (_objects as TypedShape[]).map((o: TypedShape) => {
+        return { ...o, fromJSON: true };
+      });
 
       return { ...object, fromJSON: true, objects: mappedObjects };
     }
     return { ...object, fromJSON: true };
-  }
-));
+  });
 
-const loadFromJSON = (canvas: fabric.Canvas, mapped: { [key: string]: any }, instanceId: string, state: CanvasHistoryState) => {
+const loadFromJSON = (
+  canvas: fabric.Canvas,
+  mapped: { [key: string]: any },
+  instanceId: string,
+  state: CanvasHistoryState
+) => {
   canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
     canvas
       .getObjects()
-      .forEach(
-        (o: TypedShape | TypedPolygon | TypedGroup | IPathTarget) => {
-          if (isLocalObject(o.id as string, instanceId)) {
-            (o as TypedShape).set({ selectable: true, evented: true });
+      .forEach((o: TypedShape | TypedPolygon | TypedGroup | IPathTarget) => {
+        if (isLocalObject(o.id as string, instanceId)) {
+          (o as TypedShape).set({ selectable: true, evented: true });
 
-            if ((o as TypedGroup)._objects) {
-              (o as TypedGroup).toActiveSelection();
-              canvas.discardActiveObject();
-            }
+          if ((o as TypedGroup)._objects) {
+            (o as TypedGroup).toActiveSelection();
+            canvas.discardActiveObject();
           }
         }
-      );
+      });
 
     const fill = getPreviousBackground(state.eventIndex, state.events);
     canvas.backgroundColor = fill;
     canvas.renderAll();
   });
-}
+};
 
 /**
  * Custom hook to track canvas history.
@@ -122,7 +130,9 @@ export const UndoRedo = (
         }
       });
 
-      const mapped: { [key: string]: any } = mapActiveState(state.activeState as string);
+      const mapped: { [key: string]: any } = mapActiveState(
+        state.activeState as string
+      );
       loadFromJSON(canvas, mapped, instanceId, state);
     }
 
@@ -171,6 +181,7 @@ export const UndoRedo = (
         eventSerializer?.push('reconstruct', newPayload);
       } else if (nextEvent.type !== 'activeSelection') {
         let currentEvent = state.events[state.eventIndex];
+
         if ((nextEvent?.event as any).type === 'background') {
           const fill = getPreviousBackground(state.eventIndex, state.events);
           canvas.backgroundColor = fill;
@@ -247,7 +258,9 @@ export const UndoRedo = (
 
           if (
             state.events[state.eventIndex + 1].type === 'activeSelection' &&
-            state.events[state.eventIndex].type === 'added'
+            state.events[state.eventIndex].type === 'added' &&
+            ((state.events[state.eventIndex].event as unknown) as fabric.Object)
+              .type !== 'textbox'
           ) {
             eventSerializer.push('removed', {
               id: (state.events[state.eventIndex + 1]

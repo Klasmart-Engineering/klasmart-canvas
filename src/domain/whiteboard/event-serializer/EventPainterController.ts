@@ -14,6 +14,87 @@ export class EventPainterController extends EventEmitter
   implements IPainterController {
   readonly events: PainterEvent[] = [];
 
+  public ws: WebSocket | null;
+
+  constructor() {
+    super();
+
+    // Websocket is used for test purposes until event emitter is ready. TEMPORARY.
+    // @ts-ignore
+    this.ws = new WebSocket('ws://localhost:6969');
+
+    this.ws.onopen = () => {
+      console.log('opened');
+    };
+
+    this.ws.onmessage = (event) => {
+      let data = JSON.parse(event.data);
+
+      switch (data.eventType) {
+        case 'moving': {
+          this.emit('moving', data.id, data.target);
+          break;
+        }
+        case 'added': {
+          this.emit('added', data.id, data.objectType, data.target);
+          break;
+        }
+        case 'moved': {
+          this.emit('moved', data.id, data.objectType, data.target);
+          break;
+        }
+        case 'lineWidthChanged': {
+          this.emit('lineWidthChanged', data.id, data.objectType, data.target);
+          break;
+        }
+        case 'textEdit': {
+          this.emit('textEdit', data.id, data.target);
+          break;
+        }
+        case 'modified': {
+          this.emit('modified', data.id, data.objectType, data.target);
+          break;
+        }
+        case 'rotated': {
+          this.emit('rotated', data.id, data.objectType, data.target);
+          break;
+        }
+        case 'scaled': {
+          this.emit('scaled', data.id, data.objectType, data.target);
+          break;
+        }
+        case 'removed': {
+          this.emit('removed', data.id, data.target);
+          break;
+        }
+        case 'skewed': {
+          this.emit('skewed', data.id, data.target);
+          break;
+        }
+        case 'colorChanged': {
+          this.emit('colorChanged', data.id, data.objectType, data.target);
+          break;
+        }
+        case 'fontFamilyChanged': {
+          this.emit('fontFamilyChanged', data.id, data.target);
+          break;
+        }
+        case 'pointer': {
+          this.emit('pointer', data.id, data.target);
+          break;
+        }
+        case 'setToolbarPermissions': {
+          this.emit('setToolbarPermissions', data.id, data.target);
+          break;
+        }
+      }
+    };
+
+    this.ws.onclose = () => {
+      this.ws = null;
+    };
+  }
+
   async replayEvents(): Promise<void> {
     for (const event of this.events) {
       this.parseAndEmitEvent(event);
@@ -88,82 +169,169 @@ export class EventPainterController extends EventEmitter
       case 'removed':
         this.removed(event.id, target);
         break;
-      case 'reconstruct':
-        this.reconstruct(event.id, event);
-        break;
       case 'moving':
         this.moving(event.id, target);
         break;
       case 'setToolbarPermissions':
         this.setToolbarPermissions(event.id, target);
         break;
-      case 'fontColorChanged':
-        this.fontColorChanged(event.id, event.objectType, target);
-        break;
       case 'lineWidthChanged':
         this.lineWidthChanged(event.id, event.objectType, target);
+        break;
+      case 'pointer':
+        this.pointer(event.id, target);
+        break;
+      case 'textEdit':
+        this.textEdit(event.id, target);
         break;
       case 'brushTypeChanged':
         this.brushTypeChanged(event.id, target);
         break;
+      case 'fontColorChanged':
+        this.emit('fontColorChanged', event.id, event.objectType, target);
+        break;
+      case 'reconstruct':
+        this.emit('reconstruct', event.id, target);
+        break;
     }
+  }
+
+  private textEdit(id: string, target: ICanvasObject) {
+    this.emit('textEdit', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, eventType: 'textEdit', target: { ...target, id } })
+    );
   }
 
   private added(id: string, objectType: string, target: ICanvasObject) {
     this.emit('added', id, objectType, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({
+        id,
+        objectType,
+        eventType: 'added',
+        target: { ...target, id },
+      })
+    );
   }
 
   private moved(id: string, objectType: string, target: ICanvasObject) {
     this.emit('moved', id, objectType, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({
+        id,
+        objectType,
+        eventType: 'moved',
+        target: { ...target },
+      })
+    );
   }
 
   private rotated(id: string, objectType: string, target: ICanvasObject) {
     this.emit('rotated', id, objectType, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({
+        id,
+        objectType,
+        eventType: 'rotated',
+        target: { ...target },
+      })
+    );
   }
 
   private scaled(id: string, objectType: string, target: ICanvasObject) {
     this.emit('scaled', id, objectType, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, objectType, eventType: 'scaled', target })
+    );
   }
 
   private skewed(id: string, target: ICanvasObject) {
     this.emit('skewed', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, eventType: 'skewed', target }));
   }
 
   private colorChanged(id: string, objectType: string, target: ICanvasObject) {
     this.emit('colorChanged', id, objectType, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, objectType, eventType: 'colorChanged', target })
+    );
   }
 
   private modified(id: string, objectType: string, target: ICanvasObject) {
     this.emit('modified', id, objectType, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, objectType, target, eventType: 'modified' })
+    );
   }
 
   private fontFamilyChanged(id: string, target: ICanvasObject) {
     this.emit('fontFamilyChanged', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, target, eventType: 'fontFamilyChanged' })
+    );
   }
 
-  private reconstruct(id: string, target: PainterEvent) {
-    this.emit('reconstruct', id, target);
-  }
+  // private reconstruct(id: string, target: PainterEvent) {
+  //   this.emit('reconstruct', id, target);
+
+  //   // TEMPORARY for realtime testing purposes.
+  //   this.ws?.send(JSON.stringify({ id, target, eventType: 'reconstruct' }));
+  // }
 
   private removed(id: string, target: boolean) {
     this.emit('removed', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, target, eventType: 'removed' }));
   }
 
   private moving(id: string, target: ICanvasObject) {
     this.emit('moving', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, target, eventType: 'moving' }));
   }
 
   private setToolbarPermissions(id: string, target: ICanvasObject) {
     this.emit('setToolbarPermissions', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, target, eventType: 'setToolbarPermissions' })
+    );
   }
 
-  private fontColorChanged(
-    id: string,
-    objectType: string,
-    target: ICanvasObject
-  ) {
-    this.emit('fontColorChanged', id, objectType, target);
-  }
+  // private fontColorChanged(
+  //   id: string,
+  //   objectType: string,
+  //   target: ICanvasObject
+  // ) {
+  //   this.emit('fontColorChanged', id, objectType, target);
+
+  //   // TEMPORARY for realtime testing purposes.
+  //   this.ws?.send(
+  //     JSON.stringify({ id, objectType, eventType: 'fontColorChanged', target })
+  //   );
+  // }
 
   private lineWidthChanged(
     id: string,
@@ -171,6 +339,18 @@ export class EventPainterController extends EventEmitter
     target: ICanvasObject
   ) {
     this.emit('lineWidthChanged', id, objectType, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, objectType, eventType: 'lineWidthChanged', target })
+    );
+  }
+
+  private pointer(id: string, target: ICanvasObject) {
+    this.emit('pointer', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, eventType: 'pointer', target }));
   }
 
   private brushTypeChanged(id: string, target: ICanvasObject) {

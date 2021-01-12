@@ -87,6 +87,21 @@ export interface IPainterController {
   ): this;
   on(event: 'refetch', listener: () => void): this;
 
+  on(
+    event: 'pointer',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+
+  on(
+    event: 'textEdit',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+
+  on(
+    event: 'partialErase',
+    listener: (id: string, coordinates: { x: number; y: number }[]) => void
+  ): this;
+
   removeListener(
     event: 'added',
     listener: (id: string, objectType: string, target: ICanvasObject) => void
@@ -142,6 +157,20 @@ export interface IPainterController {
   removeListener(
     event: 'lineWidthChanged',
     listener: (id: string, target: ICanvasObject) => void
+  ): this;
+  removeListener(
+    event: 'pointer',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+
+  removeListener(
+    event: 'textEdit',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+
+  removeListener(
+    event: 'partialErase',
+    listener: (id: string, coordinates: { x: number; y: number }[]) => void
   ): this;
   removeListener(event: 'refetch', listener: () => void): this;
 
