@@ -1,27 +1,12 @@
 import { useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
+import { UPDATE_RECEIVED } from '../redux/actions';
 
 const useSynchronizedSetToolbarPermissions = (
   canvas: fabric.Canvas | undefined,
   userId: string,
   shouldHandleRemoteEvent: (id: string) => boolean,
-  setToolbarIsEnabled: (enabled: boolean) => void,
-  setPointerIsEnabled: (enabled: boolean) => void,
-  setSerializerToolbarState: (enabled: {
-    [p: string]: boolean;
-    pointer: boolean;
-    move: boolean;
-    erase: boolean;
-    partialErase: boolean;
-    pen: boolean;
-    floodFill: boolean;
-    text: boolean;
-    shape: boolean;
-    undoRedo: boolean;
-    clearWhiteboard: boolean;
-    downloadCanvas: boolean;
-    uploadImage: boolean;
-  }) => void
+  updatePermissions: (tool: string, payload: boolean) => any
 ) => {
   const {
     state: { eventController },
@@ -29,13 +14,8 @@ const useSynchronizedSetToolbarPermissions = (
 
   useEffect(() => {
     const setToolbarPermissions = (id: string, target: any) => {
-      //if (!shouldHandleRemoteEvent(id)) return;
-      if (userId === id) return;
-
-      setSerializerToolbarState({
-        ...target.toolbarState,
-        [target.toolbarState]: target.toolbarState,
-      });
+      if (!shouldHandleRemoteEvent(id)) return;
+      updatePermissions(UPDATE_RECEIVED, target);
     };
 
     eventController?.on('setToolbarPermissions', setToolbarPermissions);
@@ -49,11 +29,9 @@ const useSynchronizedSetToolbarPermissions = (
   }, [
     canvas,
     eventController,
-    setToolbarIsEnabled,
-    setPointerIsEnabled,
     shouldHandleRemoteEvent,
     userId,
-    setSerializerToolbarState,
+    updatePermissions,
   ]);
 };
 

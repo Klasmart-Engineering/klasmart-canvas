@@ -1,6 +1,7 @@
 import { ITextOptions } from 'fabric/fabric-impl';
 import { useCallback, useContext } from 'react';
 import { ICanvasKeyboardEvent } from '../../../interfaces/canvas-events/canvas-keyboard-event';
+import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { UNDO, REDO, CanvasAction } from '../reducers/undo-redo';
 import { WhiteboardContext } from '../WhiteboardContext';
 
@@ -14,11 +15,11 @@ import { WhiteboardContext } from '../WhiteboardContext';
 export const useKeyHandlers = (
   canvas: fabric.Canvas,
   instanceId: string,
-  undoRedoDispatch: (action: CanvasAction) => void
+  undoRedoDispatch: (action: CanvasAction) => void,
+  permissions: IPermissions
 ) => {
   // Getting context variables
   const {
-    undoRedoIsAvailable,
     activeCanvas,
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
@@ -33,7 +34,7 @@ export const useKeyHandlers = (
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
-      if (!undoRedoIsAvailable()) return;
+      if (!permissions.undoRedo) return;
 
       /**
        * Removes the current active objects in canvas
@@ -102,7 +103,7 @@ export const useKeyHandlers = (
       perfectShapeIsActive,
       perfectShapeIsAvailable,
       updatePerfectShapeIsActive,
-      undoRedoIsAvailable,
+      permissions.undoRedo,
     ]
   );
 

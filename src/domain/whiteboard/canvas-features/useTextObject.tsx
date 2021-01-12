@@ -13,6 +13,8 @@ import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { UndoRedo } from '../hooks/useUndoRedoEffect';
 import { useCanvasActions } from '../canvas-actions/useCanvasActions';
+import { IPermissions } from '../../../interfaces/permissions/permissions';
+import { getToolbarIsEnabled } from '../redux/utils';
 
 /**
  * Manages the logic for text object creation and edition
@@ -23,14 +25,13 @@ import { useCanvasActions } from '../canvas-actions/useCanvasActions';
 export const useTextObject = (
   canvas: fabric.Canvas,
   instanceId: string,
-  userId: string
+  userId: string,
+  permissions: IPermissions,
 ) => {
   // Getting context data
   const {
     allToolbarIsEnabled,
     textIsActive,
-    toolbarIsEnabled,
-    serializerToolbarState,
     fontFamily,
     fontColor,
     eraseType,
@@ -63,7 +64,8 @@ export const useTextObject = (
   const { keyUpHandler, keyDownHandler } = useKeyHandlers(
     canvas,
     instanceId,
-    undoRedoDispatch
+    undoRedoDispatch,
+    permissions,
   );
 
   /**
@@ -142,9 +144,10 @@ export const useTextObject = (
    * Handles the logic to write text on the whiteboard
    * */
   useEffect(() => {
+    const toolbarIsEnabled = getToolbarIsEnabled();
     const teacherHasPermission = allToolbarIsEnabled && textIsActive;
     const studentHasPermission =
-      toolbarIsEnabled && serializerToolbarState.text && textIsActive;
+      toolbarIsEnabled && permissions.text && textIsActive;
 
     if (teacherHasPermission || studentHasPermission) {
       canvas.on('mouse:down', (e: fabric.IEvent) => {
@@ -232,9 +235,8 @@ export const useTextObject = (
     eraseType,
     fontColor,
     fontFamily,
-    serializerToolbarState.text,
+    permissions.text,
     textIsActive,
-    toolbarIsEnabled,
     userId,
   ]);
 
