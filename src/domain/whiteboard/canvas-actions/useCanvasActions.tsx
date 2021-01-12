@@ -4,11 +4,7 @@ import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 import { WhiteboardContext } from '../WhiteboardContext';
 // import * as shapes from '../shapes/shapes';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
-<<<<<<< HEAD
 import { getBiggerDifference, isFreeDrawing, isShape } from '../utils/shapes';
-import { UNDO, REDO, SET, SET_GROUP } from '../reducers/undo-redo';
-=======
-import { isFreeDrawing, isShape } from '../utils/shapes';
 import {
   UNDO,
   REDO,
@@ -16,7 +12,6 @@ import {
   SET_GROUP,
   CanvasAction,
 } from '../reducers/undo-redo';
->>>>>>> hotfix/KL-2327/refactor-in-whiteboard-canvas-file
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
@@ -331,22 +326,12 @@ export const useCanvasActions = (
         if (brushType === 'pencil' || brushType === 'dashed') {
           shape = shapeSelector(shapeToAdd);
         } else {
-<<<<<<< HEAD
           // await specialShapeSelector(shapeToAdd, brushType).then((result) => {
           //   if (!result) return;
 
           //   shape = result as TypedShape;
           // });
           shape = await specialShapeSelector({ canvas, shape: shapeToAdd, brushType, lineWidth, penColor}) as TypedShape;
-=======
-          await specialShapeSelector(shapeToAdd, brushType as IBrushType).then(
-            (result) => {
-              if (!result) return;
-
-              shape = result as TypedShape;
-            }
-          );
->>>>>>> hotfix/KL-2327/refactor-in-whiteboard-canvas-file
         }
 
         if (!shape) return;
