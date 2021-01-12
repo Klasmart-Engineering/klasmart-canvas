@@ -45,3 +45,15 @@ export const isText = (object: fabric.Object) => {
 export const isEmptyShape = (object: TypedShape) => {
   return isShape(object) && object.shapeType === 'shape';
 };
+
+/**
+ * Get the bigger difference
+ * between startPoint.x - point.x and startPoint.y - point.y
+ * @param {Point} point - Point to find the difference with startPoint
+ */
+export const getBiggerDifference = (point: fabric.Point, startPoint: fabric.Point) => {
+  return Math.abs(point.x - startPoint.x) >
+    Math.abs(point.y - startPoint.y)
+    ? point.x - startPoint.x
+    : point.y - startPoint.y;
+};

@@ -2,9 +2,9 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { fabric } from 'fabric';
 import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 import { WhiteboardContext } from '../WhiteboardContext';
-import * as shapes from '../shapes/shapes';
+// import * as shapes from '../shapes/shapes';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
-import { isFreeDrawing, isShape } from '../utils/shapes';
+import { getBiggerDifference, isFreeDrawing, isShape } from '../utils/shapes';
 import { UNDO, REDO, SET, SET_GROUP } from '../reducers/undo-redo';
 import { setSize, setCircleSize, setPathSize } from '../utils/scaling';
 import { v4 as uuidv4 } from 'uuid';
@@ -33,6 +33,10 @@ import { IShapePointsIndex } from '../../../interfaces/brushes/shape-points-inde
 import { ICanvasShapeBrush } from '../../../interfaces/brushes/canvas-shape-brush';
 import { setBasePathInNormalBrushes } from '../brushes/utils/setBasePathInNormalBrushes';
 import { changeBrushTypeAction } from './feature-actions/changeBrushTypeAction';
+import { useShapeSelector, useSpecialShapeSelector } from './shapeActions';
+import { useMouseMove, useMouseUp } from './mouseActions';
+import { mouseDownMain, mouseMoveMain, useAddShape } from './shapeActionUtils';
+import { requiredEllipseProps, requiredPencilDashedProps, requiredProps } from './shapeProps';
 
 export const useCanvasActions = (
   canvas?: fabric.Canvas,
@@ -69,284 +73,18 @@ export const useCanvasActions = (
    * Adds shape to whiteboard.
    * @param specific Indicates shape type that should be added in whiteboard.
    */
-  const shapeSelector = useCallback(
-    (specific: string): TypedShape => {
-      switch (specific || shape) {
-        case 'rectangle':
-          return shapes.rectangle(
-            2,
-            2,
-            penColor,
-            false,
-            lineWidth,
-            brushType === 'dashed'
-          );
-        case 'circle':
-          return shapes.circle(
-            2,
-            2,
-            penColor,
-            false,
-            lineWidth,
-            brushType === 'dashed'
-          );
-        case 'triangle':
-          return shapes.triangle(
-            2,
-            4,
-            penColor,
-            false,
-            lineWidth,
-            brushType === 'dashed'
-          );
-        case 'star':
-          return shapes.star(
-            2,
-            2,
-            penColor,
-            false,
-            lineWidth,
-            brushType === 'dashed'
-          );
-        case 'arrow':
-          return shapes.arrow(
-            2,
-            2,
-            penColor,
-            false,
-            lineWidth,
-            brushType === 'dashed'
-          );
-        case 'chatBubble':
-          return shapes.chat(
-            2,
-            2,
-            penColor,
-            false,
-            lineWidth,
-            brushType === 'dashed'
-          );
-        case 'pentagon':
-          return shapes.pentagon(
-            penColor,
-            false,
-            lineWidth,
-            brushType === 'dashed'
-          );
-        case 'hexagon':
-          return shapes.hexagon(
-            penColor,
-            false,
-            lineWidth,
-            brushType === 'dashed'
-          );
-        case 'filledRectangle':
-          return shapes.rectangle(
-            2,
-            2,
-            shapeColor,
-            true,
-            0,
-            brushType === 'dashed'
-          );
-        case 'filledCircle':
-          return shapes.circle(
-            2,
-            2,
-            shapeColor,
-            true,
-            0,
-            brushType === 'dashed'
-          );
-        case 'filledTriangle':
-          return shapes.triangle(
-            2,
-            4,
-            shapeColor,
-            true,
-            0,
-            brushType === 'dashed'
-          );
-        case 'filledStar':
-          return shapes.star(2, 2, shapeColor, true, 0, brushType === 'dashed');
-        case 'filledArrow':
-          return shapes.arrow(
-            2,
-            2,
-            shapeColor,
-            true,
-            0,
-            brushType === 'dashed'
-          );
-        case 'filledChatBubble':
-          return shapes.chat(2, 2, shapeColor, true, 0, brushType === 'dashed');
-        case 'filledPentagon':
-          return shapes.pentagon(shapeColor, true, 0, brushType === 'dashed');
-        case 'filledHexagon':
-          return shapes.hexagon(shapeColor, true, 0, brushType === 'dashed');
-        default:
-          return shapes.circle(
-            2,
-            2,
-            penColor,
-            false,
-            lineWidth,
-            brushType === 'dashed'
-          );
-      }
-    },
-    [brushType, lineWidth, penColor, shape, shapeColor]
-  );
+  const shapeSelector = useShapeSelector({ brushType, lineWidth, penColor, shape, shapeColor});
 
   /**
    * Adds shape with special brush to whiteboard.
    * @param {string} shape - Indicates shape type that should be added in whiteboard.
    * @param {IBrushType} brushType - Indicates brush type that sould be drawed the given shape.
    */
-  const specialShapeSelector = useCallback(
-    async (shape: string, brushType: IBrushType) => {
-      if (!canvas || !userId) return;
+  const specialShapeSelector = useSpecialShapeSelector(userId as string);
 
-      let brush: PenBrush | MarkerBrush | PaintBrush | ChalkBrush;
-      let newShape;
-      const original = shapePoints[shape as keyof IShapePointsIndex];
+  const mouseMove = useMouseMove();
 
-      switch (brushType) {
-        case 'pen':
-          brush = new PenBrush(canvas, userId);
-
-          const { min, max } = brush.setMinMaxWidth(lineWidth);
-          const penPoints = original.points.map((point) => {
-            return {
-              x: point.x,
-              y: point.y,
-              width: (brush as PenBrush).getRandomInt(min, max),
-            };
-          });
-
-          newShape = brush.createPenPath(
-            'provisional',
-            penPoints,
-            lineWidth,
-            penColor
-          );
-          break;
-
-        case 'marker':
-        case 'felt':
-          brush = new MarkerBrush(canvas, userId, brushType);
-          newShape = brush.createMarkerPath(
-            'provisional',
-            original.points,
-            lineWidth,
-            penColor
-          );
-          break;
-
-        case 'paintbrush':
-          brush = new PaintBrush(canvas, userId);
-          const bristles = brush.makeBrush(penColor, lineWidth);
-          newShape = brush.modifyPaintBrushPath(
-            'provisional',
-            original.points,
-            lineWidth,
-            penColor,
-            bristles
-          );
-          break;
-
-        case 'chalk':
-        case 'crayon':
-          brush = new ChalkBrush(canvas, userId, brushType);
-          const clearRects = brush.createChalkEffect(
-            original.points,
-            lineWidth
-          );
-          await brush
-            .createChalkPath(
-              'provisional',
-              original.points,
-              lineWidth,
-              penColor,
-              clearRects
-            )
-            .then((result) => {
-              newShape = result;
-            });
-          break;
-      }
-
-      if (!newShape) return;
-
-      const scaleX = Number(newShape.width) / 2;
-      const scaleY = Number(newShape.width) / 2;
-
-      newShape.set({
-        scaleX: 1 / scaleX,
-        scaleY: 1 / scaleY,
-      });
-
-      return newShape;
-    },
-    [canvas, lineWidth, penColor, userId]
-  );
-
-  /**
-   *
-   * @param shape Shape that was added to canvas.
-   * @param coordsStart Coordinates of initial click on canvas.
-   * @param isCircle Indicates if shape added is a circle.
-   */
-  const mouseMove = useCallback(
-    (
-      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
-      coordsStart: fabric.Point,
-      specific?: string
-    ): void => {
-      canvas?.on('mouse:move', (e: fabric.IEvent): void => {
-        if (!e.pointer) return;
-
-        canvas.selection = false;
-
-        if (specific === 'filledCircle' || specific === 'circle') {
-          setCircleSize(
-            shape as fabric.Ellipse,
-            coordsStart,
-            e.pointer,
-            brushType === 'pencil' || brushType === 'dashed'
-          );
-        } else if (
-          specific === 'filledRectangle' ||
-          specific === 'filledTriangle' ||
-          specific === 'rectangle' ||
-          specific === 'triangle'
-        ) {
-          setSize(
-            shape,
-            coordsStart,
-            e.pointer,
-            brushType === 'pencil' || brushType === 'dashed'
-          );
-        } else {
-          setPathSize(shape, coordsStart, e.pointer);
-        }
-
-        let anchor = { ...coordsStart, originX: 'left', originY: 'top' };
-
-        if (e.pointer && coordsStart.x > e.pointer.x) {
-          anchor = { ...anchor, originX: 'right' };
-        }
-
-        if (e.pointer && coordsStart.y > e.pointer.y) {
-          anchor = { ...anchor, originY: 'bottom' };
-        }
-
-        shape.set(anchor);
-        canvas.renderAll();
-      });
-    },
-    [brushType, canvas]
-  );
+  const mouseUp = useMouseUp(dispatch);
 
   const clearOnMouseEvent = useCallback((): void => {
     canvas?.off('mouse:down');
@@ -359,56 +97,6 @@ export const useCanvasActions = (
     canvas?.off('mouse:move');
     canvas?.off('mouse:up');
   }, [canvas]);
-
-  /**
-   * Mouse up event listener for canvas.
-   */
-  const mouseUp = useCallback(
-    (
-      shape: fabric.Object | fabric.Rect | fabric.Ellipse,
-      coordsStart: fabric.Point,
-      specific: string
-    ): void => {
-      canvas?.on('mouse:up', (e: fabric.IEvent): void => {
-        if (!e.pointer) return;
-
-        let size;
-
-        if (specific === 'filledCircle' || specific === 'circle') {
-          size = setCircleSize(
-            shape as fabric.Ellipse,
-            coordsStart,
-            e.pointer,
-            brushType === 'pencil' || brushType === 'dashed'
-          );
-        } else if (
-          specific === 'filledRectangle' ||
-          specific === 'filledTriangle' ||
-          specific === 'rectangle' ||
-          specific === 'triangle'
-        ) {
-          size = setSize(
-            shape,
-            coordsStart,
-            e.pointer,
-            brushType === 'pencil' || brushType === 'dashed'
-          );
-        } else {
-          size = setPathSize(shape, coordsStart, e.pointer);
-        }
-
-        if (size.width <= 2 && size.height <= 2) {
-          canvas.remove(shape);
-        } else {
-          shape.setCoords();
-          canvas.renderAll();
-
-          dispatch({ type: 'CANVAS_SET', payload: canvas.getObjects() });
-        }
-      });
-    },
-    [brushType, canvas, dispatch]
-  );
 
   /**
    * Mouse down event listener for canvas.
@@ -427,7 +115,7 @@ export const useCanvasActions = (
         shape = shapeSelector(specific);
 
         if (e.pointer) {
-          (shape as TypedShape).set({
+          (shape as unknown as TypedShape).set({
             top: e.pointer.y,
             left: e.pointer.x,
             shapeType: 'shape',
@@ -445,7 +133,7 @@ export const useCanvasActions = (
         }
 
         clearOnMouseEvent();
-        mouseMove(shape, e.pointer, specific);
+        mouseMove(shape, e.pointer, specific, canvas, brushType);
         mouseUp(shape, e.pointer, specific);
         canvas.add(shape);
       });
@@ -466,6 +154,8 @@ export const useCanvasActions = (
     shapeInProgress,
     setShapeInProgress,
   ] = useState<IShapeInProgress | null>();
+
+  // const addShapeTemp = useAddShape(shapeIsActive, shapeInProgress, canvas, brushType, shapeSelector, specialShapeSelector, lineWidth);
 
   /**
    * Add specific shape to whiteboard
@@ -509,7 +199,7 @@ export const useCanvasActions = (
         let newSize;
 
         if (perfectShapeIsActive) {
-          biggerDifference = getBiggerDifference(pointer);
+          biggerDifference = getBiggerDifference(pointer, startPoint);
 
           pointer.x = startPoint.x + biggerDifference;
           pointer.y = startPoint.y + biggerDifference;
@@ -584,18 +274,6 @@ export const useCanvasActions = (
       };
 
       /**
-       * Get the bigger difference
-       * between startPoint.x - point.x and startPoint.y - point.y
-       * @param {Point} point - Point to find the difference with startPoint
-       */
-      const getBiggerDifference = (point: fabric.Point) => {
-        return Math.abs(point.x - startPoint.x) >
-          Math.abs(point.y - startPoint.y)
-          ? point.x - startPoint.x
-          : point.y - startPoint.y;
-      };
-
-      /**
        * Removes the recent created shape and set resize variable in false
        */
       const cancelShapeCreation = () => {
@@ -622,7 +300,9 @@ export const useCanvasActions = (
         }
       };
 
-      canvas?.on('mouse:down', async (e: fabric.IEvent) => {
+
+      const mouseDownAction = (canvas: fabric.Canvas) => (async (e: fabric.IEvent) => {
+
         if (resize) {
           return;
         }
@@ -638,11 +318,12 @@ export const useCanvasActions = (
         if (brushType === 'pencil' || brushType === 'dashed') {
           shape = shapeSelector(shapeToAdd);
         } else {
-          await specialShapeSelector(shapeToAdd, brushType).then((result) => {
-            if (!result) return;
+          // await specialShapeSelector(shapeToAdd, brushType).then((result) => {
+          //   if (!result) return;
 
-            shape = result as TypedShape;
-          });
+          //   shape = result as TypedShape;
+          // });
+          shape = await specialShapeSelector({ canvas, shape: shapeToAdd, brushType, lineWidth, penColor}) as TypedShape;
         }
 
         if (!shape) return;
@@ -659,14 +340,14 @@ export const useCanvasActions = (
           startPoint = e.pointer;
         }
 
-        canvas.add(shape);
+        canvas?.add(shape);
         resize = true;
 
         /*
           Canceling shapes creation in object:scaling
           and object:rotating events
         */
-        canvas.on({
+        canvas?.on({
           'object:scaling': cancelShapeCreation,
           'object:rotating': cancelShapeCreation,
         });
@@ -675,11 +356,14 @@ export const useCanvasActions = (
           When the shape was resized or rotated
           the shape's movement is allowed
         */
-        canvas.on({
+        canvas?.on({
           'object:scaled': allowMovementInShape,
           'object:rotated': allowMovementInShape,
         });
       });
+
+      canvas?.on('mouse:down', mouseDownAction(canvas));
+      // canvas?.on('mouse:down', mouseDownMain(canvas, resize, brushType, shapeSelector, shapeToAdd, specialShapeSelector, lineWidth, penColor));
 
       canvas?.on('mouse:move', (e: fabric.IEvent) => {
         if (!shapeToAdd || !shape || !resize) {
@@ -876,18 +560,7 @@ export const useCanvasActions = (
               id,
             };
 
-            const requiredProps = [
-              'id',
-              'height',
-              'width',
-              'left',
-              'top',
-              'scaleX',
-              'scaleY',
-              'originX',
-              'originY',
-              'basePath',
-            ];
+            const requiredProps = requiredPencilDashedProps;
 
             requiredProps.forEach((prop: string) => {
               if (shape && (shape as any)[prop]) {
@@ -918,45 +591,6 @@ export const useCanvasActions = (
               type,
               id,
             };
-
-            const requiredProps = [
-              'id',
-              'height',
-              'width',
-              'left',
-              'top',
-              'strokeWidth',
-              'stroke',
-              'fill',
-              'name',
-              'scaleX',
-              'scaleY',
-              'strokeUniform',
-              'originX',
-              'originY',
-              'strokeMiterLimit',
-              'strokeLineJoin',
-              'strokeDashArray',
-              'strokeLineCap',
-              'strokeLineJoin',
-            ];
-
-            const requiredEllipseProps = [
-              'id',
-              'ry',
-              'rx',
-              'left',
-              'top',
-              'strokeWidth',
-              'stroke',
-              'fill',
-              'strokeUniform',
-              'originY',
-              'originX',
-              'strokeDashArray',
-              'strokeLineCap',
-              'strokeLineJoin',
-            ];
 
             if (type !== 'ellipse') {
               requiredProps.forEach((prop: string) => {
