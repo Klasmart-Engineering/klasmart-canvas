@@ -1,6 +1,8 @@
+import { fabric } from 'fabric';
 import { ITextOptions } from 'fabric/fabric-impl';
 import { useCallback, useContext } from 'react';
 import { ICanvasKeyboardEvent } from '../../../interfaces/canvas-events/canvas-keyboard-event';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { UNDO, REDO, CanvasAction } from '../reducers/undo-redo';
 import { WhiteboardContext } from '../WhiteboardContext';
 
@@ -39,14 +41,35 @@ export const useKeyHandlers = (
        * Removes the current active objects in canvas
        */
       const removeSelectedObjects = () => {
-        const objects = canvas.getActiveObjects();
+        let active = canvas.getActiveObject();
+        let objectToDelete: fabric.Object;
 
-        objects.forEach((object: fabric.Object) => {
-          if (!(object as ITextOptions)?.isEditing) {
-            canvas.remove(object);
-            canvas.discardActiveObject().renderAll();
-          }
-        });
+        canvas.discardActiveObject();
+
+        if (active.type === 'activeSelection') {
+          const objects = (active as fabric.ActiveSelection)._objects;
+
+          (active as fabric.ActiveSelection).forEachObject(
+            (object: ICanvasObject) => {
+              if (!(object as ITextOptions)?.isEditing) {
+                object.inGroup = true;
+                canvas.remove(object);
+              }
+            }
+          );
+
+          objectToDelete = new fabric.Group(objects);
+          (objectToDelete as ICanvasObject).id = 'teacher:group';
+
+          canvas.add(objectToDelete);
+          canvas.setActiveObject(objectToDelete);
+        } else {
+          objectToDelete = active;
+        }
+
+        if (!(objectToDelete as ITextOptions)?.isEditing) {
+          canvas.remove(objectToDelete);
+        }
       };
 
       const event = e as ICanvasKeyboardEvent;

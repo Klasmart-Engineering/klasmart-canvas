@@ -30,7 +30,7 @@ import { changeLineColorInSpecialBrushes } from '../brushes/actions/changeLineCo
 import { IBrushType } from '../../../interfaces/brushes/brush-type';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { PenBrush } from '../brushes/classes/penBrush';
-import { Group } from 'fabric/fabric-impl';
+import { Group, ITextOptions } from 'fabric/fabric-impl';
 import { MarkerBrush } from '../brushes/classes/markerBrush';
 import { PaintBrush } from '../brushes/classes/paintBrush';
 import { ChalkBrush } from '../brushes/classes/chalkBrush';
@@ -1550,6 +1550,8 @@ export const useCanvasActions = (
     let eraser: boolean = false;
     let activeObjects = canvas?.getActiveObjects();
 
+    /* Preparing objects to be erased locking their movement
+    and putting the eraser cursor */
     canvas?.getObjects().forEach((object: ICanvasObject) => {
       if (
         (object.id && isLocalObject(object.id, userId as string)) ||
@@ -1597,12 +1599,21 @@ export const useCanvasActions = (
 
       // if the click is made over an object group
       if (e.target?._objects) {
-        e.target._objects.forEach(function (object: fabric.Object) {
-          canvas.remove(object);
+        const objects = (e.target as fabric.ActiveSelection)._objects;
+
+        objects.forEach((object: ICanvasObject) => {
+          if (!(object as ITextOptions)?.isEditing) {
+            object.inGroup = true;
+            canvas.remove(object);
+            canvas.discardActiveObject().renderAll();
+          }
         });
 
-        canvas.discardActiveObject();
-        canvas.renderAll();
+        const objectToDelete = new fabric.Group(objects);
+        (objectToDelete as ICanvasObject).id = 'teacher:group';
+
+        canvas.add(objectToDelete);
+        canvas.remove(objectToDelete);
       }
     });
 
