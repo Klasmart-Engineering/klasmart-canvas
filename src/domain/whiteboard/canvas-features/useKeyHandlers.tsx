@@ -3,7 +3,9 @@ import { ITextOptions } from 'fabric/fabric-impl';
 import { useCallback, useContext } from 'react';
 import { ICanvasKeyboardEvent } from '../../../interfaces/canvas-events/canvas-keyboard-event';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { UNDO, REDO, CanvasAction } from '../reducers/undo-redo';
+import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { WhiteboardContext } from '../WhiteboardContext';
 
 /**
@@ -27,6 +29,11 @@ export const useKeyHandlers = (
     perfectShapeIsAvailable,
   } = useContext(WhiteboardContext);
 
+  // Event serialization for synchronizing whiteboard state.
+  const {
+    state: { eventSerializer },
+  } = useSharedEventSerializer();
+
   /**
    * General handler for keydown keyboard events
    * 'Backspace' event for removing selected element from whiteboard.
@@ -42,33 +49,34 @@ export const useKeyHandlers = (
        */
       const removeSelectedObjects = () => {
         let active = canvas.getActiveObject();
-        let objectToDelete: fabric.Object;
 
         canvas.discardActiveObject();
 
         if (active.type === 'activeSelection') {
-          const objects = (active as fabric.ActiveSelection)._objects;
+          const objectIds: string[] = [];
 
           (active as fabric.ActiveSelection).forEachObject(
             (object: ICanvasObject) => {
               if (!(object as ITextOptions)?.isEditing) {
-                object.inGroup = true;
+                object.groupClear = true;
+                objectIds.push(object.id as string);
                 canvas.remove(object);
               }
             }
           );
 
-          objectToDelete = new fabric.Group(objects);
-          (objectToDelete as ICanvasObject).id = 'teacher:group';
+          const target = {
+            target: {
+              strategy: 'removeGroup',
+              objectIds: objectIds,
+            },
+          };
 
-          canvas.add(objectToDelete);
-          canvas.setActiveObject(objectToDelete);
+          eventSerializer?.push('removed', (target as unknown) as ObjectEvent);
         } else {
-          objectToDelete = active;
-        }
-
-        if (!(objectToDelete as ITextOptions)?.isEditing) {
-          canvas.remove(objectToDelete);
+          if (!(active as ITextOptions)?.isEditing) {
+            canvas.remove(active);
+          }
         }
       };
 
@@ -118,14 +126,15 @@ export const useKeyHandlers = (
       }
     },
     [
-      canvas,
-      undoRedoDispatch,
+      undoRedoIsAvailable,
       activeCanvas,
       instanceId,
       perfectShapeIsActive,
       perfectShapeIsAvailable,
+      canvas,
+      eventSerializer,
+      undoRedoDispatch,
       updatePerfectShapeIsActive,
-      undoRedoIsAvailable,
     ]
   );
 

@@ -1600,20 +1600,25 @@ export const useCanvasActions = (
       // if the click is made over an object group
       if (e.target?._objects) {
         const objects = (e.target as fabric.ActiveSelection)._objects;
+        const objectIds: string[] = [];
 
         objects.forEach((object: ICanvasObject) => {
           if (!(object as ITextOptions)?.isEditing) {
-            object.inGroup = true;
+            object.groupClear = true;
+            objectIds.push(object.id as string);
             canvas.remove(object);
             canvas.discardActiveObject().renderAll();
           }
         });
 
-        const objectToDelete = new fabric.Group(objects);
-        (objectToDelete as ICanvasObject).id = 'teacher:group';
+        const target = {
+          target: {
+            strategy: 'removeGroup',
+            objectIds: objectIds,
+          },
+        };
 
-        canvas.add(objectToDelete);
-        canvas.remove(objectToDelete);
+        eventSerializer?.push('removed', (target as unknown) as ObjectEvent);
       }
     });
 

@@ -232,14 +232,35 @@ export const UndoRedo = (
           let objects = JSON.parse(
             state.states[state.activeStateIndex as number]
           ).objects;
-          let object = objects.filter((o: ObjectEvent) => o.id === id)[0];
-          let payload: ObjectEvent = {
-            id,
-            target: { objects: [object] },
-            type: 'reconstruct',
-          };
 
-          eventSerializer?.push('reconstruct', payload);
+          if (id.split(':')[1] !== 'group') {
+            let object = objects.filter((o: ObjectEvent) => o.id === id)[0];
+            let payload: ObjectEvent = {
+              id,
+              target: { objects: [object] },
+              type: 'reconstruct',
+            };
+
+            eventSerializer?.push('reconstruct', payload);
+          } else {
+            const objectsToReconstruct = [];
+
+            nextEvent.activeIds?.forEach((id) => {
+              const object = objects.find((object: ICanvasObject) => {
+                return object.id === id;
+              });
+
+              objectsToReconstruct.push(object);
+            });
+
+            let payload: ObjectEvent = {
+              id,
+              target: { objects },
+              type: 'reconstruct',
+            };
+
+            eventSerializer?.push('reconstruct', payload);
+          }
         } else if (nextEvent.type === 'clearedWhiteboard') {
           let id = (nextEvent.event as IUndoRedoSingleEvent).id;
           let objects = JSON.parse(
@@ -336,15 +357,24 @@ export const UndoRedo = (
       ) {
         eventSerializer?.push('added', event.event as ObjectEvent);
       } else if (event.type === 'removed') {
-        eventSerializer?.push('removed', {
-          id: (event.event as IUndoRedoSingleEvent).id,
-        } as ObjectEvent);
+        if (event.activeIds) {
+          event.activeIds?.forEach((id) => {
+            eventSerializer?.push('removed', {
+              id: id,
+            } as ObjectEvent);
+          });
+        } else {
+          eventSerializer?.push('removed', {
+            id: (event.event as IUndoRedoSingleEvent).id,
+          } as ObjectEvent);
+        }
       } else if (event.type === 'clearedWhiteboard') {
         let payload: ObjectEvent = {
           id: (event.event as IUndoRedoSingleEvent).id,
           target: false,
           type: 'reconstruct',
         };
+
         eventSerializer?.push('reconstruct', payload);
       } else if (event && event.type !== 'activeSelection') {
         let id = (event.event as IUndoRedoSingleEvent).id;

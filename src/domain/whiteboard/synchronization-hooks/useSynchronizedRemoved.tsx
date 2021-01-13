@@ -1,6 +1,6 @@
-import { useEffect, useContext, useCallback } from 'react';
+import { useEffect, useContext } from 'react';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
-import { CanvasAction, SET, SET_GROUP, SET_OTHER } from '../reducers/undo-redo';
+import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
@@ -8,13 +8,13 @@ import { ITextOptions } from 'fabric/fabric-impl';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
-import { TypedGroup } from '../../../interfaces/shapes/group';
 
 interface ITarget {
   strategy: string;
   userId: string;
   isBackgroundImage: boolean;
   isLocalImage: boolean;
+  objectIds?: string[];
 }
 
 const useSynchronizedRemoved = (
@@ -30,59 +30,6 @@ const useSynchronizedRemoved = (
 
   const { clearIsActive, setBackgroundImage, setLocalImage } = useContext(
     WhiteboardContext
-  );
-
-  /**
-   * Dispatch undo/redo of the given deleted object
-   * @param {ICanvasObject} object - Object that was removed
-   * @param {ObjectEvent} payload - Payload to set in undo/redo dispatcher
-   */
-  const dispatchUndoRedo = useCallback(
-    (object: ICanvasObject, payload: ObjectEvent) => {
-      if (object.id?.split(':')[1] !== 'group') {
-        let event = { event: payload, type: 'removed' } as IUndoRedoEvent;
-
-        undoRedoDispatch({
-          type: SET,
-          payload: canvas?.getObjects(),
-          canvasId: userId,
-          event,
-        });
-      } else {
-        const activeIds: string[] = object
-          // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
-          .getObjects()
-          .map((o: TypedShape) => o.id);
-
-        const payload = {
-          type: object.type,
-          svg: true,
-          target: null,
-          id: `${userId}:group`,
-        };
-
-        const event = {
-          event: payload,
-          type: 'activeSelection',
-          activeIds,
-        };
-
-        let filtered = canvas?.getObjects().filter((o: any) => {
-          return !o.group;
-        });
-
-        let active: TypedGroup = object as TypedGroup;
-        active?.set({ id: `${userId}:group` });
-
-        undoRedoDispatch({
-          type: SET_GROUP,
-          payload: [...(filtered as any[]), active],
-          canvasId: userId,
-          event: (event as unknown) as IUndoRedoEvent,
-        });
-      }
-    },
-    [canvas, undoRedoDispatch, userId]
   );
 
   /** Register and handle remote event. */
@@ -132,6 +79,30 @@ const useSynchronizedRemoved = (
                 canvas?.remove(obj);
               }
             }
+          });
+          break;
+        case 'removeGroup':
+          if (shouldHandleRemoteEvent(objectId)) return;
+
+          target.objectIds?.forEach((id) => {
+            const objectToRemove = canvas
+              ?.getObjects()
+              .find((object: ICanvasObject) => object.id === id);
+
+            canvas?.remove(objectToRemove as fabric.Object);
+          });
+
+          const event = ({
+            event: { id: `${userId}:group` },
+            type: 'removed',
+            activeIds: target.objectIds,
+          } as unknown) as IUndoRedoEvent;
+
+          undoRedoDispatch({
+            type: SET,
+            payload: canvas?.getObjects(),
+            canvasId: userId,
+            event,
           });
           break;
         default:
@@ -207,11 +178,17 @@ const useSynchronizedRemoved = (
         if (
           !(e.target as TypedShape).skipState &&
           !(e.target as TypedShape).fromJSON &&
-          !(e.target as ICanvasObject).inGroup &&
           ((e.target as ICanvasObject)?.text?.trim().length ||
             (e.target as ICanvasObject).get('type') !== 'textbox')
         ) {
-          dispatchUndoRedo(e.target, payload);
+          let event = { event: payload, type: 'removed' } as IUndoRedoEvent;
+
+          undoRedoDispatch({
+            type: SET,
+            payload: canvas?.getObjects(),
+            canvasId: userId,
+            event,
+          });
         }
 
         eventSerializer?.push('removed', payload as ObjectEvent);
@@ -226,7 +203,6 @@ const useSynchronizedRemoved = (
   }, [
     canvas,
     clearIsActive,
-    dispatchUndoRedo,
     eventSerializer,
     shouldSerializeEvent,
     undoRedoDispatch,

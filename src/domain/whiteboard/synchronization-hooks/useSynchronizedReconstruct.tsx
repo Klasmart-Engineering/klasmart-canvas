@@ -27,8 +27,14 @@ const useSynchronizedReconstruct = (
     const reconstruct = (id: string, target: ICanvasObject) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
-      if (!target.param) {
+      if (typeof target === 'object' && !target.param) {
         target.param = JSON.stringify(target);
+      }
+
+      if (typeof target !== 'object') {
+        target = {
+          param: 'false',
+        } as ICanvasObject;
       }
 
       const parsed = JSON.parse(target.param as string);
@@ -59,7 +65,7 @@ const useSynchronizedReconstruct = (
       };
 
       const loadImage = (object: ICanvasObject) =>
-        new Promise((resolve) => {
+        new Promise<void>((resolve) => {
           const { src, ...data } = object as ICanvasObject;
 
           fabric.Image.fromURL(
