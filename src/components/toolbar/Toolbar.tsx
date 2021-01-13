@@ -197,9 +197,9 @@ function Toolbar(
       updateShapesAreSelectable(false);
     }
 
-    updateShapesAreEvented(
-      tool === ELEMENTS.FLOOD_FILL_TOOL || tool === ELEMENTS.ERASE_TYPE_TOOL
-    );
+    // updateShapesAreEvented(
+    //   tool === ELEMENTS.FLOOD_FILL_TOOL || tool === ELEMENTS.ERASE_TYPE_TOOL
+    // );
 
     // set the clicked tool like active style in Toolbar
     if (allToolbarIsEnabled || toolbarIsEnabled) {
@@ -532,15 +532,7 @@ function Toolbar(
     getActiveTool,
     getToolElements,
     allToolbarIsEnabled,
-    props.permissions.pointer,
-    props.permissions.move,
-    props.permissions.erase,
-    props.permissions.pen,
-    props.permissions.floodFill,
-    props.permissions.text,
-    props.permissions.shape,
-    props.permissions.undoRedo,
-    props.permissions.clearWhiteboard,
+    props.permissions,
   ]);
 
   const toolbarContainerStyle: CSSProperties = {
