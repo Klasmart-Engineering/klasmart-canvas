@@ -15,6 +15,7 @@ import {
   UPDATE_UNDO_REDO,
   UPDATE_UPLOAD_IMAGE,
 } from './actions';
+import { canvasBoardReducer } from './canvasActionReducer';
 
 /**
  * Default permissions state.
@@ -90,4 +91,5 @@ export function permissionsReducer(state: IPermissions = permissionsState, actio
  */
 export const rootReducer = combineReducers({
   permissionsState: permissionsReducer,
+  canvasBoardState: canvasBoardReducer,
 });
