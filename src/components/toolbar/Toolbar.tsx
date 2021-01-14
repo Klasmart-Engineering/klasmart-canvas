@@ -197,9 +197,9 @@ function Toolbar(
       updateShapesAreSelectable(false);
     }
 
-    // updateShapesAreEvented(
-    //   tool === ELEMENTS.FLOOD_FILL_TOOL || tool === ELEMENTS.ERASE_TYPE_TOOL
-    // );
+    updateShapesAreEvented(
+      tool === ELEMENTS.FLOOD_FILL_TOOL || tool === ELEMENTS.ERASE_TYPE_TOOL
+    );
 
     // set the clicked tool like active style in Toolbar
     if (allToolbarIsEnabled || toolbarIsEnabled) {
