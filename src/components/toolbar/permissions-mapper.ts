@@ -78,29 +78,6 @@ export const mappedToolElements = (
             allToolbarIsEnabled ||
             serializerToolbarState.erase ||
             serializerToolbarState.partialErase;
-
-          elmnt = {
-            ...elmnt,
-            options: (elmnt as IBasicToolbarSelector).options.map(
-              (option: IToolbarSelectorOption) => {
-                if (option.id === 'partial_erase') {
-                  return {
-                    ...option,
-                    enabled:
-                      allToolbarIsEnabled ||
-                      serializerToolbarState.partialErase,
-                  };
-                } else {
-                  return {
-                    ...option,
-                    enabled:
-                      allToolbarIsEnabled || serializerToolbarState.erase,
-                  };
-                }
-              }
-            ),
-          };
-
           return { ...elmnt, enabled };
         }
         case 'line_type': {
