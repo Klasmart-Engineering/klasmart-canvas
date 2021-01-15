@@ -6,7 +6,10 @@ import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-even
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { changeLineWidthInSpecialBrushes } from '../brushes/actions/changeLineWidthInSpecialBrushes';
-import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
+import {
+  ObjectEvent,
+  ObjectType,
+} from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { isEmptyShape, isFreeDrawing } from '../utils/shapes';
@@ -70,7 +73,10 @@ export const useChangeLineWidth = (
      * in a custom path object
      * @param {ICanvasBrush} object - Custom Path Object to change its width
      */
-    const customBrushChange = async (object: ICanvasBrush) => {
+    const customBrushChange = async (
+      object: ICanvasBrush,
+      isUnique: boolean
+    ) => {
       let payload: ObjectEvent;
 
       await changeLineWidthInSpecialBrushes(canvas, userId, object, lineWidth)
@@ -79,7 +85,7 @@ export const useChangeLineWidth = (
           newActives.push(newObject as fabric.Object);
 
           payload = {
-            type: 'group',
+            type: newObject.type as ObjectType,
             target: {
               basePath: {
                 points: basePath?.points || [],
@@ -93,6 +99,29 @@ export const useChangeLineWidth = (
           };
 
           eventSerializer?.push('lineWidthChanged', payload);
+
+          if (isUnique) {
+            // Payload for undo/redo dispatcher
+            const undoRedoPayload = {
+              type: newObject.type,
+              target: { strokeWidth: basePath?.strokeWidth },
+              id: newObject?.id,
+            };
+
+            // Event for undo/redo dispatcher
+            const event = {
+              event: undoRedoPayload,
+              type: 'lineWidthChanged',
+            };
+
+            // Disptaching line width change for custom paths
+            undoRedoDispatch({
+              type: SET,
+              payload: canvas?.getObjects() as TypedShape[],
+              canvasId: userId,
+              event: (event as unknown) as IUndoRedoEvent,
+            });
+          }
         })
         .catch((e: Error) => {
           if (e.message === 'lineWidth is the same') {
@@ -126,14 +155,14 @@ export const useChangeLineWidth = (
       // Updating basePath
       if (
         isFreeDrawing(object) &&
-        (object as ICanvasPathBrush).basePath.type !== 'dashed'
+        (object as ICanvasPathBrush).basePath?.type !== 'dashed'
       ) {
         const basePath = (object as ICanvasPathBrush).basePath;
         (object as ICanvasPathBrush).set({
           basePath: {
-            type: basePath.type,
-            points: basePath.points,
-            stroke: basePath.stroke,
+            type: basePath?.type,
+            points: basePath?.points,
+            stroke: basePath?.stroke,
             strokeWidth: lineWidth,
           },
         });
@@ -162,13 +191,14 @@ export const useChangeLineWidth = (
       if (!canvas) return;
 
       const selection = canvas.getActiveObject();
-      const isUniqueObject = activeObjects.length === 1;
 
       if (selection?.type === 'activeSelection') {
         activeObjects = (selection as fabric.ActiveSelection)._objects;
       } else {
         activeObjects = canvas.getActiveObjects();
       }
+
+      const isUniqueObject = activeObjects.length === 1;
 
       if (!activeObjects) return;
       canvas.discardActiveObject();
@@ -179,7 +209,7 @@ export const useChangeLineWidth = (
         if (isCommonBrush(object)) {
           commonBrushChange(object, isUniqueObject);
         } else if (isCustomBrush(object as ICanvasBrush)) {
-          await customBrushChange(object as ICanvasBrush);
+          await customBrushChange(object as ICanvasBrush, isUniqueObject);
         }
       }
 

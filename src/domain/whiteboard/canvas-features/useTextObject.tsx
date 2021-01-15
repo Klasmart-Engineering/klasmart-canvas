@@ -86,6 +86,8 @@ export const useTextObject = (
 
             const objects = canvas?.getActiveObjects();
 
+            canvas.discardActiveObject();
+
             if (objects && objects.length) {
               objects.forEach((obj: ICanvasObject) => {
                 if (obj.id && isLocalObject(obj.id, userId)) {
@@ -127,6 +129,13 @@ export const useTextObject = (
                   });
                 }
               });
+            }
+
+            if (objects.length === 1) {
+              canvas?.setActiveObject(objects[0]);
+            } else if (objects.length >= 2) {
+              const activesGroup = new fabric.ActiveSelection(objects);
+              canvas?.setActiveObject(activesGroup);
             }
           }
         })

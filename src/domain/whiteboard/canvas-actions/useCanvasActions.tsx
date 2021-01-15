@@ -33,7 +33,7 @@ import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { IBrushType } from '../../../interfaces/brushes/brush-type';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { PenBrush } from '../brushes/classes/penBrush';
-import { Group } from 'fabric/fabric-impl';
+import { Group, ITextOptions } from 'fabric/fabric-impl';
 import { MarkerBrush } from '../brushes/classes/markerBrush';
 import { PaintBrush } from '../brushes/classes/paintBrush';
 import { ChalkBrush } from '../brushes/classes/chalkBrush';
@@ -1068,13 +1068,15 @@ export const useCanvasActions = (
 
       for (const object of activeObjects) {
         if (
-          ((isShape(object) && object.shapeType === 'shape') ||
-            isFreeDrawing(object)) &&
-          color !== object.stroke
+          (isShape(object) && object.shapeType === 'shape') ||
+          isFreeDrawing(object)
         ) {
-          (object as ICanvasPathBrush).set('stroke', color);
           newActives.push(object);
-          changePenColorSync(object as ICanvasObject);
+
+          if (color !== object.stroke) {
+            (object as ICanvasPathBrush).set('stroke', color);
+            changePenColorSync(object as ICanvasObject);
+          }
         }
 
         // Updating basePath
@@ -1105,12 +1107,12 @@ export const useCanvasActions = (
           )
             .then((newObject) => {
               const payload: ObjectEvent = {
-                type: 'group',
+                type: newObject.type as ObjectType,
                 target: {
-                  stroke: (object as ICanvasBrush).basePath?.stroke,
+                  stroke: (newObject as ICanvasBrush).basePath?.stroke,
                   bristles: (object as ICanvasBrush).basePath?.bristles,
                 } as ICanvasObject,
-                id: String(object.id),
+                id: String(newObject.id),
               };
 
               eventSerializer?.push('colorChanged', payload);
@@ -1204,7 +1206,8 @@ export const useCanvasActions = (
         userId as string,
         eventSerializer,
         updateBrushType,
-        type
+        type,
+        dispatch
       );
     },
     [canvas, eventSerializer, updateBrushType, userId]
@@ -1249,62 +1252,56 @@ export const useCanvasActions = (
   const textColor = useCallback(
     (color: string) => {
       updateFontColor(color);
-      if (
-        canvas?.getActiveObject() &&
-        (canvas.getActiveObject() as fabric.IText).text
-      ) {
-        canvas.getActiveObject().set('fill', color);
-        canvas.renderAll();
 
-        const object: ICanvasObject = canvas?.getActiveObject();
+      let actives: fabric.Object[] = [];
+
+      if (!canvas) return;
+
+      const selection = canvas.getActiveObject();
+
+      if (selection?.type === 'activeSelection') {
+        actives = (selection as fabric.ActiveSelection)._objects;
+      } else {
+        actives = canvas.getActiveObjects();
+      }
+
+      if (!actives) return;
+
+      canvas.discardActiveObject();
+
+      for (const object of actives) {
+        if ((object as fabric.IText).text) {
+          object.set({ fill: color });
+        }
 
         if (!(object as fabric.ITextOptions).isEditing) {
           const payload = {
             type: 'textbox',
             target: { fill: color },
-            id: object.id,
+            id: (object as ICanvasObject).id,
           } as ObjectEvent;
 
           eventSerializer?.push('fontColorChanged', payload);
 
-          const event = { event: payload, type: 'colorChanged' };
+          if (actives.length === 1) {
+            const event = { event: payload, type: 'colorChanged' };
 
-          dispatch({
-            type: SET,
-            payload: canvas?.getObjects() as TypedShape[],
-            canvasId: userId,
-            event: (event as unknown) as IUndoRedoEvent,
-          });
-        }
-        return;
-      }
-
-      canvas?.getActiveObjects().forEach((obj: ICanvasObject) => {
-        if (obj.id) {
-          const type: ObjectType = obj.get('type') as ObjectType;
-          if (type === 'textbox') {
-            const target = (type: string) => {
-              if (type === 'textbox') {
-                return {
-                  fill: color,
-                };
-              }
-            };
-
-            obj.set({
-              fill: color,
+            dispatch({
+              type: SET,
+              payload: canvas?.getObjects() as TypedShape[],
+              canvasId: userId,
+              event: (event as unknown) as IUndoRedoEvent,
             });
-
-            const payload: ObjectEvent = {
-              type,
-              target: target(type) as ICanvasObject,
-              id: obj.id,
-            };
-
-            eventSerializer?.push('fontColorChanged', payload);
           }
         }
-      });
+      }
+
+      if (actives.length === 1) {
+        canvas?.setActiveObject(actives[0]);
+      } else if (actives.length >= 2) {
+        const activesGroup = new fabric.ActiveSelection(actives);
+        canvas?.setActiveObject(activesGroup);
+      }
     },
     [updateFontColor, canvas, eventSerializer, dispatch, userId]
   );
@@ -1560,6 +1557,8 @@ export const useCanvasActions = (
     let eraser: boolean = false;
     let activeObjects = canvas?.getActiveObjects();
 
+    /* Preparing objects to be erased locking their movement
+    and putting the eraser cursor */
     canvas?.getObjects().forEach((object: ICanvasObject) => {
       if (
         (object.id && isLocalObject(object.id, userId as string)) ||
@@ -1607,12 +1606,26 @@ export const useCanvasActions = (
 
       // if the click is made over an object group
       if (e.target?._objects) {
-        e.target._objects.forEach(function (object: fabric.Object) {
-          canvas.remove(object);
+        const objects = (e.target as fabric.ActiveSelection)._objects;
+        const objectIds: string[] = [];
+
+        objects.forEach((object: ICanvasObject) => {
+          if (!(object as ITextOptions)?.isEditing) {
+            object.groupClear = true;
+            objectIds.push(object.id as string);
+            canvas.remove(object);
+            canvas.discardActiveObject().renderAll();
+          }
         });
 
-        canvas.discardActiveObject();
-        canvas.renderAll();
+        const target = {
+          target: {
+            strategy: 'removeGroup',
+            objectIds: objectIds,
+          },
+        };
+
+        eventSerializer?.push('removed', (target as unknown) as ObjectEvent);
       }
     });
 

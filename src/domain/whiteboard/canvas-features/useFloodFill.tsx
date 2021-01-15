@@ -15,6 +15,7 @@ import ICanvasActions from '../canvas-actions/ICanvasActions';
 import store from '../redux/store';
 import { getToolbarIsEnabled } from '../redux/utils';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
 /**
  * Handles the logic for Flood-fill Feature
@@ -46,8 +47,6 @@ export const useFloodFill = (
     textIsActive,
   } = useContext(WhiteboardContext);
 
-
-
   const paintBucket = `url("${floodFillCursor}") 2 15, default`;
   const laserPointerIsActive = useMemo(() => laserIsActive, [laserIsActive]);
 
@@ -76,6 +75,8 @@ export const useFloodFill = (
     return (
       !event.target ||
       (event.target.get('type') === 'path' && !isEmptyShape(event.target)) ||
+      (event.target.get('type') === 'group' &&
+        (event.target as ICanvasBrush).basePath) ||
       event.target.get('type') === 'image'
     );
   };
@@ -258,8 +259,7 @@ export const useFloodFill = (
       );
     };
 
-    const teacherHasPermission =
-      allToolbarIsEnabled && floodFillIsActive;
+    const teacherHasPermission = allToolbarIsEnabled && floodFillIsActive;
 
     const studentHasPermission =
       floodFillIsActive && toolbarIsEnabled && serializerToolbarState.floodFill;

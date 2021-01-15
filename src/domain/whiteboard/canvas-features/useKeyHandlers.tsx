@@ -1,8 +1,12 @@
+import { fabric } from 'fabric';
 import { ITextOptions } from 'fabric/fabric-impl';
 import { useCallback, useContext } from 'react';
 import { ICanvasKeyboardEvent } from '../../../interfaces/canvas-events/canvas-keyboard-event';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { UNDO, REDO, CanvasAction } from '../reducers/undo-redo';
+import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { WhiteboardContext } from '../WhiteboardContext';
 
 /**
@@ -26,6 +30,11 @@ export const useKeyHandlers = (
     perfectShapeIsAvailable,
   } = useContext(WhiteboardContext);
 
+  // Event serialization for synchronizing whiteboard state.
+  const {
+    state: { eventSerializer },
+  } = useSharedEventSerializer();
+
   /**
    * General handler for keydown keyboard events
    * 'Backspace' event for removing selected element from whiteboard.
@@ -40,14 +49,36 @@ export const useKeyHandlers = (
        * Removes the current active objects in canvas
        */
       const removeSelectedObjects = () => {
-        const objects = canvas.getActiveObjects();
+        let active = canvas.getActiveObject();
 
-        objects.forEach((object: fabric.Object) => {
-          if (!(object as ITextOptions)?.isEditing) {
-            canvas.remove(object);
-            canvas.discardActiveObject().renderAll();
+        canvas.discardActiveObject();
+
+        if (active.type === 'activeSelection') {
+          const objectIds: string[] = [];
+
+          (active as fabric.ActiveSelection).forEachObject(
+            (object: ICanvasObject) => {
+              if (!(object as ITextOptions)?.isEditing) {
+                object.groupClear = true;
+                objectIds.push(object.id as string);
+                canvas.remove(object);
+              }
+            }
+          );
+
+          const target = {
+            target: {
+              strategy: 'removeGroup',
+              objectIds: objectIds,
+            },
+          };
+
+          eventSerializer?.push('removed', (target as unknown) as ObjectEvent);
+        } else {
+          if (!(active as ITextOptions)?.isEditing) {
+            canvas.remove(active);
           }
-        });
+        }
       };
 
       const event = e as ICanvasKeyboardEvent;
@@ -96,12 +127,13 @@ export const useKeyHandlers = (
       }
     },
     [
-      canvas,
-      undoRedoDispatch,
       activeCanvas,
       instanceId,
       perfectShapeIsActive,
       perfectShapeIsAvailable,
+      canvas,
+      eventSerializer,
+      undoRedoDispatch,
       updatePerfectShapeIsActive,
       permissions.undoRedo,
     ]
