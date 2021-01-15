@@ -195,6 +195,10 @@ export class Realtime {
    * @param points Path points
    */
   public drawPath(points: IPoint[]) {
+    if (!points) {
+      return;
+    }
+
     let i = 0;
     this.clear();
 
