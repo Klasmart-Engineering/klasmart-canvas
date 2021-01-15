@@ -1398,7 +1398,7 @@ export const useCanvasActions = (
    * Clears all whiteboard elements
    * */
   const clearWhiteboardClearMySelf = useCallback(async () => {
-    const toolbarIsEnabled = getToolbarIsEnabled();
+    const toolbarIsEnabled = getToolbarIsEnabled(userId);
     const serializerToolbarState = store.getState().permissionsState as IPermissions;
     const teacherHasPermission = allToolbarIsEnabled;
     const studentHasPermission =

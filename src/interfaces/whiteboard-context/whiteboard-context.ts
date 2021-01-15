@@ -66,6 +66,7 @@ export interface IWhiteboardContext {
   clearIsActive: boolean;
   updateClearIsActive: (active: boolean) => void;
   allToolbarIsEnabled: boolean;
+  userId?: string;
   lineWidthIsActive: boolean;
   updateLineWidthIsActive: (active: boolean) => void;
   brushType: IBrushType;
@@ -92,4 +93,5 @@ export interface IWhiteboardContext {
   setIsBackgroundImage: (status: boolean) => void;
   localImage: string | File;
   setLocalImage: (image: string | File) => void;
+  openClearWhiteboardModal: () => void;
 }

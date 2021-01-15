@@ -82,6 +82,7 @@ function Toolbar(
     updateImagePopupIsOpen,
     updatePartialEraseIsActive,
     openUploadFileModal,
+    openClearWhiteboardModal,
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
@@ -225,7 +226,7 @@ function Toolbar(
     if (toolbarIsEnabled) {
       switch (tool) {
         case ELEMENTS.CLEAR_WHITEBOARD_ACTION:
-          // openClearWhiteboardModal();
+          openClearWhiteboardModal();
           break;
 
         case ELEMENTS.UNDO_ACTION:
