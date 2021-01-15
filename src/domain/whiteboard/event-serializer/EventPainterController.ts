@@ -87,6 +87,9 @@ export class EventPainterController extends EventEmitter
           this.emit('setToolbarPermissions', data.id, data.target);
           break;
         }
+        case 'fontColorChanged': {
+          this.emit('fontColorChanged', data.id, data.objectType, data.target);
+        }
       }
     };
 
@@ -188,7 +191,7 @@ export class EventPainterController extends EventEmitter
         this.brushTypeChanged(event.id, target);
         break;
       case 'fontColorChanged':
-        this.emit('fontColorChanged', event.id, event.objectType, target);
+        this.fontColorChanged(event.id, event.objectType, target);
         break;
       case 'reconstruct':
         this.emit('reconstruct', event.id, target);
@@ -320,18 +323,18 @@ export class EventPainterController extends EventEmitter
     );
   }
 
-  // private fontColorChanged(
-  //   id: string,
-  //   objectType: string,
-  //   target: ICanvasObject
-  // ) {
-  //   this.emit('fontColorChanged', id, objectType, target);
+  private fontColorChanged(
+    id: string,
+    objectType: string,
+    target: ICanvasObject
+  ) {
+    this.emit('fontColorChanged', id, objectType, target);
 
-  //   // TEMPORARY for realtime testing purposes.
-  //   this.ws?.send(
-  //     JSON.stringify({ id, objectType, eventType: 'fontColorChanged', target })
-  //   );
-  // }
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, objectType, eventType: 'fontColorChanged', target })
+    );
+  }
 
   private lineWidthChanged(
     id: string,
