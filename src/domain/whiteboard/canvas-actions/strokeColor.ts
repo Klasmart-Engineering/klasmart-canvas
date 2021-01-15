@@ -8,7 +8,7 @@ import { TypedGroup } from "../../../interfaces/shapes/group";
 import { TypedShape } from "../../../interfaces/shapes/shapes";
 import { changeLineColorInSpecialBrushes } from "../brushes/actions/changeLineColorInSpecialBrushes";
 import { useSynchronization } from "../canvas-features/useSynchronization";
-import { ObjectEvent } from "../event-serializer/PaintEventSerializer";
+import { ObjectEvent, ObjectType } from "../event-serializer/PaintEventSerializer";
 import { SET, SET_GROUP } from "../reducers/undo-redo";
 import { isShape, isFreeDrawing } from "../utils/shapes";
 
@@ -162,4 +162,68 @@ export const useChangeStrokeColor = (canvas: fabric.Canvas, userId: string, even
   // If changePenColorSync is added performance is affected
   // eslint-disable-next-line react-hooks/exhaustive-deps
   [updatePenColor, userId, eventSerializer, dispatch, canvas]
+));
+
+
+export const useTextColor = (canvas: fabric.Canvas, userId: string, updateFontColor: any, eventSerializer: any, dispatch: any) => (useCallback(
+  (color: string) => {
+    updateFontColor(color);
+    if (
+      canvas?.getActiveObject() &&
+      (canvas.getActiveObject() as fabric.IText).text
+    ) {
+      canvas.getActiveObject().set('fill', color);
+      canvas.renderAll();
+
+      const object: ICanvasObject = canvas?.getActiveObject();
+
+      if (!(object as fabric.ITextOptions).isEditing) {
+        const payload = {
+          type: 'textbox',
+          target: { fill: color },
+          id: object.id,
+        } as ObjectEvent;
+
+        eventSerializer?.push('fontColorChanged', payload);
+
+        const event = { event: payload, type: 'colorChanged' };
+
+        dispatch({
+          type: SET,
+          payload: canvas?.getObjects() as TypedShape[],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      }
+      return;
+    }
+
+    canvas?.getActiveObjects().forEach((obj: ICanvasObject) => {
+      if (obj.id) {
+        const type: ObjectType = obj.get('type') as ObjectType;
+        if (type === 'textbox') {
+          const target = (type: string) => {
+            if (type === 'textbox') {
+              return {
+                fill: color,
+              };
+            }
+          };
+
+          obj.set({
+            fill: color,
+          });
+
+          const payload: ObjectEvent = {
+            type,
+            target: target(type) as ICanvasObject,
+            id: obj.id,
+          };
+
+          eventSerializer?.push('fontColorChanged', payload);
+        }
+      }
+    });
+  },
+  [updateFontColor, canvas, eventSerializer, dispatch, userId]
 ));

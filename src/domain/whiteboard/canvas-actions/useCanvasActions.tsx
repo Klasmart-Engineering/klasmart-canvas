@@ -11,14 +11,11 @@ import {
   CanvasAction,
 } from '../reducers/undo-redo';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
-import { ICanvasMouseEvent } from '../../../interfaces/canvas-events/canvas-mouse-event';
 import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
 import {
   ObjectEvent,
-  ObjectType,
 } from '../event-serializer/PaintEventSerializer';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
-import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { PartialErase } from '../partial-erase/partialErase';
 import { useSynchronization } from '../canvas-features/useSynchronization';
 import store from '../../whiteboard/redux/store';
@@ -27,11 +24,18 @@ import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { IBrushType } from '../../../interfaces/brushes/brush-type';
 import { changeBrushTypeAction } from './feature-actions/changeBrushTypeAction';
 import { useShapeSelector, useSpecialShapeSelector } from './shapeActions';
-import { useMouseMove, useMouseUp } from './mouseActions';
+import { useMouseDown, useMouseMove, useMouseUp } from './mouseActions';
 import { mouseDownAction } from './mouseHandlers/mouseDown';
 import { mouseUpAction } from './mouseHandlers/mouseUp';
 import { mouseMoveAction } from './mouseHandlers/mouseMove';
-import { useChangeStrokeColor } from './strokeColor';
+import { useChangeStrokeColor, useTextColor } from './strokeColor';
+import { useEraseObject } from './eraseActions';
+import { useClearWhiteboardOthers, useClearWhiteboardSelf, useClearWhiteboardClearAll } from './clearWhiteboardActions';
+
+interface IShapeInProgress {
+  shape: TypedShape;
+  startPoint: fabric.Point;
+}
 
 export const useCanvasActions = (
   canvas: fabric.Canvas,
@@ -97,49 +101,7 @@ export const useCanvasActions = (
    * @param shape Shape being added on canvas.
    * @param isCircle Indicates if shape is a circle.
    */
-  const mouseDown = useCallback(
-    (specific: string, color?: string): void => {
-      canvas?.on('mouse:down', (e: fabric.IEvent): void => {
-        console.log('mouse down...');
-        if (e.target || !e.pointer) {
-          return;
-        }
-
-        let shape;
-
-        shape = shapeSelector(specific);
-
-        if (e.pointer) {
-          (shape as unknown as TypedShape).set({
-            top: e.pointer.y,
-            left: e.pointer.x,
-            shapeType: 'shape',
-            name: specific,
-            strokeUniform: true,
-          });
-        }
-
-        // fill and type properties just can be resetted if is an filled shape
-        if (shape.fill !== 'transparent') {
-          shape.set({
-            shapeType: 'filledShape',
-            fill: color || shapeColor,
-          });
-        }
-
-        clearOnMouseEvent();
-        mouseMove(shape, e.pointer, specific, canvas, brushType);
-        mouseUp(shape, e.pointer, specific);
-        canvas.add(shape);
-      });
-    },
-    [canvas, clearOnMouseEvent, mouseMove, mouseUp, shapeColor, shapeSelector]
-  );
-
-  interface IShapeInProgress {
-    shape: TypedShape;
-    startPoint: fabric.Point;
-  }
+  const mouseDown = useMouseDown(canvas, shapeSelector, clearOnMouseEvent, mouseMove, mouseUp, brushType, shapeColor);
 
   /**
    * Used to save the current shape in case of an interruption
@@ -250,68 +212,7 @@ export const useCanvasActions = (
    * Add specific color to selected text or group of texts
    * @param {string} color - color to set
    */
-  const textColor = useCallback(
-    (color: string) => {
-      updateFontColor(color);
-      if (
-        canvas?.getActiveObject() &&
-        (canvas.getActiveObject() as fabric.IText).text
-      ) {
-        canvas.getActiveObject().set('fill', color);
-        canvas.renderAll();
-
-        const object: ICanvasObject = canvas?.getActiveObject();
-
-        if (!(object as fabric.ITextOptions).isEditing) {
-          const payload = {
-            type: 'textbox',
-            target: { fill: color },
-            id: object.id,
-          } as ObjectEvent;
-
-          eventSerializer?.push('fontColorChanged', payload);
-
-          const event = { event: payload, type: 'colorChanged' };
-
-          dispatch({
-            type: SET,
-            payload: canvas?.getObjects() as TypedShape[],
-            canvasId: userId,
-            event: (event as unknown) as IUndoRedoEvent,
-          });
-        }
-        return;
-      }
-
-      canvas?.getActiveObjects().forEach((obj: ICanvasObject) => {
-        if (obj.id) {
-          const type: ObjectType = obj.get('type') as ObjectType;
-          if (type === 'textbox') {
-            const target = (type: string) => {
-              if (type === 'textbox') {
-                return {
-                  fill: color,
-                };
-              }
-            };
-
-            obj.set({
-              fill: color,
-            });
-
-            const payload: ObjectEvent = {
-              type,
-              target: target(type) as ICanvasObject,
-              id: obj.id,
-            };
-
-            eventSerializer?.push('fontColorChanged', payload);
-          }
-        }
-      });
-    },
-    [updateFontColor, canvas, eventSerializer, dispatch, userId]
-  );
+  const textColor = useTextColor(canvas, userId, updateFontColor, eventSerializer, dispatch);
 
   /**
    * Set the given visibility in all the controls in the given object.
@@ -368,162 +269,30 @@ export const useCanvasActions = (
   /**
    * Clears all whiteboard elements
    * */
-  const clearWhiteboardClearAll = useCallback(async () => {
-    await updateClearIsActive(true);
-    await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-      if (obj.id) {
-        obj.set({ groupClear: true });
-        canvas?.remove(obj);
-      }
-    });
-
-    const target = {
-      target: {
-        strategy: 'allowClearAll',
-      },
-    };
-
-    eventSerializer?.push('removed', target as ObjectEvent);
-
-    // Add cleared whiteboard to undo / redo state.
-    const event = {
-      event: { id: `${userId}:clearWhiteboard` },
-      type: 'clearedWhiteboard',
-    } as IUndoRedoEvent;
-
-    // Add cleared whiteboard to undo / redo state.
-
-    dispatch({
-      type: SET,
-      payload: canvas?.getObjects(),
-      canvasId: userId,
-      event,
-    });
-
-    await updateClearIsActive(false);
-  }, [updateClearIsActive, canvas, dispatch, userId, eventSerializer]);
+  const clearWhiteboardClearAll = useClearWhiteboardClearAll(canvas, userId, updateClearIsActive, eventSerializer, dispatch);
 
   /**
    * Clears all whiteboard elements
    * */
-  const clearWhiteboardClearMySelf = useCallback(async () => {
-    const toolbarIsEnabled = getToolbarIsEnabled();
-    const serializerToolbarState = store.getState().permissionsState as IPermissions;
-    const teacherHasPermission = allToolbarIsEnabled;
-    const studentHasPermission =
-      toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
-    if (teacherHasPermission || studentHasPermission) {
-      if (typeof localImage === 'string' && localImage.length) {
-        const target = {
-          id: '',
-          target: {
-            strategy: 'allowClearMyself',
-            isLocalImage: true,
-          },
-        };
-
-        eventSerializer?.push('removed', target as ObjectEvent);
-      }
-      await updateClearIsActive(true);
-      await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-        if (obj.id && isLocalObject(obj.id, userId)) {
-          const target = {
-            id: obj.id,
-            target: {
-              strategy: 'allowClearMyself',
-            },
-          };
-
-          obj.set({ groupClear: true });
-          canvas?.remove(obj);
-          eventSerializer?.push('removed', target as ObjectEvent);
-        }
-      });
-
-      if (canvas?.backgroundImage) {
-        const target = {
-          // @ts-ignore
-          id: canvas.backgroundImage.id,
-          target: {
-            strategy: 'allowClearMyself',
-            isBackgroundImage: true,
-          },
-        };
-
-        eventSerializer?.push('removed', target as ObjectEvent);
-
-        // In order to remove background you need to add 0 to the first argument.
-        // An empty string unfortunately doesnt work.
-        // https://stackoverflow.com/a/14171884
-        // @ts-ignore
-        canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
-      }
-
-      closeModal();
-
-      const event = {
-        event: { id: `${userId}:clearWhiteboard` },
-        type: 'clearedWhiteboard',
-      } as IUndoRedoEvent;
-
-      // Add cleared whiteboard to undo / redo state.
-      dispatch({
-        type: SET,
-        payload: canvas?.getObjects(),
-        canvasId: userId,
-        event,
-      });
-
-      await updateClearIsActive(false);
-    }
-    // If isLocalObject is added in dependencies an infinity loop happens
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
+  const clearWhiteboardClearMySelf = useClearWhiteboardSelf(
     canvas,
+    userId,
     closeModal,
-    canvasId,
+    dispatch,
+    isLocalObject,
+    allToolbarIsEnabled,
+    localImage,
     eventSerializer,
     updateClearIsActive,
-    allToolbarIsEnabled,
-    dispatch,
-    userId,
-    localImage,
-    backgroundImage,
-  ]);
+    canvasId,
+    backgroundImage
+  );
 
   /**
    * Clears all whiteboard with allowClearOthers strategy
    * */
-  const clearWhiteboardAllowClearOthers = useCallback(
-    async (userId: string) => {
-      await updateClearIsActive(true);
-      await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-        if (obj.id) {
-          const object = obj.id.split(':');
+  const clearWhiteboardAllowClearOthers = useClearWhiteboardOthers(canvas, updateClearIsActive, eventSerializer);
 
-          if (!object.length) {
-            throw new Error('Invalid ID');
-          }
-
-          if (object[0] === userId) {
-            canvas?.remove(obj);
-          }
-
-          const target = {
-            id: obj.id,
-            target: {
-              strategy: 'allowClearOthers',
-              userId,
-            },
-          };
-
-          eventSerializer?.push('removed', target as ObjectEvent);
-        }
-      });
-      await updateClearIsActive(false);
-    },
-    [canvas, eventSerializer, updateClearIsActive]
-  );
 
   /**
    * Set Canvas Whiteboard selection ability
@@ -560,95 +329,8 @@ export const useCanvasActions = (
   /**
    * Creates the listeners to erase objects from the whiteboard
    */
-  const eraseObject = useCallback(() => {
-    let eraser: boolean = false;
-    let activeObjects = canvas?.getActiveObjects();
+  const eraseObject = useEraseObject(canvas, userId, canvasId);
 
-    canvas?.getObjects().forEach((object: ICanvasObject) => {
-      if (
-        (object.id && isLocalObject(object.id, userId as string)) ||
-        !object.id
-      ) {
-        object.set({
-          evented: true,
-          hoverCursor: `url("${eraseObjectCursor}"), auto`,
-          lockMovementX: true,
-          lockMovementY: true,
-        });
-      } else if (object.id) {
-        object.set({
-          hoverCursor: 'default',
-        });
-      }
-    });
-
-    if (activeObjects?.length && activeObjects.length > 1) {
-      canvas?.getActiveObject().set({
-        hoverCursor: `url("${eraseObjectCursor}"), auto`,
-      });
-    }
-
-    // When mouse down eraser is able to remove objects
-    canvas?.on('mouse:down', (e: ICanvasMouseEvent) => {
-      if (eraser) {
-        return false;
-      }
-
-      canvas.defaultCursor = `url("${eraseObjectCursor}"), auto`;
-      eraser = true;
-
-      // if the click is made over an object
-      if (
-        e.target &&
-        (!e.target._objects ||
-          (e.target._objects && (e.target as ICanvasBrush).basePath)) &&
-        ((e.target.id && isLocalObject(e.target.id, userId as string)) ||
-          !e.target.id)
-      ) {
-        canvas.remove(e.target);
-        canvas.renderAll();
-      }
-
-      // if the click is made over an object group
-      if (e.target?._objects) {
-        e.target._objects.forEach(function (object: fabric.Object) {
-          canvas.remove(object);
-        });
-
-        canvas.discardActiveObject();
-        canvas.renderAll();
-      }
-    });
-
-    // When mouse is over an object
-    canvas?.on('mouse:over', (e: ICanvasMouseEvent) => {
-      if (!eraser) {
-        return false;
-      }
-
-      if (
-        (e.target &&
-          e.target.id &&
-          isLocalObject(e.target.id, userId as string)) ||
-        (e.target && !e.target.id)
-      ) {
-        canvas.remove(e.target);
-        canvas.renderAll();
-      }
-    });
-
-    // When mouse up eraser is unable to remove objects
-    canvas?.on('mouse:up', () => {
-      if (!eraser) {
-        return false;
-      }
-
-      canvas.defaultCursor = 'default';
-      eraser = false;
-    });
-    // If isLocalObject is added in dependencies an infinity loop happens
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, canvasId, userId]);
 
   useEffect(() => {
     if (!canvas) {

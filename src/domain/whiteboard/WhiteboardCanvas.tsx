@@ -132,6 +132,21 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     localImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
+  // useEffects and logic to set canvas properties
+  useSetCanvas(
+    instanceId,
+    setCanvas,
+    canvas as fabric.Canvas,
+    wrapper as HTMLElement,
+    setWrapper,
+    pixelWidth,
+    pixelHeight,
+    pointerEvents,
+    scaleMode,
+    display,
+    initialStyle
+  );
+
   // Getting Canvas shared functions
   const { actions, mouseDown } = useCanvasActions(
     canvas as fabric.Canvas,
@@ -201,20 +216,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
   }, [canvas, eventController, generatedBy]);
 
-  // useEffects and logic to set canvas properties
-  useSetCanvas(
-    instanceId,
-    setCanvas,
-    canvas as fabric.Canvas,
-    wrapper as HTMLElement,
-    setWrapper,
-    pixelWidth,
-    pixelHeight,
-    pointerEvents,
-    scaleMode,
-    display,
-    initialStyle
-  );
 
   // useEffects and logic for manage the object manipulation in canvas
   useObjectManipulation(

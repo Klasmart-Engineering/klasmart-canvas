@@ -114,3 +114,48 @@ export function useMouseUp(dispatch?: any) {
   return value;
 }
 
+export const useMouseDown = (
+  canvas: fabric.Canvas,
+  shapeSelector: any,
+  clearOnMouseEvent: any,
+  mouseMove: any,
+  mouseUp: any,
+  brushType: string,
+  shapeColor: any
+) => (useCallback(
+  (specific: string, color?: string): void => {
+    canvas?.on('mouse:down', (e: fabric.IEvent): void => {
+      if (e.target || !e.pointer) {
+        return;
+      }
+
+      let shape;
+
+      shape = shapeSelector(specific);
+
+      if (e.pointer) {
+        (shape as unknown as TypedShape).set({
+          top: e.pointer.y,
+          left: e.pointer.x,
+          shapeType: 'shape',
+          name: specific,
+          strokeUniform: true,
+        });
+      }
+
+      // fill and type properties just can be resetted if is an filled shape
+      if (shape.fill !== 'transparent') {
+        shape.set({
+          shapeType: 'filledShape',
+          fill: color || shapeColor,
+        });
+      }
+
+      clearOnMouseEvent();
+      mouseMove(shape, e.pointer, specific, canvas, brushType);
+      mouseUp(shape, e.pointer, specific);
+      canvas.add(shape);
+    });
+  },
+  [canvas, clearOnMouseEvent, mouseMove, mouseUp, shapeColor, shapeSelector]
+));
