@@ -6,6 +6,7 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { CanvasHistoryState } from '../reducers/undo-redo';
 import { getStateVariables } from './getStateVariables';
+import { sendReconstructEvent } from './sendReconstructEvent';
 
 /**
  * Renders Redo action in Remote Whiteboards according with the given state
@@ -40,9 +41,17 @@ export const RenderRemoteRedo = (
 
   switch (currentEvent.type) {
     case 'added': {
-      if (currentObject.type === 'image') return;
-
       eventSerializer?.push('added', currentObject as ObjectEvent);
+
+      if (currentObject.type === 'image') {
+        const joinedIds = currentObject.target.joinedIds;
+
+        joinedIds?.forEach((id) => {
+          eventSerializer?.push('removed', {
+            id: id,
+          } as ObjectEvent);
+        });
+      }
       break;
     }
 
@@ -64,26 +73,17 @@ export const RenderRemoteRedo = (
     }
 
     case 'clearedWhiteboard': {
-      let payload: ObjectEvent = {
-        id: currentObject.id,
-        target: false,
-        type: 'reconstruct',
-      };
+      const id = currentObject.id;
 
-      eventSerializer?.push('reconstruct', payload);
+      sendReconstructEvent(id, false, eventSerializer);
       break;
     }
 
     case 'activeSelection': {
       const objects = JSON.parse(currentState).objects;
-      let id = currentObject.id;
-      let payload: ObjectEvent = {
-        id,
-        target: { objects },
-        type: 'reconstruct',
-      };
+      const id = currentObject.id;
 
-      eventSerializer?.push('reconstruct', payload);
+      sendReconstructEvent(id, { objects }, eventSerializer);
       break;
     }
 
@@ -92,13 +92,7 @@ export const RenderRemoteRedo = (
       let id = currentObject.id;
       let object = objects.find((o: TypedShape | TypedGroup) => o.id === id);
 
-      let payload: ObjectEvent = {
-        id,
-        target: { objects: [object] },
-        type: 'reconstruct',
-      };
-
-      eventSerializer?.push('reconstruct', payload);
+      sendReconstructEvent(id, { objects: [object] }, eventSerializer);
       break;
     }
   }

@@ -1,4 +1,3 @@
-import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import {
   ObjectEvent,
@@ -7,6 +6,7 @@ import {
 import { CanvasHistoryState } from '../reducers/undo-redo';
 import { getPreviousBackground } from './getPreviousBackground';
 import { getStateVariables } from './getStateVariables';
+import { sendReconstructEvent } from './sendReconstructEvent';
 
 /**
  * Renders Undo action in Remote Whiteboards
@@ -33,10 +33,9 @@ export const RenderRemoteUndo = (
    * with those ids to reconstruct them in the whiteboard
    */
   const reconstructJoinedObjects = () => {
-    let joinedIds = nextObject.target?.joinedIds as string[];
+    let joinedIds = nextObject.target.joinedIds as string[];
     const id = nextObject.id;
-    const currentIds = ((currentEvent as unknown) as IUndoRedoSingleEvent)
-      .target?.joinedIds as string[];
+    const currentIds = currentObject.target.joinedIds as string[];
     const objects = JSON.parse(currentState).objects;
 
     if (currentIds) {
@@ -78,66 +77,48 @@ export const RenderRemoteUndo = (
     }
 
     case 'activeSelection': {
+      /**
+       * Validates if the id to send to payload must be from
+       * currentObject or nextObject
+       */
+      const idIsInCurrentObject = () => {
+        return (
+          currentEvent.type === 'activeSelection' ||
+          currentEvent.type === 'added'
+        );
+      };
+
       const objects = JSON.parse(currentState).objects;
+      const { id } = idIsInCurrentObject() ? currentObject : nextObject;
 
-      if (
-        currentEvent.type === 'activeSelection' ||
-        currentEvent.type === 'added'
-      ) {
-        const id = currentObject.id;
-        const payload = {
-          id,
-          target: { objects },
-          type: 'reconstruct',
-        } as ObjectEvent;
-
-        if (currentEvent.type === 'added' && currentObject.type !== 'textbox') {
-          eventSerializer.push('removed', {
-            id: nextObject.id,
-          });
-        }
-
-        eventSerializer?.push('reconstruct', payload);
-      } else {
-        const payload = {
+      if (currentEvent.type === 'added' && currentObject.type !== 'textbox') {
+        eventSerializer.push('removed', {
           id: nextObject.id,
-          target: { objects },
-          type: 'reconstruct',
-        } as ObjectEvent;
-
-        eventSerializer?.push('reconstruct', payload);
+        });
       }
+
+      sendReconstructEvent(id, { objects }, eventSerializer);
 
       break;
     }
 
     case 'clearedWhiteboard': {
       const objects = JSON.parse(currentState).objects;
-      let id = nextObject.id;
+      const id = nextObject.id;
 
-      const payload = {
-        id,
-        target: { objects },
-        type: 'reconstruct',
-      } as ObjectEvent;
-
-      eventSerializer?.push('reconstruct', payload);
+      sendReconstructEvent(id, { objects }, eventSerializer);
       break;
     }
 
     default: {
       if (nextObject.type === 'background') {
         const fill = getPreviousBackground(state.eventIndex, state.events);
+        const id = nextObject.id;
+
         canvas.backgroundColor = fill;
         canvas.renderAll();
 
-        let payload: ObjectEvent = {
-          id: nextObject.id,
-          target: { background: fill },
-          type: 'reconstruct',
-        };
-
-        eventSerializer?.push('reconstruct', payload);
+        sendReconstructEvent(id, { background: fill }, eventSerializer);
         return;
       }
 
@@ -151,15 +132,9 @@ export const RenderRemoteUndo = (
           const objects = JSON.parse(currentState).objects;
           let object = objects.find((o: ObjectEvent) => o.id === id);
 
-          let payload: ObjectEvent = {
-            id,
-            target: { objects: [object] },
-            type: 'reconstruct',
-          };
-
-          eventSerializer?.push('reconstruct', payload);
+          sendReconstructEvent(id, { objects: [object] }, eventSerializer);
         } else {
-          const objectsToReconstruct = [];
+          const objectsToReconstruct: fabric.Object[] = [];
           const objects = JSON.parse(currentState).objects;
 
           nextEvent.activeIds?.forEach((id) => {
@@ -170,22 +145,17 @@ export const RenderRemoteUndo = (
             objectsToReconstruct.push(object);
           });
 
-          let payload: ObjectEvent = {
+          sendReconstructEvent(
             id,
-            target: { objects },
-            type: 'reconstruct',
-          };
-
-          eventSerializer?.push('reconstruct', payload);
+            { objects: objectsToReconstruct },
+            eventSerializer
+          );
         }
       } else if (state.activeStateIndex !== null) {
         const objects = JSON.parse(currentState).objects;
-        let payload: ObjectEvent = {
-          id: nextObject.id,
-          target: { objects },
-          type: 'reconstruct',
-        };
-        eventSerializer?.push('reconstruct', payload);
+        const id = nextObject.id;
+
+        sendReconstructEvent(id, { objects }, eventSerializer);
       }
 
       break;
