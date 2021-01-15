@@ -63,6 +63,7 @@ function Whiteboard() {
         clearWhiteboardPermissions={teacher}
         allToolbarIsEnabled={true}
         activeCanvas={activeCanvas}
+        userId={'teacher'}
       >
         <Provider store={store}>
           <AuthMenu userId={'teacher'} />
@@ -96,6 +97,7 @@ function Whiteboard() {
         clearWhiteboardPermissions={student}
         allToolbarIsEnabled={false}
         activeCanvas={activeCanvas}
+        userId={'student'}
       >
         <Provider store={store}>
           <div
@@ -128,6 +130,7 @@ function Whiteboard() {
         clearWhiteboardPermissions={student}
         allToolbarIsEnabled={false}
         activeCanvas={activeCanvas}
+        userId={'student2'}
       >
         <Provider store={store}>
           <div
