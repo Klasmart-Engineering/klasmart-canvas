@@ -46,11 +46,13 @@ export const WhiteboardProvider = ({
   clearWhiteboardPermissions,
   allToolbarIsEnabled,
   activeCanvas,
+  userId,
 }: {
   children: React.ReactNode;
   clearWhiteboardPermissions: IClearWhiteboardPermissions;
   allToolbarIsEnabled: boolean;
   activeCanvas: MutableRefObject<string | null>;
+  userId?: string;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();
@@ -169,7 +171,7 @@ export const WhiteboardProvider = ({
   );
 
   const clearWhiteboardActionClearMyself = useCallback(() => {
-    const toolbarIsEnabled = getToolbarIsEnabled();
+    const toolbarIsEnabled = getToolbarIsEnabled(userId);
 
     if (clearWhiteboardPermissions.allowClearMyself && toolbarIsEnabled) {
       canvasActions?.clearWhiteboardClearMySelf();

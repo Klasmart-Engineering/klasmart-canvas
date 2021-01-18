@@ -82,6 +82,7 @@ function Toolbar(
     updateImagePopupIsOpen,
     updatePartialEraseIsActive,
     openUploadFileModal,
+    openClearWhiteboardModal,
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
@@ -225,7 +226,7 @@ function Toolbar(
     if (toolbarIsEnabled) {
       switch (tool) {
         case ELEMENTS.CLEAR_WHITEBOARD_ACTION:
-          // openClearWhiteboardModal();
+          openClearWhiteboardModal();
           break;
 
         case ELEMENTS.UNDO_ACTION:
@@ -532,15 +533,7 @@ function Toolbar(
     getActiveTool,
     getToolElements,
     allToolbarIsEnabled,
-    props.permissions.pointer,
-    props.permissions.move,
-    props.permissions.erase,
-    props.permissions.pen,
-    props.permissions.floodFill,
-    props.permissions.text,
-    props.permissions.shape,
-    props.permissions.undoRedo,
-    props.permissions.clearWhiteboard,
+    props.permissions,
   ]);
 
   const toolbarContainerStyle: CSSProperties = {

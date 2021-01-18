@@ -274,7 +274,79 @@ export const useCanvasActions = (
   /**
    * Clears all whiteboard elements
    * */
-  const clearWhiteboardClearMySelf = useClearWhiteboardSelf(
+  const clearWhiteboardClearMySelf = useCallback(async () => {
+    const toolbarIsEnabled = getToolbarIsEnabled(userId);
+    const serializerToolbarState = store.getState().permissionsState as IPermissions;
+    const teacherHasPermission = allToolbarIsEnabled;
+    const studentHasPermission =
+      toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
+    if (teacherHasPermission || studentHasPermission) {
+      if (typeof localImage === 'string' && localImage.length) {
+        const target = {
+          id: '',
+          target: {
+            strategy: 'allowClearMyself',
+            isLocalImage: true,
+          },
+        };
+
+        eventSerializer?.push('removed', target as ObjectEvent);
+      }
+      await updateClearIsActive(true);
+      await canvas?.getObjects().forEach((obj: ICanvasObject) => {
+        if (obj.id && isLocalObject(obj.id, userId)) {
+          const target = {
+            id: obj.id,
+            target: {
+              strategy: 'allowClearMyself',
+            },
+          };
+
+          obj.set({ groupClear: true });
+          canvas?.remove(obj);
+          eventSerializer?.push('removed', target as ObjectEvent);
+        }
+      });
+
+      if (canvas?.backgroundImage) {
+        const target = {
+          // @ts-ignore
+          id: canvas.backgroundImage.id,
+          target: {
+            strategy: 'allowClearMyself',
+            isBackgroundImage: true,
+          },
+        };
+
+        eventSerializer?.push('removed', target as ObjectEvent);
+
+        // In order to remove background you need to add 0 to the first argument.
+        // An empty string unfortunately doesnt work.
+        // https://stackoverflow.com/a/14171884
+        // @ts-ignore
+        canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+      }
+
+      closeModal();
+
+      const event = {
+        event: { id: `${userId}:clearWhiteboard` },
+        type: 'clearedWhiteboard',
+      } as IUndoRedoEvent;
+
+      // Add cleared whiteboard to undo / redo state.
+      dispatch({
+        type: SET,
+        payload: canvas?.getObjects(),
+        canvasId: userId,
+        event,
+      });
+
+      await updateClearIsActive(false);
+    }
+    // If isLocalObject is added in dependencies an infinity loop happens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
     canvas,
     userId,
     closeModal,
