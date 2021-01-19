@@ -92,6 +92,8 @@ function Toolbar() {
     allToolbarIsEnabled || serializerToolbarState.floodFill;
   const textToolIsActive = allToolbarIsEnabled || serializerToolbarState.text;
   const shapeToolIsActive = allToolbarIsEnabled || serializerToolbarState.shape;
+  const backgroundColorToolIsActive =
+    allToolbarIsEnabled || serializerToolbarState.backgroundColor;
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -124,6 +126,13 @@ function Toolbar() {
     }
 
     if (tool === ELEMENTS.ADD_SHAPE_TOOL && !shapeToolIsActive) {
+      return;
+    }
+
+    if (
+      tool === ELEMENTS.BACKGROUND_COLOR_TOOL &&
+      !backgroundColorToolIsActive
+    ) {
       return;
     }
 
