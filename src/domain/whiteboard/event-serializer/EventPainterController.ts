@@ -89,6 +89,11 @@ export class EventPainterController extends EventEmitter
         }
         case 'fontColorChanged': {
           this.emit('fontColorChanged', data.id, data.objectType, data.target);
+          break;
+        }
+        case 'backgroundColorChanged': {
+          this.emit('backgroundColorChanged', data.id, data.target);
+          break;
         }
       }
     };
@@ -365,5 +370,10 @@ export class EventPainterController extends EventEmitter
 
   private backgroundColorChanged(id: string, target: ICanvasObject) {
     this.emit('backgroundColorChanged', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, eventType: 'backgroundColorChanged', target })
+    );
   }
 }
