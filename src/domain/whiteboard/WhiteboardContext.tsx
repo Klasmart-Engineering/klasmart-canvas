@@ -38,6 +38,7 @@ import store from './redux/store';
 import { getToolbarIsEnabled } from './redux/utils';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { useBackgroundColor } from './hooks/useBackgroundColor';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -62,6 +63,7 @@ export const WhiteboardProvider = ({
   const { eraseType, updateEraseType } = useEraseType();
   const { lineWidth, updateLineWidth } = useLineWidth();
   const { floodFill, updateFloodFill } = useFloodFill();
+  const { backgroundColor, updateBackgroundColor } = useBackgroundColor();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
 
@@ -117,6 +119,7 @@ export const WhiteboardProvider = ({
   const [backgroundImage, setBackgroundImage] = useState<string | File>('');
   const [isBackgroundImage, setIsBackgroundImage] = useState(false);
   const [localImage, setLocalImage] = useState<string | File>('');
+  const [localBackground, setLocalBackground] = useState(false);
   const [
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
@@ -137,7 +140,10 @@ export const WhiteboardProvider = ({
    * Opens ClearWhiteboardModal
    */
   const openClearWhiteboardModal = () => {
-    if (allToolbarIsEnabled || (store.getState().permissionsState as IPermissions).clearWhiteboard) {
+    if (
+      allToolbarIsEnabled ||
+      (store.getState().permissionsState as IPermissions).clearWhiteboard
+    ) {
       openModal();
     }
   };
@@ -176,7 +182,7 @@ export const WhiteboardProvider = ({
     if (clearWhiteboardPermissions.allowClearMyself && toolbarIsEnabled) {
       canvasActions?.clearWhiteboardClearMySelf();
     }
-  }, [canvasActions, clearWhiteboardPermissions]);
+  }, [canvasActions, clearWhiteboardPermissions.allowClearMyself, userId]);
 
   const clearWhiteboardAllowClearOthersAction = useCallback(
     (userId) => {
@@ -204,6 +210,13 @@ export const WhiteboardProvider = ({
     [canvasActions]
   );
 
+  const fillBackgroundColor = useCallback(
+    (color: string) => {
+      canvasActions?.fillBackgroundColor(color);
+    },
+    [canvasActions]
+  );
+
   const eraseObjectAction = useCallback(() => {
     canvasActions?.eraseObject();
   }, [canvasActions]);
@@ -224,11 +237,9 @@ export const WhiteboardProvider = ({
   }, [canvasActions]);
 
   const perfectShapeIsAvailable = () => {
-    const permissionsState = store.getState() as unknown as IPermissions;
+    const permissionsState = (store.getState() as unknown) as IPermissions;
     return (
-      allToolbarIsEnabled ||
-      permissionsState.shape ||
-      permissionsState.move
+      allToolbarIsEnabled || permissionsState.shape || permissionsState.move
     );
   };
 
@@ -340,6 +351,11 @@ export const WhiteboardProvider = ({
     setIsBackgroundImage,
     localImage,
     setLocalImage,
+    localBackground,
+    setLocalBackground,
+    backgroundColor,
+    updateBackgroundColor,
+    fillBackgroundColor,
   };
 
   return (
@@ -355,17 +371,17 @@ export const WhiteboardProvider = ({
         Clear student
       </button>
       {(window.innerWidth <= 768 || window.innerHeight <= 768) &&
-        perfectShapeIsAvailable() ? (
-          <WhiteboardToggle
-            label="Perfect Shape Creation"
-            state={perfectShapeIsActive}
-            onStateChange={(value: boolean) => {
-              if (perfectShapeIsAvailable()) {
-                updatePerfectShapeIsActive(value);
-              }
-            }}
-          />
-        ) : null}
+      perfectShapeIsAvailable() ? (
+        <WhiteboardToggle
+          label="Perfect Shape Creation"
+          state={perfectShapeIsActive}
+          onStateChange={(value: boolean) => {
+            if (perfectShapeIsAvailable()) {
+              updatePerfectShapeIsActive(value);
+            }
+          }}
+        />
+      ) : null}
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />

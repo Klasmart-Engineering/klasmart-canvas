@@ -444,6 +444,12 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'backgroundImage') {
+        if (canvas)
+          canvas.setBackgroundColor(
+            'transparent',
+            canvas.renderAll.bind(canvas)
+          );
+
         fabric.Image.fromURL(target.src as string, function (img) {
           canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
             scaleX: (canvas.width || 0) / (img.width || 0),
@@ -459,6 +465,12 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'localImage') {
+        if (canvas)
+          canvas.setBackgroundColor(
+            'transparent',
+            canvas.renderAll.bind(canvas)
+          );
+
         if (target.backgroundImage) setLocalImage(target.backgroundImage);
 
         return;

@@ -71,6 +71,12 @@ export const useCanvasActions = (
     backgroundImage,
     localImage,
     brushType,
+    updateBackgroundColor,
+    setLocalBackground,
+    localBackground,
+    setIsBackgroundImage,
+    setBackgroundImageIsPartialErasable,
+    setLocalImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { changePenColorSync } = useSynchronization(userId as string);
@@ -298,6 +304,45 @@ export const useCanvasActions = (
       return newShape;
     },
     [canvas, lineWidth, penColor, userId]
+  );
+
+  /**
+   * Add specific color to the whiteboard background
+   * @param {string} color - color to set
+   */
+  const fillBackgroundColor = useCallback(
+    async (color: string) => {
+      await updateBackgroundColor(color);
+      await setLocalBackground(true);
+      await setIsBackgroundImage(false);
+      await setBackgroundImageIsPartialErasable(false);
+      await setLocalImage('');
+
+      if (canvas)
+        await canvas.setBackgroundColor(
+          'transparent',
+          canvas.renderAll.bind(canvas)
+        );
+      // @ts-ignore
+      await canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+
+      const payload = {
+        id: userId,
+        target: color,
+      };
+
+      eventSerializer?.push('backgroundColorChanged', payload);
+    },
+    [
+      canvas,
+      eventSerializer,
+      setBackgroundImageIsPartialErasable,
+      setIsBackgroundImage,
+      setLocalBackground,
+      setLocalImage,
+      updateBackgroundColor,
+      userId,
+    ]
   );
 
   /**
@@ -566,11 +611,11 @@ export const useCanvasActions = (
           const brush = new PaintBrush(canvas, userId);
           const newPoints = ((shape as ICanvasPathBrush).basePath
             ?.points as ICoordinate[]).map((point) => {
-              return {
-                x: point.x * Number(shape.scaleX),
-                y: point.y * Number(shape.scaleY),
-              };
-            });
+            return {
+              x: point.x * Number(shape.scaleX),
+              y: point.y * Number(shape.scaleY),
+            };
+          });
 
           const newPath = brush.modifyPaintBrushPath(
             String(shape.id),
@@ -1210,7 +1255,7 @@ export const useCanvasActions = (
         dispatch
       );
     },
-    [canvas, eventSerializer, updateBrushType, userId]
+    [canvas, dispatch, eventSerializer, updateBrushType, userId]
   );
 
   /**
@@ -1401,11 +1446,27 @@ export const useCanvasActions = (
    * */
   const clearWhiteboardClearMySelf = useCallback(async () => {
     const toolbarIsEnabled = getToolbarIsEnabled(userId);
-    const serializerToolbarState = store.getState().permissionsState as IPermissions;
+    const serializerToolbarState = store.getState()
+      .permissionsState as IPermissions;
     const teacherHasPermission = allToolbarIsEnabled;
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
     if (teacherHasPermission || studentHasPermission) {
+      if (localBackground) {
+        updateBackgroundColor('#000000');
+        setLocalBackground(false);
+
+        const target = {
+          id: '',
+          target: {
+            strategy: 'allowClearMyself',
+            isLocalImage: true,
+          },
+        };
+
+        eventSerializer?.push('removed', target as ObjectEvent);
+      }
+
       if (typeof localImage === 'string' && localImage.length) {
         const target = {
           id: '',
@@ -1665,7 +1726,8 @@ export const useCanvasActions = (
     }
 
     const toolbarIsEnabled = getToolbarIsEnabled(userId);
-    const serializerToolbarState = store.getState().permissionsState as IPermissions;
+    const serializerToolbarState = store.getState()
+      .permissionsState as IPermissions;
     let eraser: any;
 
     if (
@@ -1734,7 +1796,8 @@ export const useCanvasActions = (
 
   const undo = useCallback(() => {
     const toolbarIsEnabled = getToolbarIsEnabled();
-    const serializerToolbarState = store.getState().permissionsState as IPermissions;
+    const serializerToolbarState = store.getState()
+      .permissionsState as IPermissions;
     const teacherHasPermission = allToolbarIsEnabled;
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.undoRedo;
@@ -1742,15 +1805,12 @@ export const useCanvasActions = (
     if (teacherHasPermission || studentHasPermission) {
       dispatch({ type: UNDO, canvasId: canvasId });
     }
-  }, [
-    dispatch,
-    canvasId,
-    allToolbarIsEnabled,
-  ]);
+  }, [dispatch, canvasId, allToolbarIsEnabled]);
 
   const redo = useCallback(() => {
     const toolbarIsEnabled = getToolbarIsEnabled();
-    const serializerToolbarState = store.getState().permissionsState as IPermissions;
+    const serializerToolbarState = store.getState()
+      .permissionsState as IPermissions;
     const teacherHasPermission = allToolbarIsEnabled;
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.undoRedo;
@@ -1758,11 +1818,7 @@ export const useCanvasActions = (
     if (teacherHasPermission || studentHasPermission) {
       dispatch({ type: REDO, canvasId: canvasId });
     }
-  }, [
-    dispatch,
-    canvasId,
-    allToolbarIsEnabled,
-  ]);
+  }, [dispatch, canvasId, allToolbarIsEnabled]);
 
   const state = useMemo(() => {
     const actions = {
@@ -1782,14 +1838,15 @@ export const useCanvasActions = (
       redo,
       clearWhiteboardAllowClearOthers,
       clearWhiteboardClearMySelf,
+      fillBackgroundColor,
     };
 
     return { actions, mouseDown };
   }, [
     fillColor,
     changeStrokeColor,
-    textColor,
     changeBrushType,
+    textColor,
     clearWhiteboardClearAll,
     discardActiveObject,
     addShape,
@@ -1802,6 +1859,7 @@ export const useCanvasActions = (
     redo,
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
+    fillBackgroundColor,
     mouseDown,
   ]);
 

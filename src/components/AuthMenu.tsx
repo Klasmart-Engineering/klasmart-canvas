@@ -22,10 +22,7 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-function AuthMenu(props: {
-  userId: string;
-  [key: string]: any
-}) {
+function AuthMenu(props: { userId: string; [key: string]: any }) {
   console.log('PROPS:::::', props);
   console.log('USER ID: ', props.userId);
   const { userId } = props;
@@ -53,7 +50,8 @@ function AuthMenu(props: {
     undoRedo,
     clearWhiteboard,
     downloadCanvas,
-    uploadImage
+    uploadImage,
+    backgroundColor,
   } = props.permissions;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,6 +97,11 @@ function AuthMenu(props: {
       checked: floodFill,
       name: 'floodFill',
       label: 'Flood-fill tool',
+    },
+    {
+      checked: backgroundColor,
+      name: 'backgroundColor',
+      label: 'Background Color tool',
     },
     {
       checked: text,
@@ -185,18 +188,17 @@ function AuthMenu(props: {
   );
 }
 
-// TEMPORARY : once we have an actual login, this will have to be mapped to the login data for the user state and isAdmin properties. 
-const mapStateToProps = (state:any, ownProps: any) => (
-  { 
-    ...ownProps, 
-    permissions: state.permissionsState,
-    user: state.userState,
-    isAdmin: ownProps.userId === 'teacher', // TEMPORARY until actual login process is created.
-  }
-);
+// TEMPORARY : once we have an actual login, this will have to be mapped to the login data for the user state and isAdmin properties.
+const mapStateToProps = (state: any, ownProps: any) => ({
+  ...ownProps,
+  permissions: state.permissionsState,
+  user: state.userState,
+  isAdmin: ownProps.userId === 'teacher', // TEMPORARY until actual login process is created.
+});
 
 const mapDispatchToProps = (dispatch: any) => ({
-  updatePermissions: (tool: string, payload: boolean) => dispatch({ type: tool, payload }),
+  updatePermissions: (tool: string, payload: boolean) =>
+    dispatch({ type: tool, payload }),
   updateUser: (id: string) => dispatch({ type: 'UPDATE_USER', id }),
 });
 
