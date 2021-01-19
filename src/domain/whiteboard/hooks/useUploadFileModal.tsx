@@ -40,6 +40,7 @@ export const useUploadFileModal = () => {
   const UploadFileModal = (props: IUploadFileModal) => {
     const [value, setValue] = useState('element');
     const [error, setError] = useState(false);
+    const [gifError, setGifError] = useState(false);
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       setValue((event.target as HTMLInputElement).value);
     };
@@ -75,11 +76,17 @@ export const useUploadFileModal = () => {
         }
 
         if (value === 'background') {
+          if (fileType === 'image/gif') {
+            setGifError(true);
+            return;
+          }
+
           setIsBackgroundImage(true);
           setBackgroundImage(URL.createObjectURL(img));
           setBackgroundImageIsPartialErasable(backgroundImageIsPartialErasable);
           setOpen(false);
           setError(false);
+          setGifError(false);
 
           return;
         }
@@ -98,6 +105,7 @@ export const useUploadFileModal = () => {
 
         setOpen(false);
         setError(false);
+        setGifError(false);
       }
     };
 
@@ -118,6 +126,11 @@ export const useUploadFileModal = () => {
             {error && (
               <FormLabel component="legend">
                 File should be less than 5mb
+              </FormLabel>
+            )}
+            {gifError && (
+              <FormLabel component="legend">
+                Can not use gifs as background image
               </FormLabel>
             )}
             <FormControl component="fieldset">

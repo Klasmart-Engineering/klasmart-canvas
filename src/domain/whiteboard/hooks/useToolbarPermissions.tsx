@@ -15,6 +15,7 @@ export const useToolbarPermissions = () => {
     clearWhiteboard: false,
     downloadCanvas: false,
     uploadImage: false,
+    backgroundColor: false,
   });
 
   return {

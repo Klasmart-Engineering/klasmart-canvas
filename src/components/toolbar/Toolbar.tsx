@@ -57,6 +57,7 @@ function Toolbar() {
     updateFloodFill,
     updateFloodFillIsActive,
     updateEventedObjects,
+    backgroundColor,
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
@@ -79,6 +80,7 @@ function Toolbar() {
     updateImagePopupIsOpen,
     updatePartialEraseIsActive,
     openUploadFileModal,
+    fillBackgroundColor,
   } = useContext(WhiteboardContext);
 
   const pointerToolIsActive =
@@ -273,6 +275,10 @@ function Toolbar() {
         updateFloodFill(option);
         break;
 
+      case ELEMENTS.BACKGROUND_COLOR_TOOL:
+        fillBackgroundColor(option);
+        break;
+
       case ELEMENTS.ADD_TEXT_TOOL:
         updateFontFamily(option);
         break;
@@ -390,6 +396,9 @@ function Toolbar() {
 
       case ELEMENTS.FLOOD_FILL_TOOL:
         return floodFill;
+
+      case ELEMENTS.BACKGROUND_COLOR_TOOL:
+        return backgroundColor;
 
       case ELEMENTS.ADD_TEXT_TOOL:
         return fontFamily;

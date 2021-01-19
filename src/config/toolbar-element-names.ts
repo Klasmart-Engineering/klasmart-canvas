@@ -11,6 +11,7 @@ export const ELEMENTS = {
   LINE_TYPE_TOOL: 'line_type',
   LINE_WIDTH_TOOL: 'line_width',
   FLOOD_FILL_TOOL: 'flood_fill',
+  BACKGROUND_COLOR_TOOL: 'background_color',
   ADD_TEXT_TOOL: 'add_text',
   ADD_SHAPE_TOOL: 'add_shape',
   ADD_STAMP_TOOL: 'add_stamp',
