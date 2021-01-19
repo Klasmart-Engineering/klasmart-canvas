@@ -20,6 +20,7 @@ const useSynchronizedBackgroundColorChanged = (
   } = useSharedEventSerializer();
 
   const {
+    backgroundColor,
     updateBackgroundColor,
     setLocalBackground,
     setIsBackgroundImage,
@@ -29,7 +30,8 @@ const useSynchronizedBackgroundColorChanged = (
 
   useEffect(() => {
     const backgroundColorChanged = (id: string, target: string) => {
-      if (id && !shouldHandleRemoteEvent(id)) return;
+      if (id && !shouldHandleRemoteEvent(id) && backgroundColor === target)
+        return;
 
       updateBackgroundColor(target);
       setLocalBackground(true);
@@ -62,6 +64,7 @@ const useSynchronizedBackgroundColorChanged = (
     setIsBackgroundImage,
     setBackgroundImageIsPartialErasable,
     setLocalImage,
+    backgroundColor,
   ]);
 };
 

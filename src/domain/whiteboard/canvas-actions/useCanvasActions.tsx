@@ -72,10 +72,10 @@ export const useCanvasActions = (
     brushType,
     updateBackgroundColor,
     setLocalBackground,
+    localBackground,
     setIsBackgroundImage,
     setBackgroundImageIsPartialErasable,
     setLocalImage,
-    localBackground,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { changePenColorSync } = useSynchronization(userId as string);
@@ -310,17 +310,20 @@ export const useCanvasActions = (
    * @param {string} color - color to set
    */
   const fillBackgroundColor = useCallback(
-    (color: string) => {
-      updateBackgroundColor(color);
-      setLocalBackground(true);
-      setIsBackgroundImage(false);
-      setBackgroundImageIsPartialErasable(false);
-      setLocalImage('');
+    async (color: string) => {
+      await updateBackgroundColor(color);
+      await setLocalBackground(true);
+      await setIsBackgroundImage(false);
+      await setBackgroundImageIsPartialErasable(false);
+      await setLocalImage('');
 
       if (canvas)
-        canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
+        await canvas.setBackgroundColor(
+          'transparent',
+          canvas.renderAll.bind(canvas)
+        );
       // @ts-ignore
-      canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+      await canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
 
       const payload = {
         id: userId,
@@ -330,14 +333,14 @@ export const useCanvasActions = (
       eventSerializer?.push('backgroundColorChanged', payload);
     },
     [
-      updateBackgroundColor,
       canvas,
       eventSerializer,
-      userId,
-      setLocalBackground,
-      setIsBackgroundImage,
       setBackgroundImageIsPartialErasable,
+      setIsBackgroundImage,
+      setLocalBackground,
       setLocalImage,
+      updateBackgroundColor,
+      userId,
     ]
   );
 
