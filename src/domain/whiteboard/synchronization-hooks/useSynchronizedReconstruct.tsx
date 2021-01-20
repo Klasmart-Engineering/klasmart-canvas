@@ -27,7 +27,18 @@ const useSynchronizedReconstruct = (
     const reconstruct = (id: string, target: ICanvasObject) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
+      if (typeof target === 'object' && !target.param) {
+        target.param = JSON.stringify(target);
+      }
+
+      if (typeof target !== 'object') {
+        target = {
+          param: 'false',
+        } as ICanvasObject;
+      }
+
       const parsed = JSON.parse(target.param as string);
+
       if (parsed === false) {
         canvas?.getObjects().forEach((object: TypedShape) => {
           if (getId(id) === getId(object.id)) {
