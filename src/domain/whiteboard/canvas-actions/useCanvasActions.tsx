@@ -317,11 +317,11 @@ export const useCanvasActions = (
       await setBackgroundImageIsPartialErasable(false);
       await setLocalImage('');
 
-      if (canvas)
-        await canvas.setBackgroundColor(
-          'transparent',
-          canvas.renderAll.bind(canvas)
-        );
+      await canvas.setBackgroundColor(
+        'transparent',
+        canvas.renderAll.bind(canvas)
+      );
+
       // @ts-ignore
       await canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
 
@@ -330,10 +330,26 @@ export const useCanvasActions = (
         target: color,
       };
 
+      const event = ({
+        event: {
+          id: userId,
+          color,
+        },
+        type: 'backgroundColorChanged',
+      } as unknown) as IUndoRedoEvent;
+
+      dispatch({
+        type: SET,
+        payload: canvas?.getObjects(),
+        canvasId: userId,
+        event,
+      });
+
       eventSerializer?.push('backgroundColorChanged', payload);
     },
     [
       canvas,
+      dispatch,
       eventSerializer,
       setBackgroundImageIsPartialErasable,
       setIsBackgroundImage,

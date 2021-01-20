@@ -11,12 +11,14 @@ import { sendReconstructEvent } from './sendReconstructEvent';
 /**
  * Renders Redo action in Remote Whiteboards according with the given state
  * @param {fabric.Canvas} canvas - Current canvas
+ * @param {string} instanceId - Canvas ID
  * @param {CanvasHistoryState} state - Current state to get data for render
  * @param {PaintEventSerializer} eventSerializer - Event serializer to send
  * changes to remote whiteboards
  */
 export const RenderRemoteRedo = (
   canvas: fabric.Canvas,
+  instanceId: string,
   state: CanvasHistoryState,
   eventSerializer: PaintEventSerializer
 ) => {
@@ -84,6 +86,16 @@ export const RenderRemoteRedo = (
       const id = currentObject.id;
 
       sendReconstructEvent(id, { objects }, eventSerializer);
+      break;
+    }
+
+    case 'backgroundColorChanged': {
+      const payload = {
+        id: instanceId,
+        target: currentObject.color,
+      };
+
+      eventSerializer?.push('backgroundColorChanged', payload);
       break;
     }
 
