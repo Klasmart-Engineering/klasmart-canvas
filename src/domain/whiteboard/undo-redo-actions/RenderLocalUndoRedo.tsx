@@ -51,17 +51,15 @@ const mapActiveState = (activeState: string) =>
  * @param {{ [key: string]: any }} mapped - Objects to set in canvas.
  * @param {string} instanceId - Canvas ID
  * @param {CanvasHistoryState} state - Current state in canvas actions history
+ * @param {(color: string) => void} setBackgroundColorInCanvas - Function to
+ * set background color in current canvas
  */
 const loadFromJSON = (
   canvas: fabric.Canvas,
   mapped: { [key: string]: any },
   instanceId: string,
   state: CanvasHistoryState,
-  updateBackgroundColor: (arg1: string) => void,
-  setLocalBackground: (arg1: boolean) => void,
-  setIsBackgroundImage: (arg1: boolean) => void,
-  setBackgroundImageIsPartialErasable: (arg1: boolean) => void,
-  setLocalImage: (arg1: string) => void
+  setBackgroundColorInCanvas: (color: string) => void
 ) => {
   canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
     canvas
@@ -86,16 +84,9 @@ const loadFromJSON = (
     if (!divColorBackground) {
       canvas.backgroundColor = fill;
     } else {
-      updateBackgroundColor(divColorBackground);
-      setLocalBackground(true);
-      setIsBackgroundImage(false);
-      setBackgroundImageIsPartialErasable(false);
-      setLocalImage('');
-
-      canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
-      // @ts-ignore
-      canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+      setBackgroundColorInCanvas(divColorBackground);
     }
+
     canvas.renderAll();
   });
 };
@@ -107,17 +98,15 @@ const loadFromJSON = (
  * @param {CanvasHistoryState} state - Current state to get data to render
  * @param {boolean} shapesAreSelectable - Flag to know if objects are able
  * to be selectable
+ * @param {(color: string) => void} setBackgroundColorInCanvas - Function to
+ * set background color in current canvas
  */
 export const RenderLocalUndoRedo = (
   canvas: fabric.Canvas,
   instanceId: string,
   state: CanvasHistoryState,
   shapesAreSelectable: boolean,
-  updateBackgroundColor: (arg1: string) => void,
-  setLocalBackground: (arg1: boolean) => void,
-  setIsBackgroundImage: (arg1: boolean) => void,
-  setBackgroundImageIsPartialErasable: (arg1: boolean) => void,
-  setLocalImage: (arg1: string) => void
+  setBackgroundColorInCanvas: (color: string) => void
 ) => {
   /**
    * Reset selectable, evented and strokeUniform properties
@@ -151,17 +140,7 @@ export const RenderLocalUndoRedo = (
   );
 
   // Loading objects in canvas
-  loadFromJSON(
-    canvas,
-    mapped,
-    instanceId,
-    state,
-    updateBackgroundColor,
-    setLocalBackground,
-    setIsBackgroundImage,
-    setBackgroundImageIsPartialErasable,
-    setLocalImage
-  );
+  loadFromJSON(canvas, mapped, instanceId, state, setBackgroundColorInCanvas);
 
   // If undo/redo was applied in a group of objects
   if (mapped.length === 1 && mapped[0].type === 'activeSelection') {

@@ -22,14 +22,9 @@ export const UndoRedo = (
   instanceId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
-  const {
-    shapesAreSelectable,
-    updateBackgroundColor,
-    setLocalBackground,
-    setIsBackgroundImage,
-    setBackgroundImageIsPartialErasable,
-    setLocalImage,
-  } = useContext(WhiteboardContext);
+  const { shapesAreSelectable, setBackgroundColorInCanvas } = useContext(
+    WhiteboardContext
+  );
 
   useEffect(() => {
     if (!state || !canvas) {
@@ -43,11 +38,7 @@ export const UndoRedo = (
         instanceId,
         state,
         shapesAreSelectable,
-        updateBackgroundColor,
-        setLocalBackground,
-        setIsBackgroundImage,
-        setBackgroundImageIsPartialErasable,
-        setLocalImage
+        setBackgroundColorInCanvas
       );
     }
 
@@ -57,17 +48,12 @@ export const UndoRedo = (
       RenderRemoteRedo(canvas, instanceId, state, eventSerializer);
     }
   }, [
-    state,
     canvas,
-    dispatch,
     eventSerializer,
     instanceId,
+    setBackgroundColorInCanvas,
     shapesAreSelectable,
-    updateBackgroundColor,
-    setLocalBackground,
-    setIsBackgroundImage,
-    setBackgroundImageIsPartialErasable,
-    setLocalImage,
+    state,
   ]);
 
   return { state, dispatch };
