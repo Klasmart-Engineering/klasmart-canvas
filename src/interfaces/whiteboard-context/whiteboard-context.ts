@@ -97,6 +97,7 @@ export interface IWhiteboardContext {
   backgroundColor: string;
   updateBackgroundColor: (color: string) => void;
   fillBackgroundColor: (color: string) => void;
+  setBackgroundColorInCanvas: (color: string) => void;
   localBackground: boolean;
   setLocalBackground: (condition: boolean) => void;
 }

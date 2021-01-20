@@ -307,42 +307,64 @@ export const useCanvasActions = (
   );
 
   /**
+   * Changes backgroundColor property
+   * and makes the necessary changes to paint the current whiteboard
+   * @param {string} color - Color to paint the background
+   */
+  const setBackgroundColorInCanvas = useCallback(
+    (color: string) => {
+      updateBackgroundColor(color);
+      setLocalBackground(true);
+      setIsBackgroundImage(false);
+      setBackgroundImageIsPartialErasable(false);
+      setLocalImage('');
+
+      canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
+
+      // @ts-ignore
+      canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+    },
+    [
+      canvas,
+      setBackgroundImageIsPartialErasable,
+      setIsBackgroundImage,
+      setLocalBackground,
+      setLocalImage,
+      updateBackgroundColor,
+    ]
+  );
+
+  /**
    * Add specific color to the whiteboard background
    * @param {string} color - color to set
    */
   const fillBackgroundColor = useCallback(
     async (color: string) => {
-      await updateBackgroundColor(color);
-      await setLocalBackground(true);
-      await setIsBackgroundImage(false);
-      await setBackgroundImageIsPartialErasable(false);
-      await setLocalImage('');
-
-      if (canvas)
-        await canvas.setBackgroundColor(
-          'transparent',
-          canvas.renderAll.bind(canvas)
-        );
-      // @ts-ignore
-      await canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+      await setBackgroundColorInCanvas(color);
 
       const payload = {
         id: userId,
         target: color,
       };
 
+      const event = ({
+        event: {
+          id: userId,
+          color,
+        },
+        type: 'backgroundColorChanged',
+      } as unknown) as IUndoRedoEvent;
+
+      dispatch({
+        type: SET,
+        payload: canvas?.getObjects(),
+        canvasId: userId,
+        event,
+      });
+
       eventSerializer?.push('backgroundColorChanged', payload);
     },
-    [
-      canvas,
-      eventSerializer,
-      setBackgroundImageIsPartialErasable,
-      setIsBackgroundImage,
-      setLocalBackground,
-      setLocalImage,
-      updateBackgroundColor,
-      userId,
-    ]
+    [canvas, dispatch, eventSerializer, setBackgroundColorInCanvas, userId]
   );
 
   /**
@@ -1839,6 +1861,7 @@ export const useCanvasActions = (
       clearWhiteboardAllowClearOthers,
       clearWhiteboardClearMySelf,
       fillBackgroundColor,
+      setBackgroundColorInCanvas,
     };
 
     return { actions, mouseDown };
@@ -1861,6 +1884,7 @@ export const useCanvasActions = (
     clearWhiteboardClearMySelf,
     fillBackgroundColor,
     mouseDown,
+    setBackgroundColorInCanvas,
   ]);
 
   return state;

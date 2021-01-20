@@ -22,7 +22,9 @@ export const UndoRedo = (
   instanceId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
-  const { shapesAreSelectable } = useContext(WhiteboardContext);
+  const { shapesAreSelectable, setBackgroundColorInCanvas } = useContext(
+    WhiteboardContext
+  );
 
   useEffect(() => {
     if (!state || !canvas) {
@@ -31,21 +33,27 @@ export const UndoRedo = (
 
     // Rerenders local canvas when an undo or redo event has been executed.
     if (state.actionType === UNDO || state.actionType === REDO) {
-      RenderLocalUndoRedo(canvas, instanceId, state, shapesAreSelectable);
+      RenderLocalUndoRedo(
+        canvas,
+        instanceId,
+        state,
+        shapesAreSelectable,
+        setBackgroundColorInCanvas
+      );
     }
 
     if (state.actionType === UNDO) {
-      RenderRemoteUndo(canvas, state, eventSerializer);
+      RenderRemoteUndo(canvas, instanceId, state, eventSerializer);
     } else if (state.actionType === REDO) {
-      RenderRemoteRedo(canvas, state, eventSerializer);
+      RenderRemoteRedo(canvas, instanceId, state, eventSerializer);
     }
   }, [
-    state,
     canvas,
-    dispatch,
     eventSerializer,
     instanceId,
+    setBackgroundColorInCanvas,
     shapesAreSelectable,
+    state,
   ]);
 
   return { state, dispatch };

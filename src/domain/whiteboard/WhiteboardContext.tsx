@@ -217,6 +217,13 @@ export const WhiteboardProvider = ({
     [canvasActions]
   );
 
+  const setBackgroundColorInCanvas = useCallback(
+    (color: string) => {
+      canvasActions?.setBackgroundColorInCanvas(color);
+    },
+    [canvasActions]
+  );
+
   const eraseObjectAction = useCallback(() => {
     canvasActions?.eraseObject();
   }, [canvasActions]);
@@ -356,6 +363,7 @@ export const WhiteboardProvider = ({
     backgroundColor,
     updateBackgroundColor,
     fillBackgroundColor,
+    setBackgroundColorInCanvas,
   };
 
   return (

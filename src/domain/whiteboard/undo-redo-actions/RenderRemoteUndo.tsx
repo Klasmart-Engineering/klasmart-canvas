@@ -4,19 +4,24 @@ import {
   PaintEventSerializer,
 } from '../event-serializer/PaintEventSerializer';
 import { CanvasHistoryState } from '../reducers/undo-redo';
-import { getPreviousBackground } from './getPreviousBackground';
+import {
+  getPreviousBackground,
+  getPreviousBackgroundDivColor,
+} from './getPreviousBackground';
 import { getStateVariables } from './getStateVariables';
 import { sendReconstructEvent } from './sendReconstructEvent';
 
 /**
  * Renders Undo action in Remote Whiteboards
  * @param {fabric.Canvas} canvas - Current canvas
+ * @param {string} instanceId - Canvas ID
  * @param {CanvasHistoryState} state - Current state to get data to render
  * @param {PaintEventSerializer} eventSerializer - Event serializer to send
  * changes to Remote Whiteboards
  */
 export const RenderRemoteUndo = (
   canvas: fabric.Canvas,
+  instanceId: string,
   state: CanvasHistoryState,
   eventSerializer: PaintEventSerializer
 ) => {
@@ -107,6 +112,21 @@ export const RenderRemoteUndo = (
       const id = nextObject.id;
 
       sendReconstructEvent(id, { objects }, eventSerializer);
+      break;
+    }
+
+    case 'backgroundColorChanged': {
+      const divColorBackground = getPreviousBackgroundDivColor(
+        state.eventIndex,
+        state.events
+      );
+
+      const payload = {
+        id: instanceId,
+        target: divColorBackground || 'transparent',
+      };
+
+      eventSerializer?.push('backgroundColorChanged', payload);
       break;
     }
 
