@@ -190,59 +190,10 @@ export const useChangeLineWidth = (
         canvas?.setActiveObject(activesGroup);
       }
 
-      // activeObjects.forEach((object: ICanvasObject) => {
-      //   if (isCommonBrush(object)) {
-      //     commonBrushChange(object, isUniqueObject);
-      //   } else if (isCustomBrush(object as ICanvasBrush)) {
-      //     customBrushChange(object as ICanvasBrush);
-      //   }
-      // });
-
       canvas.renderAll();
     };
 
     changeLineWidth();
-
-    // if (!canvas) return;
-
-    // const selection = canvas.getActiveObject();
-    // const isUniqueObject = activeObjects.length === 1;
-
-    // if (selection?.type === 'activeSelection') {
-    //   activeObjects = (selection as fabric.ActiveSelection)._objects;
-    // } else {
-    //   activeObjects = canvas.getActiveObjects();
-    // }
-
-    // if (!activeObjects) return;
-    // canvas.discardActiveObject();
-
-    // for (const object of activeObjects) {
-    //   canvas.discardActiveObject();
-
-    //   if (isCommonBrush(object)) {
-    //     commonBrushChange(object, isUniqueObject);
-    //   } else if (isCustomBrush(object as ICanvasBrush)) {
-    //     await customBrushChange(object as ICanvasBrush);
-    //   }
-    // }
-
-    // if (newActives.length === 1) {
-    //   canvas?.setActiveObject(newActives[0]);
-    // } else if (newActives.length >= 2) {
-    //   const activesGroup = new fabric.ActiveSelection(newActives);
-    //   canvas?.setActiveObject(activesGroup);
-    // }
-
-    // // activeObjects.forEach((object: ICanvasObject) => {
-    // //   if (isCommonBrush(object)) {
-    // //     commonBrushChange(object, isUniqueObject);
-    // //   } else if (isCustomBrush(object as ICanvasBrush)) {
-    // //     customBrushChange(object as ICanvasBrush);
-    // //   }
-    // // });
-
-    // canvas.renderAll();
 
     /* If commonBrushChange is added on dependencies
     useEffect is loading more than the necesary times
