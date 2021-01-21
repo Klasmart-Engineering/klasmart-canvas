@@ -5,7 +5,6 @@ import { ICanvasKeyboardEvent } from '../../../interfaces/canvas-events/canvas-k
 import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
-import { UNDO, REDO, CanvasAction } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { WhiteboardContext } from '../WhiteboardContext';
 
@@ -13,13 +12,10 @@ import { WhiteboardContext } from '../WhiteboardContext';
  * Handles the logic for keyboard events
  * @param {fabric.Canvas} canvas - Canvas to interact
  * @param {string} instanceId - Id of the current canvas
- * @param {(action: CanvasAction) => void} undoRedoDispatch - Dispatcher
- * to save the following events to make undo/redo over them
  */
 export const useKeyHandlers = (
   canvas: fabric.Canvas,
   instanceId: string,
-  undoRedoDispatch: (action: CanvasAction) => void,
   permissions: IPermissions
 ) => {
   // Getting context variables
@@ -28,6 +24,8 @@ export const useKeyHandlers = (
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
     perfectShapeIsAvailable,
+    redo,
+    undo,
   } = useContext(WhiteboardContext);
 
   // Event serialization for synchronizing whiteboard state.
@@ -81,26 +79,50 @@ export const useKeyHandlers = (
         }
       };
 
+      /**
+       * Checks if client's OS is MacOS or not
+       */
+      const isMacOS = () => {
+        return navigator.appVersion.indexOf('Mac') !== -1;
+      };
+
+      /**
+       * Checks if an Undo Shortcut is executed
+       */
+      const isUndoShortcut = () => {
+        return (
+          (event.ctrlKey || (isMacOS() && event.metaKey)) &&
+          event.keyCode === 90 &&
+          !event.shiftKey &&
+          activeCanvas.current === instanceId
+        );
+      };
+
+      /**
+       * Checks if a Redo Shortcut is executed
+       */
+      const isRedoShortcut = () => {
+        return (
+          ((event.keyCode === 89 && event.ctrlKey) ||
+            (isMacOS() &&
+              event.metaKey &&
+              event.shiftKey &&
+              event.keyCode === 90)) &&
+          activeCanvas.current === instanceId
+        );
+      };
+
       const event = e as ICanvasKeyboardEvent;
 
       // UNDO Keyboard Shortcut
-      if (
-        event.keyCode === 90 &&
-        event.ctrlKey &&
-        !event.shiftKey &&
-        activeCanvas.current === instanceId
-      ) {
-        undoRedoDispatch({ type: UNDO, canvasId: instanceId });
+      if (isUndoShortcut()) {
+        undo();
         return;
       }
 
       // REDO Keyboard Shortcut
-      if (
-        event.keyCode === 89 &&
-        event.ctrlKey &&
-        activeCanvas.current === instanceId
-      ) {
-        undoRedoDispatch({ type: REDO, canvasId: instanceId });
+      if (isRedoShortcut()) {
+        redo();
         return;
       }
 
@@ -133,7 +155,8 @@ export const useKeyHandlers = (
       perfectShapeIsAvailable,
       canvas,
       eventSerializer,
-      undoRedoDispatch,
+      undo,
+      redo,
       updatePerfectShapeIsActive,
       permissions.undoRedo,
     ]

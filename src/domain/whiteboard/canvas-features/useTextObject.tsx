@@ -26,7 +26,7 @@ export const useTextObject = (
   canvas: fabric.Canvas,
   instanceId: string,
   userId: string,
-  permissions: IPermissions,
+  permissions: IPermissions
 ) => {
   // Getting context data
   const {
@@ -64,8 +64,7 @@ export const useTextObject = (
   const { keyUpHandler, keyDownHandler } = useKeyHandlers(
     canvas,
     instanceId,
-    undoRedoDispatch,
-    permissions,
+    permissions
   );
 
   /**
