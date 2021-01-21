@@ -9,6 +9,76 @@ import { PaintBrush } from '../brushes/classes/paintBrush';
 import { PenBrush } from '../brushes/classes/penBrush';
 import * as shapes from '../shapes/shapes';
 
+export const shapeSelector = (props: any, specific: keyof typeof shapes | string): TypedShape => {
+  const { brushType, lineWidth, penColor, shape, shapeColor } = props;
+  const value: keyof typeof shapes | string = (specific || shape as string) === 'chatBubble' ? 'chat' : specific || shape;
+
+  switch (value) {
+    case 'rectangle':
+    case 'circle':
+    case 'triangle':
+    case 'star':
+    case 'arrow':
+    case 'chat':
+      return shapes[value](
+        2,
+        2,
+        penColor,
+        false,
+        lineWidth,
+        brushType === 'dashed'
+      );
+    case 'pentagon':
+    case 'hexagon':
+      return shapes[value](
+        penColor,
+        false,
+        lineWidth,
+        brushType === 'dashed'
+      );
+    case 'filledRectangle':
+    case 'filledCircle':
+    case 'filledArrow':
+    case 'filledStar':
+    case 'filledChatBubble': {
+      const key: 'rectangle' | 'circle' | 'arrow' | 'star' | 'chat'=
+        value.replace('filled', '').toLowerCase() as 'rectangle' | 'circle' | 'arrow' | 'star' | 'chat';
+
+      return shapes[key](
+        2,
+        2,
+        shapeColor,
+        true,
+        0,
+        brushType === 'dashed'
+      );
+    }
+    case 'filledTriangle':
+      return shapes.triangle(
+        2,
+        4,
+        shapeColor,
+        true,
+        0,
+        brushType === 'dashed'
+      );
+    case 'filledPentagon':
+    case 'filledHexagon': {
+      const key = value === 'filledPentagon' ? 'pentagon' : 'hexagon';
+      return shapes[key](shapeColor, true, 0, brushType === 'dashed');
+    }
+    default:
+      return shapes.circle(
+        2,
+        2,
+        penColor,
+        false,
+        lineWidth,
+        brushType === 'dashed'
+      );
+  }
+};
+
 export function useShapeSelector(props: any) {
   const { brushType, lineWidth, penColor, shape, shapeColor } = props;
   const value = useCallback(

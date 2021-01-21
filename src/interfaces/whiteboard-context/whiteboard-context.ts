@@ -45,6 +45,7 @@ export interface IWhiteboardContext {
   updateShapesAreSelectable: (status: boolean) => void;
   shapesAreEvented: boolean;
   updateShapesAreEvented: (status: boolean) => void;
+  canvasActions: ICanvasActions | undefined;
   updateCanvasActions: (actions: ICanvasActions) => void;
   laserIsActive: boolean;
   updateLaserIsActive: (status: boolean) => void;

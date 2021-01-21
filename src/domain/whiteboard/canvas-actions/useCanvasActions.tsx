@@ -12,10 +12,6 @@ import {
 } from '../reducers/undo-redo';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
-import {
-  ObjectEvent,
-} from '../event-serializer/PaintEventSerializer';
-import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { PartialErase } from '../partial-erase/partialErase';
 import { useSynchronization } from '../canvas-features/useSynchronization';
 import store from '../../whiteboard/redux/store';
@@ -71,7 +67,7 @@ export const useCanvasActions = (
    * Adds shape to whiteboard.
    * @param specific Indicates shape type that should be added in whiteboard.
    */
-  const shapeSelector = useShapeSelector({ brushType, lineWidth, penColor, shape, shapeColor});
+  const shapeSelector = useShapeSelector({ brushType, lineWidth, penColor, shape, shapeColor });
 
   /**
    * Adds shape with special brush to whiteboard.
@@ -80,10 +76,19 @@ export const useCanvasActions = (
    */
   const specialShapeSelector = useSpecialShapeSelector(userId as string);
 
+  /**
+   * Mouse move event handlers for cavnas
+   */
   const mouseMove = useMouseMove();
 
+  /**
+   * Mouse up event handlers for cavnas
+   */
   const mouseUp = useMouseUp(dispatch);
 
+  /**
+   * Clear mouse event handlers for cavnas
+   */
   const clearOnMouseEvent = useCallback((): void => {
     canvas?.off('mouse:down');
   }, [canvas]);
@@ -163,6 +168,9 @@ export const useCanvasActions = (
    */
   const changeStrokeColor = useChangeStrokeColor(canvas, userId, eventSerializer, updatePenColor, dispatch, changePenColorSync);
 
+  /**
+   * Changes brush type for shapes and
+   */
   const changeBrushType = useCallback(
     (type: IBrushType) => {
       changeBrushTypeAction(
@@ -274,79 +282,7 @@ export const useCanvasActions = (
   /**
    * Clears all whiteboard elements
    * */
-  const clearWhiteboardClearMySelf = useCallback(async () => {
-    const toolbarIsEnabled = getToolbarIsEnabled(userId);
-    const serializerToolbarState = store.getState().permissionsState as IPermissions;
-    const teacherHasPermission = allToolbarIsEnabled;
-    const studentHasPermission =
-      toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
-    if (teacherHasPermission || studentHasPermission) {
-      if (typeof localImage === 'string' && localImage.length) {
-        const target = {
-          id: '',
-          target: {
-            strategy: 'allowClearMyself',
-            isLocalImage: true,
-          },
-        };
-
-        eventSerializer?.push('removed', target as ObjectEvent);
-      }
-      await updateClearIsActive(true);
-      await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-        if (obj.id && isLocalObject(obj.id, userId)) {
-          const target = {
-            id: obj.id,
-            target: {
-              strategy: 'allowClearMyself',
-            },
-          };
-
-          obj.set({ groupClear: true });
-          canvas?.remove(obj);
-          eventSerializer?.push('removed', target as ObjectEvent);
-        }
-      });
-
-      if (canvas?.backgroundImage) {
-        const target = {
-          // @ts-ignore
-          id: canvas.backgroundImage.id,
-          target: {
-            strategy: 'allowClearMyself',
-            isBackgroundImage: true,
-          },
-        };
-
-        eventSerializer?.push('removed', target as ObjectEvent);
-
-        // In order to remove background you need to add 0 to the first argument.
-        // An empty string unfortunately doesnt work.
-        // https://stackoverflow.com/a/14171884
-        // @ts-ignore
-        canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
-      }
-
-      closeModal();
-
-      const event = {
-        event: { id: `${userId}:clearWhiteboard` },
-        type: 'clearedWhiteboard',
-      } as IUndoRedoEvent;
-
-      // Add cleared whiteboard to undo / redo state.
-      dispatch({
-        type: SET,
-        payload: canvas?.getObjects(),
-        canvasId: userId,
-        event,
-      });
-
-      await updateClearIsActive(false);
-    }
-    // If isLocalObject is added in dependencies an infinity loop happens
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
+  const clearWhiteboardClearMySelf = useClearWhiteboardSelf(
     canvas,
     userId,
     closeModal,
@@ -364,7 +300,6 @@ export const useCanvasActions = (
    * Clears all whiteboard with allowClearOthers strategy
    * */
   const clearWhiteboardAllowClearOthers = useClearWhiteboardOthers(canvas, updateClearIsActive, eventSerializer);
-
 
   /**
    * Set Canvas Whiteboard selection ability

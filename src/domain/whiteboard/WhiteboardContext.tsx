@@ -293,6 +293,7 @@ export const WhiteboardProvider = ({
     updateShapeColor,
     shapesAreSelectable,
     shapesAreEvented,
+    canvasActions,
     updateCanvasActions,
     laserIsActive,
     updateLaserIsActive,

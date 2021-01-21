@@ -130,7 +130,6 @@ export const useMouseDown = (
       }
 
       let shape;
-
       shape = shapeSelector(specific);
 
       if (e.pointer) {

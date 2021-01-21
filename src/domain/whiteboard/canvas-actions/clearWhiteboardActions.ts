@@ -21,7 +21,6 @@ export const useClearWhiteboardSelf = (
   canvasId: string,
   backgroundImage: any,
 ) => (useCallback(async () => {
-  console.log('CANVAS: ', canvas);
   const toolbarIsEnabled = getToolbarIsEnabled();
   const serializerToolbarState = store.getState().permissionsState as IPermissions;
   const teacherHasPermission = allToolbarIsEnabled;

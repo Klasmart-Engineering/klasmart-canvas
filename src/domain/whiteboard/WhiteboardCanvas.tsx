@@ -122,6 +122,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     penColor,
     isLocalObject,
     shape,
+    canvasActions,
     updateCanvasActions,
     laserIsActive,
     allToolbarIsEnabled,
@@ -358,8 +359,11 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {
-    updateCanvasActions(actions);
-  }, [actions, updateCanvasActions]);
+    if (!canvasActions && canvas) {
+      updateCanvasActions(actions);
+    }
+
+  }, [actions, updateCanvasActions, canvas]);
 
   return (
     <>

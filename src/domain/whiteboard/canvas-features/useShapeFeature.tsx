@@ -219,24 +219,6 @@ export const useShapeFeature = (
   ]);
 
   /**
-   * Starts shape creation when a shape is selected in Toolbar
-   */
-  useEffect(() => {
-    if (shape && shapeIsActive) {
-      mouseDown(shape, shapeColor);
-    }
-
-    return () => {
-      if (!textIsActive) {
-        canvas?.off('mouse:down');
-      }
-
-      canvas?.off('mouse:move');
-      canvas?.off('mouse:up');
-    };
-  }, [canvas, shape, shapeIsActive, mouseDown, shapeColor, textIsActive]);
-
-  /**
    * Set a selected shape like perfect if perfectShapeIsActive
    */
   useEffect(() => {

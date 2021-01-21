@@ -12,6 +12,7 @@ export const mouseMoveAction = (
   eventSerializer: any,
 ) => ((e: fabric.IEvent) => {
   let shape = store.getState().canvasBoardState.shape;
+  
   if (!shapeToAdd || !shape || !store.getState().canvasBoardState.resize) {
     return;
   }

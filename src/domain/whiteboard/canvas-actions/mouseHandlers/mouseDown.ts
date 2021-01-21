@@ -5,7 +5,7 @@ import { cancelShapeCreation, allowMovementInShape } from "../objectHandlers";
 export const mouseDownAction = (
   canvas: fabric.Canvas,
   brushType: string,
-  shapeSelector: any,
+  shapeSelector: (arg1: any) => any,
   shapeToAdd: any,
   specialShapeSelector: any,
   lineWidth: number,
