@@ -38,6 +38,7 @@ const useSynchronizedReconstruct = (
       }
 
       const parsed = JSON.parse(target.param as string);
+
       if (parsed === false) {
         canvas?.getObjects().forEach((object: TypedShape) => {
           if (getId(id) === getId(object.id)) {
