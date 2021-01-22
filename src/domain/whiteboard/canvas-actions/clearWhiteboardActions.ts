@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import { IUndoRedoEvent } from "../../../interfaces/canvas-events/undo-redo-event";
 import { ICanvasObject } from "../../../interfaces/objects/canvas-object";
 import { IPermissions } from "../../../interfaces/permissions/permissions";
-import { ObjectEvent } from "../event-serializer/PaintEventSerializer";
-import { SET } from "../reducers/undo-redo";
+import { ObjectEvent, PaintEventSerializer } from "../event-serializer/PaintEventSerializer";
+import { CanvasAction, SET } from "../reducers/undo-redo";
 import store from "../redux/store";
 import { getToolbarIsEnabled } from "../redux/utils";
 
@@ -12,11 +12,11 @@ export const useClearWhiteboardSelf = (
   canvas: fabric.Canvas,
   userId: string,
   closeModal: any,
-  dispatch: any,
+  dispatch: (action: CanvasAction) => void,
   isLocalObject: any,
   allToolbarIsEnabled: boolean,
   localImage: string | File,
-  eventSerializer: any,
+  eventSerializer: PaintEventSerializer,
   updateClearIsActive: any,
   canvasId: string,
   backgroundImage: any,

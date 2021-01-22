@@ -1,13 +1,15 @@
+import { IBrushType } from "../../../../interfaces/brushes/brush-type";
+import { ISpecialShapeSelectorPropsType } from "../../../../interfaces/canvas-events/special-shape-selector";
 import { TypedShape } from "../../../../interfaces/shapes/shapes";
 import store from "../../redux/store";
 import { cancelShapeCreation, allowMovementInShape } from "../objectHandlers";
 
 export const mouseDownAction = (
   canvas: fabric.Canvas,
-  brushType: string,
-  shapeSelector: (arg1: any) => any,
-  shapeToAdd: any,
-  specialShapeSelector: any,
+  brushType: IBrushType,
+  shapeSelector: (arg1: string) => any,
+  shapeToAdd: string,
+  specialShapeSelector: (arg1: ISpecialShapeSelectorPropsType) => any,
   lineWidth: number,
   penColor: string
 ) => (async (e: fabric.IEvent) => {

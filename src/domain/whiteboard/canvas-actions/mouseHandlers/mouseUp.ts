@@ -4,16 +4,18 @@ import { ICanvasBrush } from '../../../../interfaces/brushes/canvas-brush';
 import { ICanvasShapeBrush } from '../../../../interfaces/brushes/canvas-shape-brush';
 import { ICoordinate } from '../../../../interfaces/brushes/coordinate';
 import { IShapePointsIndex } from '../../../../interfaces/brushes/shape-points-index';
+import { IShapeInProgress } from '../../../../interfaces/canvas-events/shape-in-progress';
 import { IUndoRedoEvent } from '../../../../interfaces/canvas-events/undo-redo-event';
 import { ICanvasObject } from '../../../../interfaces/objects/canvas-object';
 import { TypedShape } from '../../../../interfaces/shapes/shapes';
+import { PaintEventSerializer } from '../../../../poc/whiteboard/event-serializer/PaintEventSerializer';
 import { ChalkBrush } from '../../brushes/classes/chalkBrush';
 import { MarkerBrush } from '../../brushes/classes/markerBrush';
 import { PaintBrush } from '../../brushes/classes/paintBrush';
 import { PenBrush } from '../../brushes/classes/penBrush';
 import { setBasePathInNormalBrushes } from '../../brushes/utils/setBasePathInNormalBrushes';
 import { ObjectEvent } from '../../event-serializer/PaintEventSerializer';
-import { SET } from '../../reducers/undo-redo';
+import { CanvasAction, SET } from '../../reducers/undo-redo';
 import store from "../../redux/store";
 import { setShapeSize } from "../shapeActionUtils";
 import { requiredEllipseProps, requiredPencilDashedProps, requiredProps } from '../shapeProps';
@@ -26,9 +28,9 @@ export const mouseUpAction = (
   brushType: string,
   lineWidth: number,
   penColor: string,
-  setShapeInProgress: any,
-  eventSerializer: any,
-  dispatch: any,
+  setShapeInProgress: React.Dispatch<React.SetStateAction<IShapeInProgress | null | undefined>>,
+  eventSerializer: PaintEventSerializer,
+  dispatch: (action: CanvasAction) => void,
 ) => (async (e: fabric.IEvent) => {
 
   let shape = store.getState().canvasBoardState.shape;

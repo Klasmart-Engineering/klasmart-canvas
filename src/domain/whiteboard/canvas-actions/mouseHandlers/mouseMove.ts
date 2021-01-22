@@ -1,4 +1,5 @@
-import { ObjectEvent } from "../../event-serializer/PaintEventSerializer";
+import { IShapeInProgress } from "../../../../interfaces/canvas-events/shape-in-progress";
+import { ObjectEvent, PaintEventSerializer } from "../../event-serializer/PaintEventSerializer";
 import store from "../../redux/store";
 import { setShapeSize } from "../shapeActionUtils";
 
@@ -8,8 +9,8 @@ export const mouseMoveAction = (
   perfectShapeIsActive: boolean,
   shapeToAdd: string,
   brushType: string,
-  setShapeInProgress: any,
-  eventSerializer: any,
+  setShapeInProgress: React.Dispatch<React.SetStateAction<IShapeInProgress | null | undefined>>,
+  eventSerializer: PaintEventSerializer,
 ) => ((e: fabric.IEvent) => {
   let shape = store.getState().canvasBoardState.shape;
   

@@ -27,11 +27,8 @@ import { mouseMoveAction } from './mouseHandlers/mouseMove';
 import { useChangeStrokeColor, useTextColor } from './strokeColor';
 import { useEraseObject } from './eraseActions';
 import { useClearWhiteboardOthers, useClearWhiteboardSelf, useClearWhiteboardClearAll } from './clearWhiteboardActions';
+import { IShapeInProgress } from '../../../interfaces/canvas-events/shape-in-progress';
 
-interface IShapeInProgress {
-  shape: TypedShape;
-  startPoint: fabric.Point;
-}
 
 export const useCanvasActions = (
   canvas: fabric.Canvas,
@@ -116,8 +113,6 @@ export const useCanvasActions = (
     shapeInProgress,
     setShapeInProgress,
   ] = useState<IShapeInProgress | null>();
-
-  // const addShapeTemp = useAddShape(shapeIsActive, shapeInProgress, canvas, brushType, shapeSelector, specialShapeSelector, lineWidth);
 
   /**
    * Add specific shape to whiteboard
