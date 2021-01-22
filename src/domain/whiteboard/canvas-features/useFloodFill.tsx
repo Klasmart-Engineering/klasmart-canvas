@@ -46,8 +46,6 @@ export const useFloodFill = (
     textIsActive,
   } = useContext(WhiteboardContext);
 
-
-
   const paintBucket = `url("${floodFillCursor}") 2 15, default`;
   const laserPointerIsActive = useMemo(() => laserIsActive, [laserIsActive]);
 
