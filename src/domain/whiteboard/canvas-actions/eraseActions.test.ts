@@ -1,5 +1,6 @@
+
 import { renderHook, act } from '@testing-library/react-hooks';
-import { mouseDownAction } from './mouseDown';
+import { useEraseObject } from './eraseActions';
 import { createCanvas } from 'canvas';
 
 const canvas =  {
@@ -7,11 +8,13 @@ const canvas =  {
   appendChild: () => (createCanvas(200, 200))
 };
 
-const shapeSelector = (prop: any) => ({});
-
-test('should set mouseDownAction as a function', () => {
+test('should set useClearWhiteboardSelf as a function', () => {
   const { result } = renderHook(() => (
-    mouseDownAction(canvas as unknown as fabric.Canvas, 'pen', shapeSelector, 'rectangle', shapeSelector, 3, '#000'))
+    useEraseObject(
+      // @ts-ignore
+      canvas,
+      'test',
+      'test'))
   );
   expect(typeof result.current).toBe('function');
 });

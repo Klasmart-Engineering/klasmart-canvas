@@ -1,5 +1,5 @@
-import { renderHook, act } from '@testing-library/react-hooks';
-import { mouseMoveAction } from './mouseMove';
+import { renderHook } from '@testing-library/react-hooks';
+import { mouseUpAction } from './mouseUp';
 import { createCanvas } from 'canvas';
 
 const canvas =  {
@@ -9,10 +9,10 @@ const canvas =  {
 
 const shapeSelector = (prop: any) => ({});
 
-test('should set mouseMoveAction as a function', () => {
+test('should set mouseUpAction as a function', () => {
   const { result } = renderHook(() => (
     // @ts-ignore
-    mouseMoveAction(canvas as unknown as fabric.Canvas, 'test1', false, 'rectangle', 'pen', shapeSelector, shapeSelector)
+    mouseUpAction(canvas as unknown as fabric.Canvas, 'test1', false, 'rectangle', 'pen', shapeSelector, shapeSelector)
   ));
   expect(typeof result.current).toBe('function');
 });

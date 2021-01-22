@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { IBrushType } from "../../../interfaces/brushes/brush-type";
 import { TypedShape } from "../../../interfaces/shapes/shapes";
 import { setCircleSize, setSize, setPathSize } from "../utils/scaling";
 
@@ -14,7 +15,7 @@ export function useMouseMove() {
     coordsStart: fabric.Point,
     specific?: string,
     canvas?: fabric.Canvas,
-    brushType?: any,
+    brushType?: IBrushType,
   ): void => {
     const mouseMove = (e: fabric.IEvent): void => {
       if (!e.pointer || !canvas) return;
@@ -70,7 +71,7 @@ export function useMouseUp(dispatch?: any) {
     coordsStart: fabric.Point,
     specific?: string,
     canvas?: fabric.Canvas,
-    brushType?: any,
+    brushType?: IBrushType,
   ): void => {
     canvas?.on('mouse:up', (e: fabric.IEvent): void => {
       if (!e.pointer) return;
@@ -117,11 +118,11 @@ export function useMouseUp(dispatch?: any) {
 export const useMouseDown = (
   canvas: fabric.Canvas,
   shapeSelector: any,
-  clearOnMouseEvent: any,
-  mouseMove: any,
-  mouseUp: any,
+  clearOnMouseEvent: <T>(...args:T[]) => T,
+  mouseMove: <T>(...args:T[]) => T,
+  mouseUp: <T>(...args:T[]) => T,
   brushType: string,
-  shapeColor: any
+  shapeColor: string
 ) => (useCallback(
   (specific: string, color?: string): void => {
     canvas?.on('mouse:down', (e: fabric.IEvent): void => {
