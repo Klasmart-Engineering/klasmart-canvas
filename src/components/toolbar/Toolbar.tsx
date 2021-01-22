@@ -536,6 +536,16 @@ function Toolbar(props: {
         elements: getToolElements,
       });
     }
+
+    if (
+      !props.permissions.backgroundColor &&
+      getActiveTool === ELEMENTS.BACKGROUND_COLOR_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
   }, [
     pointerIsEnabled,
     getActiveTool,
