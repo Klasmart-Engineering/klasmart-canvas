@@ -106,19 +106,14 @@ export const changeLineWidthInSpecialBrushes = async (
           lineWidth
         );
 
-        await brush
-          .createChalkPath(
-            String(object.id),
-            basePath?.points || [],
-            lineWidth,
-            String(basePath?.stroke),
-            newClearRects
-          )
-          .then((response) => {
-            if (response) {
-              newObject = response;
-            }
-          });
+        newObject = await brush.createChalkPath(
+          String(object.id),
+          basePath?.points || [],
+          lineWidth,
+          String(basePath?.stroke),
+          newClearRects
+        );
+
         break;
     }
 
