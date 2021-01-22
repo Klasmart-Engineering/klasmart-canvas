@@ -26,6 +26,9 @@ export const UndoRedo = (
     WhiteboardContext
   );
 
+  /**
+   * Handles logic for render changes in undo/redo actions in local whiteboard
+   */
   useEffect(() => {
     if (!state || !canvas) {
       return;
@@ -42,20 +45,24 @@ export const UndoRedo = (
         setBackgroundColorInCanvas
       );
     }
-
-    if (state.actionType === UNDO) {
-      RenderRemoteUndo(canvas, instanceId, state, eventSerializer);
-    } else if (state.actionType === REDO) {
-      RenderRemoteRedo(canvas, instanceId, state, eventSerializer);
-    }
   }, [
     canvas,
-    eventSerializer,
     instanceId,
     setBackgroundColorInCanvas,
     shapesAreSelectable,
     state,
   ]);
+
+  /**
+   * Handles logic for render changes in undo/redo actions in remote whiteboards
+   */
+  useEffect(() => {
+    if (state.actionType === UNDO) {
+      RenderRemoteUndo(canvas, instanceId, state, eventSerializer);
+    } else if (state.actionType === REDO) {
+      RenderRemoteRedo(canvas, instanceId, state, eventSerializer);
+    }
+  }, [canvas, eventSerializer, instanceId, state]);
 
   return { state, dispatch };
 };
