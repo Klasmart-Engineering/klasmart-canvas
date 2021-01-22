@@ -494,7 +494,6 @@ export const useCanvasActions = (
   const mouseDown = useCallback(
     (specific: string, color?: string): void => {
       canvas?.on('mouse:down', (e: fabric.IEvent): void => {
-        console.log('mouse down...');
         if (e.target || !e.pointer) {
           return;
         }

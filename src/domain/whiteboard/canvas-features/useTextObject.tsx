@@ -64,7 +64,8 @@ export const useTextObject = (
   const { keyUpHandler, keyDownHandler } = useKeyHandlers(
     canvas,
     instanceId,
-    permissions
+    permissions,
+    allToolbarIsEnabled,
   );
 
   /**
