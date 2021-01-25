@@ -2,7 +2,6 @@ import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { fabric } from 'fabric';
 import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 import { WhiteboardContext } from '../WhiteboardContext';
-import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { isShape } from '../utils/shapes';
 import {
   UNDO,

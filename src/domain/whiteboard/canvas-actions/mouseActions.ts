@@ -4,14 +4,6 @@ import { TypedShape } from "../../../interfaces/shapes/shapes";
 import { CanvasAction } from "../reducers/undo-redo";
 import { setCircleSize, setSize, setPathSize } from "../utils/scaling";
 
-interface IPropsMouseMove {
-  shape: fabric.Object | fabric.Rect | fabric.Ellipse;
-  coordsStart: fabric.Point;
-  specific?: string | undefined;
-  canvas?: fabric.Canvas | undefined;
-  brushType?: "pencil" | "pen" | "felt" | "crayon" | "chalk" | "paintbrush" | "marker" | "dashed" | undefined;
-}
-
 /**
  * Mouse Move event handler
  * @param shape Shape that was added to canvas.
@@ -123,7 +115,7 @@ export function useMouseUp(dispatch: React.Dispatch<CanvasAction>) {
         dispatch({ type: 'CANVAS_SET', payload: canvas.getObjects() });
       }
     });
-  }, [])
+  }, [dispatch])
 
   return value;
 }
@@ -172,5 +164,5 @@ export const useMouseDown = (
       canvas.add(shape);
     });
   },
-  [canvas, clearOnMouseEvent, mouseMove, mouseUp, shapeColor, shapeSelector]
+  [canvas, clearOnMouseEvent, mouseMove, mouseUp, shapeColor, shapeSelector, brushType]
 ));

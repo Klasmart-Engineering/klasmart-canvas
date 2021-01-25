@@ -44,7 +44,6 @@ export const useShapeFeature = (
     eraseType,
     laserIsActive,
     shape,
-    shapeColor,
     perfectShapeIsActive,
     perfectShapeIsAvailable,
     updatePerfectShapeIsActive,

@@ -270,7 +270,7 @@ export function useSpecialShapeSelector(userId: string) {
     });
 
     return newShape;
-  }, []);
+  }, [userId]);
 
   return value;
 }

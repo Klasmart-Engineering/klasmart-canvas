@@ -363,7 +363,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
       updateCanvasActions(actions);
     }
 
-  }, [actions, updateCanvasActions, canvas]);
+  }, [actions, updateCanvasActions, canvas, canvasActions]);
 
   return (
     <>
