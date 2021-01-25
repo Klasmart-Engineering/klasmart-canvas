@@ -209,7 +209,7 @@ const actionsSection: IBasicToolbarSection = {
 };
 
 const toolsSection: IBasicToolbarSection = {
-  active: 'pointers',
+  active: null,
   elements: [
     // Pointers - ToolbarSelector
     {

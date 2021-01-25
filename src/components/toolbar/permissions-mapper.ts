@@ -65,6 +65,11 @@ export const mappedToolElements = (
       elmnt: IBasicToolbarButton | IBasicToolbarSelector | IBasicSpecialSelector
     ) => {
       switch (elmnt.id) {
+        case 'pointers': {
+          const enabled =
+            allToolbarIsEnabled || serializerToolbarState.cursorPointer;
+          return { ...elmnt, enabled };
+        }
         case 'laser_pointer': {
           const enabled = allToolbarIsEnabled || serializerToolbarState.pointer;
           return { ...elmnt, enabled };

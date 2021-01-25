@@ -9,6 +9,7 @@ const useSynchronizedSetToolbarPermissions = (
   setPointerIsEnabled: (enabled: boolean) => void,
   setSerializerToolbarState: (enabled: {
     [p: string]: boolean;
+    cursorPointer: boolean;
     pointer: boolean;
     move: boolean;
     erase: boolean;

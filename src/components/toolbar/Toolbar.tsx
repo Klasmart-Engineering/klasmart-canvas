@@ -82,6 +82,8 @@ function Toolbar() {
     openUploadFileModal,
   } = useContext(WhiteboardContext);
 
+  const cursorPointerToolIsActive =
+    allToolbarIsEnabled || serializerToolbarState.cursorPointer;
   const pointerToolIsActive =
     allToolbarIsEnabled || serializerToolbarState.pointer;
   const moveToolIsActive = allToolbarIsEnabled || serializerToolbarState.move;
@@ -98,6 +100,10 @@ function Toolbar() {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
+    if (tool === ELEMENTS.POINTERS_TOOL && !cursorPointerToolIsActive) {
+      return;
+    }
+
     if (tool === ELEMENTS.LASER_TOOL && !pointerToolIsActive) {
       return;
     }
@@ -428,7 +434,7 @@ function Toolbar() {
   /**
    * Indicates active tool.
    */
-  const getActiveTool = useMemo((): string => tools.active, [tools]);
+  const getActiveTool = useMemo((): string => tools.active as string, [tools]);
 
   /**
    * Returns tool elements.
@@ -452,7 +458,7 @@ function Toolbar() {
       getActiveTool === ELEMENTS.LASER_TOOL
     ) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }
@@ -462,7 +468,7 @@ function Toolbar() {
       getActiveTool === ELEMENTS.MOVE_OBJECTS_TOOL
     ) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }
@@ -472,7 +478,7 @@ function Toolbar() {
       getActiveTool === ELEMENTS.ERASE_TYPE_TOOL
     ) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }
@@ -482,7 +488,7 @@ function Toolbar() {
       getActiveTool === ELEMENTS.LINE_TYPE_TOOL
     ) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }
@@ -492,7 +498,7 @@ function Toolbar() {
       getActiveTool === ELEMENTS.FLOOD_FILL_TOOL
     ) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }
@@ -502,7 +508,7 @@ function Toolbar() {
       getActiveTool === ELEMENTS.ADD_TEXT_TOOL
     ) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }
@@ -512,7 +518,7 @@ function Toolbar() {
       getActiveTool === ELEMENTS.ADD_SHAPE_TOOL
     ) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }

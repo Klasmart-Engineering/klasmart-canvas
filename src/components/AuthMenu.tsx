@@ -47,6 +47,7 @@ export default function AuthMenu(props: {
     serializerToolbarState
   );
   const {
+    cursorPointer,
     pointer,
     move,
     erase,
@@ -58,7 +59,7 @@ export default function AuthMenu(props: {
     undoRedo,
     clearWhiteboard,
     downloadCanvas,
-    uploadImage
+    uploadImage,
   } = localToolbarState;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,6 +81,11 @@ export default function AuthMenu(props: {
   }, [userId, eventSerializer, localToolbarState]);
 
   const tools = [
+    {
+      checked: cursorPointer,
+      name: 'cursorPointer',
+      label: 'Cursor pointer tool',
+    },
     {
       checked: pointer,
       name: 'pointer',

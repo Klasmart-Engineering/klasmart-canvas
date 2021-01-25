@@ -3,6 +3,7 @@ import { useState } from 'react';
 export const useToolbarPermissions = () => {
   const [toolbarIsEnabled, setToolbarIsEnabled] = useState(true);
   const [serializerToolbarState, setSerializerToolbarState] = useState({
+    cursorPointer: false,
     pointer: false,
     move: false,
     erase: false,
