@@ -43,6 +43,7 @@ export const useFloodFill = (
     eraseType,
     laserIsActive,
     textIsActive,
+    pointerEvents,
   } = useContext(WhiteboardContext);
 
   const paintBucket = `url("${floodFillCursor}") 2 15, default`;
@@ -292,7 +293,9 @@ export const useFloodFill = (
     }
 
     return () => {
-      canvas.defaultCursor = 'default';
+      if (pointerEvents) {
+        canvas.defaultCursor = 'default';
+      }
 
       // Returning objects to their normal state
       if (!floodFillIsActive && eraseType !== 'object') {
@@ -321,6 +324,7 @@ export const useFloodFill = (
     isLocalObject,
     laserPointerIsActive,
     paintBucket,
+    pointerEvents,
     serializerToolbarState.floodFill,
     textIsActive,
     toolbarIsEnabled,

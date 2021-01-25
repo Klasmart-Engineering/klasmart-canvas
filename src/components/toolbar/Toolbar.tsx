@@ -19,6 +19,7 @@ import { CSSProperties } from '@material-ui/core/styles/withStyles';
 import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 import { mappedActionElements, mappedToolElements } from './permissions-mapper';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { IPointerType } from '../../interfaces/pointers/pointer-type';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -258,7 +259,7 @@ function Toolbar() {
   function handleToolSelectorChange(tool: string, option: string) {
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
-        updatePointer(option);
+        updatePointer(option as IPointerType);
         break;
 
       case ELEMENTS.LINE_TYPE_TOOL:

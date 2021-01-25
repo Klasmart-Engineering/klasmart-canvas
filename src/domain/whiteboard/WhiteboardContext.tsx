@@ -37,6 +37,7 @@ import WhiteboardToggle from '../../components/WhiteboardToogle';
 import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 import { useUploadFileModal } from './hooks/useUploadFileModal';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { usePointer } from './hooks/usePointer';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -63,6 +64,7 @@ export const WhiteboardProvider = ({
   const { floodFill, updateFloodFill } = useFloodFill();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
+  const { pointer, updatePointer } = usePointer();
 
   const {
     ClearWhiteboardModal,
@@ -106,7 +108,6 @@ export const WhiteboardProvider = ({
   } = useUploadFileModal();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
-  const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
 

@@ -1,10 +1,11 @@
 import { MutableRefObject } from 'react';
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
 import { IBrushType } from '../brushes/brush-type';
+import { IPointerType } from '../pointers/pointer-type';
 
 export interface IWhiteboardContext {
-  pointer: string;
-  updatePointer: (pointer: string) => void;
+  pointer: IPointerType;
+  updatePointer: (pointer: IPointerType) => void;
   eraseType: string | null;
   updateEraseType: (type: string | null) => void;
   text: string;
