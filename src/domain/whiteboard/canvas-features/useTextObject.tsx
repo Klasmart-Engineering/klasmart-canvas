@@ -66,6 +66,7 @@ export const useTextObject = (
     instanceId,
     undoRedoDispatch,
     permissions,
+    allToolbarIsEnabled,
   );
 
   /**

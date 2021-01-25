@@ -16,7 +16,8 @@ export const useKeyHandlers = (
   canvas: fabric.Canvas,
   instanceId: string,
   undoRedoDispatch: (action: CanvasAction) => void,
-  permissions: IPermissions
+  permissions: IPermissions,
+  allToolbarIsEnabled: boolean
 ) => {
   // Getting context variables
   const {
@@ -34,7 +35,7 @@ export const useKeyHandlers = (
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
-      if (!permissions.undoRedo) return;
+      if (!(permissions.undoRedo || allToolbarIsEnabled)) return;
 
       /**
        * Removes the current active objects in canvas
