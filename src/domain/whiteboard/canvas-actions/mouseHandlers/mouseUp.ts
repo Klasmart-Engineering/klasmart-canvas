@@ -20,6 +20,19 @@ import store from "../../redux/store";
 import { setShapeSize } from "../shapeActionUtils";
 import { requiredEllipseProps, requiredPencilDashedProps, requiredProps } from '../shapeProps';
 
+/**
+ * Mouse up event handler
+ * @param canvas Fabric canvas
+ * @param userId User ID
+ * @param perfectShapeIsActive Indicates if perfect shape is active
+ * @param shapeToAdd Shape to add
+ * @param brushType Brush type
+ * @param lineWidth Line width
+ * @param penColor Pen, brush, or stroke color
+ * @param setShapeInProgress Method to set shape in progress
+ * @param eventSerializer Paint event serializer
+ * @param dispatch Dispatch method for undo redo state.
+ */
 export const mouseUpAction = (
   canvas: fabric.Canvas,
   userId: string,

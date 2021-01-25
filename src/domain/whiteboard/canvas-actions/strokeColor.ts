@@ -7,22 +7,31 @@ import { ICanvasObject } from "../../../interfaces/objects/canvas-object";
 import { TypedGroup } from "../../../interfaces/shapes/group";
 import { TypedShape } from "../../../interfaces/shapes/shapes";
 import { changeLineColorInSpecialBrushes } from "../brushes/actions/changeLineColorInSpecialBrushes";
-import { useSynchronization } from "../canvas-features/useSynchronization";
-import { ObjectEvent, ObjectType } from "../event-serializer/PaintEventSerializer";
-import { SET, SET_GROUP } from "../reducers/undo-redo";
+import { ObjectEvent, ObjectType, PaintEventSerializer } from "../event-serializer/PaintEventSerializer";
+import { CanvasAction, SET, SET_GROUP } from "../reducers/undo-redo";
 import { isShape, isFreeDrawing } from "../utils/shapes";
 
 /**
  * Changes the penColor value and if one or more objects are selected
  * also changes the stroke color in free drawing and empty shape objects
- * @param {string} color - new color to change
+ * @param canvas Fabric canvas
+ * @param userId User ID
+ * @param eventSerializer Paint event serializer
+ * @param updatePenColor Update pen color method
+ * @param dispatch Dispatch
+ * @param changePenColorSync Change pen color method.
  */
-export const useChangeStrokeColor = (canvas: fabric.Canvas, userId: string, eventSerializer: any, updatePenColor: any, dispatch: any, changePenColorSync: any) => (useCallback(
+export const useChangeStrokeColor = (
+  canvas: fabric.Canvas,
+  userId: string,
+  eventSerializer: PaintEventSerializer,
+  updatePenColor: (color: string) => void,
+  dispatch: React.Dispatch<CanvasAction>,
+  changePenColorSync: (arg1: ICanvasObject) => void
+) => (useCallback(
   (color: string): void => {
     let newActives: TypedShape[] = [];
     let activeObjects: TypedShape[] = [];
-
-    console.log('CHANGING!!!!!', canvas);
 
     if (!canvas) return;
 
@@ -164,8 +173,21 @@ export const useChangeStrokeColor = (canvas: fabric.Canvas, userId: string, even
   [updatePenColor, userId, eventSerializer, dispatch, canvas]
 ));
 
-
-export const useTextColor = (canvas: fabric.Canvas, userId: string, updateFontColor: any, eventSerializer: any, dispatch: any) => (useCallback(
+/**
+ * Updates text color.
+ * @param canvas Fabric canvas
+ * @param userId User id
+ * @param updateFontColor updates font color method
+ * @param eventSerializer Paint event serializer
+ * @param dispatch Undo redo dispatch method.
+ */
+export const useTextColor = (
+  canvas: fabric.Canvas,
+  userId: string,
+  updateFontColor: (color: string) => void,
+  eventSerializer: PaintEventSerializer,
+  dispatch: React.Dispatch<CanvasAction>
+) => (useCallback(
   (color: string) => {
     updateFontColor(color);
     if (

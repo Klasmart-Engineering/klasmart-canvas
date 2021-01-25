@@ -8,16 +8,30 @@ import store from "../redux/store";
 import { getToolbarIsEnabled } from "../redux/utils";
 
 
+/**
+ * 
+ * @param canvas Canvas
+ * @param userId user Id
+ * @param closeModal Close modal method
+ * @param dispatch Dispatch method
+ * @param isLocalObject Method to check if object is local
+ * @param allToolbarIsEnabled Indicates if all toolbar tools are enabled
+ * @param localImage Image to display as background or cavnas
+ * @param eventSerializer Paint event serializer
+ * @param updateClearIsActive Method to activate clear canvas functionality
+ * @param canvasId Canvas ID
+ * @param backgroundImage background image
+ */
 export const useClearWhiteboardSelf = (
   canvas: fabric.Canvas,
   userId: string,
-  closeModal: any,
+  closeModal: () => void,
   dispatch: (action: CanvasAction) => void,
-  isLocalObject: any,
+  isLocalObject: (id: string, canvasId: string | undefined) => boolean | undefined,
   allToolbarIsEnabled: boolean,
   localImage: string | File,
   eventSerializer: PaintEventSerializer,
-  updateClearIsActive: any,
+  updateClearIsActive: (arg: boolean) => void,
   canvasId: string,
   backgroundImage: any,
 ) => (useCallback(async () => {
@@ -106,7 +120,17 @@ export const useClearWhiteboardSelf = (
 ])
 );
 
-export const useClearWhiteboardOthers = (canvas: fabric.Canvas, updateClearIsActive: any, eventSerializer: any) => (
+/**
+ * Method to clear other clearboards besides teacher
+ * @param canvas Fabric canvas
+ * @param updateClearIsActive Updates clear is active
+ * @param eventSerializer Pain event serializer
+ */
+export const useClearWhiteboardOthers = (
+  canvas: fabric.Canvas,
+  updateClearIsActive: (arg: boolean) => void,
+  eventSerializer: PaintEventSerializer
+) => (
   /**
    * Clears all whiteboard with allowClearOthers strategy
    * */
@@ -146,7 +170,7 @@ export const useClearWhiteboardClearAll = (
   canvas: fabric.Canvas,
   userId: string,
   updateClearIsActive: any,
-  eventSerializer: any,
+  eventSerializer: PaintEventSerializer,
   dispatch: any
 ) => (useCallback(
   async () => {

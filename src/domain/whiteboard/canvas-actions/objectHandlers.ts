@@ -1,5 +1,9 @@
 import store from "../redux/store";
 
+/**
+ * Cancels shape creation
+ * @param canvas Fabric canvas
+ */
 export const cancelShapeCreation = (canvas: fabric.Canvas) => {
   return () => {
     if (store.getState().canvasBoardState.resize) {

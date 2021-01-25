@@ -3,6 +3,16 @@ import { ObjectEvent, PaintEventSerializer } from "../../event-serializer/PaintE
 import store from "../../redux/store";
 import { setShapeSize } from "../shapeActionUtils";
 
+/**
+ * Mouse move handler
+ * @param canvas Fabric canvas
+ * @param userId User ID
+ * @param perfectShapeIsActive Indicates if perfect shape is active
+ * @param shapeToAdd Indicates shape to add
+ * @param brushType Brush type
+ * @param setShapeInProgress Method to set shape in progress
+ * @param eventSerializer Paint event serializer
+ */
 export const mouseMoveAction = (
   canvas: fabric.Canvas,
   userId: string,

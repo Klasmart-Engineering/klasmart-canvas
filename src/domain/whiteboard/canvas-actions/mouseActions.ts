@@ -1,10 +1,19 @@
 import { useCallback } from "react";
 import { IBrushType } from "../../../interfaces/brushes/brush-type";
 import { TypedShape } from "../../../interfaces/shapes/shapes";
+import { CanvasAction } from "../reducers/undo-redo";
 import { setCircleSize, setSize, setPathSize } from "../utils/scaling";
 
+interface IPropsMouseMove {
+  shape: fabric.Object | fabric.Rect | fabric.Ellipse;
+  coordsStart: fabric.Point;
+  specific?: string | undefined;
+  canvas?: fabric.Canvas | undefined;
+  brushType?: "pencil" | "pen" | "felt" | "crayon" | "chalk" | "paintbrush" | "marker" | "dashed" | undefined;
+}
+
 /**
- *
+ * Mouse Move event handler
  * @param shape Shape that was added to canvas.
  * @param coordsStart Coordinates of initial click on canvas.
  * @param isCircle Indicates if shape added is a circle.
@@ -65,7 +74,11 @@ export function useMouseMove() {
   return value;
 }
 
-export function useMouseUp(dispatch?: any) {
+/**
+ * Mouse up event handler
+ * @param dispatch React dispatch method
+ */
+export function useMouseUp(dispatch: React.Dispatch<CanvasAction>) {
   const value = useCallback((
     shape: fabric.Object | fabric.Rect | fabric.Ellipse,
     coordsStart: fabric.Point,
@@ -117,10 +130,10 @@ export function useMouseUp(dispatch?: any) {
 
 export const useMouseDown = (
   canvas: fabric.Canvas,
-  shapeSelector: any,
-  clearOnMouseEvent: <T>(...args:T[]) => T,
-  mouseMove: <T>(...args:T[]) => T,
-  mouseUp: <T>(...args:T[]) => T,
+  shapeSelector: (args: string) => fabric.Object | TypedShape,
+  clearOnMouseEvent: () => void,
+  mouseMove: (...args: Array<any>) => void,
+  mouseUp: (...args: Array<any>) => void,
   brushType: string,
   shapeColor: string
 ) => (useCallback(
@@ -152,7 +165,9 @@ export const useMouseDown = (
       }
 
       clearOnMouseEvent();
+      // @ts-ignore
       mouseMove(shape, e.pointer, specific, canvas, brushType);
+      // @ts-ignore
       mouseUp(shape, e.pointer, specific);
       canvas.add(shape);
     });

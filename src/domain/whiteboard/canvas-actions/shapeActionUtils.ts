@@ -1,87 +1,23 @@
 import { Group } from "fabric/fabric-impl";
-import { useCallback } from "react";
-import { shapePoints } from "../../../assets/shapes-points";
 import { ICanvasBrush } from "../../../interfaces/brushes/canvas-brush";
 import { ICanvasPathBrush } from "../../../interfaces/brushes/canvas-path-brush";
-import { ICanvasShapeBrush } from "../../../interfaces/brushes/canvas-shape-brush";
 import { ICoordinate } from "../../../interfaces/brushes/coordinate";
-import { IShapePointsIndex } from "../../../interfaces/brushes/shape-points-index";
-import { ICanvasObject } from "../../../interfaces/objects/canvas-object";
 import { TypedShape } from "../../../interfaces/shapes/shapes";
-import { ChalkBrush } from "../brushes/classes/chalkBrush";
-import { MarkerBrush } from "../brushes/classes/markerBrush";
 import { PaintBrush } from "../brushes/classes/paintBrush";
-import { PenBrush } from "../brushes/classes/penBrush";
-import { setBasePathInNormalBrushes } from "../brushes/utils/setBasePathInNormalBrushes";
-import { SET } from "../reducers/undo-redo";
 import { setCircleSize, setSize, setPathSize } from "../utils/scaling";
-import { isShape, getBiggerDifference, penPointsMapping, setScaledPoint } from "../utils/shapes";
-import { v4 as uuidv4 } from 'uuid';
-import shape from "@material-ui/core/styles/shape";
-import store from "../redux/store";
+import { getBiggerDifference } from "../utils/shapes";
 
-interface IShapeInProgress {
-  shape: TypedShape;
-  startPoint: fabric.Point;
-}
-
-const requiredPencilDashedProps = [
-  'id',
-  'height',
-  'width',
-  'left',
-  'top',
-  'scaleX',
-  'scaleY',
-  'originX',
-  'originY',
-  'basePath',
-];
-
-const requiredProps = [
-  'id',
-  'height',
-  'width',
-  'left',
-  'top',
-  'strokeWidth',
-  'stroke',
-  'fill',
-  'name',
-  'scaleX',
-  'scaleY',
-  'strokeUniform',
-  'originX',
-  'originY',
-  'strokeMiterLimit',
-  'strokeLineJoin',
-  'strokeDashArray',
-  'strokeLineCap',
-  'strokeLineJoin',
-];
-
-const requiredEllipseProps = [
-  'id',
-  'ry',
-  'rx',
-  'left',
-  'top',
-  'strokeWidth',
-  'stroke',
-  'fill',
-  'strokeUniform',
-  'originY',
-  'originX',
-  'strokeDashArray',
-  'strokeLineCap',
-  'strokeLineJoin',
-];
 
 /**
- * Set the new size of a recently created shape
- * @param {TypedShape} shape - Shape to change its size
- * @param {IEvent} e - Current event, necessary to know
- * where is the pointer
+ * Sets shape size
+ * @param shape Shape 
+ * @param e fabric event
+ * @param perfectShapeIsActive Indicates if perfect shape is enabled
+ * @param startPoint Start point coordinates
+ * @param shapeToAdd Type of shape to add
+ * @param brushType Brush type
+ * @param canvas Fabric canvas
+ * @param userId User id.
  */
 export const setShapeSize = (
   shape: TypedShape,
@@ -174,14 +110,24 @@ export const setShapeSize = (
   return newSize;
 };
 
+/**
+ * Mouse move event handler.
+ * @param canvas Canvas
+ * @param setShapeSize Set shape size method
+ * @param setShapeInProgress Set shape in progress method
+ * @param shapeToAdd Sets shape to add
+ * @param shape Indicates shape
+ * @param resize Indicates if shape is being resized
+ * @param startPoint Start point coordinates
+ */
 export const mouseMoveMain = (
   canvas: fabric.Canvas,
-  setShapeSize: any,
-  setShapeInProgress: any,
+  setShapeSize: <T>(...args: T[]) => void,
+  setShapeInProgress: <T>(...args: T[]) => void,
   shapeToAdd: string,
-  shape: any,
+  shape: fabric.Object | TypedShape,
   resize: boolean,
-  startPoint: any
+  startPoint: fabric.Point
 ) => {
 
   return canvas?.on('mouse:move', (e: fabric.IEvent) => {
@@ -190,6 +136,7 @@ export const mouseMoveMain = (
     }
 
     canvas.selection = false;
+    // @ts-ignore
     setShapeSize(shape, e);
 
     let anchor = { ...startPoint, originX: 'left', originY: 'top' };

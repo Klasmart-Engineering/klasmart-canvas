@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { shapePoints } from '../../../assets/shapes-points';
 import { IBrushType } from '../../../interfaces/brushes/brush-type';
 import { IShapePointsIndex } from '../../../interfaces/brushes/shape-points-index';
+import { ISpecialShapeSelectorPropsType } from '../../../interfaces/canvas-events/special-shape-selector';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { ChalkBrush } from '../brushes/classes/chalkBrush';
 import { MarkerBrush } from '../brushes/classes/markerBrush';
@@ -9,7 +10,21 @@ import { PaintBrush } from '../brushes/classes/paintBrush';
 import { PenBrush } from '../brushes/classes/penBrush';
 import * as shapes from '../shapes/shapes';
 
-export const shapeSelector = (props: any, specific: keyof typeof shapes | string): TypedShape => {
+interface IProps {
+  brushType: IBrushType;
+  lineWidth: number;
+  penColor: string;
+  shape: string;
+  shapeColor: string;
+  canvas?: fabric.Canvas;
+};
+
+/**
+ * Selects shape
+ * @param props Shape properties
+ * @param specific Specified shape.
+ */
+export const shapeSelector = (props: IProps, specific: keyof typeof shapes | string): TypedShape => {
   const { brushType, lineWidth, penColor, shape, shapeColor } = props;
   const value: keyof typeof shapes | string = (specific || shape as string) === 'chatBubble' ? 'chat' : specific || shape;
 
@@ -79,7 +94,11 @@ export const shapeSelector = (props: any, specific: keyof typeof shapes | string
   }
 };
 
-export function useShapeSelector(props: any) {
+/**
+ * Selects shape.
+ * @param props Shape properties
+ */
+export function useShapeSelector(props: IProps) {
   const { brushType, lineWidth, penColor, shape, shapeColor } = props;
   const value = useCallback(
     (specific: keyof typeof shapes | string): TypedShape => {
@@ -159,8 +178,12 @@ export function useShapeSelector(props: any) {
   return value;
 }
 
+/**
+ * Selects special (filled) shape.
+ * @param userId User Id
+ */
 export function useSpecialShapeSelector(userId: string) {
-  const value = useCallback(async (useProps: any) => {
+  const value = useCallback(async (useProps: ISpecialShapeSelectorPropsType) => {
     const { canvas, shape, brushType, lineWidth, penColor } = useProps;
     const original = shapePoints[shape as keyof IShapePointsIndex];
     let brush: PenBrush | MarkerBrush | PaintBrush | ChalkBrush;

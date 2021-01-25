@@ -4,6 +4,16 @@ import { TypedShape } from "../../../../interfaces/shapes/shapes";
 import store from "../../redux/store";
 import { cancelShapeCreation, allowMovementInShape } from "../objectHandlers";
 
+/**
+ * Mouse down event handler
+ * @param canvas Fabric canvas
+ * @param brushType Brush type
+ * @param shapeSelector Shape selector method
+ * @param shapeToAdd Indicates shape to add
+ * @param specialShapeSelector Method to select special shape
+ * @param lineWidth Line width
+ * @param penColor Pen / brush color
+ */
 export const mouseDownAction = (
   canvas: fabric.Canvas,
   brushType: IBrushType,

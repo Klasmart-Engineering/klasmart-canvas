@@ -7,6 +7,9 @@ import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 
 /**
  * Creates the listeners to erase objects from the whiteboard
+ * @param canvas fabric canvas
+ * @param userId user id
+ * @param canvasId canvas id
  */
 export const useEraseObject = (
   canvas: fabric.Canvas,
