@@ -42,7 +42,7 @@ export const useKeyHandlers = (
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
-      if (!permissions.undoRedo || !allToolbarIsEnabled) return;
+      if (!(permissions.undoRedo || allToolbarIsEnabled)) return;
 
       /**
        * Removes the current active objects in canvas
