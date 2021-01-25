@@ -445,6 +445,20 @@ function Toolbar() {
   );
 
   /**
+   * Sets pointer tool as active for teacher user
+   */
+  useEffect(() => {
+    if (allToolbarIsEnabled) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+    // If getToolElements and tools.active are added an infinite loop happens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allToolbarIsEnabled]);
+
+  /**
    * Checks if any tool permission is set to true. If not, and tool is selected,
    * default pointer is automatically selected.
    */
