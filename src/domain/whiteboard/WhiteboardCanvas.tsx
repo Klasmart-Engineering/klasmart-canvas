@@ -48,6 +48,7 @@ import { useUndoRedo } from './canvas-features/useUndoRedo';
 import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
 import { v4 as uuidv4 } from 'uuid';
 import { usePointerFeature } from './canvas-features/usePointerFeature';
+import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -355,6 +356,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setPointerIsEnabled,
     setSerializerToolbarState
   );
+  useSynchronizedCursorPointer(canvas, userId, filterIncomingEvents);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {

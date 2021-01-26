@@ -15,7 +15,8 @@ export type PainterEventType =
   | 'lineWidthChanged'
   | 'pointer'
   | 'textEdit'
-  | 'brushTypeChanged';
+  | 'brushTypeChanged'
+  | 'cursorPointer';
 
 export interface PainterEvent {
   // The event type.

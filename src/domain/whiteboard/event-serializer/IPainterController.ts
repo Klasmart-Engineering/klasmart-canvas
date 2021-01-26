@@ -102,6 +102,11 @@ export interface IPainterController {
     listener: (id: string, coordinates: { x: number; y: number }[]) => void
   ): this;
 
+  on(
+    event: 'cursorPointer',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+
   removeListener(
     event: 'added',
     listener: (id: string, objectType: string, target: ICanvasObject) => void
@@ -173,6 +178,11 @@ export interface IPainterController {
     listener: (id: string, coordinates: { x: number; y: number }[]) => void
   ): this;
   removeListener(event: 'refetch', listener: () => void): this;
+
+  removeListener(
+    event: 'cursorPointer',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
 
   replayEvents(): Promise<void>;
 }
