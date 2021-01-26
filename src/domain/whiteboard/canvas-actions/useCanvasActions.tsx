@@ -56,6 +56,7 @@ export const useCanvasActions = (
     backgroundImage,
     localImage,
     brushType,
+    eraserIsActive,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { changePenColorSync } = useSynchronization(userId as string);
@@ -346,6 +347,7 @@ export const useCanvasActions = (
       eraseType === 'partial' &&
       canvas &&
       toolbarIsEnabled &&
+      eraserIsActive &&
       (allToolbarIsEnabled || serializerToolbarState.partialErase)
     ) {
       canvas?.discardActiveObject();
@@ -389,6 +391,7 @@ export const useCanvasActions = (
     };
   }, [
     canvas,
+    eraserIsActive,
     eraseType,
     partialEraseIsActive,
     allToolbarIsEnabled,

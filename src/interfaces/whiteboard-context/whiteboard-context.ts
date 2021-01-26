@@ -95,4 +95,6 @@ export interface IWhiteboardContext {
   localImage: string | File;
   setLocalImage: (image: string | File) => void;
   openClearWhiteboardModal: () => void;
+  eraserIsActive: boolean;
+  updateEraserIsActive: (status: boolean) => void;
 }
