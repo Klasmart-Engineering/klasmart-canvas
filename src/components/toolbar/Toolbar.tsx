@@ -533,6 +533,16 @@ function Toolbar() {
         elements: getToolElements,
       });
     }
+
+    if (
+      !serializerToolbarState.backgroundColor &&
+      getActiveTool === ELEMENTS.BACKGROUND_COLOR_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
   }, [
     pointerIsEnabled,
     getActiveTool,
@@ -547,6 +557,7 @@ function Toolbar() {
     serializerToolbarState.shape,
     serializerToolbarState.undoRedo,
     serializerToolbarState.clearWhiteboard,
+    serializerToolbarState.backgroundColor,
   ]);
 
   const toolbarContainerStyle: CSSProperties = {

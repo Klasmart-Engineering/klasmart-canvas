@@ -25,6 +25,7 @@ export interface ICanvasActions {
   clearWhiteboardAllowClearOthers: (userId: string) => void;
   clearWhiteboardClearAll: () => void;
   fillBackgroundColor: (color: string) => void;
+  setBackgroundColorInCanvas: (color: string) => void;
 }
 
 export default ICanvasActions;

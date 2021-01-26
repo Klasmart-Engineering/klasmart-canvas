@@ -354,7 +354,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setPointerIsEnabled,
     setSerializerToolbarState
   );
-  useSynchronizedBackgroundColorChanged(canvas, userId, filterIncomingEvents);
+  useSynchronizedBackgroundColorChanged(filterIncomingEvents);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {
