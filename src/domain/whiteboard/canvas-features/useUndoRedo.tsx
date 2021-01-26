@@ -156,7 +156,6 @@ export const useUndoRedo = (
       const object = canvas.getActiveObject() as ICanvasObject;
       const type = object?.get('type');
 
-      canvas.discardActiveObject();
       if (type === 'activeSelection') {
         const events: IUndoRedoEvent[] = [];
         const eventId = uuidv4();

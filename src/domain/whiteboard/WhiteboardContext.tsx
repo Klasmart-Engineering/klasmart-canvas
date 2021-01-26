@@ -38,6 +38,7 @@ import store from './redux/store';
 import { getToolbarIsEnabled } from './redux/utils';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { useBackgroundColor } from './hooks/useBackgroundColor';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -62,6 +63,7 @@ export const WhiteboardProvider = ({
   const { eraseType, updateEraseType } = useEraseType();
   const { lineWidth, updateLineWidth } = useLineWidth();
   const { floodFill, updateFloodFill } = useFloodFill();
+  const { backgroundColor, updateBackgroundColor } = useBackgroundColor();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
 
@@ -118,6 +120,7 @@ export const WhiteboardProvider = ({
   const [backgroundImage, setBackgroundImage] = useState<string | File>('');
   const [isBackgroundImage, setIsBackgroundImage] = useState(false);
   const [localImage, setLocalImage] = useState<string | File>('');
+  const [localBackground, setLocalBackground] = useState(false);
   const [
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
@@ -201,6 +204,20 @@ export const WhiteboardProvider = ({
   const addShapeAction = useCallback(
     (specific: string) => {
       canvasActions?.addShape(specific);
+    },
+    [canvasActions]
+  );
+
+  const fillBackgroundColor = useCallback(
+    (color: string) => {
+      canvasActions?.fillBackgroundColor(color);
+    },
+    [canvasActions]
+  );
+
+  const setBackgroundColorInCanvas = useCallback(
+    (color: string) => {
+      canvasActions?.setBackgroundColorInCanvas(color);
     },
     [canvasActions]
   );
@@ -343,7 +360,13 @@ export const WhiteboardProvider = ({
     localImage,
     setLocalImage,
     eraserIsActive,
-    updateEraserIsActive
+    updateEraserIsActive,
+    localBackground,
+    setLocalBackground,
+    backgroundColor,
+    updateBackgroundColor,
+    fillBackgroundColor,
+    setBackgroundColorInCanvas,
   };
 
   return (

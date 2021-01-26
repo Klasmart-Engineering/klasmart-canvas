@@ -49,6 +49,7 @@ import { useUndoRedo } from './canvas-features/useUndoRedo';
 import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
 import { v4 as uuidv4 } from 'uuid';
 import { IPermissions } from '../../interfaces/permissions/permissions';
+import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -131,6 +132,8 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     backgroundImage,
     backgroundImageIsPartialErasable,
     localImage,
+    localBackground,
+    backgroundColor,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   // useEffects and logic to set canvas properties
@@ -356,6 +359,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     updatePermissions,
   );
+  useSynchronizedBackgroundColorChanged(filterIncomingEvents);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {
@@ -397,6 +401,15 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
           }}
           alt="background"
           src={localImage.toString()}
+        />
+      )}
+      {!localImage && localBackground && (
+        <div
+          style={{
+            height: '100%',
+            width: '100%',
+            backgroundColor: backgroundColor,
+          }}
         />
       )}
     </>

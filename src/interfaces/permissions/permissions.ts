@@ -14,4 +14,5 @@ export interface IPermissions {
   clearWhiteboard: boolean;
   downloadCanvas: boolean;
   uploadImage: boolean;
+  backgroundColor: boolean;
 }

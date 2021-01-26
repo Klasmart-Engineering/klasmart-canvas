@@ -4,16 +4,17 @@ import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
-import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { ITextOptions } from 'fabric/fabric-impl';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 
 interface ITarget {
   strategy: string;
   userId: string;
   isBackgroundImage: boolean;
   isLocalImage: boolean;
+  objectIds?: string[];
 }
 
 const useSynchronizedRemoved = (
@@ -27,9 +28,12 @@ const useSynchronizedRemoved = (
     state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
 
-  const { clearIsActive, setBackgroundImage, setLocalImage } = useContext(
-    WhiteboardContext
-  );
+  const {
+    clearIsActive,
+    setBackgroundImage,
+    setLocalImage,
+    setLocalBackground,
+  } = useContext(WhiteboardContext);
 
   /** Register and handle remote event. */
   useEffect(() => {
@@ -37,6 +41,7 @@ const useSynchronizedRemoved = (
       if (target.isLocalImage) {
         setLocalImage('');
         setBackgroundImage('');
+        setLocalBackground(false);
         return;
       }
 
@@ -80,6 +85,30 @@ const useSynchronizedRemoved = (
             }
           });
           break;
+        case 'removeGroup':
+          if (shouldHandleRemoteEvent(objectId)) return;
+
+          target.objectIds?.forEach((id) => {
+            const objectToRemove = canvas
+              ?.getObjects()
+              .find((object: ICanvasObject) => object.id === id);
+
+            canvas?.remove(objectToRemove as fabric.Object);
+          });
+
+          const event = ({
+            event: { id: `${userId}:group` },
+            type: 'removed',
+            activeIds: target.objectIds,
+          } as unknown) as IUndoRedoEvent;
+
+          undoRedoDispatch({
+            type: SET,
+            payload: canvas?.getObjects(),
+            canvasId: userId,
+            event,
+          });
+          break;
         default:
           canvas?.forEachObject(function (obj: ICanvasObject | TypedShape) {
             if (obj.id && obj.id === objectId) {
@@ -112,6 +141,7 @@ const useSynchronizedRemoved = (
     userId,
     setLocalImage,
     setBackgroundImage,
+    setLocalBackground,
   ]);
 
   /** Register and handle local event. */
@@ -156,10 +186,11 @@ const useSynchronizedRemoved = (
           ((e.target as ICanvasObject)?.text?.trim().length ||
             (e.target as ICanvasObject).get('type') !== 'textbox')
         ) {
-          const event = { event: payload, type: 'removed' } as IUndoRedoEvent;
+          let event = { event: payload, type: 'removed' } as IUndoRedoEvent;
+
           undoRedoDispatch({
             type: SET,
-            payload: canvas.getObjects(),
+            payload: canvas?.getObjects(),
             canvasId: userId,
             event,
           });

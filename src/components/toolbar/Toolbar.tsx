@@ -62,6 +62,7 @@ function Toolbar(
     updateFloodFill,
     updateFloodFillIsActive,
     updateEventedObjects,
+    backgroundColor,
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
@@ -84,6 +85,7 @@ function Toolbar(
     openUploadFileModal,
     openClearWhiteboardModal,
     updateEraserIsActive,
+    fillBackgroundColor,
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
@@ -96,6 +98,8 @@ function Toolbar(
     allToolbarIsEnabled || props.permissions.floodFill;
   const textToolIsActive = allToolbarIsEnabled || props.permissions.text;
   const shapeToolIsActive = allToolbarIsEnabled || props.permissions.shape;
+  const backgroundColorToolIsActive =
+    allToolbarIsEnabled || props.permissions.backgroundColor;
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -131,6 +135,12 @@ function Toolbar(
       return;
     }
 
+    if (
+      tool === ELEMENTS.BACKGROUND_COLOR_TOOL &&
+      !backgroundColorToolIsActive
+    ) {
+      return;
+    }
     /*
       If you click on another button different than
       the mentioned below the selected object will be deselected;
@@ -279,6 +289,10 @@ function Toolbar(
         updateFloodFill(option);
         break;
 
+      case ELEMENTS.BACKGROUND_COLOR_TOOL:
+        fillBackgroundColor(option);
+        break;
+
       case ELEMENTS.ADD_TEXT_TOOL:
         updateFontFamily(option);
         break;
@@ -405,6 +419,9 @@ function Toolbar(
       case ELEMENTS.FLOOD_FILL_TOOL:
         return floodFill;
 
+      case ELEMENTS.BACKGROUND_COLOR_TOOL:
+        return backgroundColor;
+
       case ELEMENTS.ADD_TEXT_TOOL:
         return fontFamily;
 
@@ -529,6 +546,16 @@ function Toolbar(
     if (
       !props.permissions.shape &&
       getActiveTool === ELEMENTS.ADD_SHAPE_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
+
+    if (
+      !props.permissions.backgroundColor &&
+      getActiveTool === ELEMENTS.BACKGROUND_COLOR_TOOL
     ) {
       setTools({
         active: ELEMENTS.POINTERS_TOOL,

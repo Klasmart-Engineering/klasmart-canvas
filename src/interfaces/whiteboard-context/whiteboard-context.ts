@@ -97,4 +97,10 @@ export interface IWhiteboardContext {
   openClearWhiteboardModal: () => void;
   eraserIsActive: boolean;
   updateEraserIsActive: (status: boolean) => void;
+  backgroundColor: string;
+  updateBackgroundColor: (color: string) => void;
+  fillBackgroundColor: (color: string) => void;
+  setBackgroundColorInCanvas: (color: string) => void;
+  localBackground: boolean;
+  setLocalBackground: (condition: boolean) => void;
 }

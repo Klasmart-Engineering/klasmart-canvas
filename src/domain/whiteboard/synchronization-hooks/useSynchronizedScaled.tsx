@@ -92,6 +92,78 @@ const useSynchronizedScaled = (
     [fixPaintBrushLines]
   );
 
+  /**
+   * Remove the given chalk/crayon path from canvas
+   * and add a new one in the correct scale in remote whiteboard
+   * @param {ICanvasBrush} path - Path to remove
+   */
+  const remakePathSync = useCallback(
+    async (path: ICanvasBrush) => {
+      if (!canvas || !userId) return;
+
+      // Data to generate a new chalk/crayon path
+      const basePath = path.basePath;
+
+      // Brush creation
+      const brush = new ChalkBrush(
+        canvas,
+        userId,
+        basePath?.type as 'crayon' | 'chalk'
+      );
+
+      // new points creation based on the new scale
+      const newPoints = (basePath?.points as ICoordinate[]).map((point) => {
+        return {
+          x: point.x * Number(path?.scaleX),
+          y: point.y * Number(path?.scaleY),
+        };
+      });
+
+      // new chalk/crayon effect for the new path
+      const newRects = brush.createChalkEffect(
+        newPoints,
+        Number(basePath?.strokeWidth)
+      );
+
+      try {
+        const newObject = await brush.createChalkPath(
+          String(path.id),
+          newPoints,
+          Number(basePath?.strokeWidth),
+          String(basePath?.stroke),
+          newRects
+        );
+
+        if (!path) return;
+
+        const id = path.id;
+        newObject.set({
+          top: path.top,
+          left: path.left,
+          angle: path.angle,
+          flipX: path.flipX,
+          flipY: path.flipY,
+        });
+
+        // Id's are deleted to avoid add and remove event serializing
+        delete path.id;
+        delete newObject.id;
+
+        canvas.remove(path);
+        canvas.add(newObject);
+        canvas.renderAll();
+
+        // Id's are deleted to avoid add and remove event serializing
+        newObject.set({
+          id: id,
+        });
+      } catch (error) {
+        console.warn(error);
+      }
+    },
+    [canvas, userId]
+  );
+
   /** Register and handle remote event. */
   useEffect(() => {
     const objectScaled = (id: string, target: ICanvasObject) => {
@@ -117,6 +189,10 @@ const useSynchronizedScaled = (
             if (object.type === 'group-marker') {
               fixLines(obj as ICanvasBrush);
             }
+
+            if (object.type === 'image-based') {
+              remakePathSync(obj as ICanvasBrush);
+            }
           }
         }
       });
@@ -139,7 +215,7 @@ const useSynchronizedScaled = (
       }
 
       const localObjects: any[] = canvas?.getObjects() || [];
-      const objectsToGroup = [];
+      const objectsToGroup: ICanvasObject[] = [];
 
       for (let i = 0; i < localObjects.length; i++) {
         if (target.activeIds) {
@@ -149,10 +225,15 @@ const useSynchronizedScaled = (
         }
       }
 
+      for (let i = 0; i < objectsToGroup.length; i++) {
+        let match = target?.eTarget?.objects?.filter((o: any) => o.id === objectsToGroup[i].id)[0] || {};
+        objectsToGroup[i].set(match);
+      }
+
       const props = target?.eTarget;
 
       const sel = new fabric.ActiveSelection(objectsToGroup, {
-        canvas: canvas,
+        canvas,
         originX: props?.originX,
         originY: props?.originY,
         top: props?.top,
@@ -173,7 +254,9 @@ const useSynchronizedScaled = (
         snapAngle: props?.snapAngle,
         snapThreshold: props?.snapThreshold,
         group: props?.group,
+        globalCompositeOperation: 'source-over',
       });
+
       canvas?.setActiveObject(sel);
       canvas?.requestRenderAll();
       canvas?.discardActiveObject();
@@ -193,7 +276,14 @@ const useSynchronizedScaled = (
     return () => {
       eventController?.removeListener('scaled', scaled);
     };
-  }, [canvas, eventController, fixLines, shouldHandleRemoteEvent, userId]);
+  }, [
+    canvas,
+    eventController,
+    fixLines,
+    remakePathSync,
+    shouldHandleRemoteEvent,
+    userId,
+  ]);
 
   useEffect(() => {
     const objectScaled = async (
@@ -214,41 +304,49 @@ const useSynchronizedScaled = (
           activeIds.push(activeObject.id as string);
         });
 
+        const groupPayloadData = e.target.toJSON([
+          'id'
+        ]);
+
         const groupPayload: ObjectEvent = {
           id: userId,
           type,
-          target: { activeIds, eTarget: e.target, isGroup: true },
+          target: { activeIds, eTarget: groupPayloadData, isGroup: true },
         };
+
         eventSerializer?.push('scaled', groupPayload);
 
-        const activeObjects = canvas?.getActiveObjects();
-        canvas?.discardActiveObject();
-        const activeSelection = new fabric.ActiveSelection(activeObjects, {
-          canvas: canvas,
-        });
-        canvas?.setActiveObject(activeSelection);
-        canvas?.renderAll();
+        if (!filtered) {
 
-        const payload = {
-          type,
-          svg: true,
-          target: null,
-          id: `${userId}:group`,
-        };
+          const activeObjects = canvas?.getActiveObjects();
+          canvas?.discardActiveObject();
+          const activeSelection = new fabric.ActiveSelection(activeObjects, {
+            canvas: canvas,
+          });
+          canvas?.setActiveObject(activeSelection);
+          canvas?.renderAll();
 
-        const event = { event: payload, type: 'activeSelection', activeIds };
-        const filtered = canvas?.getObjects().filter((o: any) => {
-          return !o.group;
-        });
+          const payload = {
+            type,
+            svg: true,
+            target: null,
+            id: `${userId}:group`,
+          };
 
-        let active = canvas?.getActiveObject();
+          const event = { event: payload, type: 'activeSelection', activeIds };
+          const filteredPayload = canvas?.getObjects().filter((o: any) => {
+            return !o.group;
+          });
 
-        undoRedoDispatch({
-          type: SET_GROUP,
-          payload: [...(filtered as any[]), active],
-          canvasId: userId,
-          event: (event as unknown) as IUndoRedoEvent,
-        });
+          let active = canvas?.getActiveObject();
+
+          undoRedoDispatch({
+            type: SET_GROUP,
+            payload: [...(filteredPayload as any[]), active],
+            canvasId: userId,
+            event: (event as unknown) as IUndoRedoEvent,
+          });
+        }
       } else {
         if (!(e.target as ICanvasObject).id) {
           return;
@@ -317,6 +415,7 @@ const useSynchronizedScaled = (
               .then((newObject) => {
                 if (!e.target) return;
 
+                const id = brushTarget.id;
                 newObject.set({
                   top: e.target.top,
                   left: e.target.left,
@@ -325,10 +424,21 @@ const useSynchronizedScaled = (
                   flipY: e.target.flipY,
                 });
 
+                // Id's are deleted to avoid add and remove event serializing
+                delete (e.target as ICanvasBrush).id;
+                delete newObject.id;
+
                 canvas.remove(e.target);
                 canvas.add(newObject);
                 canvas.setActiveObject(newObject);
                 canvas.renderAll();
+
+                // Id's are deleted to avoid add and remove event serializing
+                newObject.set({
+                  id: id,
+                });
+
+                target.type = 'image-based';
               });
             break;
         }

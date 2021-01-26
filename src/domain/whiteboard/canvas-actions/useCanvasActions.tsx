@@ -27,6 +27,7 @@ import { useChangeStrokeColor, useTextColor } from './strokeColor';
 import { useEraseObject } from './eraseActions';
 import { useClearWhiteboardOthers, useClearWhiteboardSelf, useClearWhiteboardClearAll } from './clearWhiteboardActions';
 import { IShapeInProgress } from '../../../interfaces/canvas-events/shape-in-progress';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 
 
 export const useCanvasActions = (
@@ -57,6 +58,12 @@ export const useCanvasActions = (
     localImage,
     brushType,
     eraserIsActive,
+    updateBackgroundColor,
+    setLocalBackground,
+    localBackground,
+    setIsBackgroundImage,
+    setBackgroundImageIsPartialErasable,
+    setLocalImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { changePenColorSync } = useSynchronization(userId as string);
@@ -74,7 +81,71 @@ export const useCanvasActions = (
   const specialShapeSelector = useSpecialShapeSelector(userId as string);
 
   /**
-   * Mouse move event handlers for cavnas
+   * Changes backgroundColor property
+   * and makes the necessary changes to paint the current whiteboard
+   * @param {string} color - Color to paint the background
+   */
+  const setBackgroundColorInCanvas = useCallback(
+    (color: string) => {
+      updateBackgroundColor(color);
+      setLocalBackground(true);
+      setIsBackgroundImage(false);
+      setBackgroundImageIsPartialErasable(false);
+      setLocalImage('');
+
+      canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
+
+      // @ts-ignore
+      canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+    },
+    [
+      canvas,
+      setBackgroundImageIsPartialErasable,
+      setIsBackgroundImage,
+      setLocalBackground,
+      setLocalImage,
+      updateBackgroundColor,
+    ]
+  );
+
+  /**
+   * Add specific color to the whiteboard background
+   * @param {string} color - color to set
+   */
+  const fillBackgroundColor = useCallback(
+    async (color: string) => {
+      await setBackgroundColorInCanvas(color);
+
+      const payload = {
+        id: userId,
+        target: color,
+      };
+
+      const event = ({
+        event: {
+          id: userId,
+          color,
+        },
+        type: 'backgroundColorChanged',
+      } as unknown) as IUndoRedoEvent;
+
+      dispatch({
+        type: SET,
+        payload: canvas?.getObjects(),
+        canvasId: userId,
+        event,
+      });
+
+      eventSerializer?.push('backgroundColorChanged', payload);
+    },
+    [canvas, dispatch, eventSerializer, setBackgroundColorInCanvas, userId]
+  );
+
+  /**
+   *
+   * @param shape Shape that was added to canvas.
+   * @param coordsStart Coordinates of initial click on canvas.
+   * @param isCircle Indicates if shape added is a circle.
    */
   const mouseMove = useMouseMove();
 
@@ -173,10 +244,11 @@ export const useCanvasActions = (
         userId as string,
         eventSerializer,
         updateBrushType,
-        type
+        type,
+        dispatch
       );
     },
-    [canvas, eventSerializer, updateBrushType, userId]
+    [canvas, dispatch, eventSerializer, updateBrushType, userId]
   );
 
   /**
@@ -459,14 +531,16 @@ export const useCanvasActions = (
       redo,
       clearWhiteboardAllowClearOthers,
       clearWhiteboardClearMySelf,
+      fillBackgroundColor,
+      setBackgroundColorInCanvas,
     };
 
     return { actions, mouseDown };
   }, [
     fillColor,
     changeStrokeColor,
-    textColor,
     changeBrushType,
+    textColor,
     clearWhiteboardClearAll,
     discardActiveObject,
     addShape,
@@ -479,7 +553,9 @@ export const useCanvasActions = (
     redo,
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
+    fillBackgroundColor,
     mouseDown,
+    setBackgroundColorInCanvas,
   ]);
 
   return state;

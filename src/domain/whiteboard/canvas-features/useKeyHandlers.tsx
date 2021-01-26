@@ -1,21 +1,21 @@
+import { fabric } from 'fabric';
 import { ITextOptions } from 'fabric/fabric-impl';
 import { useCallback, useContext } from 'react';
 import { ICanvasKeyboardEvent } from '../../../interfaces/canvas-events/canvas-keyboard-event';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
-import { UNDO, REDO, CanvasAction } from '../reducers/undo-redo';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
+import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { WhiteboardContext } from '../WhiteboardContext';
 
 /**
  * Handles the logic for keyboard events
  * @param {fabric.Canvas} canvas - Canvas to interact
  * @param {string} instanceId - Id of the current canvas
- * @param {(action: CanvasAction) => void} undoRedoDispatch - Dispatcher
- * to save the following events to make undo/redo over them
  */
 export const useKeyHandlers = (
   canvas: fabric.Canvas,
   instanceId: string,
-  undoRedoDispatch: (action: CanvasAction) => void,
   permissions: IPermissions,
   allToolbarIsEnabled: boolean
 ) => {
@@ -25,7 +25,14 @@ export const useKeyHandlers = (
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
     perfectShapeIsAvailable,
+    redo,
+    undo,
   } = useContext(WhiteboardContext);
+
+  // Event serialization for synchronizing whiteboard state.
+  const {
+    state: { eventSerializer },
+  } = useSharedEventSerializer();
 
   /**
    * General handler for keydown keyboard events
@@ -41,36 +48,82 @@ export const useKeyHandlers = (
        * Removes the current active objects in canvas
        */
       const removeSelectedObjects = () => {
-        const objects = canvas.getActiveObjects();
+        let active = canvas.getActiveObject();
 
-        objects.forEach((object: fabric.Object) => {
-          if (!(object as ITextOptions)?.isEditing) {
-            canvas.remove(object);
-            canvas.discardActiveObject().renderAll();
+        canvas.discardActiveObject();
+
+        if (active.type === 'activeSelection') {
+          const objectIds: string[] = [];
+
+          (active as fabric.ActiveSelection).forEachObject(
+            (object: ICanvasObject) => {
+              if (!(object as ITextOptions)?.isEditing) {
+                object.groupClear = true;
+                objectIds.push(object.id as string);
+                canvas.remove(object);
+              }
+            }
+          );
+
+          const target = {
+            target: {
+              strategy: 'removeGroup',
+              objectIds: objectIds,
+            },
+          };
+
+          eventSerializer?.push('removed', (target as unknown) as ObjectEvent);
+        } else {
+          if (!(active as ITextOptions)?.isEditing) {
+            canvas.remove(active);
           }
-        });
+        }
+      };
+
+      /**
+       * Checks if client's OS is MacOS or not
+       */
+      const isMacOS = () => {
+        return navigator.appVersion.indexOf('Mac') !== -1;
+      };
+
+      /**
+       * Checks if an Undo Shortcut is executed
+       */
+      const isUndoShortcut = () => {
+        return (
+          (event.ctrlKey || (isMacOS() && event.metaKey)) &&
+          event.keyCode === 90 &&
+          !event.shiftKey &&
+          activeCanvas.current === instanceId
+        );
+      };
+
+      /**
+       * Checks if a Redo Shortcut is executed
+       */
+      const isRedoShortcut = () => {
+        return (
+          ((event.keyCode === 89 && event.ctrlKey) ||
+            (isMacOS() &&
+              event.metaKey &&
+              event.shiftKey &&
+              event.keyCode === 90)) &&
+          activeCanvas.current === instanceId
+        );
       };
 
       const event = e as ICanvasKeyboardEvent;
 
       // UNDO Keyboard Shortcut
-      if (
-        event.keyCode === 90 &&
-        event.ctrlKey &&
-        !event.shiftKey &&
-        activeCanvas.current === instanceId
-      ) {
-        undoRedoDispatch({ type: UNDO, canvasId: instanceId });
+      if (isUndoShortcut()) {
+        undo();
         return;
       }
 
       // REDO Keyboard Shortcut
-      if (
-        event.keyCode === 89 &&
-        event.ctrlKey &&
-        activeCanvas.current === instanceId
-      ) {
-        undoRedoDispatch({ type: REDO, canvasId: instanceId });
+      if (isRedoShortcut()) {
+        redo();
         return;
       }
 
@@ -97,12 +150,14 @@ export const useKeyHandlers = (
       }
     },
     [
-      canvas,
-      undoRedoDispatch,
       activeCanvas,
       instanceId,
       perfectShapeIsActive,
       perfectShapeIsAvailable,
+      canvas,
+      eventSerializer,
+      undo,
+      redo,
       updatePerfectShapeIsActive,
       permissions.undoRedo,
     ]
