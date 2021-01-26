@@ -3,4 +3,5 @@ export interface ICanvasKeyboardEvent extends Event {
   keyCode?: number;
   ctrlKey?: boolean;
   shiftKey?: boolean;
+  metaKey?: boolean;
 }

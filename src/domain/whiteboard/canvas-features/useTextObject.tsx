@@ -60,11 +60,7 @@ export const useTextObject = (
   );
 
   // Getting Key Handlers
-  const { keyUpHandler, keyDownHandler } = useKeyHandlers(
-    canvas,
-    instanceId,
-    undoRedoDispatch
-  );
+  const { keyUpHandler, keyDownHandler } = useKeyHandlers(canvas, instanceId);
 
   /**
    * Loads selected font. Default is Arial
