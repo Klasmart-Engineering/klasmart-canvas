@@ -4,6 +4,7 @@ import { IBristle } from '../brushes/bristle';
 export interface ICanvasObject extends fabric.Object {
   bristles?: IBristle[];
   _objects?: ICanvasObject[];
+  objects?: ICanvasObject[];
   id?: string;
   path?: string | ICanvasObject;
   text?: string;
