@@ -19,6 +19,7 @@ import {
 } from '../../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET } from '../../reducers/undo-redo';
 import { isEmptyShape } from '../../utils/shapes';
+import { changeBrushTypeUndoRedoGroup } from './changeBrushTypeUndoRedoGroup';
 
 /**
  * Changes brushType value and if one or more objects are selected
@@ -234,15 +235,17 @@ export const changeBrushTypeAction = async (
 
       eventSerializer?.push('brushTypeChanged', payload);
 
-      const event = { event: payload, type: 'brushTypeChanged' };
+      if (activeObjects.length === 1) {
+        const event = { event: payload, type: 'brushTypeChanged' };
 
-      // Dispatching Brush Type Change in Custom Paths
-      undoRedoDispatch({
-        type: SET,
-        payload: canvas?.getObjects() as TypedShape[],
-        canvasId: userId,
-        event: (event as unknown) as IUndoRedoEvent,
-      });
+        // Dispatching Brush Type Change in Custom Paths
+        undoRedoDispatch({
+          type: SET,
+          payload: canvas?.getObjects() as TypedShape[],
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      }
     }
   }
 
@@ -254,4 +257,5 @@ export const changeBrushTypeAction = async (
   }
 
   canvas?.renderAll();
+  changeBrushTypeUndoRedoGroup(canvas, userId, undoRedoDispatch);
 };

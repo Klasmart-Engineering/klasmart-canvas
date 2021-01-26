@@ -37,7 +37,8 @@ const useSynchronizedColorChanged = (
 
             case 'shape':
               obj.set({
-                fill: target.fill,
+                fill: target.fill || obj.fill,
+                stroke: target.stroke || obj.stroke,
               });
               break;
 

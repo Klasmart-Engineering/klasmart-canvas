@@ -23,23 +23,7 @@ export declare interface PaintEventSerializer {
 export interface ObjectEvent {
   id: string;
   type?: ObjectType;
-  target?:
-    | ICanvasObject
-    | { objects: ICanvasObject[] }
-    | { background: string }
-    | { pointer: boolean }
-    | boolean
-    | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean }
-    | IToolbarUI
-    | string
-    | {
-        coordinates: { x: number; y: number }[];
-        lineWidth: number;
-        color: string;
-      }
-    | { type: string; svg: string }
-    | IBrushSyncTarget
-    | string;
+  target?: PayloadTarget;
 }
 
 export interface IBackgroundImageEvent {
@@ -67,6 +51,23 @@ export type ObjectType =
   | 'localImage'
   | 'svg';
 
+export type PayloadTarget =
+  | ICanvasObject
+  | { objects: ICanvasObject[] }
+  | { background: string }
+  | { pointer: boolean }
+  | boolean
+  | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean }
+  | IToolbarUI
+  | string
+  | {
+      coordinates: { x: number; y: number }[];
+      lineWidth: number;
+      color: string;
+    }
+  | { type: string; svg: string }
+  | IBrushSyncTarget
+  | string;
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {
   readonly multiplier: number;

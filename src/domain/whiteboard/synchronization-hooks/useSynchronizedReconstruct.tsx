@@ -66,7 +66,7 @@ const useSynchronizedReconstruct = (
       };
 
       const loadImage = (object: ICanvasObject) =>
-        new Promise((resolve) => {
+        new Promise<void>((resolve) => {
           const { src, ...data } = object as ICanvasObject;
 
           fabric.Image.fromURL(
