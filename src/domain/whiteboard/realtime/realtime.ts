@@ -195,6 +195,10 @@ export class Realtime {
    * @param points Path points
    */
   public drawPath(points: IPoint[]) {
+    if (!points) {
+      return;
+    }
+
     let i = 0;
     this.clear();
 
@@ -218,6 +222,11 @@ export class Realtime {
    */
   public rectDraw(target: any) {
     this.clear();
+
+    if (!target || !target.shape) {
+      return;
+    }
+
     const rect = shapes.rectangle(
       target.shape.width,
       target.shape.height,

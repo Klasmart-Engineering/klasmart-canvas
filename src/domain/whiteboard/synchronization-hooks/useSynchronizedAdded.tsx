@@ -165,11 +165,15 @@ const useSynchronizedAdded = (
 
       if (
         (canvas && (payload.target as ICanvasObject)?.text?.trim().length) ||
-        (canvas && payload.type === 'group') ||
-        (canvas && payload.type === 'image') ||
+        (canvas &&
+          payload.type === 'group' &&
+          (payload.target as ICanvasBrush)?.basePath) ||
+        (canvas &&
+          payload.type === 'image' &&
+          (payload.target as ICanvasBrush)?.basePath) ||
         (canvas &&
           payload.type === 'path' &&
-          (payload.target as ICanvasPathBrush).basePath)
+          (payload.target as ICanvasPathBrush)?.basePath)
       ) {
         const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
@@ -440,6 +444,12 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'backgroundImage') {
+        if (canvas)
+          canvas.setBackgroundColor(
+            'transparent',
+            canvas.renderAll.bind(canvas)
+          );
+
         fabric.Image.fromURL(target.src as string, function (img) {
           canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
             scaleX: (canvas.width || 0) / (img.width || 0),
@@ -455,6 +465,12 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'localImage') {
+        if (canvas)
+          canvas.setBackgroundColor(
+            'transparent',
+            canvas.renderAll.bind(canvas)
+          );
+
         if (target.backgroundImage) setLocalImage(target.backgroundImage);
 
         return;

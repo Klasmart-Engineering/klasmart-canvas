@@ -53,7 +53,8 @@ function AuthMenu(props: {
     undoRedo,
     clearWhiteboard,
     downloadCanvas,
-    uploadImage
+    uploadImage,
+    backgroundColor,
   } = props.permissions;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,6 +100,11 @@ function AuthMenu(props: {
       checked: floodFill,
       name: 'floodFill',
       label: 'Flood-fill tool',
+    },
+    {
+      checked: backgroundColor,
+      name: 'backgroundColor',
+      label: 'Background Color tool',
     },
     {
       checked: text,

@@ -4,4 +4,5 @@ export interface IUndoRedoSingleEvent {
   id: string;
   target: ICanvasObject;
   type?: string;
+  color?: string;
 }

@@ -5,6 +5,7 @@ import { CanvasAction, SET_OTHER } from '../reducers/undo-redo';
 import { fabric } from 'fabric';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
 const useSynchronizedReconstruct = (
   canvas: fabric.Canvas | undefined,
@@ -26,7 +27,18 @@ const useSynchronizedReconstruct = (
     const reconstruct = (id: string, target: ICanvasObject) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
+      if (typeof target === 'object' && !target.param) {
+        target.param = JSON.stringify(target);
+      }
+
+      if (typeof target !== 'object') {
+        target = {
+          param: 'false',
+        } as ICanvasObject;
+      }
+
       const parsed = JSON.parse(target.param as string);
+
       if (parsed === false) {
         canvas?.getObjects().forEach((object: TypedShape) => {
           if (getId(id) === getId(object.id)) {
@@ -53,22 +65,26 @@ const useSynchronizedReconstruct = (
         canvas?.bringToFront(object);
       };
 
-      const loadImage = (object: ICanvasObject) => (new Promise((resolve) => {
-        const { src, ...data } = object as ICanvasObject;
+      const loadImage = (object: ICanvasObject) =>
+        new Promise<void>((resolve) => {
+          const { src, ...data } = object as ICanvasObject;
 
-        fabric.Image.fromURL(object.src as string, async (image: fabric.Image) => {
-          image.set(data);
-          reset(image as TypedShape);
+          fabric.Image.fromURL(
+            object.src as string,
+            async (image: fabric.Image) => {
+              image.set(data);
+              reset(image as TypedShape);
 
-          resolve();
+              resolve();
+            }
+          );
         });
-      }));
 
       objects?.forEach(async (object: TypedShape) => {
         if (object && object.type === 'path') {
           const group: TypedGroup | undefined = canvas
             ?.getObjects()
-            .filter((o: any) => o._objects)[0] as TypedGroup;
+            .filter((o: any) => o._objects && !o.basePath)[0] as TypedGroup;
           if (group && group.id) {
             canvas?.remove(group);
           }
@@ -109,7 +125,10 @@ const useSynchronizedReconstruct = (
         } else if (object && object.type === 'image') {
           if ((object as ICanvasObject).joinedIds) {
             canvas?.getObjects().forEach((o: ICanvasObject) => {
-              if ((object as ICanvasObject).joinedIds?.indexOf(o.id as string) !== -1) {
+              if (
+                (object as ICanvasObject).joinedIds?.indexOf(o.id as string) !==
+                -1
+              ) {
                 canvas.remove(o);
               }
             });
@@ -140,9 +159,19 @@ const useSynchronizedReconstruct = (
 
           canvas?.remove(groupObject);
 
-          items.forEach((o: TypedShape) => {
-            canvas?.add(o);
-          });
+          // If object is a custom brush
+          if ((object as ICanvasBrush).basePath) {
+            let newGroup = new fabric.Group(items);
+            (newGroup as ICanvasBrush).set({
+              ...object,
+            });
+
+            canvas?.add(newGroup);
+          } else {
+            items.forEach((o: TypedShape) => {
+              canvas?.add(o);
+            });
+          }
         }
 
         undoRedoDispatch({

@@ -32,6 +32,7 @@ const permissionsState: IPermissions = {
   clearWhiteboard: false,
   downloadCanvas: false,
   uploadImage: false,
+  backgroundColor: false,
 }
 
 /**

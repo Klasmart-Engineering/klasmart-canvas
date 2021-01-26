@@ -26,6 +26,8 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
     backgroundImageIsPartialErasable,
     backgroundImage,
     setLocalImage,
+    setLocalBackground,
+    updateBackgroundColor,
     isGif,
     image,
   } = useContext(WhiteboardContext);
@@ -38,6 +40,10 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
     if (!canvas) return;
 
     if (isBackgroundImage) {
+      updateBackgroundColor('#000000');
+      setLocalBackground(false);
+      canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
+
       if (backgroundImageIsPartialErasable) {
         createBackgroundImage(backgroundImage.toString(), userId, canvas).then(
           () => {
@@ -94,7 +100,9 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
     image,
     isBackgroundImage,
     isGif,
+    setLocalBackground,
     setLocalImage,
+    updateBackgroundColor,
     userId,
   ]);
 };

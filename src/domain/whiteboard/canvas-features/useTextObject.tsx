@@ -64,7 +64,6 @@ export const useTextObject = (
   const { keyUpHandler, keyDownHandler } = useKeyHandlers(
     canvas,
     instanceId,
-    undoRedoDispatch,
     permissions,
     allToolbarIsEnabled,
   );
@@ -86,6 +85,8 @@ export const useTextObject = (
             canvas.requestRenderAll();
 
             const objects = canvas?.getActiveObjects();
+
+            canvas.discardActiveObject();
 
             if (objects && objects.length) {
               objects.forEach((obj: ICanvasObject) => {
@@ -128,6 +129,13 @@ export const useTextObject = (
                   });
                 }
               });
+            }
+
+            if (objects.length === 1) {
+              canvas?.setActiveObject(objects[0]);
+            } else if (objects.length >= 2) {
+              const activesGroup = new fabric.ActiveSelection(objects);
+              canvas?.setActiveObject(activesGroup);
             }
           }
         })
