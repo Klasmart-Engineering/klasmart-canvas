@@ -1,5 +1,8 @@
 import { useCallback, useContext, useEffect } from 'react';
 import { WhiteboardContext } from '../WhiteboardContext';
+import arrowPointer from '../../../assets/cursors/arrow-pointer.png';
+import handPointer from '../../../assets/cursors/hand-pointer.png';
+import crosshairPointer from '../../../assets/cursors/crosshair-pointer.png';
 
 /**
  * Handles the logic for pointer feature
@@ -14,13 +17,13 @@ export const usePointerFeature = (canvas: fabric.Canvas) => {
   const setCursor = useCallback(() => {
     switch (pointer) {
       case 'arrow':
-        return 'default';
+        return `url("${arrowPointer}"), auto`;
 
       case 'hand':
-        return 'pointer';
+        return `url("${handPointer}"), auto`;
 
       case 'crosshair':
-        return 'crosshair';
+        return `url("${crosshairPointer}"), auto`;
     }
   }, [pointer]);
 
