@@ -125,40 +125,41 @@ const useSynchronizedScaled = (
         Number(basePath?.strokeWidth)
       );
 
-      // Path creation
-      await brush
-        .createChalkPath(
+      try {
+        const newObject = await brush.createChalkPath(
           String(path.id),
           newPoints,
           Number(basePath?.strokeWidth),
           String(basePath?.stroke),
           newRects
-        )
-        .then((newObject) => {
-          if (!path) return;
+        );
 
-          const id = path.id;
-          newObject.set({
-            top: path.top,
-            left: path.left,
-            angle: path.angle,
-            flipX: path.flipX,
-            flipY: path.flipY,
-          });
+        if (!path) return;
 
-          // Id's are deleted to avoid add and remove event serializing
-          delete path.id;
-          delete newObject.id;
-
-          canvas.remove(path);
-          canvas.add(newObject);
-          canvas.renderAll();
-
-          // Id's are deleted to avoid add and remove event serializing
-          newObject.set({
-            id: id,
-          });
+        const id = path.id;
+        newObject.set({
+          top: path.top,
+          left: path.left,
+          angle: path.angle,
+          flipX: path.flipX,
+          flipY: path.flipY,
         });
+
+        // Id's are deleted to avoid add and remove event serializing
+        delete path.id;
+        delete newObject.id;
+
+        canvas.remove(path);
+        canvas.add(newObject);
+        canvas.renderAll();
+
+        // Id's are deleted to avoid add and remove event serializing
+        newObject.set({
+          id: id,
+        });
+      } catch (error) {
+        console.warn(error);
+      }
     },
     [canvas, userId]
   );

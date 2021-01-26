@@ -85,13 +85,14 @@ function Toolbar(props: {
     updatePartialEraseIsActive,
     openUploadFileModal,
     openClearWhiteboardModal,
+    updateEraserIsActive,
     fillBackgroundColor,
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
   const pointerToolIsActive = allToolbarIsEnabled || props.permissions.pointer;
   const moveToolIsActive = allToolbarIsEnabled || props.permissions.move;
-  const eraseToolIsActive = allToolbarIsEnabled || props.permissions.erase;
+  const eraseToolIsActive = allToolbarIsEnabled || props.permissions.erase || props.permissions.partialErase;
   const penToolIsActive = allToolbarIsEnabled || props.permissions.pen;
   const floodFillToolIsActive =
     allToolbarIsEnabled || props.permissions.floodFill;
@@ -140,12 +141,6 @@ function Toolbar(props: {
     ) {
       return;
     }
-
-    // Set Erase Type in initial value
-    updateEraseType(null);
-
-    updatePartialEraseIsActive(false);
-
     /*
       If you click on another button different than
       the mentioned below the selected object will be deselected;
@@ -189,6 +184,11 @@ function Toolbar(props: {
      * Indicates if laser tool is active.
      */
     updateLaserIsActive(tool === ELEMENTS.LASER_TOOL);
+    
+    /**
+     * Indicates if any eraser is active.
+     */
+    updateEraserIsActive(tool === ELEMENTS.ERASE_TYPE_TOOL);
 
     /**
      * Indicates if line width tool is active.
@@ -404,7 +404,7 @@ function Toolbar(props: {
       case ELEMENTS.ERASE_TYPE_TOOL: {
         let allowed = props?.options.filter((options: any) => options.enabled);
 
-        if (allowed?.length === 1 && allowed[0].value !== eraseType) {
+        if (allowed?.length === 1 && eraseType && allowed[0].value !== eraseType) {
           updateEraseType(allowed[0].value);
           return allowed[0].value;
         }
@@ -497,7 +497,7 @@ function Toolbar(props: {
     }
 
     if (
-      !props.permissions.erase &&
+      !(props.permissions.erase || props.permissions.partialErase) &&
       getActiveTool === ELEMENTS.ERASE_TYPE_TOOL
     ) {
       setTools({
@@ -506,7 +506,16 @@ function Toolbar(props: {
       });
     }
 
-    if (!props.permissions.pen && getActiveTool === ELEMENTS.LINE_TYPE_TOOL) {
+    if (!props.permissions.erase && props.permissions.partialErase) {
+      updateEraseType('partial');
+    } else if (props.permissions.erase && !props.permissions.partialErase) {
+      updateEraseType('object');
+    }
+
+    if (
+      !props.permissions.pen &&
+      getActiveTool === ELEMENTS.LINE_TYPE_TOOL
+    ) {
       setTools({
         active: ELEMENTS.POINTERS_TOOL,
         elements: getToolElements,

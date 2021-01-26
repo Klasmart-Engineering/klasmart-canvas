@@ -12,7 +12,6 @@ import { isEmptyShape, isFreeDrawing, isShape } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
 import floodFillCursor from '../../../assets/cursors/flood-fill.png';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
-import store from '../redux/store';
 import { getToolbarIsEnabled } from '../redux/utils';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
