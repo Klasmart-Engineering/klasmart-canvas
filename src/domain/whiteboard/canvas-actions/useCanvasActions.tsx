@@ -1103,12 +1103,12 @@ export const useCanvasActions = (
           )
             .then((newObject) => {
               const payload: ObjectEvent = {
-                type: 'group',
+                type: newObject.type as ObjectType,
                 target: {
-                  stroke: (object as ICanvasBrush).basePath?.stroke,
+                  stroke: (newObject as ICanvasBrush).basePath?.stroke,
                   bristles: (object as ICanvasBrush).basePath?.bristles,
                 } as ICanvasObject,
-                id: String(object.id),
+                id: String(newObject.id),
               };
 
               eventSerializer?.push('colorChanged', payload);
@@ -1197,10 +1197,11 @@ export const useCanvasActions = (
         userId as string,
         eventSerializer,
         updateBrushType,
-        type
+        type,
+        dispatch
       );
     },
-    [canvas, eventSerializer, updateBrushType, userId]
+    [canvas, dispatch, eventSerializer, updateBrushType, userId]
   );
 
   /**

@@ -165,11 +165,15 @@ const useSynchronizedAdded = (
 
       if (
         (canvas && (payload.target as ICanvasObject)?.text?.trim().length) ||
-        (canvas && payload.type === 'group') ||
-        (canvas && payload.type === 'image') ||
+        (canvas &&
+          payload.type === 'group' &&
+          (payload.target as ICanvasBrush)?.basePath) ||
+        (canvas &&
+          payload.type === 'image' &&
+          (payload.target as ICanvasBrush)?.basePath) ||
         (canvas &&
           payload.type === 'path' &&
-          (payload.target as ICanvasPathBrush).basePath)
+          (payload.target as ICanvasPathBrush)?.basePath)
       ) {
         const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 

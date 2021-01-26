@@ -6,6 +6,7 @@ import { ICanvasBrush } from '../../../../interfaces/brushes/canvas-brush';
 import { ICanvasPathBrush } from '../../../../interfaces/brushes/canvas-path-brush';
 import { ICoordinate } from '../../../../interfaces/brushes/coordinate';
 import { IShapePointsIndex } from '../../../../interfaces/brushes/shape-points-index';
+import { IUndoRedoEvent } from '../../../../interfaces/canvas-events/undo-redo-event';
 import { ICanvasObject } from '../../../../interfaces/objects/canvas-object';
 import { TypedShape } from '../../../../interfaces/shapes/shapes';
 import { ChalkBrush } from '../../brushes/classes/chalkBrush';
@@ -16,6 +17,7 @@ import {
   ObjectEvent,
   PaintEventSerializer,
 } from '../../event-serializer/PaintEventSerializer';
+import { CanvasAction, SET } from '../../reducers/undo-redo';
 import { isEmptyShape } from '../../utils/shapes';
 
 /**
@@ -26,13 +28,16 @@ import { isEmptyShape } from '../../utils/shapes';
  * @param {PaintEventSerializer} eventSerializer - Serializer to synchronize
  * changes in the other canvases
  * @param {IBrushType} type - Brush type to change
+ * @param {(action: CanvasAction) => void} undoRedoDispatch - Dispatcher
+ * to save brush type changes and could make undo/redo over them
  */
 export const changeBrushTypeAction = async (
   canvas: fabric.Canvas,
   userId: string,
   eventSerializer: PaintEventSerializer,
   updateBrushType: (type: IBrushType) => void,
-  type: IBrushType
+  type: IBrushType,
+  undoRedoDispatch: (action: CanvasAction) => void
 ) => {
   let newActives: ICanvasObject[] = [];
   let activeObjects: ICanvasObject[] = [];
@@ -228,6 +233,16 @@ export const changeBrushTypeAction = async (
       } as ObjectEvent;
 
       eventSerializer?.push('brushTypeChanged', payload);
+
+      const event = { event: payload, type: 'brushTypeChanged' };
+
+      // Dispatching Brush Type Change in Custom Paths
+      undoRedoDispatch({
+        type: SET,
+        payload: canvas?.getObjects() as TypedShape[],
+        canvasId: userId,
+        event: (event as unknown) as IUndoRedoEvent,
+      });
     }
   }
 
