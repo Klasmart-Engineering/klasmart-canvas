@@ -70,6 +70,12 @@ export const useCanvasActions = (
     backgroundImage,
     localImage,
     brushType,
+    updateBackgroundColor,
+    setLocalBackground,
+    localBackground,
+    setIsBackgroundImage,
+    setBackgroundImageIsPartialErasable,
+    setLocalImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { changePenColorSync } = useSynchronization(userId as string);
@@ -297,6 +303,45 @@ export const useCanvasActions = (
       return newShape;
     },
     [canvas, lineWidth, penColor, userId]
+  );
+
+  /**
+   * Add specific color to the whiteboard background
+   * @param {string} color - color to set
+   */
+  const fillBackgroundColor = useCallback(
+    async (color: string) => {
+      await updateBackgroundColor(color);
+      await setLocalBackground(true);
+      await setIsBackgroundImage(false);
+      await setBackgroundImageIsPartialErasable(false);
+      await setLocalImage('');
+
+      if (canvas)
+        await canvas.setBackgroundColor(
+          'transparent',
+          canvas.renderAll.bind(canvas)
+        );
+      // @ts-ignore
+      await canvas.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+
+      const payload = {
+        id: userId,
+        target: color,
+      };
+
+      eventSerializer?.push('backgroundColorChanged', payload);
+    },
+    [
+      canvas,
+      eventSerializer,
+      setBackgroundImageIsPartialErasable,
+      setIsBackgroundImage,
+      setLocalBackground,
+      setLocalImage,
+      updateBackgroundColor,
+      userId,
+    ]
   );
 
   /**
@@ -1397,6 +1442,21 @@ export const useCanvasActions = (
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
     if (teacherHasPermission || studentHasPermission) {
+      if (localBackground) {
+        updateBackgroundColor('#000000');
+        setLocalBackground(false);
+
+        const target = {
+          id: '',
+          target: {
+            strategy: 'allowClearMyself',
+            isLocalImage: true,
+          },
+        };
+
+        eventSerializer?.push('removed', target as ObjectEvent);
+      }
+
       if (typeof localImage === 'string' && localImage.length) {
         const target = {
           id: '',
@@ -1776,14 +1836,15 @@ export const useCanvasActions = (
       redo,
       clearWhiteboardAllowClearOthers,
       clearWhiteboardClearMySelf,
+      fillBackgroundColor,
     };
 
     return { actions, mouseDown };
   }, [
     fillColor,
     changeStrokeColor,
-    textColor,
     changeBrushType,
+    textColor,
     clearWhiteboardClearAll,
     discardActiveObject,
     addShape,
@@ -1796,6 +1857,7 @@ export const useCanvasActions = (
     redo,
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
+    fillBackgroundColor,
     mouseDown,
   ]);
 
