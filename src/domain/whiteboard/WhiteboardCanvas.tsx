@@ -260,7 +260,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
 
   // useEffects and logic for manage pointers
-  usePointerFeature(canvas as fabric.Canvas);
+  usePointerFeature(canvas as fabric.Canvas, userId);
 
   useSynchronizedMoved(
     canvas,

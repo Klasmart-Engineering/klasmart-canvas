@@ -80,6 +80,12 @@ const useSynchronizedCursorPointer = (
           return object.id === id;
         }) as ICanvasObject;
 
+      // Removing current cursor
+      if (pointer === 'none' && pointerImage) {
+        canvas?.remove(pointerImage);
+        canvas?.renderAll();
+      }
+
       /*
         If a pointer change occurs,
         current pointer will be removed to create the new one

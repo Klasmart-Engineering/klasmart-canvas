@@ -536,6 +536,16 @@ function Toolbar() {
         elements: getToolElements,
       });
     }
+
+    if (
+      !serializerToolbarState.cursorPointer &&
+      getActiveTool === ELEMENTS.POINTERS_TOOL
+    ) {
+      setTools({
+        active: null,
+        elements: getToolElements,
+      });
+    }
   }, [
     pointerIsEnabled,
     getActiveTool,
@@ -550,6 +560,7 @@ function Toolbar() {
     serializerToolbarState.shape,
     serializerToolbarState.undoRedo,
     serializerToolbarState.clearWhiteboard,
+    serializerToolbarState.cursorPointer,
   ]);
 
   const toolbarContainerStyle: CSSProperties = {

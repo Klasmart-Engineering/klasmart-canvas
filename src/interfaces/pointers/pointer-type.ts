@@ -1,1 +1,1 @@
-export type IPointerType = 'arrow' | 'hand' | 'crosshair';
+export type IPointerType = 'none' | 'arrow' | 'hand' | 'crosshair';
