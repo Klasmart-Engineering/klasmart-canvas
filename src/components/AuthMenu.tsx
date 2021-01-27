@@ -60,6 +60,7 @@ export default function AuthMenu(props: {
     clearWhiteboard,
     downloadCanvas,
     uploadImage,
+    backgroundColor,
   } = localToolbarState;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,6 +116,11 @@ export default function AuthMenu(props: {
       checked: floodFill,
       name: 'floodFill',
       label: 'Flood-fill tool',
+    },
+    {
+      checked: backgroundColor,
+      name: 'backgroundColor',
+      label: 'Background Color tool',
     },
     {
       checked: text,

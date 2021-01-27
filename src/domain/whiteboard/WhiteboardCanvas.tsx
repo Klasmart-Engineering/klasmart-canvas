@@ -49,6 +49,7 @@ import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchron
 import { v4 as uuidv4 } from 'uuid';
 import { usePointerFeature } from './canvas-features/usePointerFeature';
 import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
+import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -128,6 +129,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     backgroundImage,
     backgroundImageIsPartialErasable,
     localImage,
+    localBackground,
+    backgroundColor,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   // Getting Canvas shared functions
@@ -357,6 +360,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     setSerializerToolbarState
   );
   useSynchronizedCursorPointer(canvas, userId, filterIncomingEvents);
+  useSynchronizedBackgroundColorChanged(filterIncomingEvents);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {
@@ -395,6 +399,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
           }}
           alt="background"
           src={localImage.toString()}
+        />
+      )}
+      {!localImage && localBackground && (
+        <div
+          style={{
+            height: '100%',
+            width: '100%',
+            backgroundColor: backgroundColor,
+          }}
         />
       )}
     </>

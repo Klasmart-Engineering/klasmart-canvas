@@ -22,8 +22,13 @@ export const UndoRedo = (
   instanceId: string
 ) => {
   const { state, dispatch } = useUndoRedo();
-  const { shapesAreSelectable } = useContext(WhiteboardContext);
+  const { shapesAreSelectable, setBackgroundColorInCanvas } = useContext(
+    WhiteboardContext
+  );
 
+  /**
+   * Handles logic for render changes in undo/redo actions in local whiteboard
+   */
   useEffect(() => {
     if (!state || !canvas) {
       return;
@@ -31,22 +36,33 @@ export const UndoRedo = (
 
     // Rerenders local canvas when an undo or redo event has been executed.
     if (state.actionType === UNDO || state.actionType === REDO) {
-      RenderLocalUndoRedo(canvas, instanceId, state, shapesAreSelectable);
-    }
-
-    if (state.actionType === UNDO) {
-      RenderRemoteUndo(canvas, state, eventSerializer);
-    } else if (state.actionType === REDO) {
-      RenderRemoteRedo(canvas, state, eventSerializer);
+      RenderLocalUndoRedo(
+        canvas,
+        instanceId,
+        state,
+        state.actionType as 'UNDO' | 'REDO',
+        shapesAreSelectable,
+        setBackgroundColorInCanvas
+      );
     }
   }, [
-    state,
     canvas,
-    dispatch,
-    eventSerializer,
     instanceId,
+    setBackgroundColorInCanvas,
     shapesAreSelectable,
+    state,
   ]);
+
+  /**
+   * Handles logic for render changes in undo/redo actions in remote whiteboards
+   */
+  useEffect(() => {
+    if (state.actionType === UNDO) {
+      RenderRemoteUndo(canvas, instanceId, state, eventSerializer);
+    } else if (state.actionType === REDO) {
+      RenderRemoteRedo(canvas, instanceId, state, eventSerializer);
+    }
+  }, [canvas, eventSerializer, instanceId, state]);
 
   return { state, dispatch };
 };

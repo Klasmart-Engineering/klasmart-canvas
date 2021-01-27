@@ -117,6 +117,11 @@ export const mappedToolElements = (
             allToolbarIsEnabled || serializerToolbarState.floodFill;
           return { ...elmnt, enabled };
         }
+        case 'background_color': {
+          const enabled =
+            allToolbarIsEnabled || serializerToolbarState.backgroundColor;
+          return { ...elmnt, enabled };
+        }
         case 'add_text': {
           const enabled = allToolbarIsEnabled || serializerToolbarState.text;
           return { ...elmnt, enabled };

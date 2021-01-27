@@ -93,6 +93,11 @@ export class EventPainterController extends EventEmitter
         }
         case 'cursorPointer': {
           this.emit('cursorPointer', data.id, data.target);
+          break;
+        }
+        case 'backgroundColorChanged': {
+          this.emit('backgroundColorChanged', data.id, data.target);
+          break;
         }
       }
     };
@@ -193,6 +198,9 @@ export class EventPainterController extends EventEmitter
         break;
       case 'brushTypeChanged':
         this.brushTypeChanged(event.id, target);
+        break;
+      case 'backgroundColorChanged':
+        this.backgroundColorChanged(event.id, target);
         break;
       case 'fontColorChanged':
         this.fontColorChanged(event.id, event.objectType, target);
@@ -372,5 +380,14 @@ export class EventPainterController extends EventEmitter
 
   private brushTypeChanged(id: string, target: ICanvasObject) {
     this.emit('brushTypeChanged', id, target);
+  }
+
+  private backgroundColorChanged(id: string, target: ICanvasObject) {
+    this.emit('backgroundColorChanged', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, eventType: 'backgroundColorChanged', target })
+    );
   }
 }

@@ -24,3 +24,27 @@ export const getPreviousBackground = (
 
   return '#fff';
 };
+
+/**
+ * Get's previous set color for canvas background.
+ * @param currentIndex Current event index.
+ * @param events List of events.
+ */
+export const getPreviousBackgroundDivColor = (
+  currentIndex: number,
+  events: IUndoRedoEvent[]
+): string | null => {
+  let i = currentIndex;
+
+  if (i < 0) {
+    return null;
+  }
+
+  for (i; i >= 0; i--) {
+    if ((events[i] as IUndoRedoEvent)?.type === 'backgroundColorChanged') {
+      return (events[i].event as IUndoRedoSingleEvent).color as string;
+    }
+  }
+
+  return null;
+};

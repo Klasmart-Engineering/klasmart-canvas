@@ -85,6 +85,10 @@ export interface IPainterController {
     event: 'brushTypeChanged',
     listener: (id: string, target: ICanvasObject) => void
   ): this;
+  on(
+    event: 'backgroundColorChanged',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
   on(event: 'refetch', listener: () => void): this;
 
   on(
@@ -137,6 +141,14 @@ export interface IPainterController {
   ): this;
   removeListener(
     event: 'fontFamilyChanged',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+  removeListener(
+    event: 'brushTypeChanged',
+    listener: (id: string, target: ICanvasObject) => void
+  ): this;
+  removeListener(
+    event: 'backgroundColorChanged',
     listener: (id: string, target: ICanvasObject) => void
   ): this;
   removeListener(

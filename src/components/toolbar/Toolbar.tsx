@@ -58,6 +58,7 @@ function Toolbar() {
     updateFloodFill,
     updateFloodFillIsActive,
     updateEventedObjects,
+    backgroundColor,
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
@@ -80,6 +81,7 @@ function Toolbar() {
     updateImagePopupIsOpen,
     updatePartialEraseIsActive,
     openUploadFileModal,
+    fillBackgroundColor,
   } = useContext(WhiteboardContext);
 
   const cursorPointerToolIsActive =
@@ -93,6 +95,8 @@ function Toolbar() {
     allToolbarIsEnabled || serializerToolbarState.floodFill;
   const textToolIsActive = allToolbarIsEnabled || serializerToolbarState.text;
   const shapeToolIsActive = allToolbarIsEnabled || serializerToolbarState.shape;
+  const backgroundColorToolIsActive =
+    allToolbarIsEnabled || serializerToolbarState.backgroundColor;
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -129,6 +133,13 @@ function Toolbar() {
     }
 
     if (tool === ELEMENTS.ADD_SHAPE_TOOL && !shapeToolIsActive) {
+      return;
+    }
+
+    if (
+      tool === ELEMENTS.BACKGROUND_COLOR_TOOL &&
+      !backgroundColorToolIsActive
+    ) {
       return;
     }
 
@@ -280,6 +291,10 @@ function Toolbar() {
         updateFloodFill(option);
         break;
 
+      case ELEMENTS.BACKGROUND_COLOR_TOOL:
+        fillBackgroundColor(option);
+        break;
+
       case ELEMENTS.ADD_TEXT_TOOL:
         updateFontFamily(option);
         break;
@@ -397,6 +412,9 @@ function Toolbar() {
 
       case ELEMENTS.FLOOD_FILL_TOOL:
         return floodFill;
+
+      case ELEMENTS.BACKGROUND_COLOR_TOOL:
+        return backgroundColor;
 
       case ELEMENTS.ADD_TEXT_TOOL:
         return fontFamily;
@@ -546,6 +564,16 @@ function Toolbar() {
         elements: getToolElements,
       });
     }
+
+    if (
+      !serializerToolbarState.backgroundColor &&
+      getActiveTool === ELEMENTS.BACKGROUND_COLOR_TOOL
+    ) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+    }
   }, [
     pointerIsEnabled,
     getActiveTool,
@@ -561,6 +589,7 @@ function Toolbar() {
     serializerToolbarState.undoRedo,
     serializerToolbarState.clearWhiteboard,
     serializerToolbarState.cursorPointer,
+    serializerToolbarState.backgroundColor,
   ]);
 
   const toolbarContainerStyle: CSSProperties = {

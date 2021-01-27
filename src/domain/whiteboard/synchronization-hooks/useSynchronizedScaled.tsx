@@ -125,40 +125,41 @@ const useSynchronizedScaled = (
         Number(basePath?.strokeWidth)
       );
 
-      // Path creation
-      await brush
-        .createChalkPath(
+      try {
+        const newObject = await brush.createChalkPath(
           String(path.id),
           newPoints,
           Number(basePath?.strokeWidth),
           String(basePath?.stroke),
           newRects
-        )
-        .then((newObject) => {
-          if (!path) return;
+        );
 
-          const id = path.id;
-          newObject.set({
-            top: path.top,
-            left: path.left,
-            angle: path.angle,
-            flipX: path.flipX,
-            flipY: path.flipY,
-          });
+        if (!path) return;
 
-          // Id's are deleted to avoid add and remove event serializing
-          delete path.id;
-          delete newObject.id;
-
-          canvas.remove(path);
-          canvas.add(newObject);
-          canvas.renderAll();
-
-          // Id's are deleted to avoid add and remove event serializing
-          newObject.set({
-            id: id,
-          });
+        const id = path.id;
+        newObject.set({
+          top: path.top,
+          left: path.left,
+          angle: path.angle,
+          flipX: path.flipX,
+          flipY: path.flipY,
         });
+
+        // Id's are deleted to avoid add and remove event serializing
+        delete path.id;
+        delete newObject.id;
+
+        canvas.remove(path);
+        canvas.add(newObject);
+        canvas.renderAll();
+
+        // Id's are deleted to avoid add and remove event serializing
+        newObject.set({
+          id: id,
+        });
+      } catch (error) {
+        console.warn(error);
+      }
     },
     [canvas, userId]
   );
@@ -214,7 +215,7 @@ const useSynchronizedScaled = (
       }
 
       const localObjects: any[] = canvas?.getObjects() || [];
-      const objectsToGroup = [];
+      const objectsToGroup: ICanvasObject[] = [];
 
       for (let i = 0; i < localObjects.length; i++) {
         if (target.activeIds) {
@@ -224,10 +225,15 @@ const useSynchronizedScaled = (
         }
       }
 
+      for (let i = 0; i < objectsToGroup.length; i++) {
+        let match = target?.eTarget?.objects?.filter((o: any) => o.id === objectsToGroup[i].id)[0] || {};
+        objectsToGroup[i].set(match);
+      }
+
       const props = target?.eTarget;
 
       const sel = new fabric.ActiveSelection(objectsToGroup, {
-        canvas: canvas,
+        canvas,
         originX: props?.originX,
         originY: props?.originY,
         top: props?.top,
@@ -248,7 +254,9 @@ const useSynchronizedScaled = (
         snapAngle: props?.snapAngle,
         snapThreshold: props?.snapThreshold,
         group: props?.group,
+        globalCompositeOperation: 'source-over',
       });
+
       canvas?.setActiveObject(sel);
       canvas?.requestRenderAll();
       canvas?.discardActiveObject();
@@ -296,41 +304,49 @@ const useSynchronizedScaled = (
           activeIds.push(activeObject.id as string);
         });
 
+        const groupPayloadData = e.target.toJSON([
+          'id'
+        ]);
+
         const groupPayload: ObjectEvent = {
           id: userId,
           type,
-          target: { activeIds, eTarget: e.target, isGroup: true },
+          target: { activeIds, eTarget: groupPayloadData, isGroup: true },
         };
+
         eventSerializer?.push('scaled', groupPayload);
 
-        const activeObjects = canvas?.getActiveObjects();
-        canvas?.discardActiveObject();
-        const activeSelection = new fabric.ActiveSelection(activeObjects, {
-          canvas: canvas,
-        });
-        canvas?.setActiveObject(activeSelection);
-        canvas?.renderAll();
+        if (!filtered) {
 
-        const payload = {
-          type,
-          svg: true,
-          target: null,
-          id: `${userId}:group`,
-        };
+          const activeObjects = canvas?.getActiveObjects();
+          canvas?.discardActiveObject();
+          const activeSelection = new fabric.ActiveSelection(activeObjects, {
+            canvas: canvas,
+          });
+          canvas?.setActiveObject(activeSelection);
+          canvas?.renderAll();
 
-        const event = { event: payload, type: 'activeSelection', activeIds };
-        const filtered = canvas?.getObjects().filter((o: any) => {
-          return !o.group;
-        });
+          const payload = {
+            type,
+            svg: true,
+            target: null,
+            id: `${userId}:group`,
+          };
 
-        let active = canvas?.getActiveObject();
+          const event = { event: payload, type: 'activeSelection', activeIds };
+          const filteredPayload = canvas?.getObjects().filter((o: any) => {
+            return !o.group;
+          });
 
-        undoRedoDispatch({
-          type: SET_GROUP,
-          payload: [...(filtered as any[]), active],
-          canvasId: userId,
-          event: (event as unknown) as IUndoRedoEvent,
-        });
+          let active = canvas?.getActiveObject();
+
+          undoRedoDispatch({
+            type: SET_GROUP,
+            payload: [...(filteredPayload as any[]), active],
+            canvasId: userId,
+            event: (event as unknown) as IUndoRedoEvent,
+          });
+        }
       } else {
         if (!(e.target as ICanvasObject).id) {
           return;

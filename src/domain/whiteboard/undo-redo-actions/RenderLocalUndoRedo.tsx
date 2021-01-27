@@ -4,7 +4,11 @@ import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { TypedPolygon, TypedShape } from '../../../interfaces/shapes/shapes';
 import { CanvasHistoryState } from '../reducers/undo-redo';
-import { getPreviousBackground } from './getPreviousBackground';
+import {
+  getPreviousBackground,
+  getPreviousBackgroundDivColor,
+} from './getPreviousBackground';
+import { getStateVariables } from './getStateVariables';
 
 /**
  * Determine if an object belongs to local canvas.
@@ -48,13 +52,20 @@ const mapActiveState = (activeState: string) =>
  * @param {{ [key: string]: any }} mapped - Objects to set in canvas.
  * @param {string} instanceId - Canvas ID
  * @param {CanvasHistoryState} state - Current state in canvas actions history
+ * @param {'UNDO' | 'REDO'} action - Action made
+ * @param {(color: string) => void} setBackgroundColorInCanvas - Function to
+ * set background color in current canvas
  */
 const loadFromJSON = (
   canvas: fabric.Canvas,
   mapped: { [key: string]: any },
   instanceId: string,
-  state: CanvasHistoryState
+  state: CanvasHistoryState,
+  action: 'UNDO' | 'REDO',
+  setBackgroundColorInCanvas: (color: string) => void
 ) => {
+  const { currentEvent, nextEvent } = getStateVariables(state);
+
   canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
     canvas
       .getObjects()
@@ -69,8 +80,23 @@ const loadFromJSON = (
         }
       });
 
-    const fill = getPreviousBackground(state.eventIndex, state.events);
-    canvas.backgroundColor = fill;
+    if (
+      (action === 'UNDO' && nextEvent.type === 'backgroundColorChanged') ||
+      (action === 'REDO' && currentEvent.type === 'backgroundColorChanged')
+    ) {
+      const fill = getPreviousBackground(state.eventIndex, state.events);
+      const divColorBackground = getPreviousBackgroundDivColor(
+        state.eventIndex,
+        state.events
+      );
+
+      if (divColorBackground) {
+        setBackgroundColorInCanvas(divColorBackground);
+      } else {
+        canvas.backgroundColor = fill;
+      }
+    }
+
     canvas.renderAll();
   });
 };
@@ -80,14 +106,19 @@ const loadFromJSON = (
  * @param {fabric.Canvas} canvas - Current canvas
  * @param {string} instanceId - Canvas ID
  * @param {CanvasHistoryState} state - Current state to get data to render
+ * @param {'UNDO' | 'REDO'} action - Action made
  * @param {boolean} shapesAreSelectable - Flag to know if objects are able
  * to be selectable
+ * @param {(color: string) => void} setBackgroundColorInCanvas - Function to
+ * set background color in current canvas
  */
 export const RenderLocalUndoRedo = (
   canvas: fabric.Canvas,
   instanceId: string,
   state: CanvasHistoryState,
-  shapesAreSelectable: boolean
+  action: 'UNDO' | 'REDO',
+  shapesAreSelectable: boolean,
+  setBackgroundColorInCanvas: (color: string) => void
 ) => {
   /**
    * Reset selectable, evented and strokeUniform properties
@@ -121,7 +152,14 @@ export const RenderLocalUndoRedo = (
   );
 
   // Loading objects in canvas
-  loadFromJSON(canvas, mapped, instanceId, state);
+  loadFromJSON(
+    canvas,
+    mapped,
+    instanceId,
+    state,
+    action,
+    setBackgroundColorInCanvas
+  );
 
   // If undo/redo was applied in a group of objects
   if (mapped.length === 1 && mapped[0].type === 'activeSelection') {

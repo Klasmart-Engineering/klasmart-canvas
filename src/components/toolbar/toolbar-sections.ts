@@ -38,6 +38,7 @@ import screenshot from '../../assets/icons/toolbar/screenshot.svg';
 import share from '../../assets/icons/toolbar/share.svg';
 import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRounded';
 import FormatColorFillRoundedIcon from '@material-ui/icons/FormatColorFillRounded';
+import PaletteIcon from '@material-ui/icons/Palette';
 import BorderColorRoundedIcon from '@material-ui/icons/BorderColorRounded';
 import FormatColorTextRoundedIcon from '@material-ui/icons/FormatColorTextRounded';
 import IStyleOption from '../../interfaces/toolbar/toolbar-special-elements/style-option';
@@ -48,7 +49,7 @@ const colorPaletteOptions: IStyleOption[] = [
     value: 'transparent',
     title: 'Transparent',
     style: {
-      color: 'rgba(125, 125, 125, 0.1)',
+      color: 'rgba(125, 125, 125, 0.3)',
     },
   },
   {
@@ -57,7 +58,7 @@ const colorPaletteOptions: IStyleOption[] = [
     title: 'White',
     style: {
       color: '#ffffff',
-      backgroundColor: 'rgba(80, 80, 80, 0.1)',
+      backgroundColor: 'rgba(80, 80, 80, 0.3)',
       borderRadius: '4px',
     },
   },
@@ -386,6 +387,12 @@ const toolsSection: IBasicToolbarSection = {
     {
       id: 'flood_fill',
       icon: FormatColorFillRoundedIcon,
+      styleOptions: colorPaletteOptions,
+    },
+    // Background Color - SpecialToolbarSelector
+    {
+      id: 'background_color',
+      icon: PaletteIcon,
       styleOptions: colorPaletteOptions,
     },
     // Text - ToolbarSelector - Color Palette
