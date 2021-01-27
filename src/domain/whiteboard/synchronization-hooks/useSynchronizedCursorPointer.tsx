@@ -55,7 +55,6 @@ const useSynchronizedCursorPointer = (
     };
 
     if (!pointerEvents) {
-      console.log(canvas);
       canvas?.on('mouse:move', move);
     }
 
@@ -74,54 +73,63 @@ const useSynchronizedCursorPointer = (
     const moved = async (id: string, target: IPointerTarget) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
-      let imagePath = '';
+      const { top, left, pointer } = target;
       const pointerImage = canvas
         ?.getObjects()
         .find((object: ICanvasObject) => {
           return object.id === id;
-        });
-      const { top, left, pointer } = target;
+        }) as ICanvasObject;
+
+      /*
+        If a pointer change occurs,
+        current pointer will be removed to create the new one
+      */
+      if (pointerImage?.pointer !== pointer) {
+        canvas?.remove(pointerImage);
+        canvas?.renderAll();
+      }
 
       /*
         If the cursor already exists, just will be moved;
         if not, will be created
       */
       if (pointerImage) {
-        console.log(canvas?.getObjects());
         pointerImage.set({ top, left });
         canvas?.renderAll();
       } else {
-        switch (pointer) {
-          case 'arrow':
-            imagePath = arrowPointer;
-            break;
-
-          case 'hand':
-            imagePath = handPointer;
-            break;
-
-          case 'crosshair':
-            imagePath = crosshairPointer;
-            break;
-        }
-
-        await createCursor(id, imagePath, top, left);
+        await createCursor(id, top, left, pointer);
       }
     };
 
     /**
      * Creates an image of the current cursor to be rendered in remote canvases
      * @param {string} id - Id to set in the image
-     * @param {string} imagePath - Url path in which the image is
      * @param {number} top - Vertical position for the image
      * @param {number} left - Horizontal position for the image
+     * @param {IPointerType} pointer - Cursor pointer to render
      */
     const createCursor = async (
       id: string,
-      imagePath: string,
       top: number,
-      left: number
+      left: number,
+      pointer: IPointerType
     ) => {
+      let imagePath = '';
+
+      switch (pointer) {
+        case 'arrow':
+          imagePath = arrowPointer;
+          break;
+
+        case 'hand':
+          imagePath = handPointer;
+          break;
+
+        case 'crosshair':
+          imagePath = crosshairPointer;
+          break;
+      }
+
       return new Promise<void>((resolve) => {
         fabric.Image.fromURL(imagePath, function (img) {
           // Setting image's position
@@ -144,7 +152,7 @@ const useSynchronizedCursorPointer = (
           }
 
           // Adding cursor on remote canvases
-          objectImage.id = id;
+          objectImage.set({ id, pointer });
           canvas?.add(objectImage);
 
           resolve();
