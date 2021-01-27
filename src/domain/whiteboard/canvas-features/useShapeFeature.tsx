@@ -1,6 +1,7 @@
 import { useCallback, useContext, useEffect } from 'react';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
 import {
@@ -8,6 +9,7 @@ import {
   ObjectType,
 } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET } from '../reducers/undo-redo';
+import { getToolbarIsEnabled } from '../redux/utils';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { isEmptyShape } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
@@ -27,15 +29,14 @@ export const useShapeFeature = (
   userId: string,
   actions: ICanvasActions,
   mouseDown: (specific: string, color?: string) => void,
-  undoRedoDispatch: (action: CanvasAction) => void
+  undoRedoDispatch: (action: CanvasAction) => void,
+  serializerToolbarState: IPermissions
 ) => {
   // Getting context variables
   const {
     shapeIsActive,
     brushIsActive,
     allToolbarIsEnabled,
-    toolbarIsEnabled,
-    serializerToolbarState,
     isLocalObject,
     textIsActive,
     floodFillIsActive,
@@ -98,9 +99,10 @@ export const useShapeFeature = (
    * Get the permissions for students and teacher to use shape feature.
    */
   const getPermissions = useCallback(() => {
+    const toolbarIsEnabled = getToolbarIsEnabled();
     return {
       teacherHasPermission:
-        allToolbarIsEnabled && shape && shapeIsActive && toolbarIsEnabled,
+        allToolbarIsEnabled && shape && shapeIsActive,
       studentHasPermission:
         shape &&
         shapeIsActive &&
@@ -109,10 +111,9 @@ export const useShapeFeature = (
     };
   }, [
     allToolbarIsEnabled,
-    serializerToolbarState.shape,
     shape,
     shapeIsActive,
-    toolbarIsEnabled,
+    serializerToolbarState,
   ]);
 
   /**
@@ -211,7 +212,6 @@ export const useShapeFeature = (
     shapesAreEvented,
     isLocalObject,
     laserIsActive,
-    toolbarIsEnabled,
     allToolbarIsEnabled,
     serializerToolbarState.shape,
     getPermissions,

@@ -22,11 +22,9 @@ import { useLineWidth } from './hooks/useLineWidth';
 import { useFloodFill } from './hooks/useFloodFill';
 import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
 import { useLaserIsActive } from './hooks/useLaserIsActive';
-import { useToolbarPermissions } from './hooks/useToolbarPermissions';
 import ICanvasActions from './canvas-actions/ICanvasActions';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IClearWhiteboardPermissions } from '../../interfaces/canvas-events/clear-whiteboard-permissions';
-import AuthMenu from '../../components/AuthMenu';
 import { useClearIsActive } from './hooks/useClearIsActive';
 import { usePointerPermissions } from './hooks/usePointerPermissions';
 import { useLineWidthIsActive } from './hooks/lineWidthIsActive';
@@ -36,6 +34,9 @@ import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
 import WhiteboardToggle from '../../components/WhiteboardToogle';
 import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 import { useUploadFileModal } from './hooks/useUploadFileModal';
+import store from './redux/store';
+import { getToolbarIsEnabled } from './redux/utils';
+import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
 import { usePointer } from './hooks/usePointer';
 import { useBackgroundColor } from './hooks/useBackgroundColor';
@@ -45,15 +46,15 @@ export const WhiteboardContext = createContext({} as IWhiteboardContext);
 export const WhiteboardProvider = ({
   children,
   clearWhiteboardPermissions,
-  userId,
   allToolbarIsEnabled,
   activeCanvas,
+  userId,
 }: {
   children: React.ReactNode;
   clearWhiteboardPermissions: IClearWhiteboardPermissions;
-  userId: string;
   allToolbarIsEnabled: boolean;
   activeCanvas: MutableRefObject<string | null>;
+  userId?: string;
 }) => {
   const { text, updateText } = useText();
   const { fontColor, updateFontColor } = useFontColor();
@@ -96,12 +97,6 @@ export const WhiteboardProvider = ({
   const { shapesAreEvented, updateShapesAreEvented } = useShapesAreEvented();
   const { floodFillIsActive, updateFloodFillIsActive } = useFloodFillIsActive();
   const { laserIsActive, updateLaserIsActive } = useLaserIsActive();
-  const {
-    toolbarIsEnabled,
-    setToolbarIsEnabled,
-    serializerToolbarState,
-    setSerializerToolbarState,
-  } = useToolbarPermissions();
   const { pointerIsEnabled, setPointerIsEnabled } = usePointerPermissions();
   const {
     UploadFileModal,
@@ -146,7 +141,10 @@ export const WhiteboardProvider = ({
    * Opens ClearWhiteboardModal
    */
   const openClearWhiteboardModal = () => {
-    if (allToolbarIsEnabled || serializerToolbarState.clearWhiteboard) {
+    if (
+      allToolbarIsEnabled ||
+      (store.getState().permissionsState as IPermissions).clearWhiteboard
+    ) {
       openModal();
     }
   };
@@ -180,10 +178,12 @@ export const WhiteboardProvider = ({
   );
 
   const clearWhiteboardActionClearMyself = useCallback(() => {
+    const toolbarIsEnabled = getToolbarIsEnabled(userId);
+
     if (clearWhiteboardPermissions.allowClearMyself && toolbarIsEnabled) {
       canvasActions?.clearWhiteboardClearMySelf();
     }
-  }, [canvasActions, clearWhiteboardPermissions, toolbarIsEnabled]);
+  }, [canvasActions, clearWhiteboardPermissions.allowClearMyself, userId]);
 
   const clearWhiteboardAllowClearOthersAction = useCallback(
     (userId) => {
@@ -245,19 +245,15 @@ export const WhiteboardProvider = ({
   }, [canvasActions]);
 
   const perfectShapeIsAvailable = () => {
+    const permissionsState = (store.getState() as unknown) as IPermissions;
     return (
-      allToolbarIsEnabled ||
-      serializerToolbarState.shape ||
-      serializerToolbarState.move
+      allToolbarIsEnabled || permissionsState.shape || permissionsState.move
     );
   };
 
   /**
    * Returns boolean indicating if undo / redo feature is available.
    */
-  const undoRedoIsAvailable = (): boolean => {
-    return allToolbarIsEnabled || serializerToolbarState.undoRedo;
-  };
   /**
    * List of available colors in toolbar
    * */
@@ -340,12 +336,8 @@ export const WhiteboardProvider = ({
     setCanvasSelection: setCanvasSelectionAction,
     undo: undoAction,
     redo: redoAction,
-    toolbarIsEnabled,
-    setToolbarIsEnabled,
     pointerIsEnabled,
     setPointerIsEnabled,
-    serializerToolbarState,
-    setSerializerToolbarState,
     allToolbarIsEnabled,
     imagePopupIsOpen,
     updateImagePopupIsOpen,
@@ -367,7 +359,6 @@ export const WhiteboardProvider = ({
     setIsBackgroundImage,
     localImage,
     setLocalImage,
-    undoRedoIsAvailable,
     localBackground,
     setLocalBackground,
     backgroundColor,
@@ -400,8 +391,6 @@ export const WhiteboardProvider = ({
           }}
         />
       ) : null}
-      {/*<div>Whiteboard Context {toolbarIsEnabled.toString()}</div>*/}
-      <AuthMenu userId={userId} setToolbarIsEnabled={setToolbarIsEnabled} />
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />

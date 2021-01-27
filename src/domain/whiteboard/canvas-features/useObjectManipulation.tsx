@@ -1,7 +1,9 @@
 import { Textbox } from 'fabric/fabric-impl';
 import { useCallback, useContext, useEffect } from 'react';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { IPermissions } from '../../../interfaces/permissions/permissions';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
+import { getToolbarIsEnabled } from '../redux/utils';
 import { isText } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
 
@@ -18,14 +20,14 @@ export const useObjectManipulation = (
   canvas: fabric.Canvas,
   userId: string,
   actions: ICanvasActions,
-  pointerEvents: boolean
+  pointerEvents: boolean,
+  permissions: IPermissions
 ) => {
   // Getting context variables
   const {
     allToolbarIsEnabled,
     shapesAreSelectable,
     shapesAreEvented,
-    serializerToolbarState,
     eraseType,
     isLocalObject,
     eventedObjects,
@@ -33,7 +35,6 @@ export const useObjectManipulation = (
     lineWidthIsActive,
     shapeIsActive,
     textIsActive,
-    toolbarIsEnabled,
   } = useContext(WhiteboardContext);
 
   /**
@@ -42,14 +43,14 @@ export const useObjectManipulation = (
   const getObjectPermissions = useCallback(() => {
     return {
       teacherHasPermission: allToolbarIsEnabled && shapesAreSelectable,
-      studentHasPermission: serializerToolbarState.move && shapesAreSelectable,
+      studentHasPermission: permissions.move && shapesAreSelectable,
       isEvented:
         (shapesAreSelectable || shapesAreEvented) &&
-        (allToolbarIsEnabled || serializerToolbarState.move),
+        (allToolbarIsEnabled || permissions.move),
     };
   }, [
     allToolbarIsEnabled,
-    serializerToolbarState.move,
+    permissions.move,
     shapesAreEvented,
     shapesAreSelectable,
   ]);
@@ -60,27 +61,27 @@ export const useObjectManipulation = (
   const getPointerMoveToolPermissions = useCallback(() => {
     return {
       teacherHasPermission: allToolbarIsEnabled && eventedObjects,
-      studentHasPermission: serializerToolbarState.move && eventedObjects,
-      isEvented: allToolbarIsEnabled || serializerToolbarState.move,
+      studentHasPermission: permissions.move && eventedObjects,
+      isEvented: allToolbarIsEnabled || permissions.move,
     };
-  }, [allToolbarIsEnabled, eventedObjects, serializerToolbarState.move]);
+  }, [allToolbarIsEnabled, eventedObjects, permissions.move]);
 
   /**
    * Gets permissions for local objects in LocalObjects UseEffect
    */
   const getLocalObjectPermissions = useCallback(() => {
+    const toolbarIsEnabled = getToolbarIsEnabled();
     const studentHasPermission =
       toolbarIsEnabled &&
-      (serializerToolbarState.move || serializerToolbarState.erase);
+      (permissions.move || permissions.erase);
 
     return {
       isEvented: allToolbarIsEnabled || studentHasPermission,
     };
   }, [
     allToolbarIsEnabled,
-    serializerToolbarState.erase,
-    serializerToolbarState.move,
-    toolbarIsEnabled,
+    permissions.erase,
+    permissions.move,
   ]);
 
   /**
@@ -118,7 +119,7 @@ export const useObjectManipulation = (
     shapesAreSelectable,
     userId,
     allToolbarIsEnabled,
-    serializerToolbarState.move,
+    permissions.move,
     getObjectPermissions,
   ]);
 
@@ -154,7 +155,7 @@ export const useObjectManipulation = (
     isLocalObject,
     userId,
     allToolbarIsEnabled,
-    serializerToolbarState.move,
+    permissions.move,
     getPointerMoveToolPermissions,
   ]);
 
@@ -232,12 +233,10 @@ export const useObjectManipulation = (
     });
   }, [
     canvas,
-    toolbarIsEnabled,
     isLocalObject,
     userId,
     allToolbarIsEnabled,
-    serializerToolbarState.move,
-    serializerToolbarState.erase,
+    permissions,
     shapesAreSelectable,
     getLocalObjectPermissions,
   ]);

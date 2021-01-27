@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { makeStyles, Theme, createStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
@@ -9,8 +9,7 @@ import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import { useSharedEventSerializer } from '../domain/whiteboard/SharedEventSerializerProvider';
-import { WhiteboardContext } from '../domain/whiteboard/WhiteboardContext';
-import { IWhiteboardContext } from '../interfaces/whiteboard-context/whiteboard-context';
+import { connect } from 'react-redux';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -23,10 +22,12 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-export default function AuthMenu(props: {
+function AuthMenu(props: {
   userId: string;
-  setToolbarIsEnabled: (enabled: boolean) => void;
+  [key: string]: any
 }) {
+  console.log('PROPS:::::', props);
+  console.log('USER ID: ', props.userId);
   const { userId } = props;
   const isTeacher = userId === 'teacher';
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -40,12 +41,6 @@ export default function AuthMenu(props: {
     setAnchorEl(null);
   };
   const classes = useStyles();
-  const { serializerToolbarState } = useContext(
-    WhiteboardContext
-  ) as IWhiteboardContext;
-  const [localToolbarState, setLocalToolbarState] = useState(
-    serializerToolbarState
-  );
   const {
     cursorPointer,
     pointer,
@@ -61,25 +56,20 @@ export default function AuthMenu(props: {
     downloadCanvas,
     uploadImage,
     backgroundColor,
-  } = localToolbarState;
+  } = props.permissions;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalToolbarState({
-      ...localToolbarState,
-      [event.target.name]: event.target.checked,
-    });
-  };
+    props.updatePermissions(event.target.name, event.target.checked);
 
-  useEffect(() => {
     const payload = {
       id: userId,
       target: {
-        toolbarState: localToolbarState,
+        [event.target.name]: event.target.checked,
       },
     };
 
     eventSerializer?.push('setToolbarPermissions', payload);
-  }, [userId, eventSerializer, localToolbarState]);
+  };
 
   const tools = [
     {
@@ -206,3 +196,20 @@ export default function AuthMenu(props: {
     </div>
   );
 }
+
+// TEMPORARY : once we have an actual login, this will have to be mapped to the login data for the user state and isAdmin properties. 
+const mapStateToProps = (state:any, ownProps: any) => (
+  { 
+    ...ownProps, 
+    permissions: state.permissionsState,
+    user: state.userState,
+    isAdmin: ownProps.userId === 'teacher', // TEMPORARY until actual login process is created.
+  }
+);
+
+const mapDispatchToProps = (dispatch: any) => ({
+  updatePermissions: (tool: string, payload: boolean) => dispatch({ type: tool, payload }),
+  updateUser: (id: string) => dispatch({ type: 'UPDATE_USER', id }),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(AuthMenu);

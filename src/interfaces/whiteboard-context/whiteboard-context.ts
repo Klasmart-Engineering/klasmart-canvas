@@ -21,7 +21,6 @@ export interface IWhiteboardContext {
   updateShapeColor: (color: string) => void;
   fillColor: (color: string) => void;
   textColor: (color: string) => void;
-  openClearWhiteboardModal: () => void;
   closeModal: () => void;
   penColor: string;
   updatePenColor: (color: string) => void;
@@ -64,46 +63,11 @@ export interface IWhiteboardContext {
   clearWhiteboard: () => void;
   clearWhiteboardAllowClearOthers: (userId: string) => void;
   clearWhiteboardClearAll: () => void;
-  toolbarIsEnabled: boolean;
-  setToolbarIsEnabled: (enabled: boolean) => void;
   pointerIsEnabled: boolean;
-  setPointerIsEnabled: (enabled: boolean) => void;
   clearIsActive: boolean;
   updateClearIsActive: (active: boolean) => void;
-  serializerToolbarState: {
-    cursorPointer: boolean;
-    pointer: boolean;
-    move: boolean;
-    erase: boolean;
-    partialErase: boolean;
-    pen: boolean;
-    floodFill: boolean;
-    text: boolean;
-    shape: boolean;
-    undoRedo: boolean;
-    clearWhiteboard: boolean;
-    downloadCanvas: boolean;
-    uploadImage: boolean;
-    backgroundColor: boolean;
-  };
-  setSerializerToolbarState: (enabled: {
-    [p: string]: boolean;
-    cursorPointer: boolean;
-    pointer: boolean;
-    move: boolean;
-    erase: boolean;
-    partialErase: boolean;
-    pen: boolean;
-    floodFill: boolean;
-    text: boolean;
-    shape: boolean;
-    undoRedo: boolean;
-    clearWhiteboard: boolean;
-    downloadCanvas: boolean;
-    uploadImage: boolean;
-    backgroundColor: boolean;
-  }) => void;
   allToolbarIsEnabled: boolean;
+  userId?: string;
   lineWidthIsActive: boolean;
   updateLineWidthIsActive: (active: boolean) => void;
   brushType: IBrushType;
@@ -130,11 +94,11 @@ export interface IWhiteboardContext {
   setIsBackgroundImage: (status: boolean) => void;
   localImage: string | File;
   setLocalImage: (image: string | File) => void;
+  openClearWhiteboardModal: () => void;
   backgroundColor: string;
   updateBackgroundColor: (color: string) => void;
   fillBackgroundColor: (color: string) => void;
   setBackgroundColorInCanvas: (color: string) => void;
   localBackground: boolean;
   setLocalBackground: (condition: boolean) => void;
-  undoRedoIsAvailable: () => boolean;
 }

@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect, useMemo } from 'react';
+import { connect } from 'react-redux';
 import ToolbarSection from './toolbar-section/ToolbarSection';
 import '../../assets/style/toolbar.css';
 import ToolbarButton from './toolbar-button/ToolbarButton';
@@ -20,6 +21,7 @@ import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic
 import { mappedActionElements, mappedToolElements } from './permissions-mapper';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
 import { IPointerType } from '../../interfaces/pointers/pointer-type';
+import { IPermissions } from '../../interfaces/permissions/permissions';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -30,7 +32,12 @@ type ToolbarElementTypes =
 /**
  * Render the toolbar that will be used in the whiteboard
  */
-function Toolbar() {
+function Toolbar(props: {
+  toolbarIsEnabled?: (state: {
+    permissionsState: { [key: string]: boolean };
+  }) => boolean;
+  permissions: IPermissions;
+}) {
   const [tools, setTools] = useState(toolsSection);
   const [actions] = useState(actionsSection);
 
@@ -41,7 +48,6 @@ function Toolbar() {
     fontFamily,
     fontColor,
     updateFontFamily,
-    openClearWhiteboardModal,
     setPointerEvents,
     textIsActive,
     updateTextIsActive,
@@ -72,31 +78,30 @@ function Toolbar() {
     redo,
     updateShapesAreEvented,
     updateLaserIsActive,
-    toolbarIsEnabled,
     pointerIsEnabled,
     allToolbarIsEnabled,
-    serializerToolbarState,
     updateLineWidthIsActive,
     brushType,
     updateImagePopupIsOpen,
     updatePartialEraseIsActive,
     openUploadFileModal,
+    openClearWhiteboardModal,
     fillBackgroundColor,
   } = useContext(WhiteboardContext);
 
+  const toolbarIsEnabled = props.toolbarIsEnabled;
   const cursorPointerToolIsActive =
-    allToolbarIsEnabled || serializerToolbarState.cursorPointer;
-  const pointerToolIsActive =
-    allToolbarIsEnabled || serializerToolbarState.pointer;
-  const moveToolIsActive = allToolbarIsEnabled || serializerToolbarState.move;
-  const eraseToolIsActive = allToolbarIsEnabled || serializerToolbarState.erase;
-  const penToolIsActive = allToolbarIsEnabled || serializerToolbarState.pen;
+    allToolbarIsEnabled || props.permissions.cursorPointer;
+  const pointerToolIsActive = allToolbarIsEnabled || props.permissions.pointer;
+  const moveToolIsActive = allToolbarIsEnabled || props.permissions.move;
+  const eraseToolIsActive = allToolbarIsEnabled || props.permissions.erase;
+  const penToolIsActive = allToolbarIsEnabled || props.permissions.pen;
   const floodFillToolIsActive =
-    allToolbarIsEnabled || serializerToolbarState.floodFill;
-  const textToolIsActive = allToolbarIsEnabled || serializerToolbarState.text;
-  const shapeToolIsActive = allToolbarIsEnabled || serializerToolbarState.shape;
+    allToolbarIsEnabled || props.permissions.floodFill;
+  const textToolIsActive = allToolbarIsEnabled || props.permissions.text;
+  const shapeToolIsActive = allToolbarIsEnabled || props.permissions.shape;
   const backgroundColorToolIsActive =
-    allToolbarIsEnabled || serializerToolbarState.backgroundColor;
+    allToolbarIsEnabled || props.permissions.backgroundColor;
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -233,8 +238,7 @@ function Toolbar() {
     discardActiveObject();
 
     const teacherHasPermission = allToolbarIsEnabled;
-    const studentHasPermission =
-      toolbarIsEnabled && serializerToolbarState.undoRedo;
+    const studentHasPermission = toolbarIsEnabled && props.permissions.undoRedo;
 
     if (toolbarIsEnabled) {
       switch (tool) {
@@ -259,7 +263,7 @@ function Toolbar() {
         case ELEMENTS.ADD_IMAGE_ACTION:
           if (
             teacherHasPermission ||
-            (toolbarIsEnabled && serializerToolbarState.uploadImage)
+            (toolbarIsEnabled && props.permissions.uploadImage)
           ) {
             openUploadFileModal();
           }
@@ -396,13 +400,24 @@ function Toolbar() {
    * Set the parent's definedOptionName in the given tool
    * @param {string} tool - Tool to set the definedOption
    */
-  function setSelectedOptionSelector(tool: string): string | number | null {
+  function setSelectedOptionSelector(
+    tool: string,
+    props?: IBasicToolbarSelector
+  ): string | number | null {
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
         return pointer;
 
-      case ELEMENTS.ERASE_TYPE_TOOL:
+      case ELEMENTS.ERASE_TYPE_TOOL: {
+        let allowed = props?.options.filter((options: any) => options.enabled);
+
+        if (allowed?.length === 1 && allowed[0].value !== eraseType) {
+          updateEraseType(allowed[0].value);
+          return allowed[0].value;
+        }
+
         return eraseType;
+      }
 
       case ELEMENTS.LINE_TYPE_TOOL:
         return brushType;
@@ -485,10 +500,7 @@ function Toolbar() {
       return;
     }
 
-    if (
-      !serializerToolbarState.pointer &&
-      getActiveTool === ELEMENTS.LASER_TOOL
-    ) {
+    if (!props.permissions.pointer && getActiveTool === ELEMENTS.LASER_TOOL) {
       setTools({
         active: null,
         elements: getToolElements,
@@ -496,7 +508,7 @@ function Toolbar() {
     }
 
     if (
-      !serializerToolbarState.move &&
+      !props.permissions.move &&
       getActiveTool === ELEMENTS.MOVE_OBJECTS_TOOL
     ) {
       setTools({
@@ -506,7 +518,7 @@ function Toolbar() {
     }
 
     if (
-      !serializerToolbarState.erase &&
+      !props.permissions.erase &&
       getActiveTool === ELEMENTS.ERASE_TYPE_TOOL
     ) {
       setTools({
@@ -515,10 +527,7 @@ function Toolbar() {
       });
     }
 
-    if (
-      !serializerToolbarState.pen &&
-      getActiveTool === ELEMENTS.LINE_TYPE_TOOL
-    ) {
+    if (!props.permissions.pen && getActiveTool === ELEMENTS.LINE_TYPE_TOOL) {
       setTools({
         active: null,
         elements: getToolElements,
@@ -526,7 +535,7 @@ function Toolbar() {
     }
 
     if (
-      !serializerToolbarState.floodFill &&
+      !props.permissions.floodFill &&
       getActiveTool === ELEMENTS.FLOOD_FILL_TOOL
     ) {
       setTools({
@@ -535,10 +544,14 @@ function Toolbar() {
       });
     }
 
-    if (
-      !serializerToolbarState.text &&
-      getActiveTool === ELEMENTS.ADD_TEXT_TOOL
-    ) {
+    if (!props.permissions.text && getActiveTool === ELEMENTS.ADD_TEXT_TOOL) {
+      setTools({
+        active: null,
+        elements: getToolElements,
+      });
+    }
+
+    if (!props.permissions.shape && getActiveTool === ELEMENTS.ADD_SHAPE_TOOL) {
       setTools({
         active: null,
         elements: getToolElements,
@@ -546,17 +559,7 @@ function Toolbar() {
     }
 
     if (
-      !serializerToolbarState.shape &&
-      getActiveTool === ELEMENTS.ADD_SHAPE_TOOL
-    ) {
-      setTools({
-        active: null,
-        elements: getToolElements,
-      });
-    }
-
-    if (
-      !serializerToolbarState.cursorPointer &&
+      !props.permissions.cursorPointer &&
       getActiveTool === ELEMENTS.POINTERS_TOOL
     ) {
       setTools({
@@ -566,7 +569,7 @@ function Toolbar() {
     }
 
     if (
-      !serializerToolbarState.backgroundColor &&
+      !props.permissions.backgroundColor &&
       getActiveTool === ELEMENTS.BACKGROUND_COLOR_TOOL
     ) {
       setTools({
@@ -579,17 +582,7 @@ function Toolbar() {
     getActiveTool,
     getToolElements,
     allToolbarIsEnabled,
-    serializerToolbarState.pointer,
-    serializerToolbarState.move,
-    serializerToolbarState.erase,
-    serializerToolbarState.pen,
-    serializerToolbarState.floodFill,
-    serializerToolbarState.text,
-    serializerToolbarState.shape,
-    serializerToolbarState.undoRedo,
-    serializerToolbarState.clearWhiteboard,
-    serializerToolbarState.cursorPointer,
-    serializerToolbarState.backgroundColor,
+    props.permissions,
   ]);
 
   const toolbarContainerStyle: CSSProperties = {
@@ -609,13 +602,13 @@ function Toolbar() {
   const actionElements = mappedActionElements(
     actions,
     allToolbarIsEnabled,
-    serializerToolbarState
+    props.permissions
   );
 
   const toolElements = mappedToolElements(
     tools,
     allToolbarIsEnabled,
-    serializerToolbarState
+    props.permissions
   );
 
   return (
@@ -647,7 +640,7 @@ function Toolbar() {
                     handleToolsElementClick,
                     handleToolSelectorChange,
                     handleToolsElementAction,
-                    setSelectedOptionSelector(tool.id),
+                    setSelectedOptionSelector(tool.id, tool),
                     setColorPalette(tool),
                     tool.enabled
                   )
@@ -826,5 +819,28 @@ function determineIfIsSpecialSelector(
 ): toBeDetermined is IBasicSpecialSelector {
   return !!(toBeDetermined as IBasicSpecialSelector).icon;
 }
+/**
+ * Maps state to props.
+ * @param state Redux state
+ * @param ownProps Own properties
+ */
+const mapStateToProps = (
+  state: { permissionsState: IPermissions },
+  ownProps: { toolbarIsEnabled?: boolean }
+) => ({
+  ...ownProps,
+  permissions: state.permissionsState,
+  toolbarIsEnabled: (state: {
+    permissionsState: { [key: string]: boolean };
+  }) => {
+    for (const key in state.permissionsState) {
+      if (state.permissionsState[key] === true) {
+        return true;
+      }
+    }
 
-export default Toolbar;
+    return false;
+  },
+});
+
+export default connect(mapStateToProps)(Toolbar);

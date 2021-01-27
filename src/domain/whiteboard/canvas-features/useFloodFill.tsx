@@ -12,6 +12,8 @@ import { isEmptyShape, isFreeDrawing, isShape } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
 import floodFillCursor from '../../../assets/cursors/flood-fill.png';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
+import { getToolbarIsEnabled } from '../redux/utils';
+import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 
 /**
@@ -27,6 +29,7 @@ import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
  */
 export const useFloodFill = (
   canvas: fabric.Canvas,
+  serializerToolbarState: IPermissions,
   userId: string,
   actions: ICanvasActions,
   eventSerializer: PaintEventSerializer,
@@ -37,8 +40,6 @@ export const useFloodFill = (
     isLocalObject,
     allToolbarIsEnabled,
     floodFillIsActive,
-    toolbarIsEnabled,
-    serializerToolbarState,
     floodFill,
     eraseType,
     laserIsActive,
@@ -85,6 +86,8 @@ export const useFloodFill = (
    */
   useEffect(() => {
     if (!canvas) return;
+
+    const toolbarIsEnabled = getToolbarIsEnabled();
 
     /**
      * Logic for flood-fill a shape
@@ -257,7 +260,7 @@ export const useFloodFill = (
     };
 
     const teacherHasPermission =
-      allToolbarIsEnabled && floodFillIsActive && toolbarIsEnabled;
+      allToolbarIsEnabled && floodFillIsActive;
 
     const studentHasPermission =
       floodFillIsActive && toolbarIsEnabled && serializerToolbarState.floodFill;
@@ -327,7 +330,6 @@ export const useFloodFill = (
     pointerEvents,
     serializerToolbarState.floodFill,
     textIsActive,
-    toolbarIsEnabled,
     undoRedoDispatch,
     userId,
   ]);

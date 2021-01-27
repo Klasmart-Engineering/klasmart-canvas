@@ -6,6 +6,7 @@ import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush'
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { ICanvasDrawingEvent } from '../../../interfaces/canvas-events/canvas-drawing-event';
 import { ICanvasFreeDrawingBrush } from '../../../interfaces/free-drawing/canvas-free-drawing-brush';
+import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { ChalkBrush } from '../brushes/classes/chalkBrush';
 import { DashedBrush } from '../brushes/classes/dashedBrush';
 import { MarkerBrush } from '../brushes/classes/markerBrush';
@@ -13,6 +14,7 @@ import { PaintBrush } from '../brushes/classes/paintBrush';
 import { PenBrush } from '../brushes/classes/penBrush';
 import { setBasePathInNormalBrushes } from '../brushes/utils/setBasePathInNormalBrushes';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
+import { getToolbarIsEnabled } from '../redux/utils';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 // import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { WhiteboardContext } from '../WhiteboardContext';
@@ -22,7 +24,7 @@ import { WhiteboardContext } from '../WhiteboardContext';
  * @param {fabric.Canvas} canvas - Canvas to draw
  * @param {string} userId - User that will draw in Whiteboard
  */
-export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
+export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string, serializerToolbarState: IPermissions) => {
   // Getting necessary context variables
   const {
     brushIsActive,
@@ -30,8 +32,6 @@ export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
     lineWidth,
     brushType,
     allToolbarIsEnabled,
-    toolbarIsEnabled,
-    serializerToolbarState,
     partialEraseIsActive,
   } = useContext(WhiteboardContext);
 
@@ -74,6 +74,7 @@ export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
    */
   useEffect(() => {
     let coordinates: ICoordinate[] = [];
+    const toolbarIsEnabled = getToolbarIsEnabled();
 
     /**
      * When a path object is recently created set its stroke like uniform
@@ -149,7 +150,6 @@ export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string) => {
     penColor,
     serializerToolbarState.pen,
     setBrushType,
-    toolbarIsEnabled,
     userId,
   ]);
 };

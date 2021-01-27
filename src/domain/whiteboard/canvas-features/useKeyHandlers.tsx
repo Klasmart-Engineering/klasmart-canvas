@@ -2,6 +2,7 @@ import { fabric } from 'fabric';
 import { ITextOptions } from 'fabric/fabric-impl';
 import { useCallback, useContext } from 'react';
 import { ICanvasKeyboardEvent } from '../../../interfaces/canvas-events/canvas-keyboard-event';
+import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
@@ -12,10 +13,14 @@ import { WhiteboardContext } from '../WhiteboardContext';
  * @param {fabric.Canvas} canvas - Canvas to interact
  * @param {string} instanceId - Id of the current canvas
  */
-export const useKeyHandlers = (canvas: fabric.Canvas, instanceId: string) => {
+export const useKeyHandlers = (
+  canvas: fabric.Canvas,
+  instanceId: string,
+  permissions: IPermissions,
+  allToolbarIsEnabled: boolean
+) => {
   // Getting context variables
   const {
-    undoRedoIsAvailable,
     activeCanvas,
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
@@ -37,7 +42,7 @@ export const useKeyHandlers = (canvas: fabric.Canvas, instanceId: string) => {
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
-      if (!undoRedoIsAvailable()) return;
+      if (!(permissions.undoRedo || allToolbarIsEnabled)) return;
 
       /**
        * Removes the current active objects in canvas
@@ -145,15 +150,16 @@ export const useKeyHandlers = (canvas: fabric.Canvas, instanceId: string) => {
       }
     },
     [
-      undoRedoIsAvailable,
       activeCanvas,
+      allToolbarIsEnabled,
+      canvas,
+      eventSerializer,
       instanceId,
       perfectShapeIsActive,
       perfectShapeIsAvailable,
-      canvas,
-      eventSerializer,
-      undo,
+      permissions.undoRedo,
       redo,
+      undo,
       updatePerfectShapeIsActive,
     ]
   );

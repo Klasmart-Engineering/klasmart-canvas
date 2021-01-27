@@ -6,13 +6,18 @@ import crosshairPointer from '../../../assets/cursors/crosshair-pointer.png';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
+import { IPermissions } from '../../../interfaces/permissions/permissions';
 
 /**
  * Handles the logic for pointer feature
  * @param {fabric.Canvas} canvas - Canvas in which pointer will change
  * @param {string} userId - Current user
  */
-export const usePointerFeature = (canvas: fabric.Canvas, userId: string) => {
+export const usePointerFeature = (
+  canvas: fabric.Canvas,
+  userId: string,
+  permissions: IPermissions
+) => {
   const {
     state: { eventSerializer },
   } = useSharedEventSerializer();
@@ -21,7 +26,6 @@ export const usePointerFeature = (canvas: fabric.Canvas, userId: string) => {
     pointer,
     pointerEvents,
     floodFillIsActive,
-    serializerToolbarState,
     updatePointer,
     setPointerEvents,
   } = useContext(WhiteboardContext);
@@ -49,21 +53,16 @@ export const usePointerFeature = (canvas: fabric.Canvas, userId: string) => {
 
   // Updates the involucrated states when permission is revoked
   useEffect(() => {
-    if (!serializerToolbarState.cursorPointer && canvas) {
+    if (!permissions.cursorPointer && canvas) {
       updatePointer('arrow');
       setPointerEvents(true);
       canvas.defaultCursor = 'default';
     }
-  }, [
-    canvas,
-    serializerToolbarState.cursorPointer,
-    setPointerEvents,
-    updatePointer,
-  ]);
+  }, [canvas, permissions.cursorPointer, setPointerEvents, updatePointer]);
 
   // Send an event to remove the current cursor when permission is revoked
   useEffect(() => {
-    if (!serializerToolbarState.cursorPointer || pointerEvents) {
+    if (!permissions.cursorPointer || pointerEvents) {
       const payload: ObjectEvent = {
         type: 'cursorPointer',
         target: { top: 0, left: 0, pointer: 'none' } as ICanvasObject,
@@ -72,10 +71,5 @@ export const usePointerFeature = (canvas: fabric.Canvas, userId: string) => {
 
       eventSerializer?.push('cursorPointer', payload);
     }
-  }, [
-    eventSerializer,
-    pointerEvents,
-    serializerToolbarState.cursorPointer,
-    userId,
-  ]);
+  }, [eventSerializer, permissions.cursorPointer, pointerEvents, userId]);
 };

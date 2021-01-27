@@ -9,6 +9,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
+import { connect } from 'react-redux';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { WhiteboardContext } from './WhiteboardContext';
 import { useCanvasActions } from './canvas-actions/useCanvasActions';
@@ -49,6 +50,7 @@ import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchron
 import { v4 as uuidv4 } from 'uuid';
 import { usePointerFeature } from './canvas-features/usePointerFeature';
 import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
+import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
 
 /**
@@ -77,9 +79,11 @@ export type Props = {
   clearWhiteboardPermissions: IClearWhiteboardPermissions;
   scaleMode?: ScaleMode;
   display?: boolean;
+  permissions: IPermissions;
+  updatePermissions: (tool: string, payload: boolean) => void;
 };
 
-export const WhiteboardCanvas: FunctionComponent<Props> = ({
+const WhiteboardCanvas: FunctionComponent<Props> = ({
   children,
   instanceId,
   userId,
@@ -89,6 +93,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   pixelHeight,
   scaleMode,
   display,
+  permissions,
+  updatePermissions,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
   const [wrapper, setWrapper] = useState<HTMLElement>();
@@ -99,6 +105,8 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     pixelWidth / pixelHeight,
     scaleMode || 'ScaleToFit'
   );
+
+  const serializerToolbarState = permissions;
 
   // Event serialization for synchronizing whiteboard state.
   const {
@@ -119,10 +127,6 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     shape,
     updateCanvasActions,
     laserIsActive,
-    setToolbarIsEnabled,
-    setPointerIsEnabled,
-    serializerToolbarState,
-    setSerializerToolbarState,
     allToolbarIsEnabled,
     imagePopupIsOpen,
     updateImagePopupIsOpen,
@@ -222,11 +226,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     canvas as fabric.Canvas,
     userId,
     actions,
-    pointerEvents
+    pointerEvents,
+    permissions
   );
 
   // useEffects and logic for manage free hand drawing feature
-  useFreeHandDrawing(canvas as fabric.Canvas, userId);
+  useFreeHandDrawing(canvas as fabric.Canvas, userId, permissions);
 
   // useEffects and logic for shape creation feature
   useShapeFeature(
@@ -234,12 +239,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     userId,
     actions,
     mouseDown,
-    undoRedoDispatch
+    undoRedoDispatch,
+    permissions
   );
 
   // useEffects and logic for flood-fill feature
   useFloodFill(
     canvas as fabric.Canvas,
+    permissions,
     userId,
     actions,
     eventSerializer,
@@ -251,7 +258,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useObjectSelection(canvas as fabric.Canvas, actions);
 
   // useEffects and logic for manage text object creation/edition
-  useTextObject(canvas as fabric.Canvas, instanceId, userId);
+  useTextObject(canvas as fabric.Canvas, instanceId, userId, permissions);
 
   // useEffects and logic for manage image adding feature
   useAddImage(canvas as fabric.Canvas, userId);
@@ -263,7 +270,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
 
   // useEffects and logic for manage pointers
-  usePointerFeature(canvas as fabric.Canvas, userId);
+  usePointerFeature(canvas as fabric.Canvas, userId, permissions);
 
   useSynchronizedMoved(
     canvas,
@@ -326,9 +333,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     canvas,
     userId,
     filterIncomingEvents,
-    setToolbarIsEnabled,
-    setPointerIsEnabled,
-    setSerializerToolbarState
+    mapDispatchToProps
   );
   useSynchronizedFontColorChanged(
     canvas,
@@ -355,9 +360,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     canvas,
     userId,
     filterIncomingEvents,
-    setToolbarIsEnabled,
-    setPointerIsEnabled,
-    setSerializerToolbarState
+    updatePermissions
   );
   useSynchronizedCursorPointer(canvas, userId, filterIncomingEvents);
   useSynchronizedBackgroundColorChanged(filterIncomingEvents);
@@ -413,3 +416,23 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     </>
   );
 };
+
+const mapStateToProps = (state: any, ownProps: any) => ({
+  ...ownProps,
+  permissions: state.permissionsState,
+  toolbarIsEnabled: (state: any) => {
+    for (const key in state.permissionsState) {
+      if (state.permissionsState[key] === true) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+});
+const mapDispatchToProps = (dispatch: any) => ({
+  updatePermissions: (tool: string, payload: boolean) =>
+    dispatch({ type: tool, payload }),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(WhiteboardCanvas);
