@@ -54,12 +54,10 @@ export const usePointerFeature = (
 
   // Updates the involucrated states when permission is revoked
   useEffect(() => {
-    if (!permissions.cursorPointer && canvas && !allToolbarIsEnabled) {
+    if (canvas && !(permissions.cursorPointer || allToolbarIsEnabled)) {
       updatePointer('arrow');
       setPointerEvents(true);
       canvas.defaultCursor = 'default';
-    } else if (canvas && (permissions.cursorPointer || allToolbarIsEnabled)) {
-      setPointerEvents(false);
     }
   }, [
     allToolbarIsEnabled,
@@ -74,9 +72,10 @@ export const usePointerFeature = (
     if (pointerEvents) {
       const payload: ObjectEvent = {
         type: 'cursorPointer',
-        target: { top: 0, left: 0, pointer: 'none' } as ICanvasObject,
+        target: { top: 0, left: 0, cursorPointer: 'none' } as ICanvasObject,
         id: `${userId}:cursor`,
       };
+
       eventSerializer?.push('cursorPointer', payload);
     }
   }, [eventSerializer, permissions.cursorPointer, pointerEvents, userId]);

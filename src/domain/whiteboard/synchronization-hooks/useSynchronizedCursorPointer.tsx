@@ -13,7 +13,7 @@ import { IPointerType } from '../../../interfaces/pointers/pointer-type';
 interface IPointerTarget {
   top: number;
   left: number;
-  pointer: IPointerType;
+  cursorPointer: IPointerType;
 }
 
 /**
@@ -47,7 +47,7 @@ const useSynchronizedCursorPointer = (
 
       const payload: ObjectEvent = {
         type: 'cursorPointer',
-        target: { top, left, pointer } as ICanvasObject,
+        target: { top, left, cursorPointer: pointer } as ICanvasObject,
         id,
       };
 
@@ -73,24 +73,18 @@ const useSynchronizedCursorPointer = (
     const moved = async (id: string, target: IPointerTarget) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
-      const { top, left, pointer } = target;
-      const pointerImage = canvas
-        ?.getObjects()
-        .find((object: ICanvasObject) => {
-          return object.id === id;
-        }) as ICanvasObject;
-
-      // Removing current cursor
-      if (pointer === 'none' && pointerImage) {
-        canvas?.remove(pointerImage);
-        canvas?.renderAll();
-      }
+      const { top, left, cursorPointer } = target;
+      const pointerImage = getPointerById(id);
 
       /*
-        If a pointer change occurs,
-        current pointer will be removed to create the new one
+        If cursor pointer type is 'none', current pointer will be removed.
+        If a cursor pointer type occurs, current pointer will be removed.
       */
-      if (pointerImage?.pointer !== pointer) {
+      if (
+        pointerImage &&
+        (cursorPointer === 'none' ||
+          pointerImage.cursorPointer !== cursorPointer)
+      ) {
         canvas?.remove(pointerImage);
         canvas?.renderAll();
       }
@@ -103,7 +97,11 @@ const useSynchronizedCursorPointer = (
         pointerImage.set({ top, left });
         canvas?.renderAll();
       } else {
-        await createCursor(id, top, left, pointer);
+        try {
+          await createCursor(id, top, left, cursorPointer);
+        } catch (error) {
+          console.warn(error);
+        }
       }
     };
 
@@ -112,32 +110,18 @@ const useSynchronizedCursorPointer = (
      * @param {string} id - Id to set in the image
      * @param {number} top - Vertical position for the image
      * @param {number} left - Horizontal position for the image
-     * @param {IPointerType} pointer - Cursor pointer to render
+     * @param {IPointerType} cursorPointer - Cursor pointer to render
      */
     const createCursor = async (
       id: string,
       top: number,
       left: number,
-      pointer: IPointerType
+      cursorPointer: IPointerType
     ) => {
-      let imagePath = '';
-
-      switch (pointer) {
-        case 'arrow':
-          imagePath = arrowPointer;
-          break;
-
-        case 'hand':
-          imagePath = handPointer;
-          break;
-
-        case 'crosshair':
-          imagePath = crosshairPointer;
-          break;
-      }
+      let imagePath = getImagePath(cursorPointer);
 
       return new Promise<void>((resolve) => {
-        fabric.Image.fromURL(imagePath, function (img) {
+        fabric.Image.fromURL(imagePath as string, function (img) {
           // Setting image's position
           const objectImage: ICanvasObject = img.set({
             left,
@@ -145,11 +129,7 @@ const useSynchronizedCursorPointer = (
           });
 
           // Finding for an existing object with the same id
-          const existentPointer = canvas
-            ?.getObjects()
-            .find((object: ICanvasObject) => {
-              return object.id === id;
-            });
+          const existentPointer = getPointerById(id);
 
           // If another object exists it will be removed
           if (existentPointer) {
@@ -158,12 +138,40 @@ const useSynchronizedCursorPointer = (
           }
 
           // Adding cursor on remote canvases
-          objectImage.set({ id, pointer });
+          objectImage.set({ id, cursorPointer });
           canvas?.add(objectImage);
 
           resolve();
         });
       });
+    };
+
+    /**
+     * Finds in the current canvas a pointer object with the given id
+     * @param {string} id - Id of the object to find
+     */
+    const getPointerById = (id: string) => {
+      return canvas?.getObjects().find((object: ICanvasObject) => {
+        return object.id === id;
+      }) as ICanvasObject;
+    };
+
+    /**
+     * Returns the image path according with the given cursorPointer
+     * @param {IPointerType} cursorPointer - Cursor Pointer Type
+     * to get its image path
+     */
+    const getImagePath = (cursorPointer: IPointerType) => {
+      switch (cursorPointer) {
+        case 'arrow':
+          return arrowPointer;
+
+        case 'hand':
+          return handPointer;
+
+        case 'crosshair':
+          return crosshairPointer;
+      }
     };
 
     eventController?.on('cursorPointer', moved);
