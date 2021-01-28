@@ -48,6 +48,7 @@ export const useShapeFeature = (
     perfectShapeIsActive,
     perfectShapeIsAvailable,
     updatePerfectShapeIsActive,
+    pointerEvents,
   } = useContext(WhiteboardContext);
 
   // Getting event serializer to synchronize objects
@@ -101,20 +102,14 @@ export const useShapeFeature = (
   const getPermissions = useCallback(() => {
     const toolbarIsEnabled = getToolbarIsEnabled();
     return {
-      teacherHasPermission:
-        allToolbarIsEnabled && shape && shapeIsActive,
+      teacherHasPermission: allToolbarIsEnabled && shape && shapeIsActive,
       studentHasPermission:
         shape &&
         shapeIsActive &&
         toolbarIsEnabled &&
         serializerToolbarState.shape,
     };
-  }, [
-    allToolbarIsEnabled,
-    shape,
-    shapeIsActive,
-    serializerToolbarState,
-  ]);
+  }, [allToolbarIsEnabled, shape, shapeIsActive, serializerToolbarState]);
 
   /**
    * Synchronizes and dispatches undo/redo for pperfect shape scaling
@@ -196,7 +191,7 @@ export const useShapeFeature = (
         canvas?.off('mouse:up');
       }
 
-      if (!laserIsActive && !brushIsActive) {
+      if (!laserIsActive && !brushIsActive && pointerEvents) {
         canvas?.off('mouse:move');
       }
     };
@@ -216,6 +211,7 @@ export const useShapeFeature = (
     serializerToolbarState.shape,
     getPermissions,
     brushIsActive,
+    pointerEvents,
   ]);
 
   /**

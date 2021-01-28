@@ -28,6 +28,7 @@ export const usePointerFeature = (
     floodFillIsActive,
     updatePointer,
     setPointerEvents,
+    allToolbarIsEnabled,
   } = useContext(WhiteboardContext);
 
   // Set canvas defaultCursor according with the current pointer value
@@ -53,22 +54,29 @@ export const usePointerFeature = (
 
   // Updates the involucrated states when permission is revoked
   useEffect(() => {
-    if (!permissions.cursorPointer && canvas) {
+    if (!permissions.cursorPointer && canvas && !allToolbarIsEnabled) {
       updatePointer('arrow');
       setPointerEvents(true);
       canvas.defaultCursor = 'default';
+    } else if (canvas && (permissions.cursorPointer || allToolbarIsEnabled)) {
+      setPointerEvents(false);
     }
-  }, [canvas, permissions.cursorPointer, setPointerEvents, updatePointer]);
+  }, [
+    allToolbarIsEnabled,
+    canvas,
+    permissions.cursorPointer,
+    setPointerEvents,
+    updatePointer,
+  ]);
 
   // Send an event to remove the current cursor when permission is revoked
   useEffect(() => {
-    if (!permissions.cursorPointer || pointerEvents) {
+    if (pointerEvents) {
       const payload: ObjectEvent = {
         type: 'cursorPointer',
         target: { top: 0, left: 0, pointer: 'none' } as ICanvasObject,
         id: `${userId}:cursor`,
       };
-
       eventSerializer?.push('cursorPointer', payload);
     }
   }, [eventSerializer, permissions.cursorPointer, pointerEvents, userId]);
