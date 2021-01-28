@@ -48,6 +48,8 @@ import { useChangeLineWidth } from './canvas-features/useChangeLineWidth';
 import { useUndoRedo } from './canvas-features/useUndoRedo';
 import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
 import { v4 as uuidv4 } from 'uuid';
+import { usePointerFeature } from './canvas-features/usePointerFeature';
+import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
 
@@ -269,6 +271,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   // useEffects and logic for manage undo/redo feature
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
 
+  // useEffects and logic for manage pointers
+  usePointerFeature(canvas as fabric.Canvas, userId, permissions);
+
   useSynchronizedMoved(
     canvas,
     userId,
@@ -359,6 +364,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     updatePermissions
   );
+  useSynchronizedCursorPointer(canvas, userId, filterIncomingEvents);
   useSynchronizedBackgroundColorChanged(filterIncomingEvents);
 
   // NOTE: Register canvas actions with context.

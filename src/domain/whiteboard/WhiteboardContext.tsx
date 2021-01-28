@@ -38,6 +38,7 @@ import store from './redux/store';
 import { getToolbarIsEnabled } from './redux/utils';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { usePointer } from './hooks/usePointer';
 import { useBackgroundColor } from './hooks/useBackgroundColor';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
@@ -66,6 +67,7 @@ export const WhiteboardProvider = ({
   const { backgroundColor, updateBackgroundColor } = useBackgroundColor();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
+  const { pointer, updatePointer } = usePointer();
 
   const {
     ClearWhiteboardModal,
@@ -103,7 +105,6 @@ export const WhiteboardProvider = ({
   } = useUploadFileModal();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
-  const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
   const [eraserIsActive, updateEraserIsActive] = useState(false);

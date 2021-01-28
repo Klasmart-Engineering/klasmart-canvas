@@ -34,6 +34,7 @@ const permissionsState: IPermissions = {
   downloadCanvas: false,
   uploadImage: false,
   backgroundColor: false,
+  cursorPointer: false,
 };
 
 /**
