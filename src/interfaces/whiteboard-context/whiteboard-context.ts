@@ -47,6 +47,7 @@ export interface IWhiteboardContext {
   updateShapesAreSelectable: (status: boolean) => void;
   shapesAreEvented: boolean;
   updateShapesAreEvented: (status: boolean) => void;
+  canvasActions: ICanvasActions | undefined;
   updateCanvasActions: (actions: ICanvasActions) => void;
   laserIsActive: boolean;
   updateLaserIsActive: (status: boolean) => void;
@@ -96,6 +97,8 @@ export interface IWhiteboardContext {
   localImage: string | File;
   setLocalImage: (image: string | File) => void;
   openClearWhiteboardModal: () => void;
+  eraserIsActive: boolean;
+  updateEraserIsActive: (status: boolean) => void;
   backgroundColor: string;
   updateBackgroundColor: (color: string) => void;
   fillBackgroundColor: (color: string) => void;

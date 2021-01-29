@@ -125,6 +125,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     penColor,
     isLocalObject,
     shape,
+    canvasActions,
     updateCanvasActions,
     laserIsActive,
     allToolbarIsEnabled,
@@ -136,6 +137,21 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     localBackground,
     backgroundColor,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
+
+  // useEffects and logic to set canvas properties
+  useSetCanvas(
+    instanceId,
+    setCanvas,
+    canvas as fabric.Canvas,
+    wrapper as HTMLElement,
+    setWrapper,
+    pixelWidth,
+    pixelHeight,
+    pointerEvents,
+    scaleMode,
+    display,
+    initialStyle
+  );
 
   // Getting Canvas shared functions
   const { actions, mouseDown } = useCanvasActions(
@@ -206,20 +222,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
   }, [canvas, eventController, generatedBy]);
 
-  // useEffects and logic to set canvas properties
-  useSetCanvas(
-    instanceId,
-    setCanvas,
-    canvas as fabric.Canvas,
-    wrapper as HTMLElement,
-    setWrapper,
-    pixelWidth,
-    pixelHeight,
-    pointerEvents,
-    scaleMode,
-    display,
-    initialStyle
-  );
 
   // useEffects and logic for manage the object manipulation in canvas
   useObjectManipulation(
@@ -367,8 +369,11 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {
-    updateCanvasActions(actions);
-  }, [actions, updateCanvasActions]);
+    if (!canvasActions && canvas) {
+      updateCanvasActions(actions);
+    }
+
+  }, [actions, updateCanvasActions, canvas, canvasActions]);
 
   return (
     <>

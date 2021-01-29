@@ -3,6 +3,7 @@ import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic
 import IBasicToolbarButton from '../../interfaces/toolbar/toolbar-button/basic-toolbar-button';
 import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elements/basic-special-selector';
 import { IPermissions } from '../../interfaces/permissions/permissions';
+import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
 
 /**
  * Maps permissions to action tools.
@@ -82,6 +83,29 @@ export const mappedToolElements = (
             allToolbarIsEnabled ||
             serializerToolbarState.erase ||
             serializerToolbarState.partialErase;
+
+          elmnt = {
+            ...elmnt,
+            options: (elmnt as IBasicToolbarSelector).options.map(
+              (option: IToolbarSelectorOption) => {
+                if (option.id === 'partial_erase') {
+                  return {
+                    ...option,
+                    enabled:
+                      allToolbarIsEnabled ||
+                      serializerToolbarState.partialErase,
+                  };
+                } else {
+                  return {
+                    ...option,
+                    enabled:
+                      allToolbarIsEnabled || serializerToolbarState.erase,
+                  };
+                }
+              }
+            ),
+          };
+
           return { ...elmnt, enabled };
         }
         case 'line_type': {

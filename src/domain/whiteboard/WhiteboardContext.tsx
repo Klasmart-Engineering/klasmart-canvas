@@ -108,6 +108,7 @@ export const WhiteboardProvider = ({
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
+  const [eraserIsActive, updateEraserIsActive] = useState(false);
 
   // NOTE: Actions provided by canvas instance somewhere in the DOM.
   // The canvas instance will be responsible for registering the actions
@@ -322,6 +323,7 @@ export const WhiteboardProvider = ({
     updateShapeColor,
     shapesAreSelectable,
     shapesAreEvented,
+    canvasActions,
     updateCanvasActions,
     laserIsActive,
     updateLaserIsActive,
@@ -369,6 +371,8 @@ export const WhiteboardProvider = ({
     setIsBackgroundImage,
     localImage,
     setLocalImage,
+    eraserIsActive,
+    updateEraserIsActive,
     localBackground,
     setLocalBackground,
     backgroundColor,
