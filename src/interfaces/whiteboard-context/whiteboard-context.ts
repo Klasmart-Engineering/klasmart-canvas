@@ -104,4 +104,6 @@ export interface IWhiteboardContext {
   setBackgroundColorInCanvas: (color: string) => void;
   localBackground: boolean;
   setLocalBackground: (condition: boolean) => void;
+  eventSerializer: any;
+  eventController: any;
 }

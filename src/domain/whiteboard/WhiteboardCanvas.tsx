@@ -10,7 +10,6 @@ import React, {
   useState,
 } from 'react';
 import { connect } from 'react-redux';
-import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { WhiteboardContext } from './WhiteboardContext';
 import { useCanvasActions } from './canvas-actions/useCanvasActions';
 import useSynchronizedAdded from './synchronization-hooks/useSynchronizedAdded';
@@ -108,18 +107,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   const serializerToolbarState = permissions;
 
-  // Event serialization for synchronizing whiteboard state.
-  const {
-    state: { eventSerializer, eventController },
-  } = useSharedEventSerializer();
-
-  // Undo/Redo dispatcher
-  const { dispatch: undoRedoDispatch } = UndoRedo(
-    canvas as fabric.Canvas,
-    eventSerializer,
-    userId
-  );
-
   // Getting context variables for this file
   const {
     penColor,
@@ -136,7 +123,15 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     localImage,
     localBackground,
     backgroundColor,
+    eventSerializer,
+    eventController,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
+
+  const { dispatch: undoRedoDispatch } = UndoRedo(
+    canvas as fabric.Canvas,
+    eventSerializer,
+    userId
+  );
 
   // useEffects and logic to set canvas properties
   useSetCanvas(

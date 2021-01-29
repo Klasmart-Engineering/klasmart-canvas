@@ -138,9 +138,10 @@ const useSynchronizedAdded = (
           break;
 
         case 'image':
-          if (e.target.basePath) {
+          const element = e.target?.getElement();
+          if (element.currentSrc) {
             target = {
-              basePath: e.target.basePath,
+              basePath: { imageData: element.currentSrc },
               scaleX: e.target.scaleX,
               scaleY: e.target.scaleY,
               angle: e.target.angle,
@@ -184,13 +185,15 @@ const useSynchronizedAdded = (
           event,
         });
 
-        eventSerializer?.push('added', payload);
+        if (!isGif) {
+          eventSerializer?.push('added', payload);
+        }
       }
 
       if (isGif) {
         const payload: ObjectEvent = {
           type: 'gif',
-          target: URL.createObjectURL(image),
+          target: { src: image as string },
           id: e.target.id,
         };
 
@@ -208,15 +211,6 @@ const useSynchronizedAdded = (
         eventSerializer?.push('added', payload);
 
         return;
-      }
-
-      if (type === 'image' && !e.target.basePath && isGif) {
-        const payload: ObjectEvent = {
-          type,
-          target: e.target,
-          id: e.target.id,
-        };
-        eventSerializer?.push('added', payload);
       }
     };
 
@@ -426,9 +420,10 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'gif') {
+        console.log('GIF TARGET: ', target);
         (async function () {
           try {
-            const gif = await fabricGif(target + '', 200, 200, 2000);
+            const gif = await fabricGif(`${target.src} `, 200, 200, 2000);
             gif.set({ top: 0, left: 0, selectable: false, evented: false });
             gif.id = id;
             canvas?.add(gif);

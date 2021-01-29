@@ -40,6 +40,7 @@ import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
 import { usePointer } from './hooks/usePointer';
 import { useBackgroundColor } from './hooks/useBackgroundColor';
+import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -68,6 +69,10 @@ export const WhiteboardProvider = ({
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
   const { pointer, updatePointer } = usePointer();
+
+  const {
+    state: { eventSerializer, eventController },
+  } = useSharedEventSerializer();
 
   const {
     ClearWhiteboardModal,
@@ -102,7 +107,7 @@ export const WhiteboardProvider = ({
     UploadFileModal,
     openUploadFileModal,
     closeUploadFileModal,
-  } = useUploadFileModal();
+  } = useUploadFileModal(eventSerializer, userId as string);
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
@@ -369,6 +374,8 @@ export const WhiteboardProvider = ({
     updateBackgroundColor,
     fillBackgroundColor,
     setBackgroundColorInCanvas,
+    eventSerializer,
+    eventController,
   };
 
   return (

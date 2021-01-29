@@ -21,7 +21,7 @@ export class EventPainterController extends EventEmitter
 
     // Websocket is used for test purposes until event emitter is ready. TEMPORARY.
     // @ts-ignore
-    this.ws = new WebSocket(`ws://${window.location.hostname}:8082`);
+    this.ws = new WebSocket(`ws://${window.location.hostname}:6969`);
 
     this.ws.onopen = () => {
       console.log('opened');
