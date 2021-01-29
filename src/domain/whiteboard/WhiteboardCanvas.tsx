@@ -50,7 +50,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { usePointerFeature } from './canvas-features/usePointerFeature';
 import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
 import { IPermissions } from '../../interfaces/permissions/permissions';
-import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
+import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useSynchronizedBackgroundColorChanged';
 
 /**
  * @field instanceId: Unique ID for this canvas.

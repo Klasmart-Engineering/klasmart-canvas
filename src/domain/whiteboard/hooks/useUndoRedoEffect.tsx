@@ -40,7 +40,7 @@ export const UndoRedo = (
         canvas,
         instanceId,
         state,
-        state.actionType as 'UNDO' | 'REDO',
+        state.actionType,
         shapesAreSelectable,
         setBackgroundColorInCanvas
       );

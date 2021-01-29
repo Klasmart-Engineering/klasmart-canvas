@@ -3,12 +3,7 @@ import { fabric } from 'fabric';
 import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { isShape } from '../utils/shapes';
-import {
-  UNDO,
-  REDO,
-  SET,
-  CanvasAction,
-} from '../reducers/undo-redo';
+import { UNDO, REDO, SET, CanvasAction } from '../reducers/undo-redo';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
 import { PartialErase } from '../partial-erase/partialErase';
@@ -25,10 +20,13 @@ import { mouseUpAction } from './mouseHandlers/mouseUp';
 import { mouseMoveAction } from './mouseHandlers/mouseMove';
 import { useChangeStrokeColor, useTextColor } from './strokeColor';
 import { useEraseObject } from './eraseActions';
-import { useClearWhiteboardOthers, useClearWhiteboardSelf, useClearWhiteboardClearAll } from './clearWhiteboardActions';
+import {
+  useClearWhiteboardOthers,
+  useClearWhiteboardSelf,
+  useClearWhiteboardClearAll,
+} from './clearWhiteboardActions';
 import { IShapeInProgress } from '../../../interfaces/canvas-events/shape-in-progress';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
-
 
 export const useCanvasActions = (
   canvas: fabric.Canvas,
@@ -54,7 +52,6 @@ export const useCanvasActions = (
     perfectShapeIsActive,
     partialEraseIsActive,
     eraseType,
-    backgroundImage,
     localImage,
     brushType,
     eraserIsActive,
@@ -64,6 +61,7 @@ export const useCanvasActions = (
     setIsBackgroundImage,
     setBackgroundImageIsPartialErasable,
     setLocalImage,
+    backgroundImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { changePenColorSync } = useSynchronization(userId as string);
@@ -71,7 +69,13 @@ export const useCanvasActions = (
    * Adds shape to whiteboard.
    * @param specific Indicates shape type that should be added in whiteboard.
    */
-  const shapeSelector = useShapeSelector({ brushType, lineWidth, penColor, shape, shapeColor });
+  const shapeSelector = useShapeSelector({
+    brushType,
+    lineWidth,
+    penColor,
+    shape,
+    shapeColor,
+  });
 
   /**
    * Adds shape with special brush to whiteboard.
@@ -174,7 +178,15 @@ export const useCanvasActions = (
    * @param shape Shape being added on canvas.
    * @param isCircle Indicates if shape is a circle.
    */
-  const mouseDown = useMouseDown(canvas, shapeSelector, clearOnMouseEvent, mouseMove, mouseUp, brushType, shapeColor);
+  const mouseDown = useMouseDown(
+    canvas,
+    shapeSelector,
+    clearOnMouseEvent,
+    mouseMove,
+    mouseUp,
+    brushType,
+    shapeColor
+  );
 
   /**
    * Used to save the current shape in case of an interruption
@@ -209,9 +221,45 @@ export const useCanvasActions = (
         activeObject.set('evented', true);
       }
 
-      canvas?.on('mouse:down', mouseDownAction(canvas, brushType, shapeSelector, shapeToAdd, specialShapeSelector, lineWidth, penColor));
-      canvas?.on('mouse:move', mouseMoveAction(canvas, userId, perfectShapeIsActive, shapeToAdd, brushType, setShapeInProgress, eventSerializer));
-      canvas?.on('mouse:up', mouseUpAction(canvas, userId, perfectShapeIsActive, shapeToAdd, brushType, lineWidth, penColor, setShapeInProgress, eventSerializer, dispatch));
+      canvas?.on(
+        'mouse:down',
+        mouseDownAction(
+          canvas,
+          brushType,
+          shapeSelector,
+          shapeToAdd,
+          specialShapeSelector,
+          lineWidth,
+          penColor
+        )
+      );
+      canvas?.on(
+        'mouse:move',
+        mouseMoveAction(
+          canvas,
+          userId,
+          perfectShapeIsActive,
+          shapeToAdd,
+          brushType,
+          setShapeInProgress,
+          eventSerializer
+        )
+      );
+      canvas?.on(
+        'mouse:up',
+        mouseUpAction(
+          canvas,
+          userId,
+          perfectShapeIsActive,
+          shapeToAdd,
+          brushType,
+          lineWidth,
+          penColor,
+          setShapeInProgress,
+          eventSerializer,
+          dispatch
+        )
+      );
     },
     /* If dataInProgress is added on dependencies
     the performance is bad and an unexpected behavior occurs */
@@ -232,7 +280,14 @@ export const useCanvasActions = (
    * also changes the stroke color in free drawing and empty shape objects
    * @param {string} color - new color to change
    */
-  const changeStrokeColor = useChangeStrokeColor(canvas, userId, eventSerializer, updatePenColor, dispatch, changePenColorSync);
+  const changeStrokeColor = useChangeStrokeColor(
+    canvas,
+    userId,
+    eventSerializer,
+    updatePenColor,
+    dispatch,
+    changePenColorSync
+  );
 
   /**
    * Changes brush type for shapes and
@@ -287,7 +342,13 @@ export const useCanvasActions = (
    * Add specific color to selected text or group of texts
    * @param {string} color - color to set
    */
-  const textColor = useTextColor(canvas, userId, updateFontColor, eventSerializer, dispatch);
+  const textColor = useTextColor(
+    canvas,
+    userId,
+    updateFontColor,
+    eventSerializer,
+    dispatch
+  );
 
   /**
    * Set the given visibility in all the controls in the given object.
@@ -342,9 +403,32 @@ export const useCanvasActions = (
   }, [canvas]);
 
   /**
+   * Clears background color from current whiteboard
+   */
+  const clearBackground = useCallback(() => {
+    updateBackgroundColor('transparent');
+    setLocalBackground(false);
+
+    const payload = {
+      id: userId,
+      target: 'transparent',
+    };
+
+    eventSerializer?.push('backgroundColorChanged', payload);
+  }, [eventSerializer, setLocalBackground, updateBackgroundColor, userId]);
+
+  /**
    * Clears all whiteboard elements
    * */
-  const clearWhiteboardClearAll = useClearWhiteboardClearAll(canvas, userId, updateClearIsActive, eventSerializer, dispatch);
+  const clearWhiteboardClearAll = useClearWhiteboardClearAll(
+    canvas,
+    userId,
+    localBackground,
+    clearBackground,
+    updateClearIsActive,
+    eventSerializer,
+    dispatch
+  );
 
   /**
    * Clears all whiteboard elements
@@ -352,6 +436,8 @@ export const useCanvasActions = (
   const clearWhiteboardClearMySelf = useClearWhiteboardSelf(
     canvas,
     userId,
+    localBackground,
+    clearBackground,
     closeModal,
     dispatch,
     isLocalObject,
@@ -366,7 +452,13 @@ export const useCanvasActions = (
   /**
    * Clears all whiteboard with allowClearOthers strategy
    * */
-  const clearWhiteboardAllowClearOthers = useClearWhiteboardOthers(canvas, updateClearIsActive, eventSerializer);
+  const clearWhiteboardAllowClearOthers = useClearWhiteboardOthers(
+    canvas,
+    localBackground,
+    clearBackground,
+    updateClearIsActive,
+    eventSerializer
+  );
 
   /**
    * Set Canvas Whiteboard selection ability
@@ -404,7 +496,6 @@ export const useCanvasActions = (
    * Creates the listeners to erase objects from the whiteboard
    */
   const eraseObject = useEraseObject(canvas, userId, canvasId);
-
 
   useEffect(() => {
     if (!canvas) {

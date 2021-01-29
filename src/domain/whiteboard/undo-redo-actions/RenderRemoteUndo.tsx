@@ -112,6 +112,21 @@ export const RenderRemoteUndo = (
       const id = nextObject.id;
 
       sendReconstructEvent(id, { objects }, eventSerializer);
+
+      if (currentEvent.type === 'backgroundColorChanged') {
+        const divColorBackground = getPreviousBackgroundDivColor(
+          state.eventIndex,
+          state.events
+        );
+
+        const payload = {
+          id: instanceId,
+          target: divColorBackground || 'transparent',
+        };
+
+        eventSerializer?.push('backgroundColorChanged', payload);
+      }
+
       break;
     }
 

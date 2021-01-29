@@ -78,6 +78,13 @@ export const RenderRemoteRedo = (
       const id = currentObject.id;
 
       sendReconstructEvent(id, false, eventSerializer);
+
+      const payload = {
+        id: instanceId,
+        target: 'transparent',
+      };
+
+      eventSerializer?.push('backgroundColorChanged', payload);
       break;
     }
 

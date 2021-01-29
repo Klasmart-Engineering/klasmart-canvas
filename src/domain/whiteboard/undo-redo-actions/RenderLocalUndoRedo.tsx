@@ -3,7 +3,7 @@ import { IPathTarget } from '../../../interfaces/canvas-events/path-target';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { TypedPolygon, TypedShape } from '../../../interfaces/shapes/shapes';
-import { CanvasHistoryState } from '../reducers/undo-redo';
+import { CanvasHistoryState, REDO, UNDO } from '../reducers/undo-redo';
 import {
   getPreviousBackground,
   getPreviousBackgroundDivColor,
@@ -52,7 +52,7 @@ const mapActiveState = (activeState: string) =>
  * @param {{ [key: string]: any }} mapped - Objects to set in canvas.
  * @param {string} instanceId - Canvas ID
  * @param {CanvasHistoryState} state - Current state in canvas actions history
- * @param {'UNDO' | 'REDO'} action - Action made
+ * @param {string} action - Undo/Redo action made
  * @param {(color: string) => void} setBackgroundColorInCanvas - Function to
  * set background color in current canvas
  */
@@ -61,7 +61,7 @@ const loadFromJSON = (
   mapped: { [key: string]: any },
   instanceId: string,
   state: CanvasHistoryState,
-  action: 'UNDO' | 'REDO',
+  action: string,
   setBackgroundColorInCanvas: (color: string) => void
 ) => {
   const { currentEvent, nextEvent } = getStateVariables(state);
@@ -81,8 +81,11 @@ const loadFromJSON = (
       });
 
     if (
-      (action === 'UNDO' && nextEvent.type === 'backgroundColorChanged') ||
-      (action === 'REDO' && currentEvent.type === 'backgroundColorChanged')
+      (action === UNDO && nextEvent.type === 'backgroundColorChanged') ||
+      (action === REDO && currentEvent.type === 'backgroundColorChanged') ||
+      (action === UNDO &&
+        currentEvent.type === 'backgroundColorChanged' &&
+        nextEvent.type === 'clearedWhiteboard')
     ) {
       const fill = getPreviousBackground(state.eventIndex, state.events);
       const divColorBackground = getPreviousBackgroundDivColor(
@@ -95,6 +98,10 @@ const loadFromJSON = (
       } else {
         canvas.backgroundColor = fill;
       }
+    }
+
+    if (action === REDO && currentEvent.type === 'clearedWhiteboard') {
+      canvas.backgroundColor = 'transparent';
     }
 
     canvas.renderAll();
@@ -116,7 +123,7 @@ export const RenderLocalUndoRedo = (
   canvas: fabric.Canvas,
   instanceId: string,
   state: CanvasHistoryState,
-  action: 'UNDO' | 'REDO',
+  action: string,
   shapesAreSelectable: boolean,
   setBackgroundColorInCanvas: (color: string) => void
 ) => {

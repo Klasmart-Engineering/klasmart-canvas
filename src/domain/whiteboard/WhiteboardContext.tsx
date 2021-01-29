@@ -189,7 +189,7 @@ export const WhiteboardProvider = ({
     if (clearWhiteboardPermissions.allowClearMyself && toolbarIsEnabled) {
       canvasActions?.clearWhiteboardClearMySelf();
     }
-  }, [canvasActions, clearWhiteboardPermissions, userId]);
+  }, [canvasActions, clearWhiteboardPermissions.allowClearMyself, userId]);
 
   const clearWhiteboardAllowClearOthersAction = useCallback(
     (userId) => {
