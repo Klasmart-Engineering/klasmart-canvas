@@ -1,6 +1,8 @@
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { ITextOptions } from 'fabric/fabric-impl';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { ICoordinate } from '../../../interfaces/brushes/coordinate';
+import { PenBrush } from '../brushes/classes/penBrush';
 
 /**
  * Check if the given object is a free drawing object
@@ -45,3 +47,36 @@ export const isText = (object: fabric.Object) => {
 export const isEmptyShape = (object: TypedShape) => {
   return isShape(object) && object.shapeType === 'shape';
 };
+
+/**
+ * Get the bigger difference
+ * between startPoint.x - point.x and startPoint.y - point.y
+ * @param {Point} point - Point to find the difference with startPoint
+ */
+export const getBiggerDifference = (point: fabric.Point, startPoint: fabric.Point) => {
+  return Math.abs(point.x - startPoint.x) >
+    Math.abs(point.y - startPoint.y)
+    ? point.x - startPoint.x
+    : point.y - startPoint.y;
+};
+
+export const setScaledPoint = (shape: any, original: any, point: ICoordinate) => {
+  return {
+    x:
+      (point.x * Number(shape.width) * Number(shape.scaleX)) /
+      original.width,
+    y:
+      (point.y * Number(shape.height) * Number(shape.scaleY)) /
+      original.height,
+  };
+};
+
+export const penPointsMapping = (points: any[], brush: any, min: number, max: number) => (
+  points.map((point) => (
+    {
+      x: point.x,
+      y: point.y,
+      width: (brush as PenBrush).getRandomInt(min, max),
+    }
+  )
+));
