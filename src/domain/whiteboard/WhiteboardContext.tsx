@@ -40,6 +40,7 @@ import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
 import { usePointer } from './hooks/usePointer';
 import { useBackgroundColor } from './hooks/useBackgroundColor';
+import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -173,6 +174,15 @@ export const WhiteboardProvider = ({
   const textColorAction = useCallback(
     (color: string) => {
       canvasActions?.textColor(color);
+    },
+    [canvasActions]
+  );
+
+  const isCursorObject = useCallback(
+    (object: ICanvasObject) => {
+      if (!canvasActions) return false;
+
+      return canvasActions.isCursorObject(object);
     },
     [canvasActions]
   );
@@ -365,6 +375,7 @@ export const WhiteboardProvider = ({
     updateBackgroundColor,
     fillBackgroundColor,
     setBackgroundColorInCanvas,
+    isCursorObject,
   };
 
   return (

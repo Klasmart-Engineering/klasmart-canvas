@@ -68,7 +68,6 @@ export const useCanvasActions = (
     perfectShapeIsActive,
     partialEraseIsActive,
     eraseType,
-    backgroundImage,
     localImage,
     brushType,
     updateBackgroundColor,
@@ -632,11 +631,11 @@ export const useCanvasActions = (
           const brush = new PaintBrush(canvas, userId);
           const newPoints = ((shape as ICanvasPathBrush).basePath
             ?.points as ICoordinate[]).map((point) => {
-              return {
-                x: point.x * Number(shape.scaleX),
-                y: point.y * Number(shape.scaleY),
-              };
-            });
+            return {
+              x: point.x * Number(shape.scaleX),
+              y: point.y * Number(shape.scaleY),
+            };
+          });
 
           const newPath = brush.modifyPaintBrushPath(
             String(shape.id),
@@ -1420,12 +1419,20 @@ export const useCanvasActions = (
   }, [canvas]);
 
   /**
+   * Checks if the given object is a cursor object
+   * @param {ICanvasObject} object - Object to check
+   */
+  const isCursorObject = useCallback((object: ICanvasObject) => {
+    return object.id?.split(':')[1] === 'cursor';
+  }, []);
+
+  /**
    * Clears all whiteboard elements
    * */
   const clearWhiteboardClearAll = useCallback(async () => {
     await updateClearIsActive(true);
     await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-      if (obj.id) {
+      if (obj.id && !isCursorObject(obj)) {
         obj.set({ groupClear: true });
         canvas?.remove(obj);
       }
@@ -1455,14 +1462,22 @@ export const useCanvasActions = (
     });
 
     await updateClearIsActive(false);
-  }, [updateClearIsActive, canvas, dispatch, userId, eventSerializer]);
+  }, [
+    updateClearIsActive,
+    canvas,
+    eventSerializer,
+    userId,
+    dispatch,
+    isCursorObject,
+  ]);
 
   /**
    * Clears all whiteboard elements
    * */
   const clearWhiteboardClearMySelf = useCallback(async () => {
     const toolbarIsEnabled = getToolbarIsEnabled(userId);
-    const serializerToolbarState = store.getState().permissionsState as IPermissions;
+    const serializerToolbarState = store.getState()
+      .permissionsState as IPermissions;
     const teacherHasPermission = allToolbarIsEnabled;
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.clearWhiteboard;
@@ -1495,7 +1510,7 @@ export const useCanvasActions = (
       }
       await updateClearIsActive(true);
       await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-        if (obj.id && isLocalObject(obj.id, userId)) {
+        if (obj.id && isLocalObject(obj.id, userId) && !isCursorObject(obj)) {
           const target = {
             id: obj.id,
             target: {
@@ -1548,16 +1563,18 @@ export const useCanvasActions = (
     // If isLocalObject is added in dependencies an infinity loop happens
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    userId,
+    allToolbarIsEnabled,
+    localBackground,
+    localImage,
+    updateClearIsActive,
     canvas,
     closeModal,
-    canvasId,
-    eventSerializer,
-    updateClearIsActive,
-    allToolbarIsEnabled,
     dispatch,
-    userId,
-    localImage,
-    backgroundImage,
+    updateBackgroundColor,
+    setLocalBackground,
+    eventSerializer,
+    isCursorObject,
   ]);
 
   /**
@@ -1574,7 +1591,7 @@ export const useCanvasActions = (
             throw new Error('Invalid ID');
           }
 
-          if (object[0] === userId) {
+          if (object[0] === userId && !isCursorObject(obj)) {
             canvas?.remove(obj);
           }
 
@@ -1591,7 +1608,7 @@ export const useCanvasActions = (
       });
       await updateClearIsActive(false);
     },
-    [canvas, eventSerializer, updateClearIsActive]
+    [canvas, eventSerializer, isCursorObject, updateClearIsActive]
   );
 
   /**
@@ -1741,7 +1758,8 @@ export const useCanvasActions = (
     }
 
     const toolbarIsEnabled = getToolbarIsEnabled(userId);
-    const serializerToolbarState = store.getState().permissionsState as IPermissions;
+    const serializerToolbarState = store.getState()
+      .permissionsState as IPermissions;
     let eraser: any;
 
     if (
@@ -1810,7 +1828,8 @@ export const useCanvasActions = (
 
   const undo = useCallback(() => {
     const toolbarIsEnabled = getToolbarIsEnabled();
-    const serializerToolbarState = store.getState().permissionsState as IPermissions;
+    const serializerToolbarState = store.getState()
+      .permissionsState as IPermissions;
     const teacherHasPermission = allToolbarIsEnabled;
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.undoRedo;
@@ -1818,15 +1837,12 @@ export const useCanvasActions = (
     if (teacherHasPermission || studentHasPermission) {
       dispatch({ type: UNDO, canvasId: canvasId });
     }
-  }, [
-    dispatch,
-    canvasId,
-    allToolbarIsEnabled,
-  ]);
+  }, [dispatch, canvasId, allToolbarIsEnabled]);
 
   const redo = useCallback(() => {
     const toolbarIsEnabled = getToolbarIsEnabled();
-    const serializerToolbarState = store.getState().permissionsState as IPermissions;
+    const serializerToolbarState = store.getState()
+      .permissionsState as IPermissions;
     const teacherHasPermission = allToolbarIsEnabled;
     const studentHasPermission =
       toolbarIsEnabled && serializerToolbarState.undoRedo;
@@ -1834,11 +1850,7 @@ export const useCanvasActions = (
     if (teacherHasPermission || studentHasPermission) {
       dispatch({ type: REDO, canvasId: canvasId });
     }
-  }, [
-    dispatch,
-    canvasId,
-    allToolbarIsEnabled,
-  ]);
+  }, [dispatch, canvasId, allToolbarIsEnabled]);
 
   const state = useMemo(() => {
     const actions = {
@@ -1860,6 +1872,7 @@ export const useCanvasActions = (
       clearWhiteboardClearMySelf,
       fillBackgroundColor,
       setBackgroundColorInCanvas,
+      isCursorObject,
     };
 
     return { actions, mouseDown };
@@ -1881,8 +1894,9 @@ export const useCanvasActions = (
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
     fillBackgroundColor,
-    mouseDown,
     setBackgroundColorInCanvas,
+    isCursorObject,
+    mouseDown,
   ]);
 
   return state;

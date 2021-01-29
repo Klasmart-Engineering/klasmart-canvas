@@ -26,6 +26,7 @@ export interface ICanvasActions {
   clearWhiteboardClearAll: () => void;
   fillBackgroundColor: (color: string) => void;
   setBackgroundColorInCanvas: (color: string) => void;
+  isCursorObject: (object: ICanvasObject) => boolean;
 }
 
 export default ICanvasActions;

@@ -33,6 +33,7 @@ const useSynchronizedRemoved = (
     setBackgroundImage,
     setLocalImage,
     setLocalBackground,
+    isCursorObject,
   } = useContext(WhiteboardContext);
 
   /** Register and handle remote event. */
@@ -49,7 +50,7 @@ const useSynchronizedRemoved = (
         case 'allowClearMyself':
           if (!shouldHandleRemoteEvent(objectId)) return;
           canvas?.forEachObject(function (obj: ICanvasObject) {
-            if (obj.id === objectId) {
+            if (obj.id === objectId && !isCursorObject(obj)) {
               canvas?.remove(obj);
             }
           });
@@ -66,7 +67,9 @@ const useSynchronizedRemoved = (
         case 'allowClearAll':
           if (shouldHandleRemoteEvent(objectId)) return;
           canvas?.forEachObject(function (obj: ICanvasObject) {
-            canvas?.remove(obj);
+            if (!isCursorObject(obj)) {
+              canvas?.remove(obj);
+            }
           });
           break;
         case 'allowClearOthers':
@@ -79,7 +82,7 @@ const useSynchronizedRemoved = (
                 throw new Error('Invalid ID');
               }
 
-              if (object[0] === target.userId) {
+              if (object[0] === target.userId && !isCursorObject(obj)) {
                 canvas?.remove(obj);
               }
             }
@@ -142,6 +145,7 @@ const useSynchronizedRemoved = (
     setLocalImage,
     setBackgroundImage,
     setLocalBackground,
+    isCursorObject,
   ]);
 
   /** Register and handle local event. */
