@@ -140,7 +140,10 @@ export const WhiteboardProvider = ({
    * Opens ClearWhiteboardModal
    */
   const openClearWhiteboardModal = () => {
-    if (allToolbarIsEnabled || (store.getState().permissionsState as IPermissions).clearWhiteboard) {
+    if (
+      allToolbarIsEnabled ||
+      (store.getState().permissionsState as IPermissions).clearWhiteboard
+    ) {
       openModal();
     }
   };
@@ -179,7 +182,7 @@ export const WhiteboardProvider = ({
     if (clearWhiteboardPermissions.allowClearMyself && toolbarIsEnabled) {
       canvasActions?.clearWhiteboardClearMySelf();
     }
-  }, [canvasActions, clearWhiteboardPermissions]);
+  }, [canvasActions, clearWhiteboardPermissions.allowClearMyself, userId]);
 
   const clearWhiteboardAllowClearOthersAction = useCallback(
     (userId) => {
@@ -241,11 +244,9 @@ export const WhiteboardProvider = ({
   }, [canvasActions]);
 
   const perfectShapeIsAvailable = () => {
-    const permissionsState = store.getState() as unknown as IPermissions;
+    const permissionsState = (store.getState() as unknown) as IPermissions;
     return (
-      allToolbarIsEnabled ||
-      permissionsState.shape ||
-      permissionsState.move
+      allToolbarIsEnabled || permissionsState.shape || permissionsState.move
     );
   };
 
@@ -378,17 +379,17 @@ export const WhiteboardProvider = ({
         Clear student
       </button>
       {(window.innerWidth <= 768 || window.innerHeight <= 768) &&
-        perfectShapeIsAvailable() ? (
-          <WhiteboardToggle
-            label="Perfect Shape Creation"
-            state={perfectShapeIsActive}
-            onStateChange={(value: boolean) => {
-              if (perfectShapeIsAvailable()) {
-                updatePerfectShapeIsActive(value);
-              }
-            }}
-          />
-        ) : null}
+      perfectShapeIsAvailable() ? (
+        <WhiteboardToggle
+          label="Perfect Shape Creation"
+          state={perfectShapeIsActive}
+          onStateChange={(value: boolean) => {
+            if (perfectShapeIsAvailable()) {
+              updatePerfectShapeIsActive(value);
+            }
+          }}
+        />
+      ) : null}
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />

@@ -2,7 +2,6 @@ import IBasicToolbarSelector from '../../interfaces/toolbar/toolbar-selector/bas
 import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 import IBasicToolbarButton from '../../interfaces/toolbar/toolbar-button/basic-toolbar-button';
 import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elements/basic-special-selector';
-import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 
 /**
@@ -58,7 +57,7 @@ export const mappedActionElements = (
 export const mappedToolElements = (
   tools: IBasicToolbarSection,
   allToolbarIsEnabled: boolean,
-  serializerToolbarState: IPermissions,
+  serializerToolbarState: IPermissions
 ) =>
   tools.elements.map(
     (

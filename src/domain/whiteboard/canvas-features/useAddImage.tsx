@@ -40,7 +40,7 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
     if (!canvas) return;
 
     if (isBackgroundImage) {
-      updateBackgroundColor('#000000');
+      updateBackgroundColor('transparent');
       setLocalBackground(false);
       canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
 

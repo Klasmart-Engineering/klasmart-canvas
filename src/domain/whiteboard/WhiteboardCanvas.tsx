@@ -49,7 +49,7 @@ import { useUndoRedo } from './canvas-features/useUndoRedo';
 import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
 import { v4 as uuidv4 } from 'uuid';
 import { IPermissions } from '../../interfaces/permissions/permissions';
-import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
+import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useSynchronizedBackgroundColorChanged';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -355,7 +355,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     canvas,
     userId,
     filterIncomingEvents,
-    updatePermissions,
+    updatePermissions
   );
   useSynchronizedBackgroundColorChanged(filterIncomingEvents);
 
@@ -413,10 +413,8 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
 const mapStateToProps = (state: any, ownProps: any) => ({
   ...ownProps,
-  permissions:
-    state.permissionsState,
+  permissions: state.permissionsState,
   toolbarIsEnabled: (state: any) => {
-
     for (const key in state.permissionsState) {
       if (state.permissionsState[key] === true) {
         return true;
@@ -427,7 +425,8 @@ const mapStateToProps = (state: any, ownProps: any) => ({
   },
 });
 const mapDispatchToProps = (dispatch: any) => ({
-  updatePermissions: (tool: string, payload: boolean) => dispatch({ type: tool, payload })
+  updatePermissions: (tool: string, payload: boolean) =>
+    dispatch({ type: tool, payload }),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(WhiteboardCanvas);
