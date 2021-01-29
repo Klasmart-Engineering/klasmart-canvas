@@ -57,11 +57,11 @@ export const useCanvasActions = (
     eraserIsActive,
     updateBackgroundColor,
     setLocalBackground,
-    localBackground,
+    backgroundImage,
     setIsBackgroundImage,
     setBackgroundImageIsPartialErasable,
     setLocalImage,
-    backgroundImage,
+    localBackground,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { changePenColorSync } = useSynchronization(userId as string);
@@ -418,6 +418,14 @@ export const useCanvasActions = (
   }, [eventSerializer, setLocalBackground, updateBackgroundColor, userId]);
 
   /**
+   * Checks if the given object is a cursor object
+   * @param {ICanvasObject} object - Object to check
+   */
+  const isCursorObject = useCallback((object: ICanvasObject) => {
+    return object.id?.split(':')[1] === 'cursor';
+  }, []);
+
+  /**
    * Clears all whiteboard elements
    * */
   const clearWhiteboardClearAll = useClearWhiteboardClearAll(
@@ -425,6 +433,7 @@ export const useCanvasActions = (
     userId,
     localBackground,
     clearBackground,
+    isCursorObject,
     updateClearIsActive,
     eventSerializer,
     dispatch
@@ -438,6 +447,7 @@ export const useCanvasActions = (
     userId,
     localBackground,
     clearBackground,
+    isCursorObject,
     closeModal,
     dispatch,
     isLocalObject,
@@ -456,6 +466,7 @@ export const useCanvasActions = (
     canvas,
     localBackground,
     clearBackground,
+    isCursorObject,
     updateClearIsActive,
     eventSerializer
   );
@@ -619,6 +630,7 @@ export const useCanvasActions = (
       clearWhiteboardClearMySelf,
       fillBackgroundColor,
       setBackgroundColorInCanvas,
+      isCursorObject,
     };
 
     return { actions, mouseDown };
@@ -640,8 +652,9 @@ export const useCanvasActions = (
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
     fillBackgroundColor,
-    mouseDown,
     setBackgroundColorInCanvas,
+    isCursorObject,
+    mouseDown,
   ]);
 
   return state;

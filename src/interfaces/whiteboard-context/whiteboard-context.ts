@@ -1,6 +1,7 @@
 import { MutableRefObject } from 'react';
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
 import { IBrushType } from '../brushes/brush-type';
+import { ICanvasObject } from '../objects/canvas-object';
 import { IPointerType } from '../pointers/pointer-type';
 
 export interface IWhiteboardContext {
@@ -106,4 +107,5 @@ export interface IWhiteboardContext {
   setLocalBackground: (condition: boolean) => void;
   eventSerializer: any;
   eventController: any;
+  isCursorObject: (object: ICanvasObject) => boolean;
 }

@@ -16,6 +16,7 @@ import { getToolbarIsEnabled } from '../redux/utils';
  * @param userId user Id
  * @param localBackground Flag to know if background color is applied
  * @param clearBackground Function that clears background color
+ * @param isCursorObject Function to know which is a cursor and which isn't
  * @param closeModal Close modal method
  * @param dispatch Dispatch method
  * @param isLocalObject Method to check if object is local
@@ -31,6 +32,7 @@ export const useClearWhiteboardSelf = (
   userId: string,
   localBackground: boolean,
   clearBackground: () => void,
+  isCursorObject: (object: ICanvasObject) => boolean,
   closeModal: () => void,
   dispatch: (action: CanvasAction) => void,
   isLocalObject: (
@@ -69,7 +71,7 @@ export const useClearWhiteboardSelf = (
       }
       await updateClearIsActive(true);
       await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-        if (obj.id && isLocalObject(obj.id, userId)) {
+        if (obj.id && isLocalObject(obj.id, userId) && !isCursorObject(obj)) {
           const target = {
             id: obj.id,
             target: {
@@ -132,6 +134,8 @@ export const useClearWhiteboardSelf = (
     dispatch,
     clearBackground,
     eventSerializer,
+    eventSerializer,
+    isCursorObject,
   ]);
 
 /**
@@ -139,6 +143,7 @@ export const useClearWhiteboardSelf = (
  * @param canvas Fabric canvas
  * @param localBackground Flag to know if background color is applied
  * @param clearBackground Function that clears background color
+ * @param isCursorObject Function to know which is a cursor and which isn't
  * @param updateClearIsActive Updates clear is active
  * @param eventSerializer Pain event serializer
  */
@@ -146,6 +151,7 @@ export const useClearWhiteboardOthers = (
   canvas: fabric.Canvas,
   localBackground: boolean,
   clearBackground: () => void,
+  isCursorObject: (object: ICanvasObject) => boolean,
   updateClearIsActive: (arg: boolean) => void,
   eventSerializer: PaintEventSerializer
 ) =>
@@ -167,7 +173,7 @@ export const useClearWhiteboardOthers = (
             throw new Error('Invalid ID');
           }
 
-          if (object[0] === userId) {
+          if (object[0] === userId && !isCursorObject(obj)) {
             canvas?.remove(obj);
           }
 
@@ -189,6 +195,7 @@ export const useClearWhiteboardOthers = (
       clearBackground,
       eventSerializer,
       localBackground,
+      isCursorObject,
       updateClearIsActive,
     ]
   );
@@ -198,6 +205,7 @@ export const useClearWhiteboardClearAll = (
   userId: string,
   localBackground: boolean,
   clearBackground: () => void,
+  isCursorObject: (object: ICanvasObject) => boolean,
   updateClearIsActive: any,
   eventSerializer: PaintEventSerializer,
   dispatch: any
@@ -209,7 +217,7 @@ export const useClearWhiteboardClearAll = (
 
     await updateClearIsActive(true);
     await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-      if (obj.id) {
+      if (obj.id && !isCursorObject(obj)) {
         obj.set({ groupClear: true });
         canvas?.remove(obj);
       }
@@ -247,4 +255,5 @@ export const useClearWhiteboardClearAll = (
     userId,
     dispatch,
     clearBackground,
+    isCursorObject,
   ]);

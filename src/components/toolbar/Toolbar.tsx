@@ -83,7 +83,6 @@ function Toolbar(props: {
     updateLineWidthIsActive,
     brushType,
     updateImagePopupIsOpen,
-    updatePartialEraseIsActive,
     openUploadFileModal,
     openClearWhiteboardModal,
     updateEraserIsActive,
