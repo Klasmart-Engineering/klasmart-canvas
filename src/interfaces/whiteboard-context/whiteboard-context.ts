@@ -106,4 +106,5 @@ export interface IWhiteboardContext {
   localBackground: boolean;
   setLocalBackground: (condition: boolean) => void;
   isCursorObject: (object: ICanvasObject) => boolean;
+  findObjectById: (id: string) => ICanvasObject | undefined;
 }

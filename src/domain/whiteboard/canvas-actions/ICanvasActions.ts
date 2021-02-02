@@ -6,7 +6,7 @@ import { IBrushType } from '../../../interfaces/brushes/brush-type';
  */
 export interface ICanvasActions {
   fillColor: (color: string) => void;
-  changeStrokeColor: (color: string) =>void;
+  changeStrokeColor: (color: string) => void;
   changeBrushType: (type: IBrushType) => void;
   textColor: (color: string) => void;
   discardActiveObject: () => void;
@@ -27,6 +27,7 @@ export interface ICanvasActions {
   fillBackgroundColor: (color: string) => void;
   setBackgroundColorInCanvas: (color: string) => void;
   isCursorObject: (object: ICanvasObject) => boolean;
+  findObjectById: (id: string) => ICanvasObject | undefined;
 }
 
 export default ICanvasActions;

@@ -1,8 +1,5 @@
-import { useCallback, useContext, useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import { WhiteboardContext } from '../WhiteboardContext';
-import arrowPointer from '../../../assets/cursors/arrow-pointer.png';
-import handPointer from '../../../assets/cursors/hand-pointer.png';
-import crosshairPointer from '../../../assets/cursors/crosshair-pointer.png';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
@@ -23,60 +20,57 @@ export const usePointerFeature = (
   } = useSharedEventSerializer();
 
   const {
-    pointer,
     pointerEvents,
     floodFillIsActive,
     updatePointer,
     setPointerEvents,
     allToolbarIsEnabled,
+    findObjectById,
   } = useContext(WhiteboardContext);
-
-  // Set canvas defaultCursor according with the current pointer value
-  const setCursor = useCallback(() => {
-    switch (pointer) {
-      case 'arrow':
-        return `url("${arrowPointer}"), auto`;
-
-      case 'hand':
-        return `url("${handPointer}"), auto`;
-
-      case 'crosshair':
-        return `url("${crosshairPointer}"), auto`;
-    }
-  }, [pointer]);
 
   // Changes canvas defaultCursor to selected pointer or default cursor
   useEffect(() => {
     if (!canvas || floodFillIsActive) return;
 
-    canvas.defaultCursor = pointerEvents ? 'default' : setCursor();
-  }, [canvas, floodFillIsActive, pointerEvents, setCursor]);
+    if (pointerEvents) {
+      const pointer = findObjectById(`${userId}:cursor`);
+      canvas?.remove(pointer as fabric.Object);
+    }
+
+    canvas.defaultCursor = pointerEvents ? 'default' : 'none';
+  }, [canvas, findObjectById, floodFillIsActive, pointerEvents, userId]);
 
   // Updates the involucrated states when permission is revoked
   useEffect(() => {
     if (canvas && !(permissions.cursorPointer || allToolbarIsEnabled)) {
+      const pointer = findObjectById(`${userId}:cursor`);
+
       updatePointer('arrow');
       setPointerEvents(true);
       canvas.defaultCursor = 'default';
+      canvas.remove(pointer as fabric.Object);
     }
   }, [
     allToolbarIsEnabled,
     canvas,
+    findObjectById,
     permissions.cursorPointer,
     setPointerEvents,
     updatePointer,
+    userId,
   ]);
 
   // Send an event to remove the current cursor when permission is revoked
   useEffect(() => {
     if (pointerEvents) {
+      const cursorId = `${userId}:cursor`;
       const payload: ObjectEvent = {
         type: 'cursorPointer',
         target: { top: 0, left: 0, cursorPointer: 'none' } as ICanvasObject,
-        id: `${userId}:cursor`,
+        id: cursorId,
       };
 
       eventSerializer?.push('cursorPointer', payload);
     }
-  }, [eventSerializer, permissions.cursorPointer, pointerEvents, userId]);
+  }, [eventSerializer, pointerEvents, userId]);
 };

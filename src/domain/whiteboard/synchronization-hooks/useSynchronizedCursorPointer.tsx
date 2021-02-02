@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { useCallback, useContext, useEffect } from 'react';
 import { fabric } from 'fabric';
 import CanvasEvent from '../../../interfaces/canvas-events/canvas-events';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
@@ -19,7 +19,7 @@ interface IPointerTarget {
 /**
  * Handles Cursor Pointer Events
  * @param {fabric.Canvas | undefined} canvas - Current Canvas
- * @param {string} userId - Usewr that send the event
+ * @param {string} userId - User that send the event
  * @param {(id: string) => boolean} shouldHandleRemoteEvent - Checks if
  * an event should be handled
  */
@@ -28,53 +28,91 @@ const useSynchronizedCursorPointer = (
   userId: string,
   shouldHandleRemoteEvent: (id: string) => boolean
 ) => {
-  const { pointerEvents, pointer } = useContext(WhiteboardContext);
+  const { pointerEvents, pointer, findObjectById } = useContext(
+    WhiteboardContext
+  );
 
   const {
     state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
 
-  useEffect(() => {
-    const id = `${userId}:cursor`;
+  /**
+   * Creates an image of the current cursor to be rendered in remote canvases
+   * @param {string} id - Id to set in the image
+   * @param {number} top - Vertical position for the image
+   * @param {number} left - Horizontal position for the image
+   * @param {IPointerType} cursorPointer - Cursor pointer to render
+   */
+  const createCursor = useCallback(
+    async (
+      id: string,
+      top: number,
+      left: number,
+      cursorPointer: IPointerType
+    ) => {
+      let imagePath = getImagePath(cursorPointer);
 
-    /**
-     * Handles moving event for cursor pointer. Emits event to other users.
-     * @param {CanvasEvent} event - Canvas event.
-     */
-    const move = (event: CanvasEvent) => {
-      const top = (event.pointer as fabric.Point).y;
-      const left = (event.pointer as fabric.Point).x;
+      return new Promise<void>((resolve) => {
+        fabric.Image.fromURL(imagePath as string, function (img) {
+          // Setting image's position
+          const objectImage: ICanvasObject = img.set({
+            left,
+            top,
+          });
 
-      const payload: ObjectEvent = {
-        type: 'cursorPointer',
-        target: { top, left, cursorPointer: pointer } as ICanvasObject,
-        id,
-      };
+          // Finding for an existing object with the same id
+          const existentPointer = findObjectById(id);
 
-      eventSerializer.push('cursorPointer', payload);
-    };
+          // If another object exists it will be removed
+          if (existentPointer) {
+            canvas?.remove(existentPointer);
+            canvas?.renderAll();
+          }
 
-    if (!pointerEvents) {
-      canvas?.on('mouse:move', move);
+          // Adding cursor on remote canvases
+          objectImage.set({ id, cursorPointer });
+          canvas?.add(objectImage);
+
+          resolve();
+        });
+      });
+    },
+    [canvas, findObjectById]
+  );
+
+  /**
+   * Returns the image path according with the given cursorPointer
+   * @param {IPointerType} cursorPointer - Cursor Pointer Type
+   * to get its image path
+   */
+  const getImagePath = (cursorPointer: IPointerType) => {
+    switch (cursorPointer) {
+      case 'arrow':
+        return arrowPointer;
+
+      case 'hand':
+        return handPointer;
+
+      case 'crosshair':
+        return crosshairPointer;
     }
+  };
 
-    return () => {
-      canvas?.off('mouse:move', move);
-    };
-  }, [canvas, eventSerializer, pointer, pointerEvents, userId]);
-
-  useEffect(() => {
-    /**
-     * Handles moving event for cursor pointer. Receives event.
-     * @param {string} id - User ID.
-     * Used for know who's send the event.
-     * @param {IPointerTarget} target - Properites for laser pointer.
-     */
-    const moved = async (id: string, target: IPointerTarget) => {
-      if (!shouldHandleRemoteEvent(id)) return;
-
-      const { top, left, cursorPointer } = target;
-      const pointerImage = getPointerById(id);
+  /**
+   * Renders the given cursor in the given point in the current canvas
+   * @param {number} top - Vertical position to render the pointer
+   * @param {number} left - Horizontal position to render the pointer
+   * @param {IPointerType} cursorPointer - Pointer type to render
+   * @param {string} cursorId - Id for the pointer object
+   */
+  const renderPointer = useCallback(
+    async (
+      top: number,
+      left: number,
+      cursorPointer: IPointerType,
+      cursorId: string
+    ) => {
+      const pointerImage = findObjectById(cursorId);
 
       /*
         If cursor pointer type is 'none', current pointer will be removed.
@@ -98,80 +136,61 @@ const useSynchronizedCursorPointer = (
         canvas?.renderAll();
       } else {
         try {
-          await createCursor(id, top, left, cursorPointer);
+          await createCursor(cursorId, top, left, cursorPointer);
         } catch (error) {
           console.warn(error);
         }
       }
-    };
+    },
+    [canvas, createCursor, findObjectById]
+  );
+
+  /** Emits local event. */
+  useEffect(() => {
+    const id = `${userId}:cursor`;
 
     /**
-     * Creates an image of the current cursor to be rendered in remote canvases
-     * @param {string} id - Id to set in the image
-     * @param {number} top - Vertical position for the image
-     * @param {number} left - Horizontal position for the image
-     * @param {IPointerType} cursorPointer - Cursor pointer to render
+     * Handles moving event for cursor pointer. Emits event to other users.
+     * @param {CanvasEvent} event - Canvas event.
      */
-    const createCursor = async (
-      id: string,
-      top: number,
-      left: number,
-      cursorPointer: IPointerType
-    ) => {
-      let imagePath = getImagePath(cursorPointer);
+    const move = (event: CanvasEvent) => {
+      const top = (event.pointer as fabric.Point).y;
+      const left = (event.pointer as fabric.Point).x;
 
-      return new Promise<void>((resolve) => {
-        fabric.Image.fromURL(imagePath as string, function (img) {
-          // Setting image's position
-          const objectImage: ICanvasObject = img.set({
-            left,
-            top,
-          });
+      renderPointer(top, left, pointer, id);
 
-          // Finding for an existing object with the same id
-          const existentPointer = getPointerById(id);
+      const payload: ObjectEvent = {
+        type: 'cursorPointer',
+        target: { top, left, cursorPointer: pointer } as ICanvasObject,
+        id,
+      };
 
-          // If another object exists it will be removed
-          if (existentPointer) {
-            canvas?.remove(existentPointer);
-            canvas?.renderAll();
-          }
-
-          // Adding cursor on remote canvases
-          objectImage.set({ id, cursorPointer });
-          canvas?.add(objectImage);
-
-          resolve();
-        });
-      });
+      eventSerializer.push('cursorPointer', payload);
     };
 
-    /**
-     * Finds in the current canvas a pointer object with the given id
-     * @param {string} id - Id of the object to find
-     */
-    const getPointerById = (id: string) => {
-      return canvas?.getObjects().find((object: ICanvasObject) => {
-        return object.id === id;
-      }) as ICanvasObject;
+    if (!pointerEvents) {
+      canvas?.on('mouse:move', move);
+    }
+
+    return () => {
+      canvas?.off('mouse:move', move);
     };
+  }, [canvas, eventSerializer, pointer, pointerEvents, renderPointer, userId]);
 
+  /** Register and handle remote moved event. */
+  useEffect(() => {
     /**
-     * Returns the image path according with the given cursorPointer
-     * @param {IPointerType} cursorPointer - Cursor Pointer Type
-     * to get its image path
+     * Handles moving event for cursor pointer. Receives event.
+     * @param {string} id - User ID.
+     * Used for know who's send the event.
+     * @param {IPointerTarget} target - Properites for laser pointer.
      */
-    const getImagePath = (cursorPointer: IPointerType) => {
-      switch (cursorPointer) {
-        case 'arrow':
-          return arrowPointer;
+    const moved = async (id: string, target: IPointerTarget) => {
+      if (!shouldHandleRemoteEvent(id)) return;
 
-        case 'hand':
-          return handPointer;
+      const { top, left, cursorPointer } = target;
 
-        case 'crosshair':
-          return crosshairPointer;
-      }
+      renderPointer(top, left, cursorPointer, id);
     };
 
     eventController?.on('cursorPointer', moved);
@@ -179,7 +198,7 @@ const useSynchronizedCursorPointer = (
     return () => {
       eventController?.removeListener('cursorPointer', moved);
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent, userId]);
+  }, [eventController, renderPointer, shouldHandleRemoteEvent]);
 };
 
 export default useSynchronizedCursorPointer;
