@@ -184,6 +184,15 @@ export const WhiteboardProvider = ({
     [canvasActions]
   );
 
+  const findObjectById = useCallback(
+    (id: string) => {
+      if (!canvasActions) return undefined;
+
+      return canvasActions.findObjectById(id);
+    },
+    [canvasActions]
+  );
+
   const isCursorObject = useCallback(
     (object: ICanvasObject) => {
       if (!canvasActions) return false;
@@ -387,6 +396,7 @@ export const WhiteboardProvider = ({
     eventSerializer,
     eventController,
     isCursorObject,
+    findObjectById,
   };
 
   return (

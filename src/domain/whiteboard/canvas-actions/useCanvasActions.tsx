@@ -418,6 +418,19 @@ export const useCanvasActions = (
   }, [eventSerializer, setLocalBackground, updateBackgroundColor, userId]);
 
   /**
+   * Finds in the current canvas an object with the given id and returns it.
+   * @param {string} id - Id of the object to find
+   */
+  const findObjectById = useCallback(
+    (id: string) => {
+      return canvas
+        .getObjects()
+        .find((obj: ICanvasObject) => obj.id === id) as ICanvasObject;
+    },
+    [canvas]
+  );
+
+  /**
    * Checks if the given object is a cursor object
    * @param {ICanvasObject} object - Object to check
    */
@@ -631,6 +644,7 @@ export const useCanvasActions = (
       fillBackgroundColor,
       setBackgroundColorInCanvas,
       isCursorObject,
+      findObjectById,
     };
 
     return { actions, mouseDown };
@@ -654,6 +668,7 @@ export const useCanvasActions = (
     fillBackgroundColor,
     setBackgroundColorInCanvas,
     isCursorObject,
+    findObjectById,
     mouseDown,
   ]);
 

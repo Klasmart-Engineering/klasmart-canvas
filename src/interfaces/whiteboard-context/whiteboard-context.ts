@@ -108,4 +108,5 @@ export interface IWhiteboardContext {
   eventSerializer: any;
   eventController: any;
   isCursorObject: (object: ICanvasObject) => boolean;
+  findObjectById: (id: string) => ICanvasObject | undefined;
 }
