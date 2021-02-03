@@ -255,7 +255,13 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   useObjectSelection(canvas as fabric.Canvas, actions);
 
   // useEffects and logic for manage text object creation/edition
-  useTextObject(canvas as fabric.Canvas, instanceId, userId, permissions);
+  useTextObject(
+    canvas as fabric.Canvas,
+    instanceId,
+    userId,
+    actions,
+    permissions
+  );
 
   // useEffects and logic for manage image adding feature
   useAddImage(canvas as fabric.Canvas, userId);
