@@ -254,8 +254,8 @@ export class Realtime {
   public ellipseDraw(target: any) {
     this.clear();
     const ellipse = shapes.circle(
-      target.shape.width,
-      target.shape.height,
+      target.shape.width / 2,
+      target.shape.height / 2,
       target.shape.stroke,
       false,
       target.shape.strokeWidth,
