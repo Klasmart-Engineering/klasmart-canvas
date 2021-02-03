@@ -52,7 +52,7 @@ export const useKeyHandlers = (
 
         canvas.discardActiveObject();
 
-        if (active.type === 'activeSelection') {
+        if (active?.type === 'activeSelection') {
           const objectIds: string[] = [];
 
           (active as fabric.ActiveSelection).forEachObject(
