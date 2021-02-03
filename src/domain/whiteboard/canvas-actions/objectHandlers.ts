@@ -1,4 +1,4 @@
-import store from "../redux/store";
+import store from '../redux/store';
 
 /**
  * Cancels shape creation
@@ -12,11 +12,11 @@ export const cancelShapeCreation = (canvas: fabric.Canvas) => {
 
     let shape = store.getState().canvasBoardState.shape;
 
-    if (!shape.id || shape.id === 'provisional') {
+    if (!shape?.id || shape?.id === 'provisional') {
       canvas?.remove(shape);
       store.dispatch({ type: 'SET_SHAPE_NULL' });
     }
-  }
+  };
 };
 
 /**
