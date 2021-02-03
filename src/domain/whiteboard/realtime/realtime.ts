@@ -380,7 +380,7 @@ export class Realtime {
       target.shape.stroke,
       false,
       target.shape.strokeWidth,
-      target.shape.strokeWidth
+      target.shape.strokeDashArray?.length
     );
 
     // @ts-ignore
@@ -401,7 +401,7 @@ export class Realtime {
       target.shape.stroke,
       false,
       target.shape.strokeWidth,
-      target.shape.strokeWidth
+      target.shape.strokeDashArray?.length
     );
 
     // @ts-ignore
