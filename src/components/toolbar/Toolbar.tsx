@@ -31,11 +31,12 @@ type ToolbarElementTypes =
 /**
  * Render the toolbar that will be used in the whiteboard
  */
-function Toolbar(
-  props: {
-    toolbarIsEnabled?: (state: { permissionsState: { [key: string]: boolean } }) => boolean,
-    permissions: IPermissions
-  }) {
+function Toolbar(props: {
+  toolbarIsEnabled?: (state: {
+    permissionsState: { [key: string]: boolean };
+  }) => boolean;
+  permissions: IPermissions;
+}) {
   const [tools, setTools] = useState(toolsSection);
   const [actions] = useState(actionsSection);
 
@@ -81,7 +82,6 @@ function Toolbar(
     updateLineWidthIsActive,
     brushType,
     updateImagePopupIsOpen,
-    updatePartialEraseIsActive,
     openUploadFileModal,
     openClearWhiteboardModal,
     updateEraserIsActive,
@@ -89,10 +89,12 @@ function Toolbar(
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
-  const pointerToolIsActive =
-    allToolbarIsEnabled || props.permissions.pointer;
+  const pointerToolIsActive = allToolbarIsEnabled || props.permissions.pointer;
   const moveToolIsActive = allToolbarIsEnabled || props.permissions.move;
-  const eraseToolIsActive = allToolbarIsEnabled || props.permissions.erase || props.permissions.partialErase;
+  const eraseToolIsActive =
+    allToolbarIsEnabled ||
+    props.permissions.erase ||
+    props.permissions.partialErase;
   const penToolIsActive = allToolbarIsEnabled || props.permissions.pen;
   const floodFillToolIsActive =
     allToolbarIsEnabled || props.permissions.floodFill;
@@ -184,7 +186,7 @@ function Toolbar(
      * Indicates if laser tool is active.
      */
     updateLaserIsActive(tool === ELEMENTS.LASER_TOOL);
-    
+
     /**
      * Indicates if any eraser is active.
      */
@@ -231,8 +233,7 @@ function Toolbar(
     discardActiveObject();
 
     const teacherHasPermission = allToolbarIsEnabled;
-    const studentHasPermission =
-      toolbarIsEnabled && props.permissions.undoRedo;
+    const studentHasPermission = toolbarIsEnabled && props.permissions.undoRedo;
 
     if (toolbarIsEnabled) {
       switch (tool) {
@@ -394,15 +395,22 @@ function Toolbar(
    * Set the parent's definedOptionName in the given tool
    * @param {string} tool - Tool to set the definedOption
    */
-  function setSelectedOptionSelector(tool: string, props?: IBasicToolbarSelector): string | number | null {
+  function setSelectedOptionSelector(
+    tool: string,
+    props?: IBasicToolbarSelector
+  ): string | number | null {
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
         return pointer;
 
       case ELEMENTS.ERASE_TYPE_TOOL: {
-        let allowed = props?.options.filter((options: any) => (options.enabled));
+        let allowed = props?.options.filter((options: any) => options.enabled);
 
-        if (allowed?.length === 1 && eraseType && allowed[0].value !== eraseType) {
+        if (
+          allowed?.length === 1 &&
+          eraseType &&
+          allowed[0].value !== eraseType
+        ) {
           updateEraseType(allowed[0].value);
           return allowed[0].value;
         }
@@ -477,10 +485,7 @@ function Toolbar(
       return;
     }
 
-    if (
-      !props.permissions.pointer &&
-      getActiveTool === ELEMENTS.LASER_TOOL
-    ) {
+    if (!props.permissions.pointer && getActiveTool === ELEMENTS.LASER_TOOL) {
       setTools({
         active: ELEMENTS.POINTERS_TOOL,
         elements: getToolElements,
@@ -513,10 +518,7 @@ function Toolbar(
       updateEraseType('object');
     }
 
-    if (
-      !props.permissions.pen &&
-      getActiveTool === ELEMENTS.LINE_TYPE_TOOL
-    ) {
+    if (!props.permissions.pen && getActiveTool === ELEMENTS.LINE_TYPE_TOOL) {
       setTools({
         active: ELEMENTS.POINTERS_TOOL,
         elements: getToolElements,
@@ -533,20 +535,14 @@ function Toolbar(
       });
     }
 
-    if (
-      !props.permissions.text &&
-      getActiveTool === ELEMENTS.ADD_TEXT_TOOL
-    ) {
+    if (!props.permissions.text && getActiveTool === ELEMENTS.ADD_TEXT_TOOL) {
       setTools({
         active: ELEMENTS.POINTERS_TOOL,
         elements: getToolElements,
       });
     }
 
-    if (
-      !props.permissions.shape &&
-      getActiveTool === ELEMENTS.ADD_SHAPE_TOOL
-    ) {
+    if (!props.permissions.shape && getActiveTool === ELEMENTS.ADD_SHAPE_TOOL) {
       setTools({
         active: ELEMENTS.POINTERS_TOOL,
         elements: getToolElements,
@@ -568,6 +564,7 @@ function Toolbar(
     getToolElements,
     allToolbarIsEnabled,
     props.permissions,
+    updateEraseType,
   ]);
 
   const toolbarContainerStyle: CSSProperties = {
@@ -609,16 +606,16 @@ function Toolbar(
             ) =>
               determineIfIsToolbarButton(tool)
                 ? createToolbarButton(
-                  tool.id,
-                  tool.title,
-                  tool.iconSrc,
-                  tool.iconName,
-                  tools.active === tool.id,
-                  handleToolsElementClick,
-                  tool.enabled
-                )
+                    tool.id,
+                    tool.title,
+                    tool.iconSrc,
+                    tool.iconName,
+                    tools.active === tool.id,
+                    handleToolsElementClick,
+                    tool.enabled
+                  )
                 : determineIfIsToolbarSelector(tool)
-                  ? createToolbarSelector(
+                ? createToolbarSelector(
                     tool.id,
                     tool.options,
                     tools.active === tool.id,
@@ -629,18 +626,18 @@ function Toolbar(
                     setColorPalette(tool),
                     tool.enabled
                   )
-                  : determineIfIsSpecialSelector(tool)
-                    ? createSpecialSelector(
-                      tool.id,
-                      tool.icon,
-                      tools.active === tool.id,
-                      setSelectedOptionSelector(tool.id),
-                      tool.styleOptions,
-                      handleToolsElementClick,
-                      handleToolSelectorChange,
-                      tool.enabled
-                    )
-                    : null
+                : determineIfIsSpecialSelector(tool)
+                ? createSpecialSelector(
+                    tool.id,
+                    tool.icon,
+                    tools.active === tool.id,
+                    setSelectedOptionSelector(tool.id),
+                    tool.styleOptions,
+                    handleToolsElementClick,
+                    handleToolSelectorChange,
+                    tool.enabled
+                  )
+                : null
           )}
         </ToolbarSection>
 
@@ -648,14 +645,14 @@ function Toolbar(
           {actionElements.map((action) =>
             determineIfIsToolbarButton(action)
               ? createToolbarButton(
-                action.id,
-                action.title,
-                action.iconSrc,
-                action.iconName,
-                actions.active === action.id,
-                handleActionsElementClick,
-                action.enabled
-              )
+                  action.id,
+                  action.title,
+                  action.iconSrc,
+                  action.iconName,
+                  actions.active === action.id,
+                  handleActionsElementClick,
+                  action.enabled
+                )
               : null
           )}
         </ToolbarSection>
@@ -809,11 +806,15 @@ function determineIfIsSpecialSelector(
  * @param state Redux state
  * @param ownProps Own properties
  */
-const mapStateToProps = (state: { permissionsState: IPermissions }, ownProps: { toolbarIsEnabled?: boolean }) => ({
+const mapStateToProps = (
+  state: { permissionsState: IPermissions },
+  ownProps: { toolbarIsEnabled?: boolean }
+) => ({
   ...ownProps,
   permissions: state.permissionsState,
-  toolbarIsEnabled: (state: { permissionsState: { [key: string]: boolean } }) => {
-
+  toolbarIsEnabled: (state: {
+    permissionsState: { [key: string]: boolean };
+  }) => {
     for (const key in state.permissionsState) {
       if (state.permissionsState[key] === true) {
         return true;
@@ -821,7 +822,7 @@ const mapStateToProps = (state: { permissionsState: IPermissions }, ownProps: { 
     }
 
     return false;
-  }
+  },
 });
 
 export default connect(mapStateToProps)(Toolbar);

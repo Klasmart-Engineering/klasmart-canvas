@@ -150,16 +150,17 @@ export const useKeyHandlers = (
       }
     },
     [
-      activeCanvas,
-      instanceId,
+      permissions.undoRedo,
+      allToolbarIsEnabled,
       perfectShapeIsActive,
       perfectShapeIsAvailable,
       canvas,
       eventSerializer,
+      activeCanvas,
+      instanceId,
       undo,
       redo,
       updatePerfectShapeIsActive,
-      permissions.undoRedo,
     ]
   );
 

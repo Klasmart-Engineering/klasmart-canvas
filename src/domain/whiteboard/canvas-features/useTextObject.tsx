@@ -12,7 +12,6 @@ import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-even
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { UndoRedo } from '../hooks/useUndoRedoEffect';
-import { useCanvasActions } from '../canvas-actions/useCanvasActions';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { getToolbarIsEnabled } from '../redux/utils';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
