@@ -85,6 +85,16 @@ export class PartialErase {
    */
   public hasPermission: boolean;
 
+  /**
+   * Indicates if canvas has an erasable background owned to user.
+   */
+  public hasBackground: boolean;
+
+  /**
+   * background Id
+   */
+  public backgroundId: string | null;
+
   /** @ignore */
   constructor(
     id: string,
@@ -105,6 +115,8 @@ export class PartialErase {
     this.rawCanvas.style.cssText = 'position: absolute; z-index: 3;';
     this.undoRedoDispatch = undoRedoDispatch;
     this.active = false;
+    this.hasBackground = false;
+    this.backgroundId = null;
 
     this.canvas
       .getElement()
@@ -171,7 +183,7 @@ export class PartialErase {
       rawContext.moveTo(this.coordinates[0].x, this.coordinates[0].y);
 
       for (i; i < this.coordinates.length; i++) {
-        rawContext.lineTo(this.coordinates[0].x, this.coordinates[0].y);
+        rawContext.lineTo(this.coordinates[i - 1].x, this.coordinates[i - 1].y);
         rawContext.strokeStyle = `rgba(0,0,0,1)`;
         rawContext.stroke();
         rawContext.beginPath();
@@ -179,7 +191,7 @@ export class PartialErase {
 
         // Remove most rendered points. Leave a segment of rendered points
         // for a smoother path.
-        if (this.coordinates.length > 5) {
+        if (this.coordinates.length > 4) {
           this.coordinates.shift();
         }
       }
@@ -201,6 +213,41 @@ export class PartialErase {
       }
     });
 
+    const background = this.canvas.backgroundImage;
+
+    // @ts-ignore
+    if (background && this.isOwned(this.id, background.id)) {
+      this.hasBackground = true;
+      // @ts-ignore
+      this.backgroundId = background.id;
+      // @ts-ignore
+      const image = background.getElement().currentSrc;
+      // @ts-ignore
+      const scaleX = background.scaleX;
+      // @ts-ignore
+      const scaleY = background.scaleY;
+
+      fabric.Image.fromURL(image, (img) => {
+        this.tempCanvas.add(img);
+        img.set({
+          scaleX,
+          scaleY,
+          originX: 'left',
+          originY: 'top',
+          // @ts-ignore
+          id: this.id,
+        });
+
+        this.tempCanvas.sendToBack(img);
+
+        this.canvas.backgroundImage = '';
+        this.canvas.renderAll();
+        this.tempCanvas.renderAll();
+      });
+
+      return;
+    }
+
     this.canvas.renderAll();
     this.tempCanvas.renderAll();
   };
@@ -208,7 +255,7 @@ export class PartialErase {
   private loadFromJSON = (
     objects: string,
     backgroundColor?: string | Pattern | undefined
-  ) =>
+  ): Promise<void> =>
     new Promise((resolve) => {
       this.canvas.loadFromJSON(objects, () => {
         if (backgroundColor) {
@@ -230,6 +277,29 @@ export class PartialErase {
       .filter(
         (o: TypedShape | IPathTarget) => (o as IPathTarget).isPartialErased
       );
+
+    if (this.hasBackground) {
+      const image = this.tempCanvas.toDataURL();
+      const id = `${this.id}:${uuidv4()}`;
+
+      fabric.Image.fromURL(image, (img) => {
+        this.canvas.setBackgroundImage(img, this.canvas.renderAll.bind(this.canvas), {
+          originX: 'left',
+          originY: 'top',
+          // @ts-ignore
+          id,
+        });
+
+        const payload: ObjectEvent = {
+          type: 'backgroundImage',
+          target: { src: image },
+          id,
+        };
+
+        this.updateStateBackground(payload);
+        this.eventSerializer.push('added', payload);
+      });
+    }
 
     this.tempCanvas
       .setActiveObject(new fabric.Group(partiallyErased))
@@ -276,18 +346,20 @@ export class PartialErase {
       this.tempCanvas.clear();
     }
 
-    group.cloneAsImage((image: TypedShape) => {
-      image.set({
-        top: group.top,
-        left: group.left,
-        id: id || this.generateId(),
-      });
+    if (!this.hasBackground) {
+      group.cloneAsImage((image: TypedShape) => {
+        image.set({
+          top: group.top,
+          left: group.left,
+          id: id || this.generateId(),
+        });
 
-      this.canvas.add(image);
-      image.bringToFront();
-      this.canvas.renderAll();
-      image.bringToFront();
-    });
+        this.canvas.add(image);
+        image.bringToFront();
+        this.canvas.renderAll();
+        image.bringToFront();
+      });
+    }
   };
 
   /**
@@ -352,7 +424,10 @@ export class PartialErase {
           joinedIds.push(obj.id as string);
           partiallyErased.push(obj);
           this.tempCanvas.remove(obj);
-          this.eventSerializer.push('removed', { id: obj.id as string });
+
+          if (obj.id) {
+            this.eventSerializer.push('removed', { id: obj.id as string });
+          }
         }
       });
 
@@ -378,13 +453,45 @@ export class PartialErase {
           target: image as ICanvasObject,
         };
 
-        this.updateState(payload);
-        this.eventSerializer.push('added', payload);
+        if (!this.hasBackground) {
+          this.updateState(payload);
+          this.eventSerializer.push('added', payload);
+        } else {
+          const payloadBg = {
+            // @ts-ignore
+            id: this.backgroundId,
+            target: {
+              strategy: 'allowClearMyself',
+              isBackgroundImage: true,
+            },
+          };
+
+          this.eventSerializer.push('removed', payloadBg as ObjectEvent);
+        }
       });
 
       this.tempCanvas.renderAll();
       this.moveSelfToPermanent(id);
     }
+  };
+
+  private updateStateBackground = (eventPayload: ObjectEvent) => {
+    console.log(this);
+    const payload = [
+      ...this.canvas.getObjects(),
+      ...this.tempCanvas.getObjects(),
+      // @ts-ignore
+      { ...(this.canvas.backgroundImage?.toJSON()), backgroundImageEditable: true }
+    ];
+
+    const eventData = { event: eventPayload, type: 'backgroundImageEditable' };
+
+    this.undoRedoDispatch({
+      type: SET,
+      payload,
+      canvasId: this.id,
+      event: (eventData as unknown) as IUndoRedoEvent,
+    });
   };
 
   /**
