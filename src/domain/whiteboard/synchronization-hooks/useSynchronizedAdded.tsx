@@ -141,7 +141,10 @@ const useSynchronizedAdded = (
           const element = e.target?.getElement();
           if (element.currentSrc) {
             target = {
-              basePath: { imageData: element.currentSrc },
+              basePath: {
+                ...e.target.basePath,
+                imageData: element.currentSrc,
+              },
               scaleX: e.target.scaleX,
               scaleY: e.target.scaleY,
               angle: e.target.angle,
