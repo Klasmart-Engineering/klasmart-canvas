@@ -185,7 +185,7 @@ const useSynchronizedAdded = (
           event,
         });
 
-        if (!isGif) {
+        if (!isGif && e.type !== 'backgroundImage') {
           eventSerializer?.push('added', payload);
         }
       }

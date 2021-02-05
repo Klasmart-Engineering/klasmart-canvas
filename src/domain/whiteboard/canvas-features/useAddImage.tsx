@@ -95,11 +95,7 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
     imageSetup();
   }, [
     backgroundImage,
-    backgroundImageIsPartialErasable,
     canvas,
-    image,
-    isBackgroundImage,
-    isGif,
     setLocalBackground,
     setLocalImage,
     updateBackgroundColor,
