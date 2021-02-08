@@ -138,9 +138,13 @@ const useSynchronizedAdded = (
           break;
 
         case 'image':
-          if (e.target.basePath) {
+          const element = e.target?.getElement();
+          if (element.currentSrc && !e.target.cursorPointer) {
             target = {
-              basePath: e.target.basePath,
+              basePath: {
+                ...e.target.basePath,
+                imageData: element.currentSrc,
+              },
               scaleX: e.target.scaleX,
               scaleY: e.target.scaleY,
               angle: e.target.angle,
