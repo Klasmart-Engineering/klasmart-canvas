@@ -34,7 +34,7 @@ export const useCanvasActions = (
   canvasId: string,
   eventSerializer: any,
   userId: string,
-  ignoreDirectActions?: boolean,
+  ignoreDirectActions?: boolean
 ) => {
   const {
     shapeIsActive,
