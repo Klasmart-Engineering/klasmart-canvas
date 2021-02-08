@@ -100,6 +100,8 @@ export class PartialErase {
    */
   private bgRawCanvas: any;
 
+  private hasSelfObjects: boolean;
+
   /** @ignore */
   constructor(
     id: string,
@@ -123,6 +125,7 @@ export class PartialErase {
     this.hasBackground = canvas.backgroundImage ? true : false;
     this.backgroundId = null;
     this.bgRawCanvas = null;
+    this.hasSelfObjects = false;
 
     if (this.hasBackground) {
       this.bgRawCanvas = document.createElement('canvas');
@@ -256,6 +259,7 @@ export class PartialErase {
 
     this.canvas.getObjects().forEach((o: ICanvasObject) => {
       if (this.isOwned(this.id, o.id as string)) {
+        this.hasSelfObjects = true;
         this.tempCanvas.add(o);
         objects.push(o);
         o.set({ isActiveErase: true });
@@ -389,7 +393,11 @@ export class PartialErase {
       this.eventSerializer.push('added', payload);
     }
 
-    if (!this.hasBackground || (this.hasBackground && !destroy)) {
+    // @ts-ignore
+    const multiple = group.getObjects();
+
+    // @ts-ignore
+    if (this.hasSelfObjects && (!this.hasBackground || (this.hasBackground && !destroy))) {
       group.cloneAsImage((image: TypedShape) => {
         image.set({
           top: group.top,
@@ -454,36 +462,42 @@ export class PartialErase {
       e.path.isPartialErased = true;
       e.path?.bringToFront();
       e.path.id = this.generateId();
+      e.path.isErasePath = true;
 
       let joinedIds: string[] = [];
 
-      this.tempCanvas.forEachObject((obj: ICanvasObject) => {
-        const intersect = obj.intersectsWithObject(
-          (e.path as unknown) as TypedShape,
-          true,
-          true
-        );
+      let objectsToErase = this.tempCanvas.getObjects().length > 1;
 
-        if (intersect) {
-          obj.set({
-            isPartialErased: true,
-          });
+      if (objectsToErase) {
+        this.tempCanvas.forEachObject((obj: ICanvasObject) => {
+          const intersect = obj.intersectsWithObject(
+            (e.path as unknown) as TypedShape,
+            true,
+            true
+          );
 
-          joinedIds.push(obj.id as string);
-          partiallyErased.push(obj);
-          this.tempCanvas.remove(obj);
+          if (intersect) {
+            obj.set({
+              isPartialErased: true,
+            });
 
-          if (obj.id) {
-            this.eventSerializer.push('removed', { id: obj.id as string });
+            joinedIds.push(obj.id as string);
+            partiallyErased.push(obj);
+            this.tempCanvas.remove(obj);
+
+            if (obj.id) {
+              this.eventSerializer.push('removed', { id: obj.id as string });
+            }
           }
-        }
-      });
+        });
+      }
 
       this.tempCanvas
         .setActiveObject(new fabric.Group(partiallyErased))
         .renderAll();
 
       let group = this.tempCanvas.getActiveObjects()[0];
+
       let id = this.generateId();
 
       group.cloneAsImage((image: ICanvasObject) => {
@@ -494,7 +508,12 @@ export class PartialErase {
           isPartialErased: true,
           joinedIds,
         });
-        this.tempCanvas.add(image);
+        
+        // If there are no objects to erase, do not add group image to canvas.
+        // if (objectsToErase) {
+          this.tempCanvas.add(image); 
+        // }
+        
         const payload: ObjectEvent = {
           id: id as string,
           type: 'image',
@@ -504,19 +523,32 @@ export class PartialErase {
         this.updateState(payload);
         this.eventSerializer.push('added', payload);
 
-        if (this.hasBackground) {
-          const payloadBg = {
-            // @ts-ignore
-            id: this.backgroundId,
-            target: {
-              strategy: 'allowClearMyself',
-              isBackgroundImage: true,
-            },
-          };
+        // if (this.hasBackground) {
+        //   const payloadBg = {
+        //     // @ts-ignore
+        //     id: this.backgroundId,
+        //     target: {
+        //       strategy: 'allowClearMyself',
+        //       isBackgroundImage: true,
+        //     },
+        //   };
 
-          this.eventSerializer.push('removed', payloadBg as ObjectEvent);
-        }
+        //   this.eventSerializer.push('removed', payloadBg as ObjectEvent);
+        // }
       });
+
+      if (this.hasBackground) {
+        const payloadBg = {
+          // @ts-ignore
+          id: this.backgroundId,
+          target: {
+            strategy: 'allowClearMyself',
+            isBackgroundImage: true,
+          },
+        };
+
+        this.eventSerializer.push('removed', payloadBg as ObjectEvent);
+      }
 
       this.tempCanvas.renderAll();
       this.moveSelfToPermanent(id);

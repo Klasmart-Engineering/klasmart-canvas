@@ -420,7 +420,6 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'gif') {
-        console.log('GIF TARGET: ', target);
         (async function () {
           try {
             const gif = await fabricGif(`${target.src} `, 200, 200, 2000);
@@ -444,6 +443,7 @@ const useSynchronizedAdded = (
             'transparent',
             canvas.renderAll.bind(canvas)
           );
+          setLocalImage('');
 
         fabric.Image.fromURL(target.src as string, function (img) {
           canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
@@ -454,6 +454,8 @@ const useSynchronizedAdded = (
             // @ts-ignore
             id,
           });
+
+          canvas?.renderAll();
         });
 
         return;
