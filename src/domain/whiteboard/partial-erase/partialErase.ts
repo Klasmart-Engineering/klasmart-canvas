@@ -100,7 +100,20 @@ export class PartialErase {
    */
   private bgRawCanvas: any;
 
+  /**
+   * Indicates if user has owned objects in board
+   */
   private hasSelfObjects: boolean;
+
+  /**
+   * Indicates if user has permissison for images and owns background
+   */
+  private hasBgPermission: boolean;
+
+  /**
+   * Canvas background image fabric.js object.
+   */
+  private backgroundImage: ICanvasObject | null;
 
   /** @ignore */
   constructor(
@@ -126,8 +139,10 @@ export class PartialErase {
     this.backgroundId = null;
     this.bgRawCanvas = null;
     this.hasSelfObjects = false;
+    this.hasBgPermission = this.hasBackground ? this.isOwned(id, (canvas.backgroundImage as unknown as ICanvasObject).id as string) : false;
+    this.backgroundImage = this.hasBackground ? this.canvas.backgroundImage as ICanvasObject : null;
 
-    if (this.hasBackground) {
+    if (this.hasBackground && this.hasBgPermission) {
       this.bgRawCanvas = document.createElement('canvas');
       this.bgRawCanvas.width = canvas.width;
       this.bgRawCanvas.height = canvas.height;
@@ -217,7 +232,7 @@ export class PartialErase {
       rawContext.beginPath();
       rawContext.moveTo(this.coordinates[0].x, this.coordinates[0].y);
 
-      if (this.hasBackground) {
+      if (this.hasBackground && this.hasBgPermission) {
         bgContext = this.bgRawCanvas.getContext('2d');
         bgContext.globalCompositeOperation = 'destination-out';
         bgContext.lineCap = 'round';
@@ -234,7 +249,7 @@ export class PartialErase {
         rawContext.beginPath();
         rawContext.moveTo(this.coordinates[i].x, this.coordinates[i].y);
 
-        if (this.hasBackground) {
+        if (this.hasBackground && this.hasBgPermission) {
           bgContext.lineTo(this.coordinates[i - 1].x, this.coordinates[i - 1].y);
           bgContext.strokeStyle = `rgba(0,0,0,1)`;
           bgContext.stroke();
@@ -279,6 +294,11 @@ export class PartialErase {
       this.canvas.loadFromJSON(objects, () => {
         if (backgroundColor) {
           this.canvas.backgroundColor = backgroundColor;
+        }
+
+        if (this.hasBackground && !this.hasBgPermission) {
+          // @ts-ignore
+          this.canvas.backgroundImage = this.backgroundImage;
         }
 
         resolve();
@@ -368,6 +388,7 @@ export class PartialErase {
     objects = [...objects, ...foreignObjects];
 
     await this.loadFromJSON(JSON.stringify({ objects }), backgroundColor);
+
     this.groupObjects();
     this.canvas.renderAll();
 
@@ -375,13 +396,13 @@ export class PartialErase {
       this.tempCanvas.clear();
     }
 
-    if (this.hasBackground && destroy) {
+    if (this.hasBackground && this.hasBgPermission && destroy) {
       this.updateBackground();
       return;
     }
 
 
-    if (this.hasBackground && !destroy) {
+    if (this.hasBackground && this.hasBgPermission && !destroy) {
       const bgImage = this.bgRawCanvas.toDataURL();
 
       const payload: ObjectEvent = {
@@ -394,10 +415,7 @@ export class PartialErase {
     }
 
     // @ts-ignore
-    const multiple = group.getObjects();
-
-    // @ts-ignore
-    if (this.hasSelfObjects && (!this.hasBackground || (this.hasBackground && !destroy))) {
+    if (this.hasSelfObjects && (!(this.hasBackground && this.hasBgPermission) || (this.hasBackground && this.hasBgPermission &&!destroy))) {
       group.cloneAsImage((image: TypedShape) => {
         image.set({
           top: group.top,
@@ -421,7 +439,7 @@ export class PartialErase {
       this.moveSelfToPermanent();
     }
 
-    if (this.hasBackground) {
+    if (this.hasBackground && this.hasBgPermission) {
       this.moveSelfToTemp();
       this.moveSelfToPermanent(null, true);
     }
@@ -537,7 +555,7 @@ export class PartialErase {
         // }
       });
 
-      if (this.hasBackground) {
+      if (this.hasBackground && this.hasBgPermission) {
         const payloadBg = {
           // @ts-ignore
           id: this.backgroundId,

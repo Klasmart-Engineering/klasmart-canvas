@@ -61,7 +61,6 @@ export const useCanvasActions = (
     eraserIsActive,
     updateBackgroundColor,
     setLocalBackground,
-    localBackground,
     setIsBackgroundImage,
     setBackgroundImageIsPartialErasable,
     setLocalImage,

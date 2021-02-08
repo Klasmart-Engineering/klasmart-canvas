@@ -93,6 +93,7 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
 
 
     imageSetup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     backgroundImage,
     canvas,

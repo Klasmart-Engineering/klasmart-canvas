@@ -149,6 +149,7 @@ export const useKeyHandlers = (
         updatePerfectShapeIsActive(true);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       activeCanvas,
       instanceId,

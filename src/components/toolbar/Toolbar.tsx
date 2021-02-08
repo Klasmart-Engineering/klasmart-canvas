@@ -81,7 +81,6 @@ function Toolbar(
     updateLineWidthIsActive,
     brushType,
     updateImagePopupIsOpen,
-    updatePartialEraseIsActive,
     openUploadFileModal,
     openClearWhiteboardModal,
     updateEraserIsActive,
@@ -562,6 +561,7 @@ function Toolbar(
         elements: getToolElements,
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     pointerIsEnabled,
     getActiveTool,
