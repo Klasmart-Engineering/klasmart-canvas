@@ -62,7 +62,6 @@ const useSynchronizedRealtime = (
             target.shape.strokeWidth
           );
         } else if (rt && !rt.isInitiated() && target.type === 'circle') {
-          console.log(userId, id);
           rt.init(
             canvas as fabric.Canvas,
             'circle',
