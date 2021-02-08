@@ -58,6 +58,8 @@ const useSynchronizedCursorPointer = (
           const objectImage: ICanvasObject = img.set({
             left,
             top,
+            evented: false,
+            selectable: false,
           });
 
           // Finding for an existing object with the same id
