@@ -99,13 +99,10 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
     };
 
     imageSetup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     backgroundImage,
-    backgroundImageIsPartialErasable,
     canvas,
-    image,
-    isBackgroundImage,
-    isGif,
     setLocalBackground,
     setLocalImage,
     updateBackgroundColor,

@@ -1,6 +1,7 @@
 import { ICanvasObject } from '../objects/canvas-object';
 
 export interface IPathTarget extends fabric.Object {
+  isErasePath?: boolean;
   id?: string;
   stroke: string;
   strokeWidth: number;

@@ -86,10 +86,10 @@ export const useUploadFileModal = (eventSerializer: PaintEventSerializer, userId
           const reader = new FileReader();
 
           reader.onload = function (e) {
+            setBackgroundImageIsPartialErasable(backgroundImageIsPartialErasable);
+            setIsBackgroundImage(true);
             if (e?.target?.result) {
-              setIsBackgroundImage(true);
               setBackgroundImage(e.target.result as string);
-              setBackgroundImageIsPartialErasable(backgroundImageIsPartialErasable);
               setOpen(false);
             }
           }
