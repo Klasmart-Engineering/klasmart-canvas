@@ -30,6 +30,7 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
     updateBackgroundColor,
     isGif,
     image,
+    laserIsActive,
   } = useContext(WhiteboardContext);
 
   /**
@@ -91,7 +92,7 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
         }
 
         if (image && !isGif) {
-          createImageAsObject(image as string, userId, canvas);
+          createImageAsObject(image as string, userId, canvas, laserIsActive);
         }
       } catch (e) {
         console.error(e);
