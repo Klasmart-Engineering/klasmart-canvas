@@ -1,8 +1,12 @@
 import { fabric } from 'fabric';
 import { shapePoints } from '../../../assets/shapes-points';
+import { IBrushType } from '../../../interfaces/brushes/brush-type';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
 import { ICanvasShapeBrush } from '../../../interfaces/brushes/canvas-shape-brush';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { IShapePointsIndex } from '../../../interfaces/brushes/shape-points-index';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ChalkBrush } from '../brushes/classes/chalkBrush';
 import { DashedBrush } from '../brushes/classes/dashedBrush';
 import { MarkerBrush } from '../brushes/classes/markerBrush';
@@ -474,6 +478,98 @@ export class Realtime {
   }
 
   /**
+   * Fix the dimensions of the given shape
+   * @param newShape - Shape to set dimensions
+   * @param targetShape - Reference shape to set dimensions in the new one
+   * @param brushType - Shape Brush Type
+   */
+  private fixCustomBrushShapeDimensions(
+    newShape: ICanvasObject,
+    targetShape: ICanvasObject,
+    brushType: IBrushType
+  ) {
+    newShape.set({
+      scaleX: targetShape.scaleX,
+      scaleY: targetShape.scaleY,
+      top: targetShape.top,
+      left: targetShape.left,
+      originX: targetShape.originX,
+      originY: targetShape.originY,
+    });
+
+    if (
+      brushType === 'paintbrush' ||
+      brushType === 'marker' ||
+      brushType === 'felt'
+    ) {
+      const scaleX = Number(targetShape.width) / Number(newShape.width);
+      const scaleY = Number(targetShape.height) / Number(newShape.height);
+      let top = targetShape.top;
+      let left = targetShape.left;
+
+      newShape.set({
+        top: targetShape.top,
+        left: targetShape.left,
+        width: targetShape.width,
+        height: targetShape.height,
+        scaleX,
+        scaleY,
+      });
+
+      if (brushType === 'paintbrush') {
+        const brush = new PaintBrush(
+          this.tempCanvas as fabric.Canvas,
+          this.canvas.id
+        );
+        const newPoints = ((newShape as ICanvasPathBrush).basePath
+          ?.points as ICoordinate[]).map((point) => {
+          return {
+            x: point.x * Number(newShape?.scaleX),
+            y: point.y * Number(newShape?.scaleY),
+          };
+        });
+
+        const newPath = brush.modifyPaintBrushPath(
+          'provisional',
+          newPoints,
+          Number((newShape as ICanvasPathBrush).basePath?.strokeWidth),
+          String((newShape as ICanvasPathBrush).basePath?.stroke),
+          (newShape as ICanvasBrush).basePath?.bristles || []
+        );
+
+        (newShape as ICanvasPathBrush).set({ ...newPath });
+
+        (newShape as fabric.Group).addWithUpdate();
+
+        newShape.set({
+          top,
+          left,
+        });
+
+        (newShape as fabric.Group).addWithUpdate();
+      } else {
+        (newShape as fabric.Group).forEachObject((line) => {
+          line.set({
+            top: Number(line.top) / Number(newShape?.scaleY),
+            left: Number(line.left) / Number(newShape?.scaleX),
+          });
+        });
+
+        (newShape as fabric.Group).addWithUpdate();
+
+        newShape.set({
+          top,
+          left,
+        });
+
+        (newShape as fabric.Group).addWithUpdate();
+      }
+    }
+
+    return newShape;
+  }
+
+  /**
    * Draws a custom brush shape in tempCanvas
    * @param shape - Shape to draw
    * @param target - Object with the required properties to render the shape
@@ -556,52 +652,11 @@ export class Realtime {
 
     if (!newShape) return;
 
-    newShape.set({
-      scaleX: target.shape.scaleX,
-      scaleY: target.shape.scaleY,
-      top: target.shape.top,
-      left: target.shape.left,
-      originX: target.shape.originX,
-      originY: target.shape.originY,
-    });
-
-    if (
-      brushType === 'marker' ||
-      brushType === 'felt' ||
-      brushType === 'paintbrush'
-    ) {
-      const scaleX = Number(target.shape.width) / Number(newShape.width);
-      const scaleY = Number(target.shape.height) / Number(newShape.height);
-
-      let top = newShape.top;
-      let left = newShape.left;
-
-      newShape.set({
-        top: target.shape.top,
-        left: target.shape.left,
-        width: target.shape.width,
-        height: target.shape.height,
-        scaleX,
-        scaleY,
-      });
-
-      (newShape as fabric.Group).addWithUpdate();
-
-      (newShape as fabric.Group)._objects.forEach((line) => {
-        line.set({
-          top: Number(line.top) / Number(newShape?.scaleY),
-          left: Number(line.left) / Number(newShape?.scaleX),
-        });
-      });
-      (newShape as fabric.Group).addWithUpdate();
-
-      newShape.set({
-        top: top,
-        left: left,
-      });
-
-      (newShape as fabric.Group).addWithUpdate();
-    }
+    newShape = this.fixCustomBrushShapeDimensions(
+      newShape,
+      target.shape,
+      brushType
+    );
 
     return newShape;
   }
