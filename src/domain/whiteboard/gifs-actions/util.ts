@@ -37,16 +37,19 @@ export async function createGif(
  * @param image Image to upload
  * @param userId User id
  * @param canvas Canvas instance
+ * @param laserIsActive Indicates if laser is active, if so, image will not be selectable
  */
 export function createImageAsObject(
   image: string,
   userId: string,
-  canvas: fabric.Canvas
+  canvas: fabric.Canvas,
+  laserIsActive: boolean,
 ) {
   return fabric.Image.fromURL(image, function (img) {
     const objectImage: ICanvasObject = img.set({
       left: 0,
       top: 0,
+      selectable: !laserIsActive,
     });
 
     img.scaleToHeight(250);
