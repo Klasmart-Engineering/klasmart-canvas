@@ -253,7 +253,13 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   useObjectSelection(canvas as fabric.Canvas, actions);
 
   // useEffects and logic for manage text object creation/edition
-  useTextObject(canvas as fabric.Canvas, instanceId, userId, permissions);
+  useTextObject(
+    canvas as fabric.Canvas,
+    instanceId,
+    userId,
+    actions,
+    permissions
+  );
 
   // useEffects and logic for manage image adding feature
   useAddImage(canvas as fabric.Canvas, userId);
@@ -352,7 +358,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     canvas,
     userId,
     filterIncomingEvents,
-    updatePermissions,
+    updatePermissions
   );
   useSynchronizedBackgroundColorChanged(filterIncomingEvents);
 
@@ -413,10 +419,8 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
 const mapStateToProps = (state: any, ownProps: any) => ({
   ...ownProps,
-  permissions:
-    state.permissionsState,
+  permissions: state.permissionsState,
   toolbarIsEnabled: (state: any) => {
-
     for (const key in state.permissionsState) {
       if (state.permissionsState[key] === true) {
         return true;
@@ -427,7 +431,8 @@ const mapStateToProps = (state: any, ownProps: any) => ({
   },
 });
 const mapDispatchToProps = (dispatch: any) => ({
-  updatePermissions: (tool: string, payload: boolean) => dispatch({ type: tool, payload })
+  updatePermissions: (tool: string, payload: boolean) =>
+    dispatch({ type: tool, payload }),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(WhiteboardCanvas);

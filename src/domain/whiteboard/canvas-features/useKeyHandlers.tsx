@@ -151,16 +151,17 @@ export const useKeyHandlers = (
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      activeCanvas,
-      instanceId,
+      permissions.undoRedo,
+      allToolbarIsEnabled,
       perfectShapeIsActive,
       perfectShapeIsAvailable,
       canvas,
       eventSerializer,
+      activeCanvas,
+      instanceId,
       undo,
       redo,
       updatePerfectShapeIsActive,
-      permissions.undoRedo,
     ]
   );
 

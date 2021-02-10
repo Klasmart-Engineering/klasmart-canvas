@@ -12,21 +12,24 @@ import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-even
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { UndoRedo } from '../hooks/useUndoRedoEffect';
-import { useCanvasActions } from '../canvas-actions/useCanvasActions';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { getToolbarIsEnabled } from '../redux/utils';
+import ICanvasActions from '../canvas-actions/ICanvasActions';
 
 /**
  * Manages the logic for text object creation and edition
  * @param {fabric.Canvas} canvas - Canvas in which text object will be created
  * @param {string} instanceId - Canvas instance identifier
  * @param {string} userId - User that will create/edit the text objects
+ * @param {ICanvasActions} actions - Shared functions for canvas
+ * @param {IPermissions} permissions - User permissions in whiteboard tools
  */
 export const useTextObject = (
   canvas: fabric.Canvas,
   instanceId: string,
   userId: string,
-  permissions: IPermissions,
+  actions: ICanvasActions,
+  permissions: IPermissions
 ) => {
   // Getting context data
   const {
@@ -51,22 +54,12 @@ export const useTextObject = (
     userId
   );
 
-  // Getting Canvas Actions
-  const { actions } = useCanvasActions(
-    canvas,
-    undoRedoDispatch,
-    instanceId,
-    eventSerializer,
-    userId,
-    true,
-  );
-
   // Getting Key Handlers
   const { keyUpHandler, keyDownHandler } = useKeyHandlers(
     canvas,
     instanceId,
     permissions,
-    allToolbarIsEnabled,
+    allToolbarIsEnabled
   );
 
   /**
