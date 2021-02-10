@@ -161,7 +161,7 @@ export class PartialErase {
         // @ts-ignore
         const height = background.height * canvas.backgroundImage?.scaleY;
 
-        ctx.drawImage(background,0,0,width,height);
+        ctx.drawImage(background, 0, 0, width, height);
         this.canvas.backgroundImage = '';
         this.canvas.renderAll();
       }
@@ -415,7 +415,7 @@ export class PartialErase {
     }
 
     // @ts-ignore
-    if (this.hasSelfObjects && (!(this.hasBackground && this.hasBgPermission) || (this.hasBackground && this.hasBgPermission &&!destroy))) {
+    if (this.hasSelfObjects && (!(this.hasBackground && this.hasBgPermission) || (this.hasBackground && this.hasBgPermission && !destroy))) {
       group.cloneAsImage((image: TypedShape) => {
         image.set({
           top: group.top,
@@ -526,12 +526,9 @@ export class PartialErase {
           isPartialErased: true,
           joinedIds,
         });
-        
-        // If there are no objects to erase, do not add group image to canvas.
-        // if (objectsToErase) {
-          this.tempCanvas.add(image); 
-        // }
-        
+
+        this.tempCanvas.add(image);
+
         const payload: ObjectEvent = {
           id: id as string,
           type: 'image',
@@ -540,19 +537,6 @@ export class PartialErase {
 
         this.updateState(payload);
         this.eventSerializer.push('added', payload);
-
-        // if (this.hasBackground) {
-        //   const payloadBg = {
-        //     // @ts-ignore
-        //     id: this.backgroundId,
-        //     target: {
-        //       strategy: 'allowClearMyself',
-        //       isBackgroundImage: true,
-        //     },
-        //   };
-
-        //   this.eventSerializer.push('removed', payloadBg as ObjectEvent);
-        // }
       });
 
       if (this.hasBackground && this.hasBgPermission) {
