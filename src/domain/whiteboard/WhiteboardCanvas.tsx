@@ -50,6 +50,7 @@ import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchron
 import { v4 as uuidv4 } from 'uuid';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
+import { useObjectHover } from './canvas-features/useObjectHover';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -133,6 +134,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     localImage,
     localBackground,
     backgroundColor,
+    displayUserInfo
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   // Getting Canvas shared functions
@@ -266,6 +268,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for manage undo/redo feature
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
+
+  // useEffects and logic for manage the changes that would happen when an object is hovered
+  useObjectHover(canvas as fabric.Canvas, displayUserInfo);
 
   useSynchronizedMoved(
     canvas,

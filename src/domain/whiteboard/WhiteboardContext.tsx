@@ -34,6 +34,7 @@ import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
 import WhiteboardToggle from '../../components/WhiteboardToogle';
 import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 import { useUploadFileModal } from './hooks/useUploadFileModal';
+import { useSetUserInfoToDisplayModal } from './hooks/useSetUserInfoToDisplayModal';
 import store from './redux/store';
 import { getToolbarIsEnabled } from './redux/utils';
 import { IPermissions } from '../../interfaces/permissions/permissions';
@@ -102,6 +103,11 @@ export const WhiteboardProvider = ({
     closeUploadFileModal,
   } = useUploadFileModal();
 
+  const {
+    SetUserInfoToDisplayModal,
+    openSetUserInfoToDisplayModal,
+  } = useSetUserInfoToDisplayModal();
+
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
@@ -124,6 +130,7 @@ export const WhiteboardProvider = ({
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
   ] = useState(false);
+  const [displayUserInfo, setUserInfoToDisplay] = useState<string>("avatar");
 
   const isLocalObject = (id: string, canvasId: string | undefined) => {
     const object = id.split(':');
@@ -363,6 +370,8 @@ export const WhiteboardProvider = ({
     updateBackgroundColor,
     fillBackgroundColor,
     setBackgroundColorInCanvas,
+    openSetUserInfoToDisplayModal,
+    displayUserInfo
   };
 
   return (
@@ -402,6 +411,11 @@ export const WhiteboardProvider = ({
         }
         isBackgroundImage={isBackgroundImage}
         setIsBackgroundImage={setIsBackgroundImage}
+      />
+      <SetUserInfoToDisplayModal
+        
+        setSelection={setUserInfoToDisplay}
+        selection={displayUserInfo}
       />
       {children}
     </WhiteboardContext.Provider>

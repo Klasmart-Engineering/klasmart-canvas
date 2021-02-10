@@ -83,6 +83,7 @@ function Toolbar(
     updateImagePopupIsOpen,
     updatePartialEraseIsActive,
     openUploadFileModal,
+    openSetUserInfoToDisplayModal,
     openClearWhiteboardModal,
     fillBackgroundColor,
   } = useContext(WhiteboardContext);
@@ -260,6 +261,14 @@ function Toolbar(
             (toolbarIsEnabled && props.permissions.uploadImage)
           ) {
             openUploadFileModal();
+          }
+          break;
+        case ELEMENTS.SET_USER_INFO_TO_DISPLAY:
+          if (
+            teacherHasPermission ||
+            (toolbarIsEnabled && props.permissions.uploadImage)
+          ) {
+            openSetUserInfoToDisplayModal();
           }
           break;
       }

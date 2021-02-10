@@ -34,6 +34,7 @@ import emojiSleep from '../../assets/icons/toolbar/emoji-sleep.svg';
 import emojiNervious from '../../assets/icons/toolbar/emoji-nervious.svg';
 import emojiLaugh from '../../assets/icons/toolbar/emoji-laugh.svg';
 import photo from '../../assets/icons/toolbar/photo.svg';
+import avatar from '../../assets/icons/toolbar/avatar.svg';
 import undo from '../../assets/icons/toolbar/undo.svg';
 import redo from '../../assets/icons/toolbar/redo.svg';
 import clear from '../../assets/icons/toolbar/clear.svg';
@@ -208,6 +209,13 @@ const actionsSection: IBasicToolbarSection = {
       title: 'Share Whiteboard',
       iconSrc: share,
       iconName: 'Share Icon',
+    },
+    // ToolbarButton
+    {
+      id: 'set_user_info_to_display',
+      title: 'Set user info to display',
+      iconSrc: avatar,
+      iconName: 'Set user info to display',
     },
   ],
 };
