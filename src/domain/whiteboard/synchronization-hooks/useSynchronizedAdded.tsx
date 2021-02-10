@@ -6,7 +6,7 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
-import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
+import { CanvasAction, SET, SET_BACKGROUND, SET_OTHER } from '../reducers/undo-redo';
 import { TypedShape, TypedPolygon } from '../../../interfaces/shapes/shapes';
 import { chat, star, arrow, hexagon, pentagon } from '../shapes/shapes';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
@@ -200,12 +200,24 @@ const useSynchronizedAdded = (
       }
 
       if (e.type === 'backgroundImage') {
+        debugger;
         const payload: ObjectEvent = {
           type: e.type,
           target: e.target,
           id: e.target.id,
         };
         eventSerializer?.push('added', payload);
+
+        const event = { event: payload, type: 'backgroundAdded' } as IUndoRedoEvent;
+
+        // send undo redo dispatch here.
+        undoRedoDispatch({
+          type: SET_BACKGROUND,
+          background: payload,
+          payload: canvas?.getObjects(),
+          canvasId: userId,
+          event,
+        });
 
         return;
       }

@@ -14,6 +14,7 @@ export const SET = 'CANVAS_SET';
 export const SET_GROUP = 'CANVAS_SET_GROUP';
 export const UPDATE_OTHER = 'CANVAS_UPDATE_OTHER';
 export const SET_OTHER = 'CANVAS_SET_OTHER';
+export const SET_BACKGROUND = 'CANVAS_SET_BACKGROUND';
 
 /**
  * Model for storing the canvas history for undo/redo functionality.
@@ -60,6 +61,8 @@ export interface CanvasHistoryState {
    * Used for group manipulation.
    */
   activeObjects: ICanvasObject[];
+
+  backgrounds: any[];
 }
 
 /**
@@ -95,6 +98,8 @@ export interface CanvasAction {
    * Event ID. Used to determine if an event is grouped.
    */
   eventId?: string | undefined;
+
+  background?: any;
 }
 
 /**
@@ -109,6 +114,7 @@ const defaultState: CanvasHistoryState = {
   events: [],
   eventIndex: -1,
   activeObjects: [], // This is a work in progress, does not work.
+  backgrounds: [],
 };
 
 /**
@@ -318,6 +324,7 @@ const reducer = (
           ...stateItems,
           events,
           eventIndex: events.length - 1,
+          backgrounds: [ ...state.backgrounds, null ],
         };
       } else if (action.event && Array.isArray(action.event)) {
         events = [...events, ...action.event];
@@ -325,8 +332,56 @@ const reducer = (
           ...stateItems,
           events,
           eventIndex: events.length - 1,
+          backgrounds: [ ...state.backgrounds, null ],
         };
       }
+
+      return stateItems;
+    }
+
+    case SET_BACKGROUND: {
+      let states = [...state.states];
+      let events = [...state.events];
+      const selfItems = filterById(
+        action.canvasId as string,
+        action.payload,
+        true
+      );
+      const otherObjects = filterById(
+        action.canvasId as string,
+        action.payload,
+        false
+      );
+
+      const currentState = objectStringifier(([
+        ...selfItems,
+        ...otherObjects,
+      ] as unknown) as [fabric.Object | TypedShape]);
+
+      states = spliceStates(state.activeStateIndex, state.states);
+      const mappedSelfState = objectStringifier(selfItems);
+      states = limitValidator(
+        [...states, mappedSelfState],
+        STATES_LIMIT
+      ) as string[];
+
+
+      events = spliceEvents(state.eventIndex, events);
+      events = limitValidator(events, STATES_LIMIT) as IUndoRedoEvent[];
+
+      
+      let target = action.background.target.toJSON(CANVAS_OBJECT_PROPS);
+      let stateItems = {
+        ...state,
+        states,
+        actionType: SET_BACKGROUND,
+        backgrounds: [ ...state.backgrounds, target ],
+        activeStateIndex: states.length - 1,
+        activeState: currentState,
+        events: [ ...events, action.event as IUndoRedoEvent ],
+        eventIndex: 1,
+        otherObjects: JSON.stringify(otherObjects),
+      };
 
       return stateItems;
     }
@@ -453,6 +508,8 @@ const reducer = (
           ? state.states[activeStateIndex]
           : JSON.stringify({ objects: [] });
 
+
+      debugger;
       const activeSelfStateObjects = JSON.parse(activeSelfState).objects;
       const otherStateObjects = JSON.parse(state.otherObjects as string)
         .objects;
