@@ -24,7 +24,11 @@ import { WhiteboardContext } from '../WhiteboardContext';
  * @param {fabric.Canvas} canvas - Canvas to draw
  * @param {string} userId - User that will draw in Whiteboard
  */
-export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string, serializerToolbarState: IPermissions) => {
+export const useFreeHandDrawing = (
+  canvas: fabric.Canvas,
+  userId: string,
+  serializerToolbarState: IPermissions
+) => {
   // Getting necessary context variables
   const {
     brushIsActive,
@@ -101,7 +105,7 @@ export const useFreeHandDrawing = (canvas: fabric.Canvas, userId: string, serial
               color: penColor || DEFAULT_VALUES.PEN_COLOR,
               lineWidth,
               id: 'teacher',
-              type: 'PencilBrush',
+              type: brushType,
             },
             id: 'teacher',
           };
