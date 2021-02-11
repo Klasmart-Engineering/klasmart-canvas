@@ -9,17 +9,39 @@ export class UserInfoTooltip {
   private _img: fabric.Image
   private _text: fabric.Text
   private _shapesGroup: fabric.Group = new fabric.Group()
+  private _objectId: string | undefined = ''
   public displayUserInfo: string
+  static instance: UserInfoTooltip
+  static exists = false
+  
 
-  constructor(displayUserInfo: string) {
+  static createInstance(displayUserInfo: string){
+    if(UserInfoTooltip.exists){
+      return UserInfoTooltip.instance
+    }else{
+      UserInfoTooltip.instance = new UserInfoTooltip(displayUserInfo)
+    }
+  }
 
+  private constructor(displayUserInfo: string) {
+
+    UserInfoTooltip.exists = true
+    
     this.displayUserInfo = displayUserInfo
 
+    this._img = new fabric.Image('')
+    this._text = new fabric.Text('')
+    this._rect = new fabric.Rect()
+    this.setBasicShapes()
+
+  }
+
+  private setBasicShapes(){
     this._rect = new fabric.Rect({
       stroke: 'black',
       fill: 'white',
-      width: displayUserInfo === "avatar" ? 150 : 115,
-      height: displayUserInfo === "avatar" ? 40 : 25,
+      width: this.displayUserInfo === "avatar" ? 150 : 115,
+      height: this.displayUserInfo === "avatar" ? 40 : 25,
       shadow: 'rgba(0,0,0,0.3) 5px 5px 5px',
       originX: 'left',
       originY: 'top',
@@ -40,10 +62,9 @@ export class UserInfoTooltip {
       fontFamily: 'sans-serif',
       originX: 'left',
       originY: 'top',
-      left: displayUserInfo === "avatar" ? 37.5 : 2.5,
+      left: this.displayUserInfo === "avatar" ? 37.5 : 2.5,
       top: 5
     });
-
   }
 
   public get left(){
@@ -77,10 +98,22 @@ export class UserInfoTooltip {
     this._img.setSrc(url)
   }
 
-  public setObject(hoveredObject: ICanvasObject){
+  public isShown(){
+    return this._objectId !== ''
+  }
+
+  public hasTheSameObject(hoveredObject: ICanvasObject){
+    return this._objectId === hoveredObject.id
+  }
+
+  public removeObject(){
+    this._objectId = ''
+  }
+
+  private setObject(hoveredObject: ICanvasObject){
     
-    const objectId = hoveredObject.id
-    const userId = objectId ? objectId.substr(0, objectId.indexOf(':')) : '';
+    this._objectId = hoveredObject.id
+    const userId = this._objectId ? this._objectId.substr(0, this._objectId.indexOf(':')) : '';
     const user = store.getState().usersState.find(user => user.id === userId) 
     this.setPosition(hoveredObject.left || 0, hoveredObject.top || 0);
     if(user){
@@ -109,9 +142,15 @@ export class UserInfoTooltip {
         top: this._top,
       });
     }
+    (this._shapesGroup as ICanvasObject).id = 'tooltip'
   }
 
-  getDrawing(){
+  getDrawing(hoveredObject: ICanvasObject, displayUserInfo: string){
+    if(this.displayUserInfo !== displayUserInfo){
+      this.displayUserInfo = displayUserInfo
+      this.setBasicShapes()
+    }
+    this.setObject(hoveredObject)
     this.generateShapesGroup()
     return this._shapesGroup
   } 

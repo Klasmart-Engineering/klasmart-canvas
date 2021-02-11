@@ -1,31 +1,48 @@
-import { useEffect, useContext } from 'react';
+import { useEffect } from 'react';
 import { fabric } from 'fabric';
 import { UserInfoTooltip } from '../brushes/classes/userInfoTooltip';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 /**
  * Handles logic for showing user info on object hover
  * @param {fabric.Canvas} canvas - Canvas to draw
  */
-export const useObjectHover = (canvas: fabric.Canvas, displayUserInfo: string) => {
-  
+export const useObjectHover = (
+  canvas: fabric.Canvas,
+  displayUserInfo: string
+) => {
   let tooltipShapesGroup: fabric.Group;
-  let tooltip = new UserInfoTooltip(displayUserInfo);
+  const tooltip = UserInfoTooltip.createInstance(displayUserInfo);
 
-  const showTooltip = (
-    hoveredObject: fabric.Object
-  ) => {
-
-    if (!hoveredObject.hasOwnProperty('id')) {
+  const showTooltip = (hoveredObject: fabric.Object) => {
+    if (
+      !tooltip ||
+      !hoveredObject.hasOwnProperty('id') ||
+      tooltip.hasTheSameObject(hoveredObject)
+    ) {
       return;
     }
 
-    tooltip.setObject(hoveredObject);
-    tooltipShapesGroup = tooltip.getDrawing();
+    tooltipShapesGroup = tooltip.getDrawing(hoveredObject, displayUserInfo);
     canvas.add(tooltipShapesGroup);
-    // setTimeout(()=> {hideTooltip()}, 2000)
   };
 
   const hideTooltip = () => {
-    canvas.remove(tooltipShapesGroup);
+    // if(tooltip && tooltip.isShown()){
+    //   canvas.remove(tooltipShapesGroup);
+    //   if(tooltip)
+    //     tooltip.removeObject()
+    // }
+    const canvasObjects = canvas.getObjects();
+    if (tooltip && tooltip.isShown()) {
+      tooltip.removeObject();
+    }
+    for (let x = 0; x < canvasObjects.length; x++) {
+      if (
+        canvasObjects[x].hasOwnProperty('id') &&
+        (canvasObjects[x] as ICanvasObject).id === 'tooltip'
+      )
+        canvas.remove(canvasObjects[x]);
+    }
   };
 
   const checkIfIsHoverSomeObject = (e: fabric.IEvent) => {

@@ -99,22 +99,12 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
               </RadioGroup>
             </FormControl>
           </div>
-          {/* <DialogActions>
-            <Button
-              onClick={closeInfoToDisplayModal}
-              color="primary"
-              variant="contained"
-            >
-              Close
-            </Button>
-          </DialogActions> */}
         </Dialog>
       </div>
     );
   };
 
   return {
-    // uploadFileModal,
     openSetUserInfoToDisplayModal,
     closeInfoToDisplayModal,
     SetUserInfoToDisplayModal,
