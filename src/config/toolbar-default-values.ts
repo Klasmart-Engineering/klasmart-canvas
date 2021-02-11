@@ -9,5 +9,5 @@ export const DEFAULT_VALUES = {
   FONT_COLOR: '#000000',
   SHAPE: 'rectangle',
   SHAPE_COLOR: '#000000',
-  STAMP: 'yellowStar',
+  STAMP: 'good',
 };

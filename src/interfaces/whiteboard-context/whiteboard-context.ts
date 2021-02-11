@@ -1,6 +1,7 @@
 import { MutableRefObject } from 'react';
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
 import { IBrushType } from '../brushes/brush-type';
+import { IStampMode } from '../stamps/stamp-mode';
 
 export interface IWhiteboardContext {
   pointer: string;
@@ -103,4 +104,6 @@ export interface IWhiteboardContext {
   setBackgroundColorInCanvas: (color: string) => void;
   localBackground: boolean;
   setLocalBackground: (condition: boolean) => void;
+  stampMode: IStampMode;
+  updateStampMode: (mode: IStampMode) => void;
 }
