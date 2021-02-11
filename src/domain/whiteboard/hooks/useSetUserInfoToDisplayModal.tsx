@@ -94,7 +94,7 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
                   checked={selection === 'avatar'}
                   value="avatar"
                   control={<Radio />}
-                  label="User avatar"
+                  label="User name and avatar"
                 />
               </RadioGroup>
             </FormControl>
