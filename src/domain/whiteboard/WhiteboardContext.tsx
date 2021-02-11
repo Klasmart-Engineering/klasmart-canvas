@@ -103,10 +103,12 @@ export const WhiteboardProvider = ({
     closeUploadFileModal,
   } = useUploadFileModal();
 
+  const [displayUserInfo, setUserInfoToDisplay] = useState<string>("avatar");
+  const setUserInfo = (value: string) => setUserInfoToDisplay(value)
   const {
     SetUserInfoToDisplayModal,
     openSetUserInfoToDisplayModal,
-  } = useSetUserInfoToDisplayModal();
+  } = useSetUserInfoToDisplayModal(setUserInfo);
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -130,7 +132,7 @@ export const WhiteboardProvider = ({
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
   ] = useState(false);
-  const [displayUserInfo, setUserInfoToDisplay] = useState<string>("avatar");
+  
 
   const isLocalObject = (id: string, canvasId: string | undefined) => {
     const object = id.split(':');

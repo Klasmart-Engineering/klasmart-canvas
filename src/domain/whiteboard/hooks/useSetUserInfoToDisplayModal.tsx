@@ -7,6 +7,7 @@ import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
+import { useEffect } from 'react';
 
 export interface ISetUserInfoToDisplayModal {
   selection: string;
@@ -17,7 +18,7 @@ export interface ISetUserInfoToDisplayModal {
  Modal component to set user info to display.
  */
 
-export const useSetUserInfoToDisplayModal = () => {
+export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => void) => {
   
   const {
     state: { eventSerializer, eventController },
@@ -31,6 +32,12 @@ export const useSetUserInfoToDisplayModal = () => {
   const closeInfoToDisplayModal = useCallback(() => {
     setOpen(false);
   }, []);
+
+  useEffect(()=>{
+    eventController.on("setUserInfoToDisplay", (event, payload)=> {
+      setUserInfo(payload)
+    })
+  }, [eventController])
 
   const SetUserInfoToDisplayModal = (props: ISetUserInfoToDisplayModal) => {
     const { setSelection, selection } = props;

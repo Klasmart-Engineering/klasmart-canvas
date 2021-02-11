@@ -96,7 +96,6 @@ export class EventPainterController extends EventEmitter
           break;
         }
         case 'setUserInfoToDisplay':{
-          console.log(data)
           this.emit('setUserInfoToDisplay', data.id, data.target)
           break;
         }
@@ -212,13 +211,21 @@ export class EventPainterController extends EventEmitter
       case 'reconstruct':
         this.emit('reconstruct', event.id, target);
         break;
-        case 'setUserInfoToDisplay':
-          console.log(event, target)
-          this.emit('setUserInfoToDisplay', event.id, target)
-          break;
-        default:
-          break;
+      case 'setUserInfoToDisplay':
+        this.setUserInfoToDisplay('setUserInfoToDisplay', target)
+        break;
+      default:
+        break;
     }
+  }
+
+  private setUserInfoToDisplay(id: string, target: ICanvasObject) {
+    this.emit('setUserInfoToDisplay', id, target);
+    
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, eventType: 'setUserInfoToDisplay', target })
+    );
   }
 
   private textEdit(id: string, target: ICanvasObject) {
