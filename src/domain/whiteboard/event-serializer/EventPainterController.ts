@@ -95,7 +95,15 @@ export class EventPainterController extends EventEmitter
           this.emit('backgroundColorChanged', data.id, data.target);
           break;
         }
-      }
+        case 'setUserInfoToDisplay':{
+          console.log(data)
+          this.emit('setUserInfoToDisplay', data.id, data.target)
+          break;
+        }
+        default:
+          break;
+        }
+      
     };
 
     this.ws.onclose = () => {
@@ -204,6 +212,12 @@ export class EventPainterController extends EventEmitter
       case 'reconstruct':
         this.emit('reconstruct', event.id, target);
         break;
+        case 'setUserInfoToDisplay':
+          console.log(event, target)
+          this.emit('setUserInfoToDisplay', event.id, target)
+          break;
+        default:
+          break;
     }
   }
 

@@ -17,21 +17,21 @@ const studentPermissions = {
  */
 const initialState: IUser[] = [
   {
-    id: "1",
+    id: "teacher",
     name: 'William',
     role: 'teacher',
     permissions: teacherPermissions,
     avatarImg: 'https://i.pravatar.cc/35?img=59',
   },
   {
-    id: "2",
+    id: "student",
     name: 'John',
     role: 'student',
     permissions: studentPermissions,
     avatarImg: 'https://i.pravatar.cc/35?img=4',
   },
   {
-    id: "3",
+    id: "student2",
     name: 'Mary',
     role: 'student',
     permissions: studentPermissions,

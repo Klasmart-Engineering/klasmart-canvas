@@ -5,6 +5,8 @@ import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
 import FormControl from '@material-ui/core/FormControl';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
+import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
+import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 
 export interface ISetUserInfoToDisplayModal {
   selection: string;
@@ -16,6 +18,11 @@ export interface ISetUserInfoToDisplayModal {
  */
 
 export const useSetUserInfoToDisplayModal = () => {
+  
+  const {
+    state: { eventSerializer, eventController },
+  } = useSharedEventSerializer();
+
   const [setUserInfoToDisplayModal, setOpen] = useState(false);
   const openSetUserInfoToDisplayModal = useCallback(() => {
     setOpen(true);
@@ -29,9 +36,16 @@ export const useSetUserInfoToDisplayModal = () => {
     const { setSelection, selection } = props;
     
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      setSelection((event.target as HTMLInputElement).value)
+      const value = (event.target as HTMLInputElement).value
+      setSelection(value)
       closeInfoToDisplayModal()
-      
+      const payload: ObjectEvent = {
+        type: 'userInfoToDisplay',
+        target: value,
+        id: 'teacher',
+      };
+
+      eventSerializer.push('setUserInfoToDisplay', payload);
     };
 
     return (
