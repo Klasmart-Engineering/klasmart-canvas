@@ -57,6 +57,10 @@ export const RenderRemoteRedo = (
       break;
     }
 
+    case 'backgroundAdded': {
+      debugger;
+    }
+
     case 'removed': {
       if (currentEvent.activeIds) {
         // Redo in a group of objects removed

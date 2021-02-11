@@ -71,7 +71,7 @@ export const useClearWhiteboardSelf = (
     if (canvas?.backgroundImage) {
       const target = {
         // @ts-ignore
-        id: canvas.backgroundImage.id,
+        id: '',
         target: {
           strategy: 'allowClearMyself',
           isBackgroundImage: true,

@@ -81,6 +81,20 @@ export const RenderRemoteUndo = (
       break;
     }
 
+    case 'backgroundAdded': {
+      const target = {
+        // @ts-ignore
+        id: '',
+        target: {
+          strategy: 'removeBackground',
+          isBackgroundImage: true,
+        },
+      };
+      
+      eventSerializer?.push('removed', target as ObjectEvent);
+      break;
+    }
+
     case 'activeSelection': {
       /**
        * Validates if the id to send to payload must be from

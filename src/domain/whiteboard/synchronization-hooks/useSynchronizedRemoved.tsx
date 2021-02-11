@@ -109,6 +109,10 @@ const useSynchronizedRemoved = (
             event,
           });
           break;
+        case 'removeBackground': {
+          // @ts-ignore
+          canvas?.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+        }
         default:
           canvas?.forEachObject(function (obj: ICanvasObject | TypedShape) {
             if (obj.id && obj.id === objectId) {

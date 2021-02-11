@@ -368,7 +368,7 @@ const reducer = (
 
       events = spliceEvents(state.eventIndex, events);
       events = limitValidator(events, STATES_LIMIT) as IUndoRedoEvent[];
-
+      events = [ ...events, action.event as IUndoRedoEvent ];
       
       let target = action.background.target.toJSON(CANVAS_OBJECT_PROPS);
       let stateItems = {
@@ -378,9 +378,9 @@ const reducer = (
         backgrounds: [ ...state.backgrounds, target ],
         activeStateIndex: states.length - 1,
         activeState: currentState,
-        events: [ ...events, action.event as IUndoRedoEvent ],
-        eventIndex: 1,
-        otherObjects: JSON.stringify(otherObjects),
+        events,
+        eventIndex: events.length - 1,
+        otherObjects: objectStringifier(otherObjects),
       };
 
       return stateItems;
@@ -508,8 +508,6 @@ const reducer = (
           ? state.states[activeStateIndex]
           : JSON.stringify({ objects: [] });
 
-
-      debugger;
       const activeSelfStateObjects = JSON.parse(activeSelfState).objects;
       const otherStateObjects = JSON.parse(state.otherObjects as string)
         .objects;

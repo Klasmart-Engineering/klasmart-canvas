@@ -80,6 +80,8 @@ const loadFromJSON = (
         }
       });
 
+    debugger;
+
     if (
       (action === 'UNDO' && nextEvent.type === 'backgroundColorChanged') ||
       (action === 'REDO' && currentEvent.type === 'backgroundColorChanged')
