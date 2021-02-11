@@ -29,7 +29,7 @@ export const useChangeLineWidth = (
   undoRedoDispatch: (action: CanvasAction) => void
 ) => {
   // Getting lineWidth context variable
-  const { lineWidth } = useContext(WhiteboardContext);
+  const { lineWidth, lineWidthIsActive } = useContext(WhiteboardContext);
 
   // Getting lineWidth change synchronization effect
   const { changeLineWidthSync } = useSynchronization(userId);
@@ -222,6 +222,8 @@ export const useChangeLineWidth = (
 
       canvas.renderAll();
     };
+
+    if (!lineWidthIsActive) return;
 
     changeLineWidth();
 
