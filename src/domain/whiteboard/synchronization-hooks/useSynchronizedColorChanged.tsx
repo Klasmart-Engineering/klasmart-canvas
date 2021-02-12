@@ -81,12 +81,14 @@ const useSynchronizedColorChanged = (
                 .then((newPath) => {
                   const id = obj.id;
 
-                  newPath.set({
+                  ((newPath as unknown) as ICanvasObject).set({
                     angle: obj.angle,
                     top: obj.top,
                     left: obj.left,
                     flipX: obj.flipX,
                     flipY: obj.flipY,
+                    translateX: (obj as ICanvasObject).translateX,
+                    translateY: (obj as ICanvasObject).translateY,
                   });
 
                   delete obj.id;

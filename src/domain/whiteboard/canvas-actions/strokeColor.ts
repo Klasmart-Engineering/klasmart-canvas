@@ -35,152 +35,159 @@ export const useChangeStrokeColor = (
 ) =>
   useCallback(
     (color: string): void => {
-      let newActives: TypedShape[] = [];
-      let activeObjects: TypedShape[] = [];
+      /**
+       * Changes stroke color in current active objects
+       */
+      const changeColor = async () => {
+        let newActives: TypedShape[] = [];
+        let activeObjects: TypedShape[] = [];
 
-      if (!canvas) return;
+        if (!canvas) return;
 
-      const selection = canvas.getActiveObject();
+        const selection = canvas.getActiveObject();
 
-      if (selection?.type === 'activeSelection') {
-        activeObjects = (selection as fabric.ActiveSelection)._objects;
-      } else {
-        activeObjects = canvas.getActiveObjects();
-      }
-
-      if (!activeObjects) return;
-
-      canvas.discardActiveObject();
-
-      for (const object of activeObjects) {
-        if (
-          ((isShape(object) && object.shapeType === 'shape') ||
-            isFreeDrawing(object)) &&
-          color !== object.stroke
-        ) {
-          (object as ICanvasPathBrush).set('stroke', color);
-          newActives.push(object);
-          changePenColorSync(object as ICanvasObject);
+        if (selection?.type === 'activeSelection') {
+          activeObjects = (selection as fabric.ActiveSelection)._objects;
+        } else {
+          activeObjects = canvas.getActiveObjects();
         }
 
-        // Updating basePath
-        if (isFreeDrawing(object)) {
-          const basePath = (object as ICanvasPathBrush).basePath;
-          (object as ICanvasPathBrush).set({
-            basePath: {
-              type: basePath?.type,
-              points: basePath?.points,
-              stroke: color,
-              strokeWidth: basePath?.strokeWidth,
-            },
+        if (!activeObjects) return;
+
+        canvas.discardActiveObject();
+
+        for (const object of activeObjects) {
+          if (
+            ((isShape(object) && object.shapeType === 'shape') ||
+              isFreeDrawing(object)) &&
+            color !== object.stroke
+          ) {
+            (object as ICanvasPathBrush).set('stroke', color);
+            newActives.push(object);
+            changePenColorSync(object as ICanvasObject);
+          }
+
+          // Updating basePath
+          if (isFreeDrawing(object)) {
+            const basePath = (object as ICanvasPathBrush).basePath;
+            (object as ICanvasPathBrush).set({
+              basePath: {
+                type: basePath?.type,
+                points: basePath?.points,
+                stroke: color,
+                strokeWidth: basePath?.strokeWidth,
+              },
+            });
+          }
+
+          // Color Change in Special Brushes
+          if (
+            ((object.type === 'group' && (object as ICanvasBrush).basePath) ||
+              (object.type === 'image' && (object as ICanvasBrush).basePath)) &&
+            canvas &&
+            userId
+          ) {
+            await changeLineColorInSpecialBrushes(
+              canvas,
+              userId,
+              object as ICanvasBrush,
+              color
+            )
+              .then((newObject) => {
+                const basePath = (newObject as ICanvasBrush).basePath;
+
+                const payload: ObjectEvent = {
+                  type:
+                    basePath?.type === 'chalk' || basePath?.type === 'crayon'
+                      ? 'image'
+                      : 'group',
+                  target: {
+                    stroke: basePath?.stroke,
+                    bristles: basePath?.bristles,
+                  } as ICanvasObject,
+                  id: String(newObject.id),
+                };
+
+                eventSerializer?.push('colorChanged', payload);
+                newActives.push(newObject as TypedShape);
+              })
+              .catch((e) => {
+                console.warn(e);
+              });
+          }
+        }
+
+        if (newActives.length === 1) {
+          canvas?.setActiveObject(newActives[0]);
+        } else if (newActives.length >= 2) {
+          const activesGroup = new fabric.ActiveSelection(newActives);
+          canvas?.setActiveObject(activesGroup);
+        }
+
+        updatePenColor(color);
+
+        const obj = canvas?.getActiveObject() as any;
+        if (!obj) return;
+
+        const type = obj?.get('type');
+
+        if (type === 'textbox') return;
+
+        if (obj?.type !== 'activeSelection') {
+          let stroke = type === 'path' ? obj?.stroke : obj?.basePath?.stroke;
+
+          const payload = {
+            type,
+            target: { stroke: stroke },
+            id: obj?.id,
+          };
+
+          const event = { event: payload, type: 'colorChanged' };
+
+          dispatch({
+            type: SET,
+            payload: canvas?.getObjects() as TypedShape[],
+            canvasId: userId,
+            event: (event as unknown) as IUndoRedoEvent,
+          });
+        } else {
+          const activeIds: string[] = canvas
+            ?.getActiveObject()
+            // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
+            .getObjects()
+            .map((o: TypedShape) => o.id);
+          const payload = {
+            type,
+            svg: true,
+            target: null,
+            id: `${userId}:group`,
+          };
+
+          const event = { event: payload, type: 'activeSelection', activeIds };
+
+          let filtered = canvas?.getObjects().filter((o: any) => {
+            return !o.group;
+          });
+
+          let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
+          active?.set({ id: `${userId}:group` });
+
+          dispatch({
+            type: SET_GROUP,
+            payload: [...(filtered as any[]), active],
+            canvasId: userId,
+            event: (event as unknown) as IUndoRedoEvent,
           });
         }
 
-        // Color Change in Special Brushes
-        if (
-          ((object.type === 'group' && (object as ICanvasBrush).basePath) ||
-            (object.type === 'image' && (object as ICanvasBrush).basePath)) &&
-          canvas &&
-          userId
-        ) {
-          changeLineColorInSpecialBrushes(
-            canvas,
-            userId,
-            object as ICanvasBrush,
-            color
-          )
-            .then((newObject) => {
-              const basePath = (newObject as ICanvasBrush).basePath;
+        canvas?.renderAll();
+      };
 
-              const payload: ObjectEvent = {
-                type:
-                  basePath?.type === 'chalk' || basePath?.type === 'crayon'
-                    ? 'image'
-                    : 'group',
-                target: {
-                  stroke: basePath?.stroke,
-                  bristles: basePath?.bristles,
-                } as ICanvasObject,
-                id: String(newObject.id),
-              };
-
-              eventSerializer?.push('colorChanged', payload);
-              newActives.push(newObject as TypedShape);
-            })
-            .catch((e) => {
-              console.warn(e);
-            });
-        }
-      }
-
-      if (newActives.length === 1) {
-        canvas?.setActiveObject(newActives[0]);
-      } else if (newActives.length >= 2) {
-        const activesGroup = new fabric.ActiveSelection(newActives);
-        canvas?.setActiveObject(activesGroup);
-      }
-
-      updatePenColor(color);
-
-      const obj = canvas?.getActiveObject() as any;
-      if (!obj) return;
-
-      const type = obj?.get('type');
-
-      if (type === 'textbox') return;
-
-      if (obj?.type !== 'activeSelection') {
-        let stroke = type === 'path' ? obj?.stroke : obj?.basePath?.stroke;
-
-        const payload = {
-          type,
-          target: { stroke: stroke },
-          id: obj?.id,
-        };
-
-        const event = { event: payload, type: 'colorChanged' };
-
-        dispatch({
-          type: SET,
-          payload: canvas?.getObjects() as TypedShape[],
-          canvasId: userId,
-          event: (event as unknown) as IUndoRedoEvent,
-        });
-      } else {
-        const activeIds: string[] = canvas
-          ?.getActiveObject()
-          // @ts-ignore - Typings are out of date, getObjects is the correct method to get objects in group.
-          .getObjects()
-          .map((o: TypedShape) => o.id);
-        const payload = {
-          type,
-          svg: true,
-          target: null,
-          id: `${userId}:group`,
-        };
-
-        const event = { event: payload, type: 'activeSelection', activeIds };
-
-        let filtered = canvas?.getObjects().filter((o: any) => {
-          return !o.group;
-        });
-
-        let active: TypedGroup = canvas?.getActiveObject() as TypedGroup;
-        active?.set({ id: `${userId}:group` });
-
-        dispatch({
-          type: SET_GROUP,
-          payload: [...(filtered as any[]), active],
-          canvasId: userId,
-          event: (event as unknown) as IUndoRedoEvent,
-        });
-      }
-
-      canvas?.renderAll();
+      changeColor();
     },
     // If changePenColorSync is added performance is affected
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [updatePenColor, userId, eventSerializer, dispatch, canvas]
+    [canvas, updatePenColor, userId, eventSerializer, dispatch]
   );
 
 /**
