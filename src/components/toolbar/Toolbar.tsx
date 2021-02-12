@@ -29,7 +29,8 @@ import { IStampMode } from '../../interfaces/stamps/stamp-mode';
 type ToolbarElementTypes =
   | IBasicToolbarButton
   | IBasicToolbarSelector
-  | IBasicSpecialSelector;
+  | IBasicSpecialSelector
+  | IBasicSecondOptionSelector;
 
 /**
  * Render the toolbar that will be used in the whiteboard
@@ -69,6 +70,7 @@ function Toolbar(props: {
     backgroundColor,
     stampMode,
     updateStampMode,
+    updateStampIsActive,
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
@@ -148,6 +150,7 @@ function Toolbar(props: {
     ) {
       return;
     }
+
     /*
       If you click on another button different than
       the mentioned below the selected object will be deselected;
@@ -201,6 +204,11 @@ function Toolbar(props: {
      * Indicates if line width tool is active.
      */
     updateLineWidthIsActive(tool === ELEMENTS.LINE_WIDTH_TOOL);
+
+    /**
+     * Indicates if stamp tool is active
+     */
+    // updateStampIsActive(tool === ELEMENTS.ADD_STAMP_TOOL);
 
     /*
       It is setted to false when you select Pointer Tool,
@@ -322,7 +330,6 @@ function Toolbar(props: {
   function handleToolSecondSelectorChange(tool: string, option: string) {
     switch (tool) {
       case ELEMENTS.ADD_STAMP_TOOL:
-        console.log('opt: ', option);
         updateStampMode(option as IStampMode);
         break;
     }
@@ -348,6 +355,10 @@ function Toolbar(props: {
       case ELEMENTS.ADD_SHAPE_TOOL:
         updateShape(specific);
         break;
+
+      case ELEMENTS.ADD_STAMP_TOOL:
+        updateStampIsActive(true);
+        updateStamp(specific);
     }
   }
 
@@ -630,64 +641,68 @@ function Toolbar(props: {
     <div style={toolbarContainerStyle}>
       <div style={toolbarStyle}>
         <ToolbarSection>
-          {toolElements.map(
-            (
-              tool:
-                | IBasicToolbarButton
-                | IBasicToolbarSelector
-                | IBasicSpecialSelector
-                | IBasicSecondOptionSelector
-            ) =>
-              determineIfIsToolbarButton(tool)
-                ? createToolbarButton(
-                    tool.id,
-                    tool.title,
-                    tool.iconSrc,
-                    tool.iconName,
-                    tools.active === tool.id,
-                    handleToolsElementClick,
-                    tool.enabled
-                  )
-                : determineIfIsToolbarSelector(tool)
-                ? createToolbarSelector(
-                    tool.id,
-                    tool.options,
-                    tools.active === tool.id,
-                    handleToolsElementClick,
-                    handleToolSelectorChange,
-                    handleToolsElementAction,
-                    setSelectedOptionSelector(tool.id, tool),
-                    setColorPalette(tool),
-                    tool.enabled
-                  )
-                : determineIfIsSpecialSelector(tool)
-                ? createSpecialSelector(
-                    tool.id,
-                    tool.icon,
-                    tools.active === tool.id,
-                    setSelectedOptionSelector(tool.id),
-                    tool.styleOptions,
-                    handleToolsElementClick,
-                    handleToolSelectorChange,
-                    tool.enabled
-                  )
-                : determineIfIsToolbarSecondOptionSelector(tool)
-                ? createToolbarSecondOptionSelector(
-                    tool.id,
-                    tool.options,
-                    tool.secondOptions,
-                    tools.active === tool.id,
-                    handleToolsElementClick,
-                    handleToolSelectorChange,
-                    handleToolSecondSelectorChange,
-                    handleToolsElementAction,
-                    setSelectedOptionSelector(tool.id, tool),
-                    setSelectedSecondOptionSelector(tool.id),
-                    setColorPalette(tool),
-                    tool.enabled
-                  )
-                : null
-          )}
+          {toolElements
+            .filter((tool) => {
+              return tool.available;
+            })
+            .map(
+              (
+                tool:
+                  | IBasicToolbarButton
+                  | IBasicToolbarSelector
+                  | IBasicSpecialSelector
+                  | IBasicSecondOptionSelector
+              ) =>
+                determineIfIsToolbarButton(tool)
+                  ? createToolbarButton(
+                      tool.id,
+                      tool.title,
+                      tool.iconSrc,
+                      tool.iconName,
+                      tools.active === tool.id,
+                      handleToolsElementClick,
+                      tool.enabled
+                    )
+                  : determineIfIsToolbarSelector(tool)
+                  ? createToolbarSelector(
+                      tool.id,
+                      tool.options,
+                      tools.active === tool.id,
+                      handleToolsElementClick,
+                      handleToolSelectorChange,
+                      handleToolsElementAction,
+                      setSelectedOptionSelector(tool.id, tool),
+                      setColorPalette(tool),
+                      tool.enabled
+                    )
+                  : determineIfIsSpecialSelector(tool)
+                  ? createSpecialSelector(
+                      tool.id,
+                      tool.icon,
+                      tools.active === tool.id,
+                      setSelectedOptionSelector(tool.id),
+                      tool.styleOptions,
+                      handleToolsElementClick,
+                      handleToolSelectorChange,
+                      tool.enabled
+                    )
+                  : determineIfIsToolbarSecondOptionSelector(tool)
+                  ? createToolbarSecondOptionSelector(
+                      tool.id,
+                      tool.options,
+                      tool.secondOptions,
+                      tools.active === tool.id,
+                      handleToolsElementClick,
+                      handleToolSelectorChange,
+                      handleToolSecondSelectorChange,
+                      handleToolsElementAction,
+                      setSelectedOptionSelector(tool.id, tool),
+                      setSelectedSecondOptionSelector(tool.id),
+                      setColorPalette(tool),
+                      tool.enabled
+                    )
+                  : null
+            )}
         </ToolbarSection>
 
         <ToolbarSection>

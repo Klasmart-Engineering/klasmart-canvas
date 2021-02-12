@@ -50,6 +50,7 @@ import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchron
 import { v4 as uuidv4 } from 'uuid';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
+import { useStampFeature } from './canvas-features/useStampFeature';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -220,7 +221,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
   }, [canvas, eventController, generatedBy]);
 
-
   // useEffects and logic for manage the object manipulation in canvas
   useObjectManipulation(
     canvas as fabric.Canvas,
@@ -274,6 +274,8 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for manage undo/redo feature
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
+
+  useStampFeature();
 
   useSynchronizedMoved(
     canvas,
@@ -372,7 +374,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (!canvasActions && canvas) {
       updateCanvasActions(actions);
     }
-
   }, [actions, updateCanvasActions, canvas, canvasActions]);
 
   return (
@@ -392,7 +393,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
         id={instanceId}
         style={{ ...initialStyle, backgroundColor: 'transparent' }}
         tabIndex={0}
-        // onKeyDown={keyDown}
         onClick={() => {
           actions.addShape(shape);
         }}

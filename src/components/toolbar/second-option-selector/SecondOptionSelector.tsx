@@ -234,11 +234,11 @@ function SecondOptionSelector(props: ISecondOptionSelector) {
           active ? 'selected' : '',
           !active ? 'unselected' : '',
         ].join(' ')}
-        onClick={handleClick}
         disabled={enabled === false}
       >
         <img
           className="icon"
+          onClick={handleClick}
           style={iconStyle}
           src={selectedOption.iconSrc}
           alt={selectedOption.iconName}

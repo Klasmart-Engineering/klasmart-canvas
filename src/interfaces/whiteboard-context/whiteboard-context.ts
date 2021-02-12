@@ -96,6 +96,7 @@ export interface IWhiteboardContext {
   localImage: string | File;
   setLocalImage: (image: string | File) => void;
   openClearWhiteboardModal: () => void;
+  openStampModal: () => void;
   eraserIsActive: boolean;
   updateEraserIsActive: (status: boolean) => void;
   backgroundColor: string;
@@ -106,4 +107,6 @@ export interface IWhiteboardContext {
   setLocalBackground: (condition: boolean) => void;
   stampMode: IStampMode;
   updateStampMode: (mode: IStampMode) => void;
+  stampIsActive: boolean;
+  updateStampIsActive: (status: boolean) => void;
 }

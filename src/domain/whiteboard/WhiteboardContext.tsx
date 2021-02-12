@@ -41,6 +41,8 @@ import { IBrushType } from '../../interfaces/brushes/brush-type';
 import { useBackgroundColor } from './hooks/useBackgroundColor';
 import { useStampMode } from './hooks/useStampMode';
 import { useStamp } from './hooks/useStamp';
+import { useStampIsActive } from './hooks/useStampIsActive';
+import { useStampAssignationModal } from './hooks/useStampAssignationModal';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -91,6 +93,7 @@ export const WhiteboardProvider = ({
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
   } = usePerfectShapeIsActive();
+  const { stampIsActive, updateStampIsActive } = useStampIsActive();
 
   const {
     shapesAreSelectable,
@@ -105,6 +108,10 @@ export const WhiteboardProvider = ({
     openUploadFileModal,
     closeUploadFileModal,
   } = useUploadFileModal();
+  const {
+    StampAssignationModal,
+    openStampAssignationModal,
+  } = useStampAssignationModal();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -128,6 +135,7 @@ export const WhiteboardProvider = ({
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
   ] = useState(false);
+  const [students, assignStudents] = useState<string[]>([]);
 
   const isLocalObject = (id: string, canvasId: string | undefined) => {
     const object = id.split(':');
@@ -149,6 +157,15 @@ export const WhiteboardProvider = ({
       (store.getState().permissionsState as IPermissions).clearWhiteboard
     ) {
       openModal();
+    }
+  };
+
+  /**
+   * Opens Stamp Assignation Modal
+   */
+  const openStampModal = () => {
+    if (allToolbarIsEnabled) {
+      openStampAssignationModal();
     }
   };
 
@@ -281,6 +298,7 @@ export const WhiteboardProvider = ({
     text,
     updateText,
     openClearWhiteboardModal,
+    openStampModal,
     pointerEvents,
     eraseType,
     updateEraseType,
@@ -373,6 +391,8 @@ export const WhiteboardProvider = ({
     setBackgroundColorInCanvas,
     stampMode,
     updateStampMode,
+    stampIsActive,
+    updateStampIsActive,
   };
 
   return (
@@ -413,6 +433,8 @@ export const WhiteboardProvider = ({
         isBackgroundImage={isBackgroundImage}
         setIsBackgroundImage={setIsBackgroundImage}
       />
+
+      <StampAssignationModal assignStudents={assignStudents} />
       {children}
     </WhiteboardContext.Provider>
   );
