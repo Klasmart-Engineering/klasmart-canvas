@@ -44,7 +44,10 @@ export const useChangeLineWidth = (
    * @param {ICanvasObject} object - Object to check
    */
   const isCommonBrush = useCallback((object: ICanvasObject) => {
-    return isEmptyShape(object as TypedShape) || isFreeDrawing(object);
+    return (
+      (isEmptyShape(object as TypedShape) || isFreeDrawing(object)) &&
+      (object as ICanvasBrush).basePath?.type === 'pencil'
+    );
   }, []);
 
   /**
