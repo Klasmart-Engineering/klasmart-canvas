@@ -2,6 +2,10 @@ import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../../interfaces/objects/canvas-object';
 import store from '../../redux/store'
 
+interface IUserInfoOption {
+  value: string, label: string, rectWidth: number, rectHeight: number, textLeft: number, imgSize: number, imgLeft: number, imgTop: number
+}
+
 export class UserInfoTooltip {
   private _left: number = 0;
   private _top: number = 0;
@@ -10,10 +14,17 @@ export class UserInfoTooltip {
   private _text: fabric.Text
   private _shapesGroup: fabric.Group = new fabric.Group()
   private _objectId: string | undefined = ''
-  public displayUserInfo: string
+  public displayUserInfo: string = 'full'
+  private optionUserInfo: IUserInfoOption
   static instance: UserInfoTooltip
   static exists = false
-  
+
+  static infoOptions: IUserInfoOption[] = [
+    {value: "none", label: "None", rectWidth: 0, rectHeight: 0, textLeft: 0, imgSize: 0, imgLeft: 0, imgTop: 0},
+    {value:"avatar", label: "User avatar", rectWidth: 35, rectHeight: 35, textLeft: 0, imgSize: 35, imgLeft: 0, imgTop: 0},
+    {value:"name", label: "User name", rectWidth: 115, rectHeight: 25, textLeft: 2.5, imgSize: 35, imgLeft: 0, imgTop: 2.5},
+    {value:"full", label: "User name and avatar", rectWidth: 150, rectHeight: 40, textLeft: 37.5, imgSize: 35, imgLeft: 2.5, imgTop: 2.5}
+  ]
 
   static createInstance(displayUserInfo: string){
     if(UserInfoTooltip.exists){
@@ -27,7 +38,8 @@ export class UserInfoTooltip {
 
     UserInfoTooltip.exists = true
     
-    this.displayUserInfo = displayUserInfo
+    this.optionUserInfo = UserInfoTooltip.infoOptions[0]
+    this.setInfoOption(displayUserInfo)
 
     this._img = new fabric.Image('')
     this._text = new fabric.Text('')
@@ -36,12 +48,20 @@ export class UserInfoTooltip {
 
   }
 
+  private setInfoOption = (optionValue: string) => {
+    this.displayUserInfo = optionValue
+    const infoOption = UserInfoTooltip.infoOptions.find(option => option.value === this.displayUserInfo)
+    if(infoOption)
+      this.optionUserInfo = infoOption
+  }
+  
+
   private setBasicShapes(){
     this._rect = new fabric.Rect({
       stroke: 'black',
       fill: 'white',
-      width: this.displayUserInfo === "avatar" ? 150 : 115,
-      height: this.displayUserInfo === "avatar" ? 40 : 25,
+      width: this.optionUserInfo.rectWidth,
+      height: this.optionUserInfo.rectHeight,
       shadow: 'rgba(0,0,0,0.3) 5px 5px 5px',
       originX: 'left',
       originY: 'top',
@@ -51,10 +71,10 @@ export class UserInfoTooltip {
     this._img.set({
       originX: 'left',
       originY: 'top',
-      left: 2.5,
-      top: 2.5,
-      width: 35,
-      height: 35,
+      left: this.optionUserInfo.imgLeft,
+      top: this.optionUserInfo.imgTop,
+      width: this.optionUserInfo.imgSize,
+      height: this.optionUserInfo.imgSize,
     });
     
     this._text = new fabric.Text('userName', {
@@ -62,7 +82,7 @@ export class UserInfoTooltip {
       fontFamily: 'sans-serif',
       originX: 'left',
       originY: 'top',
-      left: this.displayUserInfo === "avatar" ? 37.5 : 2.5,
+      left: this.optionUserInfo.textLeft,
       top: 5
     });
   }
@@ -131,13 +151,18 @@ export class UserInfoTooltip {
   }
 
   private generateShapesGroup(){
-    if(this.displayUserInfo === "avatar"){
+    if(this.displayUserInfo === "full"){
       this._shapesGroup = new fabric.Group([this._rect, this._img, this._text], {
         left: this._left,
         top: this._top,
       });
-    }else{
+    }else if(this.displayUserInfo === "name"){
       this._shapesGroup = new fabric.Group([this._rect, this._text], {
+        left: this._left,
+        top: this._top,
+      });
+    }else{
+      this._shapesGroup = new fabric.Group([this._img], {
         left: this._left,
         top: this._top,
       });
@@ -147,7 +172,7 @@ export class UserInfoTooltip {
 
   getDrawing(hoveredObject: ICanvasObject, displayUserInfo: string){
     if(this.displayUserInfo !== displayUserInfo){
-      this.displayUserInfo = displayUserInfo
+      this.setInfoOption(displayUserInfo)
       this.setBasicShapes()
     }
     this.setObject(hoveredObject)

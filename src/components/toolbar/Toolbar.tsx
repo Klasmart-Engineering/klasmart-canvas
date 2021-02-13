@@ -565,6 +565,7 @@ function Toolbar(
         elements: getToolElements,
       });
     }
+    
   }, [
     pointerIsEnabled,
     getActiveTool,

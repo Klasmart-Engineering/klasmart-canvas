@@ -103,7 +103,7 @@ export const WhiteboardProvider = ({
     closeUploadFileModal,
   } = useUploadFileModal();
 
-  const [displayUserInfo, setUserInfoToDisplay] = useState<string>("avatar");
+  const [displayUserInfo, setUserInfoToDisplay] = useState<string>("full");
   const setUserInfo = (value: string) => {
     setUserInfoToDisplay(value)
   }

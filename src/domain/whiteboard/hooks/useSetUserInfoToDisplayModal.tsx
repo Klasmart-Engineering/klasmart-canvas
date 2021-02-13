@@ -8,6 +8,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { useEffect } from 'react';
+import { UserInfoTooltip } from '../brushes/classes/userInfoTooltip';
 
 export interface ISetUserInfoToDisplayModal {
   selection: string;
@@ -73,29 +74,21 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
           >
             <FormControl component="fieldset">
               <RadioGroup
-                aria-label="gender"
+                aria-label="infotodisplay"
                 name="infotodisplay"
                 value={selection}
                 onChange={handleChange}
               >
-                <FormControlLabel
-                  checked={selection === 'none'}
-                  value="none"
+                {UserInfoTooltip.infoOptions.map(option => (
+                  <FormControlLabel
+                  key={option.value}
+                  checked={selection === option.value}
+                  value={option.value}
                   control={<Radio />}
-                  label="None"
+                  label={option.label}
                 />
-                <FormControlLabel
-                  checked={selection === 'name'}
-                  value="name"
-                  control={<Radio />}
-                  label="User name"
-                />
-                <FormControlLabel
-                  checked={selection === 'avatar'}
-                  value="avatar"
-                  control={<Radio />}
-                  label="User name and avatar"
-                />
+                ))}
+                
               </RadioGroup>
             </FormControl>
           </div>
