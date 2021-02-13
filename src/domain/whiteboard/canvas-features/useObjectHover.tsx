@@ -1,8 +1,7 @@
-import { useContext, useEffect } from 'react';
+import { useEffect } from 'react';
 import { fabric } from 'fabric';
 import { UserInfoTooltip } from '../brushes/classes/userInfoTooltip';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
-import { WhiteboardContext } from '../WhiteboardContext';
 /**
  * Handles logic for showing user info on object hover
  * @param {fabric.Canvas} canvas - Canvas to draw
@@ -13,11 +12,6 @@ export const useObjectHover = (
 ) => {
   let tooltipShapesGroup: fabric.Group;
   const tooltip = UserInfoTooltip.createInstance(displayUserInfo);
-
-  //getting this state value to avoid conflict
-  const {
-    floodFillIsActive
-  } = useContext(WhiteboardContext);
 
   const showTooltip = (hoveredObject: fabric.Object) => {
     if (
@@ -62,14 +56,9 @@ export const useObjectHover = (
    * Activates hover tooltip.
    */
   useEffect(() => {
-    
-    if (canvas && displayUserInfo !== 'none' && !floodFillIsActive) {
+    if (canvas && displayUserInfo !== 'none') {
       canvas.on('mouse:move', function (e) {
         checkIfIsHoverSomeObject(e);
-      });
-      canvas.on('mouse:down', function (e) {
-        console.log("down?")
-        hideTooltip()
       });
     }
 
@@ -77,5 +66,4 @@ export const useObjectHover = (
       canvas?.off('mouse:move');
     };
   });
-
 };
