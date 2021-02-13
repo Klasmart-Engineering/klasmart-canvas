@@ -1,4 +1,3 @@
-import { combineReducers } from 'redux';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
 import {
   UPDATE_CLEAR_WHITEBOARD,
@@ -15,7 +14,6 @@ import {
   UPDATE_UNDO_REDO,
   UPDATE_UPLOAD_IMAGE,
 } from './actions';
-import { canvasBoardReducer } from './canvasActionReducer';
 
 /**
  * Default permissions state.
@@ -35,7 +33,8 @@ const permissionsState: IPermissions = {
   uploadImage: false,
   backgroundColor: false,
   cursorPointer: false,
-};
+  setUserInfoToDisplay: false,
+}
 
 /**
  * Reducer
@@ -91,10 +90,3 @@ export function permissionsReducer(
   }
 }
 
-/**
- * Root reducer
- */
-export const rootReducer = combineReducers({
-  permissionsState: permissionsReducer,
-  canvasBoardState: canvasBoardReducer,
-});

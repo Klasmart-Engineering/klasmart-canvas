@@ -34,6 +34,7 @@ import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
 import WhiteboardToggle from '../../components/WhiteboardToogle';
 import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 import { useUploadFileModal } from './hooks/useUploadFileModal';
+import { useSetUserInfoToDisplayModal } from './hooks/useSetUserInfoToDisplayModal';
 import store from './redux/store';
 import { getToolbarIsEnabled } from './redux/utils';
 import { IPermissions } from '../../interfaces/permissions/permissions';
@@ -110,6 +111,15 @@ export const WhiteboardProvider = ({
     closeUploadFileModal,
   } = useUploadFileModal(eventSerializer, userId as string);
 
+  const [displayUserInfo, setUserInfoToDisplay] = useState<string>("full");
+  const setUserInfo = (value: string) => {
+    setUserInfoToDisplay(value)
+  }
+  const {
+    SetUserInfoToDisplayModal,
+    openSetUserInfoToDisplayModal,
+  } = useSetUserInfoToDisplayModal(setUserInfo);
+
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
@@ -132,6 +142,7 @@ export const WhiteboardProvider = ({
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
   ] = useState(false);
+  
 
   const isLocalObject = (id: string, canvasId: string | undefined) => {
     const object = id.split(':');
@@ -397,6 +408,8 @@ export const WhiteboardProvider = ({
     eventController,
     isCursorObject,
     findObjectById,
+    openSetUserInfoToDisplayModal,
+    displayUserInfo
   };
 
   return (
@@ -436,6 +449,11 @@ export const WhiteboardProvider = ({
         }
         isBackgroundImage={isBackgroundImage}
         setIsBackgroundImage={setIsBackgroundImage}
+      />
+      <SetUserInfoToDisplayModal
+        
+        setSelection={setUserInfoToDisplay}
+        selection={displayUserInfo}
       />
       {children}
     </WhiteboardContext.Provider>

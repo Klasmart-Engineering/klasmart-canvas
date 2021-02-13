@@ -7,21 +7,11 @@ import { ICanvasKeyboardEvent } from '../../interfaces/canvas-events/canvas-keyb
 import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardContainer';
 
 // Redux
-import { Provider } from 'react-redux'
-import store from './redux/store'
+import { Provider } from 'react-redux';
+import store from './redux/store';
 import AuthMenu from '../../components/AuthMenu';
 
-const teacher = {
-  allowClearAll: true,
-  allowClearOthers: true,
-  allowClearMyself: true,
-};
-
-const student = {
-  allowClearAll: false,
-  allowClearOthers: false,
-  allowClearMyself: true,
-};
+const users = store.getState().usersState;
 
 function Whiteboard() {
   const whiteboardWidth = 740;
@@ -59,7 +49,44 @@ function Whiteboard() {
 
   return (
     <>
-      <WhiteboardProvider
+      {users.map(user => (
+        <WhiteboardProvider
+        key={user.id}
+        clearWhiteboardPermissions={user.permissions}
+        allToolbarIsEnabled={user.role === 'teacher'}
+        activeCanvas={activeCanvas}
+        userId={user.id}
+      >
+        <Provider store={store}>
+          <AuthMenu userId={user.id} />
+          <div
+            className="whiteboard"
+            onClick={() => {
+              activeCanvas.current = `canvas${user.id}`;
+            }}
+          >
+            <Toolbar />
+            <WhiteboardContainer
+              width={whiteboardWidth}
+              height={whiteboardHeight}
+            >
+              <WhiteboardCanvas
+                instanceId={`canvas${user.id}`}
+                userId={user.id}
+                initialStyle={canvasStyle}
+                pointerEvents={true}
+                clearWhiteboardPermissions={user.permissions}
+                pixelWidth={whiteboardWidth}
+                pixelHeight={whiteboardHeight}
+              >
+                <button>{user.role}</button>
+              </WhiteboardCanvas>
+            </WhiteboardContainer>
+          </div>
+        </Provider>
+      </WhiteboardProvider>
+      ))}
+      {/* <WhiteboardProvider
         clearWhiteboardPermissions={teacher}
         allToolbarIsEnabled={true}
         activeCanvas={activeCanvas}
@@ -158,7 +185,7 @@ function Whiteboard() {
             </WhiteboardContainer>
           </div>
         </Provider>
-      </WhiteboardProvider>
+      </WhiteboardProvider> */}
     </>
   );
 }

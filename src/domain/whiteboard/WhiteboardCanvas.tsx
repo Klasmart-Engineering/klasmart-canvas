@@ -51,6 +51,7 @@ import { usePointerFeature } from './canvas-features/usePointerFeature';
 import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useSynchronizedBackgroundColorChanged';
+import { useObjectHover } from './canvas-features/useObjectHover';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -125,6 +126,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     backgroundColor,
     eventSerializer,
     eventController,
+    displayUserInfo
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { dispatch: undoRedoDispatch } = UndoRedo(
@@ -274,6 +276,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for manage pointers
   usePointerFeature(canvas as fabric.Canvas, userId, permissions);
+  
+  // useEffects and logic for manage the changes that would happen when an object is hovered
+  useObjectHover(canvas as fabric.Canvas, displayUserInfo);
 
   useSynchronizedMoved(
     canvas,

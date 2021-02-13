@@ -5,6 +5,7 @@ import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elem
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
 
+
 /**
  * Maps permissions to action tools.
  * @param actions Action tool options for canvas.
@@ -40,6 +41,10 @@ export const mappedActionElements = (
         case 'redo': {
           const enabled =
             allToolbarIsEnabled || serializerToolbarState.undoRedo;
+          return { ...elmnt, enabled };
+        }
+        case 'set_user_info_to_display': {
+          const enabled = allToolbarIsEnabled || serializerToolbarState.shape;
           return { ...elmnt, enabled };
         }
         default: {

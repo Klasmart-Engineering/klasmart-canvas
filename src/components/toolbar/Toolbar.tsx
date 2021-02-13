@@ -84,6 +84,7 @@ function Toolbar(props: {
     brushType,
     updateImagePopupIsOpen,
     openUploadFileModal,
+    openSetUserInfoToDisplayModal,
     openClearWhiteboardModal,
     updateEraserIsActive,
     fillBackgroundColor,
@@ -268,6 +269,14 @@ function Toolbar(props: {
             (toolbarIsEnabled && props.permissions.uploadImage)
           ) {
             openUploadFileModal();
+          }
+          break;
+        case ELEMENTS.SET_USER_INFO_TO_DISPLAY:
+          if (
+            teacherHasPermission ||
+            (toolbarIsEnabled && props.permissions.uploadImage)
+          ) {
+            openSetUserInfoToDisplayModal();
           }
           break;
       }

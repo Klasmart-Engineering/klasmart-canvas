@@ -53,6 +53,7 @@ function AuthMenu(props: { userId: string; [key: string]: any }) {
     downloadCanvas,
     uploadImage,
     backgroundColor,
+    setUserInfoToDisplay
   } = props.permissions;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {

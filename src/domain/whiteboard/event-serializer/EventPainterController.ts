@@ -103,7 +103,14 @@ export class EventPainterController extends EventEmitter
           this.emit('brushTypeChanged', data.id, data.target);
           break;
         }
-      }
+        case 'setUserInfoToDisplay':{
+          this.emit('setUserInfoToDisplay', data.id, data.target)
+          break;
+        }
+        default:
+          break;
+        }
+      
     };
 
     this.ws.onclose = () => {
@@ -214,8 +221,21 @@ export class EventPainterController extends EventEmitter
         break;
       case 'cursorPointer':
         this.cursorPointer(event.id, target);
+      case 'setUserInfoToDisplay':
+        this.setUserInfoToDisplay('setUserInfoToDisplay', target)
+        break;
+      default:
         break;
     }
+  }
+
+  private setUserInfoToDisplay(id: string, target: ICanvasObject) {
+    this.emit('setUserInfoToDisplay', id, target);
+    
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, eventType: 'setUserInfoToDisplay', target })
+    );
   }
 
   private textEdit(id: string, target: ICanvasObject) {

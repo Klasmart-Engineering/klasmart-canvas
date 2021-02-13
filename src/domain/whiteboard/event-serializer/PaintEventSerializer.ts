@@ -51,7 +51,8 @@ export type ObjectType =
   | 'backgroundImage'
   | 'localImage'
   | 'svg'
-  | 'cursorPointer';
+  | 'cursorPointer'
+  | 'userInfoToDisplay';
 
 export type PayloadTarget =
   | ICanvasObject

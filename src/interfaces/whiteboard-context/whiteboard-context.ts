@@ -109,4 +109,6 @@ export interface IWhiteboardContext {
   eventController: any;
   isCursorObject: (object: ICanvasObject) => boolean;
   findObjectById: (id: string) => ICanvasObject | undefined;
+  displayUserInfo: string;
+  openSetUserInfoToDisplayModal: () => void;
 }
