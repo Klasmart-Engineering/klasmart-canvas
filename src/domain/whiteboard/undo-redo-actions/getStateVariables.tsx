@@ -7,7 +7,6 @@ import { CanvasHistoryState } from '../reducers/undo-redo';
  * @param {CanvasHistoryState} state - Current state to extract variables
  */
 export const getStateVariables = (state: CanvasHistoryState) => {
-  debugger;
   const currentEvent = state.events[state.eventIndex];
   const currentObject = currentEvent?.event as IUndoRedoSingleEvent;
   const currentState = state.states[state.activeStateIndex as number];

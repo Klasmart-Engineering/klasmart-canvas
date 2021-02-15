@@ -19,6 +19,8 @@ import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { fabricGif } from '../gifs-actions/fabricGif';
 import { addSynchronizationInSpecialBrushes } from '../brushes/actions/addSynchronizationInSpecialBrushes';
 import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
+import { CANVAS_OBJECT_PROPS } from '../../../config/undo-redo-values';
+import { IImageOptions } from 'fabric/fabric-impl';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -27,7 +29,7 @@ const useSynchronizedAdded = (
   shouldHandleRemoteEvent: (id: string) => boolean,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
-  const { floodFillIsActive, isGif, image, setLocalImage } = useContext(
+  const { floodFillIsActive, isGif, image, setLocalImage, setLocalBackground } = useContext(
     WhiteboardContext
   );
   const {
@@ -102,6 +104,18 @@ const useSynchronizedAdded = (
         };
         eventSerializer?.push('added', payload);
 
+        const event = { event: payload, type: 'backgroundAdded' } as IUndoRedoEvent;
+        const background = { ...e.target, backgroundImageEditable: false };
+
+        // send undo redo dispatch here.
+        undoRedoDispatch({
+          type: SET,
+          background,
+          payload: canvas?.getObjects(),
+          canvasId: userId,
+          event,
+        });
+
         return;
       }
 
@@ -138,9 +152,10 @@ const useSynchronizedAdded = (
           break;
 
         case 'image':
-          if (e.target.basePath) {
+          const element = e.target?.getElement();
+          if (element.currentSrc) {
             target = {
-              basePath: e.target.basePath,
+              basePath: { imageData: element.currentSrc },
               scaleX: e.target.scaleX,
               scaleY: e.target.scaleY,
               angle: e.target.angle,
@@ -175,22 +190,26 @@ const useSynchronizedAdded = (
           payload.type === 'path' &&
           (payload.target as ICanvasPathBrush)?.basePath)
       ) {
-        const event = { event: payload, type: 'added' } as IUndoRedoEvent;
+        if (e.type !== 'backgroundImage') {
+          const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
-        undoRedoDispatch({
-          type: SET,
-          payload: (canvas?.getObjects() as unknown) as TypedShape[],
-          canvasId: userId,
-          event,
-        });
+          undoRedoDispatch({
+            type: SET,
+            payload: (canvas?.getObjects() as unknown) as TypedShape[],
+            canvasId: userId,
+            event,
+          });
+        }
 
-        eventSerializer?.push('added', payload);
+        if (!isGif && e.type !== 'backgroundImage') {
+          eventSerializer?.push('added', payload);
+        }
       }
 
       if (isGif) {
         const payload: ObjectEvent = {
           type: 'gif',
-          target: URL.createObjectURL(image),
+          target: { src: image as string } as ICanvasObject,
           id: e.target.id,
         };
 
@@ -200,35 +219,20 @@ const useSynchronizedAdded = (
       }
 
       if (e.type === 'backgroundImage') {
-        debugger;
-        const payload: ObjectEvent = {
-          type: e.type,
-          target: e.target,
-          id: e.target.id,
-        };
-        eventSerializer?.push('added', payload);
-
+        eventSerializer?.push('added', { ...payload, type: 'backgroundImage' });
         const event = { event: payload, type: 'backgroundAdded' } as IUndoRedoEvent;
+        const background = { ...((canvas?.backgroundImage as fabric.Image)?.toJSON(CANVAS_OBJECT_PROPS)), backgroundImageEditable: true };
 
         // send undo redo dispatch here.
         undoRedoDispatch({
-          type: SET_BACKGROUND,
-          background: payload,
+          type: SET,
+          background,
           payload: canvas?.getObjects(),
           canvasId: userId,
           event,
         });
 
         return;
-      }
-
-      if (type === 'image' && !e.target.basePath && isGif) {
-        const payload: ObjectEvent = {
-          type,
-          target: e.target,
-          id: e.target.id,
-        };
-        eventSerializer?.push('added', payload);
       }
     };
 
@@ -440,7 +444,7 @@ const useSynchronizedAdded = (
       if (objectType === 'gif') {
         (async function () {
           try {
-            const gif = await fabricGif(target + '', 200, 200, 2000);
+            const gif = await fabricGif(`${target.src} `, 200, 200, 2000);
             gif.set({ top: 0, left: 0, selectable: false, evented: false });
             gif.id = id;
             canvas?.add(gif);
@@ -461,16 +465,20 @@ const useSynchronizedAdded = (
             'transparent',
             canvas.renderAll.bind(canvas)
           );
+          setLocalImage('');
+          setLocalBackground(false);
+        let src = (target as ICanvasPathBrush).basePath?.imageData || target.src;
 
-        fabric.Image.fromURL(target.src as string, function (img) {
+        fabric.Image.fromURL(src as string, function (img) {
           canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
             scaleX: (canvas.width || 0) / (img.width || 0),
             scaleY: (canvas.height || 0) / (img.height || 0),
             originX: 'left',
             originY: 'top',
-            // @ts-ignore
             id,
-          });
+          } as IImageOptions);
+
+          canvas?.renderAll();
         });
 
         return;
@@ -513,6 +521,7 @@ const useSynchronizedAdded = (
     return () => {
       eventController?.removeListener('added', added);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     canvas,
     eventController,

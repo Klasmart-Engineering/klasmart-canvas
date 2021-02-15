@@ -558,6 +558,7 @@ function Toolbar(props: {
         elements: getToolElements,
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     pointerIsEnabled,
     getActiveTool,

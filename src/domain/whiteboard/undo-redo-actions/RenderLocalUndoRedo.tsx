@@ -1,3 +1,4 @@
+import { fabric } from 'fabric';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { IPathTarget } from '../../../interfaces/canvas-events/path-target';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
@@ -62,7 +63,9 @@ const loadFromJSON = (
   instanceId: string,
   state: CanvasHistoryState,
   action: 'UNDO' | 'REDO',
-  setBackgroundColorInCanvas: (color: string) => void
+  setBackgroundColorInCanvas: (color: string) => void,
+  setLocalImage: (img: string | File) => void,
+  setBackgroundImageIsPartialErasable: (state: boolean) => void
 ) => {
   const { currentEvent, nextEvent } = getStateVariables(state);
 
@@ -78,9 +81,36 @@ const loadFromJSON = (
             canvas.discardActiveObject();
           }
         }
-      });
+      }); 
 
-    debugger;
+    if (state.backgrounds.length && state.activeStateIndex !== null) {
+      let bgs = state.backgrounds.slice(0, state.activeStateIndex + 1); 
+      let target = bgs.reverse().find((item: any) => item !== null);
+
+      if (target && (target as ICanvasObject).backgroundImageEditable) {
+        setBackgroundImageIsPartialErasable(true);
+        fabric.Image.fromURL((target as ICanvasObject).src as string, function (img) {
+          canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+            scaleX: (target as ICanvasObject).scaleX,
+            scaleY: (target as ICanvasObject).scaleY,
+            originX: 'left',
+            originY: 'top',
+            // @ts-ignore
+            id: target.id,
+          });
+
+          canvas?.renderAll();
+          canvas?.trigger('background:modified', img);
+        });
+      } else if (target && !(target as ICanvasObject).backgroundImageEditable) {
+        setBackgroundImageIsPartialErasable(false);
+        setLocalImage((target as ICanvasObject).backgroundImage as string);
+      } else {
+        setLocalImage('');
+      }
+    } else if (state.backgrounds.length && state.activeStateIndex === null) {
+      setLocalImage('');
+    }
 
     if (
       (action === 'UNDO' && nextEvent.type === 'backgroundColorChanged') ||
@@ -120,7 +150,9 @@ export const RenderLocalUndoRedo = (
   state: CanvasHistoryState,
   action: 'UNDO' | 'REDO',
   shapesAreSelectable: boolean,
-  setBackgroundColorInCanvas: (color: string) => void
+  setBackgroundColorInCanvas: (color: string) => void,
+  setLocalImage: (img: string | File) => void,
+  setBackgroundImageIsPartialErasable: (state: boolean) => void
 ) => {
   /**
    * Reset selectable, evented and strokeUniform properties
@@ -160,7 +192,9 @@ export const RenderLocalUndoRedo = (
     instanceId,
     state,
     action,
-    setBackgroundColorInCanvas
+    setBackgroundColorInCanvas,
+    setLocalImage,
+    setBackgroundImageIsPartialErasable
   );
 
   // If undo/redo was applied in a group of objects

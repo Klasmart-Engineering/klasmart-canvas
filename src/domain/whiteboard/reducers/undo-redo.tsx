@@ -62,7 +62,10 @@ export interface CanvasHistoryState {
    */
   activeObjects: ICanvasObject[];
 
-  backgrounds: any[];
+  /**
+   * 
+   */
+  backgrounds: (string | fabric.Image | null)[];
 }
 
 /**
@@ -77,7 +80,7 @@ export interface CanvasAction {
   /**
    * Array of fabric objects.
    */
-  payload?: fabric.Object[];
+  payload?: fabric.Object [];
 
   /**
    * ID of canvas.
@@ -99,7 +102,10 @@ export interface CanvasAction {
    */
   eventId?: string | undefined;
 
-  background?: any;
+  /**
+   * Canvas background payload
+   */
+  background?: fabric.Image;
 }
 
 /**
@@ -237,6 +243,21 @@ const spliceStates = (
   return states;
 };
 
+const spliceBackgroundStates = (
+  activeStateIndex: number | null,
+  backgroundStates: any[]
+): string[] => {
+  let states = [...backgroundStates];
+
+  if (activeStateIndex !== null && activeStateIndex + 1 < states.length) {
+    states.splice(activeStateIndex + 1, 9e9);
+  } else if (activeStateIndex === null) {
+    states = [];
+  }
+
+  return states;
+};
+
 /**
  * Removes future events if a new event has
  * been created after an undo.
@@ -269,18 +290,21 @@ const reducer = (
   switch (action.type) {
     // Sets state when new object is created.
     case SET: {
-      if (
-        !action.event ||
-        (action.event.type === 'removed' && state.activeStateIndex === null) ||
-        (action.event.type !== 'backgroundColorChanged' &&
-          !action.payload?.length &&
-          !state.states.length)
-      ) {
-        return state;
+      if (!action.background) {
+        if (
+          !action.event ||
+          (action.event.type === 'removed' && state.activeStateIndex === null) ||
+          (action.event.type !== 'backgroundColorChanged' &&
+            !action.payload?.length &&
+            !state.states.length)
+        ) {
+          return state;
+        }
       }
 
       let states = [...state.states];
       let events = [...state.events];
+
       const selfItems = filterById(
         action.canvasId as string,
         action.payload,
@@ -298,6 +322,7 @@ const reducer = (
       ] as unknown) as [fabric.Object | TypedShape]);
 
       states = spliceStates(state.activeStateIndex, state.states);
+      let backgrounds = spliceBackgroundStates(state.activeStateIndex, state.backgrounds);
 
       // Formats and creates new state.
       const mappedSelfState = objectStringifier(selfItems);
@@ -324,7 +349,7 @@ const reducer = (
           ...stateItems,
           events,
           eventIndex: events.length - 1,
-          backgrounds: [ ...state.backgrounds, null ],
+          backgrounds: [ ...backgrounds, action.background || null ],
         };
       } else if (action.event && Array.isArray(action.event)) {
         events = [...events, ...action.event];
@@ -332,56 +357,9 @@ const reducer = (
           ...stateItems,
           events,
           eventIndex: events.length - 1,
-          backgrounds: [ ...state.backgrounds, null ],
+          backgrounds: [ ...backgrounds, action.background || null ],
         };
       }
-
-      return stateItems;
-    }
-
-    case SET_BACKGROUND: {
-      let states = [...state.states];
-      let events = [...state.events];
-      const selfItems = filterById(
-        action.canvasId as string,
-        action.payload,
-        true
-      );
-      const otherObjects = filterById(
-        action.canvasId as string,
-        action.payload,
-        false
-      );
-
-      const currentState = objectStringifier(([
-        ...selfItems,
-        ...otherObjects,
-      ] as unknown) as [fabric.Object | TypedShape]);
-
-      states = spliceStates(state.activeStateIndex, state.states);
-      const mappedSelfState = objectStringifier(selfItems);
-      states = limitValidator(
-        [...states, mappedSelfState],
-        STATES_LIMIT
-      ) as string[];
-
-
-      events = spliceEvents(state.eventIndex, events);
-      events = limitValidator(events, STATES_LIMIT) as IUndoRedoEvent[];
-      events = [ ...events, action.event as IUndoRedoEvent ];
-      
-      let target = action.background.target.toJSON(CANVAS_OBJECT_PROPS);
-      let stateItems = {
-        ...state,
-        states,
-        actionType: SET_BACKGROUND,
-        backgrounds: [ ...state.backgrounds, target ],
-        activeStateIndex: states.length - 1,
-        activeState: currentState,
-        events,
-        eventIndex: events.length - 1,
-        otherObjects: objectStringifier(otherObjects),
-      };
 
       return stateItems;
     }

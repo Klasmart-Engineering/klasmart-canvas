@@ -28,4 +28,6 @@ export interface ICanvasObject extends fabric.Object {
   active?: boolean;
   isActiveErase?: boolean;
   backgroundImage?: string | File;
+  rawData?: any;
+  backgroundImageEditable?: boolean;
 }

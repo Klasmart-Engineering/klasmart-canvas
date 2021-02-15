@@ -43,7 +43,7 @@ export const RenderRemoteUndo = (
     const currentIds = currentObject.target.joinedIds as string[];
     const objects = JSON.parse(currentState).objects;
 
-    if (currentIds) {
+    if (currentIds && joinedIds) {
       joinedIds = [...joinedIds, ...currentIds];
     }
 

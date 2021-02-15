@@ -10,7 +10,7 @@ import { ICanvasObject } from '../../../../interfaces/objects/canvas-object';
 export const setBasePathInNormalBrushes = (object: ICanvasPathBrush) => {
   // Getting point from SVG data in object
   const points: ICoordinate[] | undefined = convertSVGPathInPoints(
-    (object as ICanvasObject) as fabric.Path
+    (object as unknown as ICanvasObject) as fabric.Path
   );
 
   // Setting properties of base Path and adding them in current object

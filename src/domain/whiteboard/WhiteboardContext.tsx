@@ -39,6 +39,7 @@ import { getToolbarIsEnabled } from './redux/utils';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
 import { useBackgroundColor } from './hooks/useBackgroundColor';
+import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -66,6 +67,10 @@ export const WhiteboardProvider = ({
   const { backgroundColor, updateBackgroundColor } = useBackgroundColor();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
+
+  const {
+    state: { eventSerializer, eventController },
+  } = useSharedEventSerializer();
 
   const {
     ClearWhiteboardModal,
@@ -100,7 +105,7 @@ export const WhiteboardProvider = ({
     UploadFileModal,
     openUploadFileModal,
     closeUploadFileModal,
-  } = useUploadFileModal();
+  } = useUploadFileModal(eventSerializer, userId as string);
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -367,6 +372,8 @@ export const WhiteboardProvider = ({
     updateBackgroundColor,
     fillBackgroundColor,
     setBackgroundColorInCanvas,
+    eventSerializer,
+    eventController,
   };
 
   return (

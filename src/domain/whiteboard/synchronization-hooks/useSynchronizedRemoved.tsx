@@ -60,6 +60,8 @@ const useSynchronizedRemoved = (
             // https://stackoverflow.com/a/14171884
             // @ts-ignore
             canvas?.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+            setLocalImage('');
+            setBackgroundImage('');
           }
 
           break;
@@ -112,6 +114,8 @@ const useSynchronizedRemoved = (
         case 'removeBackground': {
           // @ts-ignore
           canvas?.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+          setLocalImage('');
+          break;
         }
         default:
           canvas?.forEachObject(function (obj: ICanvasObject | TypedShape) {
