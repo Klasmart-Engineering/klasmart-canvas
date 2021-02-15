@@ -4,6 +4,7 @@ import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { IToolbarUI } from '../../../interfaces/toolbar/toolbar-ui';
 import { IBrushSyncTarget } from '../../../interfaces/brushes/brush-sync-target';
 import { Image } from 'fabric/fabric-impl';
+import { IStampSyncTarget } from '../../../interfaces/stamps/stamp-sync-target';
 
 // TODO: This service should probably implement some sort of
 // event batching, especially the line drawing can generate
@@ -67,6 +68,7 @@ export type PayloadTarget =
     }
   | { type: string; svg: string }
   | IBrushSyncTarget
+  | IStampSyncTarget
   | string;
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {

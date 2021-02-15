@@ -43,6 +43,7 @@ import { useStampMode } from './hooks/useStampMode';
 import { useStamp } from './hooks/useStamp';
 import { useStampIsActive } from './hooks/useStampIsActive';
 import { useStampAssignationModal } from './hooks/useStampAssignationModal';
+import { useStampAssignedStudents } from './hooks/useStampAssignedStudents';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -69,6 +70,10 @@ export const WhiteboardProvider = ({
   const { floodFill, updateFloodFill } = useFloodFill();
   const { stamp, updateStamp } = useStamp();
   const { stampMode, updateStampMode } = useStampMode();
+  const {
+    stampAssignedStudents,
+    updateStampAssignedStudents,
+  } = useStampAssignedStudents();
   const { backgroundColor, updateBackgroundColor } = useBackgroundColor();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
@@ -135,7 +140,10 @@ export const WhiteboardProvider = ({
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
   ] = useState(false);
-  const [students, assignStudents] = useState<string[]>([]);
+
+  const studentsList = store
+    .getState()
+    .usersState.filter((user) => user.role === 'student');
 
   const isLocalObject = (id: string, canvasId: string | undefined) => {
     const object = id.split(':');
@@ -393,6 +401,8 @@ export const WhiteboardProvider = ({
     updateStampMode,
     stampIsActive,
     updateStampIsActive,
+    stampAssignedStudents,
+    updateStampAssignedStudents,
   };
 
   return (
@@ -434,7 +444,10 @@ export const WhiteboardProvider = ({
         setIsBackgroundImage={setIsBackgroundImage}
       />
 
-      <StampAssignationModal assignStudents={assignStudents} />
+      <StampAssignationModal
+        studentsList={studentsList}
+        assignStudents={updateStampAssignedStudents}
+      />
       {children}
     </WhiteboardContext.Provider>
   );

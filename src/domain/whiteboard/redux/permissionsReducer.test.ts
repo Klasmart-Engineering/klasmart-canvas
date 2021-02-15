@@ -1,5 +1,5 @@
-import fetchMock from 'fetch-mock'
-import expect from 'expect'
+import fetchMock from 'fetch-mock';
+import expect from 'expect';
 import { permissionsReducer } from './permissionsReducer';
 
 /**
@@ -15,36 +15,37 @@ const permissionsState = {
   text: false,
   shape: false,
   undoRedo: false,
+  backgroundColor: false,
   clearWhiteboard: false,
   downloadCanvas: false,
   uploadImage: false,
-}
+};
 
 describe('async actions', () => {
   afterEach(() => {
-    fetchMock.restore()
-  })
+    fetchMock.restore();
+  });
 
   it('creates FETCH_TODOS_SUCCESS when fetching todos has been done', () => {
     expect(
       permissionsReducer(undefined, {
         type: 'pen',
-        payload: true
+        payload: true,
       })
-    ).toEqual({ ...permissionsState, pen: true })
+    ).toEqual({ ...permissionsState, pen: true });
 
     expect(
       permissionsReducer(undefined, {
         type: 'erase',
-        payload: true
+        payload: true,
       })
-    ).toEqual({ ...permissionsState, erase: true })
+    ).toEqual({ ...permissionsState, erase: true });
 
     expect(
       permissionsReducer(undefined, {
         type: 'floodFill',
-        payload: true
+        payload: true,
       })
-    ).toEqual({ ...permissionsState, floodFill: true })
+    ).toEqual({ ...permissionsState, floodFill: true });
   });
-})
+});

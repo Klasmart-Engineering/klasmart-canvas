@@ -10,9 +10,11 @@ import {
   FormControlLabel,
   FormGroup,
 } from '@material-ui/core';
+import { IUser } from '../../../interfaces/user/user';
 
 export interface IStampAssignationModal {
   assignStudents: (studentIds: string[]) => void;
+  studentsList: IUser[];
 }
 
 export const useStampAssignationModal = () => {
@@ -27,14 +29,35 @@ export const useStampAssignationModal = () => {
   }, []);
 
   const StampAssignationModal = (props: IStampAssignationModal) => {
-    const [students, setStudents] = useState([]);
+    const initStudentsArray = () => {
+      return studentsList.map((_) => false);
+    };
+
+    const { studentsList, assignStudents } = props;
+    let students = initStudentsArray();
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const clicked = event.target.name;
+      const clicked = event.target.id;
+      const clickedIndex = studentsList.findIndex(
+        (student) => student.id === clicked
+      );
 
-      console.log(clicked);
+      students[clickedIndex] = event.target.checked;
+    };
 
-      // setValue((event.target as HTMLInputElement).value);
+    const assignStampToStudents = () => {
+      const assigned = studentsList
+        .filter((_, index) => {
+          return students[index];
+        })
+        .map((student) => student.id);
+
+      setOpen(false);
+      assignStudents(assigned);
+    };
+
+    const areAssignedStudents = () => {
+      return students.find((student) => student);
     };
 
     return (
@@ -50,35 +73,27 @@ export const useStampAssignationModal = () => {
           </DialogTitle>
           <div
             style={{
-              padding: '20px',
+              padding: '0 20px 10px 20px',
             }}
           >
             <FormControl component="fieldset">
               <FormGroup>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={students[0]}
-                      onChange={handleChange}
-                      name="student1"
-                    />
-                  }
-                  label="John"
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={students[1]}
-                      onChange={handleChange}
-                      name="student2"
-                    />
-                  }
-                  label="Mary"
-                />
+                {studentsList.map((student) => (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        id={student.id}
+                        onChange={handleChange}
+                        name={student.id}
+                      />
+                    }
+                    label={student.name}
+                  />
+                ))}
               </FormGroup>
             </FormControl>
           </div>
-          <DialogActions>
+          <DialogActions style={{ padding: '10px 20px 20px 20px' }}>
             <Button
               onClick={closeStampAssignationModal}
               color="primary"
@@ -90,7 +105,8 @@ export const useStampAssignationModal = () => {
               component="span"
               color="default"
               variant="contained"
-              onClick={closeStampAssignationModal}
+              onClick={assignStampToStudents}
+              disabled={!areAssignedStudents()}
             >
               Assign
             </Button>

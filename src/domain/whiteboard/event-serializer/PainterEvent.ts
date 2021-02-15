@@ -16,7 +16,8 @@ export type PainterEventType =
   | 'pointer'
   | 'textEdit'
   | 'brushTypeChanged'
-  | 'backgroundColorChanged';
+  | 'backgroundColorChanged'
+  | 'sendStamp';
 
 export interface PainterEvent {
   // The event type.

@@ -109,4 +109,6 @@ export interface IWhiteboardContext {
   updateStampMode: (mode: IStampMode) => void;
   stampIsActive: boolean;
   updateStampIsActive: (status: boolean) => void;
+  stampAssignedStudents: string[];
+  updateStampAssignedStudents: (studentIds: string[]) => void;
 }
