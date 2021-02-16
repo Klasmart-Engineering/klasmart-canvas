@@ -29,26 +29,33 @@ export const useStampAssignationModal = () => {
   }, []);
 
   const StampAssignationModal = (props: IStampAssignationModal) => {
+    const { studentsList, assignStudents } = props;
     const initStudentsArray = () => {
       return studentsList.map((_) => false);
     };
 
-    const { studentsList, assignStudents } = props;
-    let students = initStudentsArray();
+    const [studentsStatus, setStudentsStatus] = useState(initStudentsArray());
+
+    const [selectionExists, setSelectionExists] = useState(false);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      let status = studentsStatus;
+
       const clicked = event.target.id;
       const clickedIndex = studentsList.findIndex(
         (student) => student.id === clicked
       );
 
-      students[clickedIndex] = event.target.checked;
+      studentsStatus[clickedIndex] = event.target.checked;
+
+      setStudentsStatus(status);
+      areStudentsSelected();
     };
 
     const assignStampToStudents = () => {
       const assigned = studentsList
         .filter((_, index) => {
-          return students[index];
+          return studentsStatus[index];
         })
         .map((student) => student.id);
 
@@ -56,8 +63,10 @@ export const useStampAssignationModal = () => {
       assignStudents(assigned);
     };
 
-    const areAssignedStudents = () => {
-      return students.find((student) => student);
+    const areStudentsSelected = () => {
+      const exists = !!studentsStatus.filter((student) => student).length;
+
+      setSelectionExists(exists);
     };
 
     return (
@@ -106,7 +115,7 @@ export const useStampAssignationModal = () => {
               color="default"
               variant="contained"
               onClick={assignStampToStudents}
-              disabled={!areAssignedStudents()}
+              disabled={!selectionExists}
             >
               Assign
             </Button>
