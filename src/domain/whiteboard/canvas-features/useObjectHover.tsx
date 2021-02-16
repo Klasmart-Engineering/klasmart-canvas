@@ -5,6 +5,7 @@ import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 /**
  * Handles logic for showing user info on object hover
  * @param {fabric.Canvas} canvas - Canvas to draw
+ * @param {string} displayUserInfo - display option
  */
 export const useObjectHover = (
   canvas: fabric.Canvas,
@@ -13,6 +14,10 @@ export const useObjectHover = (
   let tooltipShapesGroup: fabric.Group;
   const tooltip = UserInfoTooltip.createInstance(displayUserInfo);
 
+  /**
+   * Get tooltip and add it to the canvas
+   * @param {fabric.Object} hoveredObject - hovered object
+   */
   const showTooltip = (hoveredObject: fabric.Object) => {
     if (
       !tooltip ||
@@ -26,6 +31,9 @@ export const useObjectHover = (
     canvas.add(tooltipShapesGroup);
   };
 
+  /**
+   * Remove tooltip from canvas and unlink it from the object
+   */
   const hideTooltip = () => {
     const canvasObjects = canvas.getObjects();
     if (tooltip && tooltip.isShown()) {
@@ -40,6 +48,10 @@ export const useObjectHover = (
     }
   };
 
+  /**
+   * Check if pointer is hovering some fabric canvas object
+   * @param {fabric.Ievent} e - fabric event
+   */
   const checkIfIsHoverSomeObject = (e: fabric.IEvent) => {
     hideTooltip();
     if (!e.pointer) return;
@@ -53,7 +65,7 @@ export const useObjectHover = (
   };
 
   /**
-   * Activates hover tooltip.
+   * Activate hover tooltip.
    */
   useEffect(() => {
     if (canvas && displayUserInfo !== 'none') {
