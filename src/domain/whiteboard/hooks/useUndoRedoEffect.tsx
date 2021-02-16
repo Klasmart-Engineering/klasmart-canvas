@@ -60,7 +60,7 @@ export const UndoRedo = (
    */
   useEffect(() => {
     if (state.actionType === UNDO) {
-      RenderRemoteUndo(canvas, instanceId, state, eventSerializer);
+      RenderRemoteUndo(canvas, instanceId, state, eventSerializer, setLocalImage, setBackgroundImageIsPartialErasable);
     } else if (state.actionType === REDO) {
       RenderRemoteRedo(canvas, instanceId, state, eventSerializer);
     }

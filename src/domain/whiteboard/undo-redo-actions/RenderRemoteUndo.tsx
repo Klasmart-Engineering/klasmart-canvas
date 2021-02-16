@@ -1,3 +1,4 @@
+import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import {
   ObjectEvent,
@@ -23,7 +24,9 @@ export const RenderRemoteUndo = (
   canvas: fabric.Canvas,
   instanceId: string,
   state: CanvasHistoryState,
-  eventSerializer: PaintEventSerializer
+  eventSerializer: PaintEventSerializer,
+  setLocalImage: (img: string | File) => void,
+  setBackgroundImageIsPartialErasable: (state: boolean) => void
 ) => {
   const {
     currentEvent,
@@ -92,6 +95,19 @@ export const RenderRemoteUndo = (
       };
       
       eventSerializer?.push('removed', target as ObjectEvent);
+
+
+      if (state.backgrounds.length && state.activeStateIndex !== null) {
+        const payload: ObjectEvent = {
+          type: (state.backgrounds[state.eventIndex] as ICanvasObject).backgroundImageEditable ? 'backgroundImage' : 'localImage',
+          target: state.backgrounds[state.eventIndex] as ICanvasObject,
+          id: (state.backgrounds[state.eventIndex] as ICanvasObject).id as string,
+        };
+        
+        eventSerializer?.push('added', payload as ObjectEvent);
+        break;
+      }
+
       break;
     }
 
