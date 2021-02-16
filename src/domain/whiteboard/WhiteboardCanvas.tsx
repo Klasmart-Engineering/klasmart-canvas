@@ -53,6 +53,7 @@ import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
 import { useStampFeature } from './canvas-features/useStampFeature';
 import useSynchronizedSendStamp from './synchronization-hooks/useSynchronizedSendStamp';
+import { useCopy } from './canvas-features/useCopy';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -283,6 +284,16 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for manage undo/redo feature
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
+  
+  // const [copied, setCopied] = useState<any>(null);
+
+  useCopy(
+    canvas as fabric.Canvas,
+    userId,
+    permissions,
+    // copied,
+    // setCopied
+  );
 
   // useEffects and logic for stamp feature
   useStampFeature();
