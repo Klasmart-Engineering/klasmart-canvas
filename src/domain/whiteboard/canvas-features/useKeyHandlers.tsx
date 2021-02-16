@@ -1,6 +1,7 @@
 import { fabric } from 'fabric';
 import { ITextOptions } from 'fabric/fabric-impl';
-import { useCallback, useContext } from 'react';
+import { useCallback, useContext, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { ICanvasKeyboardEvent } from '../../../interfaces/canvas-events/canvas-keyboard-event';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
@@ -17,7 +18,7 @@ export const useKeyHandlers = (
   canvas: fabric.Canvas,
   instanceId: string,
   permissions: IPermissions,
-  allToolbarIsEnabled: boolean
+  allToolbarIsEnabled: boolean,
 ) => {
   // Getting context variables
   const {
@@ -42,6 +43,8 @@ export const useKeyHandlers = (
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
+
+
       if (!(permissions.undoRedo || allToolbarIsEnabled)) return;
 
       /**
@@ -148,6 +151,26 @@ export const useKeyHandlers = (
       ) {
         updatePerfectShapeIsActive(true);
       }
+
+      // if (event.ctrlKey && event.key === 'c' && setCopied) {
+      //   canvas.getActiveObject()?.clone((cloned: ICanvasObject) => {
+      //     cloned.set({
+      //       id: `${instanceId}:${uuidv4()}`,
+      //       top: 0,
+      //       left: 0,
+      //     });
+
+      //     // canvas.add(cloned);
+      //     // canvas.renderAll();
+      //     setCopied(cloned);
+      //   });
+      // }
+
+      // if (event.ctrlKey && event.key === 'v' && copied) {
+      //   debugger;
+      //   canvas.add(copied);
+      //   canvas.renderAll();
+      // }
     },
     [
       permissions.undoRedo,

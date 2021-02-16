@@ -50,6 +50,7 @@ import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchron
 import { v4 as uuidv4 } from 'uuid';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
+import { useCopy } from './canvas-features/useCopy';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -274,6 +275,16 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for manage undo/redo feature
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
+  
+  // const [copied, setCopied] = useState<any>(null);
+
+  useCopy(
+    canvas as fabric.Canvas,
+    userId,
+    permissions,
+    // copied,
+    // setCopied
+  );
 
   useSynchronizedMoved(
     canvas,
