@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useContext, useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import goodStamp from '../../../assets/icons/toolbar/good-stamp.png';
 import wellDoneStamp from '../../../assets/icons/toolbar/well-done-stamp.png';
@@ -6,6 +6,7 @@ import excellentStamp from '../../../assets/icons/toolbar/excellent-stamp.png';
 import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import store from '../redux/store';
+import { WhiteboardContext } from '../WhiteboardContext';
 
 const useSynchronizedSendStamp = (
   canvas: fabric.Canvas | undefined,
@@ -13,8 +14,27 @@ const useSynchronizedSendStamp = (
   shouldHandleRemoteEvent: (id: string) => boolean
 ) => {
   const {
-    state: { eventController },
+    state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
+
+  const {
+    stampAssignedStudents,
+    stamp,
+    stampMode,
+    updateStampAssignedStudents,
+  } = useContext(WhiteboardContext);
+
+  const growingDuration = 1000;
+  const stayingDuration = 3000;
+  const reducingDuration = 500;
+  const afterShowingDuration = 500;
+  const stampGapDuration = 100;
+  const totalDuration =
+    growingDuration +
+    stayingDuration +
+    reducingDuration +
+    afterShowingDuration +
+    stampGapDuration;
 
   const getStampURLImage = (stamp: string) => {
     switch (stamp) {
@@ -59,6 +79,7 @@ const useSynchronizedSendStamp = (
     [canvas]
   );
 
+  // Handling remote. Receives the event.
   useEffect(() => {
     const showStamp = (id: string, target: any) => {
       let stampWidth = 50;
@@ -156,6 +177,11 @@ const useSynchronizedSendStamp = (
             if (presentText) {
               canvas.remove(presentText);
             }
+
+            store.dispatch({
+              type: 'ADD_STAMP',
+              payload: { studentId: assignTo, stamp },
+            });
           };
 
           const removeStamp = () => {
@@ -221,7 +247,7 @@ const useSynchronizedSendStamp = (
                   onComplete: afterShowingAction,
                 }
               );
-            }, 100);
+            }, stayingDuration);
           };
 
           image.animate(
@@ -230,7 +256,7 @@ const useSynchronizedSendStamp = (
               scaleY: Number(image.scaleY) + 2,
             },
             {
-              duration: 1000,
+              duration: growingDuration,
               easing: fabric.util.ease.easeInQuad,
               onChange: canvas.renderAll.bind(canvas),
               onComplete: reduce,
@@ -243,7 +269,7 @@ const useSynchronizedSendStamp = (
               scaleY: 2,
             },
             {
-              duration: 1000,
+              duration: growingDuration,
               easing: fabric.util.ease.easeInQuad,
               onChange: canvas.renderAll.bind(canvas),
               onComplete: reduce,
@@ -265,6 +291,39 @@ const useSynchronizedSendStamp = (
     determineStampPosition,
     eventController,
     shouldHandleRemoteEvent,
+    userId,
+  ]);
+
+  // Handling local. Send the event
+  useEffect(() => {
+    if (stampAssignedStudents.length) {
+      stampAssignedStudents.forEach((studentId, index) => {
+        setTimeout(
+          () => {
+            const payload = {
+              id: `${userId}:stamp`,
+              target: {
+                stamp,
+                assignTo: studentId,
+                stampMode: stampMode,
+              },
+            };
+
+            eventSerializer.push('sendStamp', payload);
+          },
+          !index || stampMode === 'student' ? 0 : totalDuration
+        );
+      });
+
+      updateStampAssignedStudents([]);
+    }
+  }, [
+    eventSerializer,
+    stamp,
+    stampAssignedStudents,
+    stampMode,
+    totalDuration,
+    updateStampAssignedStudents,
     userId,
   ]);
 };
