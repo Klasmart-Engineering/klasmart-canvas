@@ -12,6 +12,7 @@ export const useStampFeature = (
     updateStampIsActive,
     stamp,
     stampAssignedStudents,
+    updateStampAssignedStudents,
     stampMode,
   } = useContext(WhiteboardContext);
 
@@ -39,6 +40,8 @@ export const useStampFeature = (
         console.log('sending', payload);
         eventSerializer.push('sendStamp', payload);
       });
+
+      updateStampAssignedStudents([]);
     }
   }, [
     eventSerializer,
@@ -46,6 +49,8 @@ export const useStampFeature = (
     stampAssignedStudents,
     stampIsActive,
     stampMode,
+    updateStampAssignedStudents,
+    updateStampIsActive,
     userId,
   ]);
 };
