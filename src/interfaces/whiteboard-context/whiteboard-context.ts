@@ -102,4 +102,8 @@ export interface IWhiteboardContext {
   setLocalBackground: (condition: boolean) => void;
   displayUserInfo: string;
   openSetUserInfoToDisplayModal: () => void;
+  isDrawing: boolean,
+  updateIsDrawing: (isIt: boolean) => void;
+  selectedTool: string;
+  updateSelectedTool: (tool: string) => void;
 }

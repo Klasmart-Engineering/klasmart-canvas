@@ -86,6 +86,7 @@ function Toolbar(
     openSetUserInfoToDisplayModal,
     openClearWhiteboardModal,
     fillBackgroundColor,
+    updateSelectedTool
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
@@ -107,6 +108,7 @@ function Toolbar(
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
+    
     if (tool === ELEMENTS.LASER_TOOL && !pointerToolIsActive) {
       return;
     }
@@ -201,6 +203,11 @@ function Toolbar(
       otherwise will be setted in true
     */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
+
+    /**
+     * Update selected tool
+     */
+    updateSelectedTool(tool)
 
     updateEventedObjects(tool === ELEMENTS.MOVE_OBJECTS_TOOL);
 

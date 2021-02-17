@@ -103,14 +103,14 @@ export const WhiteboardProvider = ({
     closeUploadFileModal,
   } = useUploadFileModal();
 
-  const [displayUserInfo, setUserInfoToDisplay] = useState<string>("none");
-  const setUserInfo = (value: string) => {
-    setUserInfoToDisplay(value)
-  }
+  const [displayUserInfo, setUserInfoToDisplay] = useState(DEFAULT_VALUES.DISPLAY_USER_INFO_OPTION);
   const {
     SetUserInfoToDisplayModal,
     openSetUserInfoToDisplayModal,
-  } = useSetUserInfoToDisplayModal(setUserInfo);
+  } = useSetUserInfoToDisplayModal(setUserInfoToDisplay);
+  
+  const [isDrawing, updateIsDrawing] = useState(DEFAULT_VALUES.IS_DRAWING);
+  const [selectedTool, updateSelectedTool] = useState(DEFAULT_VALUES.SELECTED_TOOL);
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
@@ -375,7 +375,11 @@ export const WhiteboardProvider = ({
     fillBackgroundColor,
     setBackgroundColorInCanvas,
     openSetUserInfoToDisplayModal,
-    displayUserInfo
+    displayUserInfo,
+    isDrawing,
+    updateIsDrawing,
+    selectedTool,
+    updateSelectedTool
   };
 
   return (
