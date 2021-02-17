@@ -30,4 +30,5 @@ export interface ICanvasObject extends fabric.Object {
   backgroundImage?: string | File;
   translateX?: number;
   translateY?: number;
+  rawData?: any;
 }

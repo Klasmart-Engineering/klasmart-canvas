@@ -503,7 +503,7 @@ function Toolbar(props: {
     }
 
     if (
-      !(props.permissions.erase || props.permissions.partialErase) &&
+      !props.permissions.erase && !props.permissions.partialErase &&
       getActiveTool === ELEMENTS.ERASE_TYPE_TOOL
     ) {
       setTools({
@@ -516,6 +516,8 @@ function Toolbar(props: {
       updateEraseType('partial');
     } else if (props.permissions.erase && !props.permissions.partialErase) {
       updateEraseType('object');
+    } else {
+      updateEraseType(null);
     }
 
     if (!props.permissions.pen && getActiveTool === ELEMENTS.LINE_TYPE_TOOL) {
@@ -558,6 +560,7 @@ function Toolbar(props: {
         elements: getToolElements,
       });
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     pointerIsEnabled,
     getActiveTool,

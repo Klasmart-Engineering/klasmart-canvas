@@ -44,10 +44,17 @@ export const downloadCanvas = (props: IProps, type: string) => {
     background.src = props.backgroundImage as string || props.localImage as string;
 
     background.onload = () => {
+      const ext = type === 'image/png' ? 'png' : 'jpg';
+
+      if (ext === 'jpg' && ctx) {
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, props.width, props.height);
+        ctx.restore();
+      }
+
       ctx?.drawImage(background, 0, 0, props.width, props.height);
       ctx?.drawImage(props.canvas.getElement(), 0, 0, props.width, props.height);
 
-      const ext = type === 'image/png' ? 'png' : 'jpg';
       const img = ((canvas as unknown) as HTMLCanvasElement).toDataURL(type, 1);
 
       generateLink(img, ext, type);

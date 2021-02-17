@@ -33,7 +33,8 @@ export const useCanvasActions = (
   dispatch: (action: CanvasAction) => void,
   canvasId: string,
   eventSerializer: any,
-  userId: string
+  userId: string,
+  ignoreDirectActions?: boolean,
 ) => {
   const {
     shapeIsActive,
@@ -476,7 +477,7 @@ export const useCanvasActions = (
   const eraseObject = useEraseObject(canvas, userId, canvasId);
 
   useEffect(() => {
-    if (!canvas) {
+    if (!canvas || ignoreDirectActions) {
       return;
     }
 

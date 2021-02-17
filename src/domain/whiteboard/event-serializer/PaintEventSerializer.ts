@@ -68,8 +68,9 @@ export type PayloadTarget =
     }
   | { type: string; svg: string }
   | IBrushSyncTarget
-  | string
-  | IShapeCreationTarget;
+  | IShapeCreationTarget
+  | { src: string }
+  | string;
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {
   readonly multiplier: number;
