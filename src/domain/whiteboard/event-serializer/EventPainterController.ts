@@ -2,6 +2,7 @@ import { EventEmitter } from 'events';
 import { IPainterController } from './IPainterController';
 import { PainterEvent } from './PainterEvent';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { IStampSyncTarget } from '../../../interfaces/stamps/stamp-sync-target';
 
 /**
  * This class is responsible for receiving remote events and translating that into
@@ -97,6 +98,10 @@ export class EventPainterController extends EventEmitter
         }
         case 'backgroundColorChanged': {
           this.emit('backgroundColorChanged', data.id, data.target);
+          break;
+        }
+        case 'sendStamp': {
+          this.emit('sendStamp', data.id, data.target);
           break;
         }
         case 'brushTypeChanged': {
@@ -212,6 +217,9 @@ export class EventPainterController extends EventEmitter
         break;
       case 'backgroundColorChanged':
         this.backgroundColorChanged(event.id, target);
+        break;
+      case 'sendStamp':
+        this.sendStamp(event.id, target);
         break;
       case 'fontColorChanged':
         this.fontColorChanged(event.id, event.objectType, target);
@@ -418,5 +426,12 @@ export class EventPainterController extends EventEmitter
     this.ws?.send(
       JSON.stringify({ id, eventType: 'backgroundColorChanged', target })
     );
+  }
+
+  private sendStamp(id: string, target: IStampSyncTarget) {
+    this.emit('sendStamp', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, eventType: 'sendStamp', target }));
   }
 }

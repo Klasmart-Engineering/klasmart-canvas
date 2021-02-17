@@ -3,10 +3,10 @@ import { IClearWhiteboardPermissions } from '../canvas-events/clear-whiteboard-p
 /**
  * User Interface
  */
-export interface IUser{
-    id: string,
-    role: string,
-    name: string,
-    permissions: IClearWhiteboardPermissions,
-    avatarImg: string
+export interface IUser {
+  id: string;
+  role: string;
+  name: string;
+  permissions: IClearWhiteboardPermissions;
+  avatarImg: string;
 }

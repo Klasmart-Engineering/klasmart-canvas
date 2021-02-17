@@ -5,6 +5,7 @@ import { IToolbarUI } from '../../../interfaces/toolbar/toolbar-ui';
 import { IBrushSyncTarget } from '../../../interfaces/brushes/brush-sync-target';
 import { Image } from 'fabric/fabric-impl';
 import { IShapeCreationTarget } from '../../../interfaces/brushes/shape-creation-target';
+import { IStampSyncTarget } from '../../../interfaces/stamps/stamp-sync-target';
 
 // TODO: This service should probably implement some sort of
 // event batching, especially the line drawing can generate
@@ -70,6 +71,7 @@ export type PayloadTarget =
     }
   | { type: string; svg: string }
   | IBrushSyncTarget
+  | IStampSyncTarget
   | { src: string }
   | string
   | IShapeCreationTarget;

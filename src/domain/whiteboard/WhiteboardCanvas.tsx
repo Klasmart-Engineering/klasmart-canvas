@@ -51,6 +51,8 @@ import { usePointerFeature } from './canvas-features/usePointerFeature';
 import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useSynchronizedBackgroundColorChanged';
+import { useStampFeature } from './canvas-features/useStampFeature';
+import useSynchronizedSendStamp from './synchronization-hooks/useSynchronizedSendStamp';
 import { useObjectHover } from './canvas-features/useObjectHover';
 
 /**
@@ -126,7 +128,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     backgroundColor,
     eventSerializer,
     eventController,
-    displayUserInfo
+    displayUserInfo,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { dispatch: undoRedoDispatch } = UndoRedo(
@@ -219,7 +221,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
   }, [canvas, eventController, generatedBy]);
 
-
   // useEffects and logic for manage the object manipulation in canvas
   useObjectManipulation(
     canvas as fabric.Canvas,
@@ -274,9 +275,12 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   // useEffects and logic for manage undo/redo feature
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
 
+  // useEffects and logic for stamp feature
+  useStampFeature();
+
   // useEffects and logic for manage pointers
   usePointerFeature(canvas as fabric.Canvas, userId, permissions);
-  
+
   // useEffects and logic for manage the changes that would happen when an object is hovered
   useObjectHover(canvas as fabric.Canvas, displayUserInfo);
 
@@ -372,13 +376,13 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   );
   useSynchronizedCursorPointer(canvas, userId, filterIncomingEvents);
   useSynchronizedBackgroundColorChanged(filterIncomingEvents);
+  useSynchronizedSendStamp(canvas, userId, filterIncomingEvents);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {
     if (!canvasActions && canvas) {
       updateCanvasActions(actions);
     }
-
   }, [actions, updateCanvasActions, canvas, canvasActions]);
 
   return (
@@ -398,7 +402,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
         id={instanceId}
         style={{ ...initialStyle, backgroundColor: 'transparent' }}
         tabIndex={0}
-        // onKeyDown={keyDown}
         onClick={() => {
           actions.addShape(shape);
         }}

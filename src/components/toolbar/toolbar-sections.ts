@@ -23,13 +23,6 @@ import hexagonShape from '../../assets/icons/toolbar/hexagon-shape.svg';
 import starShape from '../../assets/icons/toolbar/star-shape.svg';
 import chatBubbleShape from '../../assets/icons/toolbar/chat-bubble-shape.svg';
 import move from '../../assets/icons/toolbar/move.svg';
-import star from '../../assets/icons/toolbar/star.svg';
-import emojiSmile from '../../assets/icons/toolbar/emoji-smile.svg';
-import emojiLike from '../../assets/icons/toolbar/emoji-like.svg';
-import emojiHello from '../../assets/icons/toolbar/emoji-hello.svg';
-import emojiSleep from '../../assets/icons/toolbar/emoji-sleep.svg';
-import emojiNervious from '../../assets/icons/toolbar/emoji-nervious.svg';
-import emojiLaugh from '../../assets/icons/toolbar/emoji-laugh.svg';
 import photo from '../../assets/icons/toolbar/photo.svg';
 import avatar from '../../assets/icons/toolbar/avatar.svg';
 import undo from '../../assets/icons/toolbar/undo.svg';
@@ -37,6 +30,12 @@ import redo from '../../assets/icons/toolbar/redo.svg';
 import clear from '../../assets/icons/toolbar/clear.svg';
 import screenshot from '../../assets/icons/toolbar/screenshot.svg';
 import share from '../../assets/icons/toolbar/share.svg';
+import studentStampMode from '../../assets/icons/toolbar/student-stamp-mode.svg';
+import presentStampMode from '../../assets/icons/toolbar/present-stamp-mode.svg';
+import goodStamp from '../../assets/icons/toolbar/good-stamp.png';
+import wellDoneStamp from '../../assets/icons/toolbar/well-done-stamp.png';
+import excellentStamp from '../../assets/icons/toolbar/excellent-stamp.png';
+
 import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRounded';
 import FormatColorFillRoundedIcon from '@material-ui/icons/FormatColorFillRounded';
 import PaletteIcon from '@material-ui/icons/Palette';
@@ -498,53 +497,41 @@ const toolsSection: IBasicToolbarSection = {
       id: 'add_stamp',
       options: [
         {
-          id: 'yellow_star_stamp',
-          value: 'yellowStar',
-          title: 'Yellow Star',
-          iconSrc: star,
-          iconName: 'Yellow Star',
+          id: 'good_stamp',
+          value: 'good',
+          title: 'Good Stamp',
+          iconSrc: goodStamp,
+          iconName: 'Good Stamp',
         },
         {
-          id: 'emoji_1_stamp',
-          value: 'emoji1',
-          title: 'Emoji 1',
-          iconSrc: emojiSmile,
-          iconName: 'Emoji 1',
+          id: 'well_done_stamp',
+          value: 'wellDone',
+          title: 'Well Done Stamp',
+          iconSrc: wellDoneStamp,
+          iconName: 'Well Done Stamp',
         },
         {
-          id: 'emoji_2_stamp',
-          value: 'emoji2',
-          title: 'Emoji 2',
-          iconSrc: emojiLike,
-          iconName: 'Emoji 2',
+          id: 'excellent_stamp',
+          value: 'excellent',
+          title: 'Excellent Stamp',
+          iconSrc: excellentStamp,
+          iconName: 'Excellent Stamp',
+        },
+      ],
+      secondOptions: [
+        {
+          id: 'student_stamp_mode',
+          value: 'student',
+          title: 'Student Stamp Mode',
+          iconSrc: studentStampMode,
+          iconName: 'Student Stamp Mode',
         },
         {
-          id: 'emoji_3_stamp',
-          value: 'emoji3',
-          title: 'Emoji 3',
-          iconSrc: emojiHello,
-          iconName: 'Emoji 3',
-        },
-        {
-          id: 'emoji_4_stamp',
-          value: 'emoji4',
-          title: 'Emoji 4',
-          iconSrc: emojiSleep,
-          iconName: 'Emoji 4',
-        },
-        {
-          id: 'emoji_5_stamp',
-          value: 'emoji5',
-          title: 'Emoji 5',
-          iconSrc: emojiNervious,
-          iconName: 'Emoji 5',
-        },
-        {
-          id: 'emoji_6_stamp',
-          value: 'emoji6',
-          title: 'Emoji 6',
-          iconSrc: emojiLaugh,
-          iconName: 'Emoji 6',
+          id: 'present_stamp_mode',
+          value: 'present',
+          title: 'Present Stamp Mode',
+          iconSrc: presentStampMode,
+          iconName: 'Present Stamp Mode',
         },
       ],
     },

@@ -41,8 +41,13 @@ import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
 import { usePointer } from './hooks/usePointer';
 import { useBackgroundColor } from './hooks/useBackgroundColor';
-import { useSharedEventSerializer } from './SharedEventSerializerProvider';
+import { useStampMode } from './hooks/useStampMode';
+import { useStamp } from './hooks/useStamp';
+import { useStampIsActive } from './hooks/useStampIsActive';
+import { useStampAssignationModal } from './hooks/useStampAssignationModal';
+import { useStampAssignedStudents } from './hooks/useStampAssignedStudents';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
+import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -67,6 +72,12 @@ export const WhiteboardProvider = ({
   const { eraseType, updateEraseType } = useEraseType();
   const { lineWidth, updateLineWidth } = useLineWidth();
   const { floodFill, updateFloodFill } = useFloodFill();
+  const { stamp, updateStamp } = useStamp();
+  const { stampMode, updateStampMode } = useStampMode();
+  const {
+    stampAssignedStudents,
+    updateStampAssignedStudents,
+  } = useStampAssignedStudents();
   const { backgroundColor, updateBackgroundColor } = useBackgroundColor();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
@@ -96,6 +107,7 @@ export const WhiteboardProvider = ({
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
   } = usePerfectShapeIsActive();
+  const { stampIsActive, updateStampIsActive } = useStampIsActive();
 
   const {
     shapesAreSelectable,
@@ -110,11 +122,15 @@ export const WhiteboardProvider = ({
     openUploadFileModal,
     closeUploadFileModal,
   } = useUploadFileModal(eventSerializer, userId as string);
+  const {
+    StampAssignationModal,
+    openStampAssignationModal,
+  } = useStampAssignationModal();
 
-  const [displayUserInfo, setUserInfoToDisplay] = useState<string>("full");
+  const [displayUserInfo, setUserInfoToDisplay] = useState<string>('full');
   const setUserInfo = (value: string) => {
-    setUserInfoToDisplay(value)
-  }
+    setUserInfoToDisplay(value);
+  };
   const {
     SetUserInfoToDisplayModal,
     openSetUserInfoToDisplayModal,
@@ -122,7 +138,6 @@ export const WhiteboardProvider = ({
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
-  const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
   const [eraserIsActive, updateEraserIsActive] = useState(false);
 
   // NOTE: Actions provided by canvas instance somewhere in the DOM.
@@ -142,7 +157,10 @@ export const WhiteboardProvider = ({
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
   ] = useState(false);
-  
+
+  const studentsList = store
+    .getState()
+    .usersState.filter((user) => user.role === 'student');
 
   const isLocalObject = (id: string, canvasId: string | undefined) => {
     const object = id.split(':');
@@ -164,6 +182,15 @@ export const WhiteboardProvider = ({
       (store.getState().permissionsState as IPermissions).clearWhiteboard
     ) {
       openModal();
+    }
+  };
+
+  /**
+   * Opens Stamp Assignation Modal
+   */
+  const openStampModal = () => {
+    if (allToolbarIsEnabled) {
+      openStampAssignationModal();
     }
   };
 
@@ -314,6 +341,7 @@ export const WhiteboardProvider = ({
     text,
     updateText,
     openClearWhiteboardModal,
+    openStampModal,
     pointerEvents,
     eraseType,
     updateEraseType,
@@ -404,12 +432,18 @@ export const WhiteboardProvider = ({
     updateBackgroundColor,
     fillBackgroundColor,
     setBackgroundColorInCanvas,
-    eventSerializer,
-    eventController,
+    stampMode,
+    updateStampMode,
+    stampIsActive,
+    updateStampIsActive,
+    stampAssignedStudents,
+    updateStampAssignedStudents,
+    openSetUserInfoToDisplayModal,
+    displayUserInfo,
     isCursorObject,
     findObjectById,
-    openSetUserInfoToDisplayModal,
-    displayUserInfo
+    eventSerializer,
+    eventController,
   };
 
   return (
@@ -451,9 +485,13 @@ export const WhiteboardProvider = ({
         setIsBackgroundImage={setIsBackgroundImage}
       />
       <SetUserInfoToDisplayModal
-        
         setSelection={setUserInfoToDisplay}
         selection={displayUserInfo}
+      />
+
+      <StampAssignationModal
+        studentsList={studentsList}
+        assignStudents={updateStampAssignedStudents}
       />
       {children}
     </WhiteboardContext.Provider>
