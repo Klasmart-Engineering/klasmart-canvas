@@ -17,7 +17,7 @@ export async function createGif(
   canvas: fabric.Canvas
 ) {
   try {
-    const gif = await fabricGif(URL.createObjectURL(image), 200, 200, 2000);
+    const gif = await fabricGif(image, 200, 200, 2000);
     gif.set({ top: 0, left: 0 });
     gif.id = `${userId}:${uuidv4()}`;
     canvas.add(gif);

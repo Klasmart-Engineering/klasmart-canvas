@@ -10,6 +10,7 @@ import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import { FormLabel } from '@material-ui/core';
+import { PaintEventSerializer } from '../event-serializer/PaintEventSerializer';
 
 export interface IUploadFileModal {
   setImage: (image: string | File) => void;
@@ -27,7 +28,7 @@ export interface IUploadFileModal {
  The file size limit is 5mb.
  */
 
-export const useUploadFileModal = () => {
+export const useUploadFileModal = (eventSerializer: PaintEventSerializer, userId: string) => {
   const [uploadFileModal, setOpen] = useState(false);
   const openUploadFileModal = useCallback(() => {
     setOpen(true);
@@ -71,7 +72,6 @@ export const useUploadFileModal = () => {
 
         if (totalSize >= 5000) {
           setError(true);
-
           return;
         }
 
@@ -81,26 +81,51 @@ export const useUploadFileModal = () => {
             return;
           }
 
-          setIsBackgroundImage(true);
-          setBackgroundImage(URL.createObjectURL(img));
-          setBackgroundImageIsPartialErasable(backgroundImageIsPartialErasable);
-          setOpen(false);
           setError(false);
           setGifError(false);
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            setBackgroundImageIsPartialErasable(backgroundImageIsPartialErasable);
+            setIsBackgroundImage(true);
+            if (e?.target?.result) {
+              setBackgroundImage(e.target.result as string);
+              setOpen(false);
+            }
+          }
+
+          reader.readAsDataURL(img);
 
           return;
         }
 
         if (fileType === 'image/gif') {
-          setImage(img);
           setIsGif(true);
           setIsBackgroundImage(false);
           setBackgroundImageIsPartialErasable(false);
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            if (e?.target?.result) {
+              setImage(e.target.result as string);
+            }
+          };
+
+          reader.readAsDataURL(img);
         } else {
-          setImage(URL.createObjectURL(img));
-          setIsGif(false);
-          setIsBackgroundImage(false);
-          setBackgroundImageIsPartialErasable(false);
+          var reader = new FileReader();
+
+          reader.onload = function (e) {
+            if (e?.target?.result) {
+              // @ts-ignore
+              setImage(e.target.result);
+              setIsGif(false);
+              setIsBackgroundImage(false);
+              setBackgroundImageIsPartialErasable(false);
+            }
+          }
+
+          reader.readAsDataURL(img);
         }
 
         setOpen(false);
