@@ -276,14 +276,13 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   // useEffects and logic for manage undo/redo feature
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
   
-  // const [copied, setCopied] = useState<any>(null);
-
   useCopy(
     canvas as fabric.Canvas,
     userId,
     permissions,
-    // copied,
-    // setCopied
+    allToolbarIsEnabled,
+    undoRedoDispatch,
+    eventSerializer,
   );
 
   useSynchronizedMoved(

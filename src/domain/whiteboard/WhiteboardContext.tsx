@@ -39,6 +39,7 @@ import { getToolbarIsEnabled } from './redux/utils';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
 import { useBackgroundColor } from './hooks/useBackgroundColor';
+import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -121,6 +122,7 @@ export const WhiteboardProvider = ({
   const [isBackgroundImage, setIsBackgroundImage] = useState(false);
   const [localImage, setLocalImage] = useState<string | File>('');
   const [localBackground, setLocalBackground] = useState(false);
+  const [copiedItem, setCopiedItem] = useState<ICanvasObject | null>(null);
   const [
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
@@ -367,6 +369,8 @@ export const WhiteboardProvider = ({
     updateBackgroundColor,
     fillBackgroundColor,
     setBackgroundColorInCanvas,
+    copiedItem,
+    setCopiedItem,
   };
 
   return (
