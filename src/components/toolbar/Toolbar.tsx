@@ -95,6 +95,7 @@ function Toolbar(props: {
     openClearWhiteboardModal,
     updateEraserIsActive,
     fillBackgroundColor,
+    updateSelectedTool
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
@@ -218,6 +219,11 @@ function Toolbar(props: {
       otherwise will be setted in true
     */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
+
+    /**
+     * Update selected tool
+     */
+    updateSelectedTool(tool)
 
     updateEventedObjects(tool === ELEMENTS.MOVE_OBJECTS_TOOL);
 

@@ -1,18 +1,34 @@
-import { useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import { fabric } from 'fabric';
 import { UserInfoTooltip } from '../brushes/classes/userInfoTooltip';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { WhiteboardContext } from '../WhiteboardContext';
+import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
 /**
  * Handles logic for showing user info on object hover
  * @param {fabric.Canvas} canvas - Canvas to draw
+ * @param {string} displayUserInfo - display option
  */
 export const useObjectHover = (
   canvas: fabric.Canvas,
   displayUserInfo: string
 ) => {
+
+  /** 
+   * Initializing the tooltip and tooltip group 
+  */
   let tooltipShapesGroup: fabric.Group;
   const tooltip = UserInfoTooltip.createInstance(displayUserInfo);
 
+  // Getting necessary context variables
+  const {
+    selectedTool
+  } = useContext(WhiteboardContext);
+
+  /**
+   * Get tooltip and add it to the canvas
+   * @param {fabric.Object} hoveredObject - hovered object
+   */
   const showTooltip = (hoveredObject: fabric.Object) => {
     if (
       !tooltip ||
@@ -26,6 +42,9 @@ export const useObjectHover = (
     canvas.add(tooltipShapesGroup);
   };
 
+  /**
+   * Remove tooltip from canvas and unlink it from the object
+   */
   const hideTooltip = () => {
     const canvasObjects = canvas.getObjects();
     if (tooltip && tooltip.isShown()) {
@@ -40,9 +59,13 @@ export const useObjectHover = (
     }
   };
 
+  /**
+   * Check if pointer is hovering some fabric canvas object
+   * @param {fabric.Ievent} e - fabric event
+   */
   const checkIfIsHoverSomeObject = (e: fabric.IEvent) => {
     hideTooltip();
-    if (!e.pointer) return;
+    if (!e.pointer || selectedTool !== DEFAULT_VALUES.SELECTED_TOOL) return;
     const { pointer } = e;
     const canvasObjects = canvas.getObjects();
     const canvasObject = canvasObjects.find((obj) =>
@@ -53,7 +76,7 @@ export const useObjectHover = (
   };
 
   /**
-   * Activates hover tooltip.
+   * Activate hover tooltip.
    */
   useEffect(() => {
     if (canvas && displayUserInfo !== 'none') {
@@ -61,9 +84,5 @@ export const useObjectHover = (
         checkIfIsHoverSomeObject(e);
       });
     }
-
-    return () => {
-      canvas?.off('mouse:move');
-    };
   });
 };

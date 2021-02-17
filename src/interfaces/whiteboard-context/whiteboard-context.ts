@@ -119,4 +119,8 @@ export interface IWhiteboardContext {
   openSetUserInfoToDisplayModal: () => void;
   eventSerializer: any;
   eventController: any;
+  isDrawing: boolean,
+  updateIsDrawing: (isIt: boolean) => void;
+  selectedTool: string;
+  updateSelectedTool: (tool: string) => void;
 }

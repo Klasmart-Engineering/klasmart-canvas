@@ -9,6 +9,7 @@ import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { useEffect } from 'react';
 import { UserInfoTooltip } from '../brushes/classes/userInfoTooltip';
+import { DialogActions, Button } from '@material-ui/core';
 
 export interface ISetUserInfoToDisplayModal {
   selection: string;
@@ -16,7 +17,7 @@ export interface ISetUserInfoToDisplayModal {
 }
 
 /**
- Modal component to set user info to display.
+ Modal component to select user info option to display on the tooltip that appears hovering an object.
  */
 
 export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => void) => {
@@ -34,19 +35,29 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
     setOpen(false);
   }, []);
 
+  /**
+   * Handles change on user info selection event received
+   */
   useEffect(()=>{
     eventController.on("setUserInfoToDisplay", (event, payload)=> {
       setUserInfo(payload)
     })
   }, [eventController])
 
+  /**
+   * Component to display modal and handles change
+   * @param {ISetUserInfoToDisplayModal} props 
+   */
   const SetUserInfoToDisplayModal = (props: ISetUserInfoToDisplayModal) => {
     const { setSelection, selection } = props;
     
+    /**
+     * Handle input radio change
+     * @param {React.ChangeEvent} event 
+     */
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = (event.target as HTMLInputElement).value
       setSelection(value)
-      closeInfoToDisplayModal()
       const payload: ObjectEvent = {
         type: 'userInfoToDisplay',
         target: value,
@@ -92,6 +103,16 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
               </RadioGroup>
             </FormControl>
           </div>
+          <DialogActions>
+            <Button
+              onClick={closeInfoToDisplayModal}
+              color="primary"
+              variant="contained"
+            >
+              Close
+            </Button>
+           
+          </DialogActions>
         </Dialog>
       </div>
     );

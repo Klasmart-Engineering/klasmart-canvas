@@ -10,4 +10,7 @@ export const DEFAULT_VALUES = {
   SHAPE: 'rectangle',
   SHAPE_COLOR: '#000000',
   STAMP: 'good',
+  IS_DRAWING: false,
+  DISPLAY_USER_INFO_OPTION: 'none',
+  SELECTED_TOOL: 'pointers'
 };
