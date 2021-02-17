@@ -277,7 +277,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
 
   // useEffects and logic for stamp feature
-  useStampFeature(userId, eventSerializer);
+  useStampFeature();
 
   useSynchronizedMoved(
     canvas,

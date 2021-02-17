@@ -205,11 +205,6 @@ function Toolbar(props: {
      */
     updateLineWidthIsActive(tool === ELEMENTS.LINE_WIDTH_TOOL);
 
-    /**
-     * Indicates if stamp tool is active
-     */
-    // updateStampIsActive(tool === ELEMENTS.ADD_STAMP_TOOL);
-
     /*
       It is setted to false when you select Pointer Tool,
       otherwise will be setted in true

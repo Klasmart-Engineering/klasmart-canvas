@@ -1,11 +1,7 @@
 import { useContext, useEffect } from 'react';
-import { PaintEventSerializer } from '../event-serializer/PaintEventSerializer';
 import { WhiteboardContext } from '../WhiteboardContext';
 
-export const useStampFeature = (
-  userId: string,
-  eventSerializer: PaintEventSerializer
-) => {
+export const useStampFeature = () => {
   const {
     stampIsActive,
     openStampModal,
@@ -13,9 +9,11 @@ export const useStampFeature = (
     stamp,
   } = useContext(WhiteboardContext);
 
+  /**
+   * Checks stampIsActive to show the assignation stamp modal
+   */
   useEffect(() => {
     if (stampIsActive && stamp) {
-      console.log('is active: ', stampIsActive);
       openStampModal();
 
       updateStampIsActive(false);

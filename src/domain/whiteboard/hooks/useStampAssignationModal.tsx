@@ -17,19 +17,37 @@ export interface IStampAssignationModal {
   studentsList: IUser[];
 }
 
+/**
+ * Generates stamp assignation modal
+ */
 export const useStampAssignationModal = () => {
   const [stampAssignationModal, setOpen] = useState(false);
 
+  /**
+   * Opens modal
+   */
   const openStampAssignationModal = useCallback(() => {
     setOpen(true);
   }, []);
 
+  /**
+   * Closes modal
+   */
   const closeStampAssignationModal = useCallback(() => {
     setOpen(false);
   }, []);
 
+  /**
+   * Renders modal
+   * @param {IStampAssignationModal} props - Needed props to render the modal
+   * - assignStudents - Callback used when confirm button is clicked
+   * - studentsList - List of the current users that are students
+   */
   const StampAssignationModal = (props: IStampAssignationModal) => {
     const { studentsList, assignStudents } = props;
+    /**
+     * Creates the studentsStatus array and put all their values in false
+     */
     const initStudentsArray = () => {
       return studentsList.map((_) => false);
     };
@@ -38,6 +56,11 @@ export const useStampAssignationModal = () => {
 
     const [selectionExists, setSelectionExists] = useState(false);
 
+    /**
+     * Handles the changes in modal's checkboxes
+     * @param event - Event that contains all the data
+     * related to the current changed checkbox
+     */
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       let status = studentsStatus;
 
@@ -52,6 +75,10 @@ export const useStampAssignationModal = () => {
       areStudentsSelected();
     };
 
+    /**
+     * Is executed when assign button is clicked,
+     * closes the modal and updates assigned students
+     */
     const assignStampToStudents = () => {
       const assigned = studentsList
         .filter((_, index) => {
@@ -63,6 +90,9 @@ export const useStampAssignationModal = () => {
       assignStudents(assigned);
     };
 
+    /**
+     * Checks if at least one checkbox is active.
+     */
     const areStudentsSelected = () => {
       const exists = !!studentsStatus.filter((student) => student).length;
 
