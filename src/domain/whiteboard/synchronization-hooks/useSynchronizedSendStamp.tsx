@@ -76,9 +76,11 @@ const useSynchronizedSendStamp = (
       const stampsInRow = Math.floor(Number(canvas?.width) / (stampWidth + 10));
       const stampsInColumn = Math.floor(Number(canvas?.height) / stampHeight);
 
-      let existentStamps = canvas
-        ?.getObjects()
-        .filter((obj: ICanvasObject) => obj.stampObject).length as number;
+      let existentStamps =
+        (canvas
+          ?.getObjects()
+          .filter((obj: ICanvasObject) => obj.stampObject && !obj.fontFamily)
+          .length as number) - 1;
 
       if (existentStamps <= stampsInRow * stampsInColumn) {
         top = Math.floor(existentStamps / stampsInRow) * stampHeight + 10;
@@ -171,6 +173,7 @@ const useSynchronizedSendStamp = (
             evented: false,
             lockMovementX: true,
             lockMovementY: true,
+            stampObject: true,
           });
 
           canvas?.add(image);
@@ -199,6 +202,10 @@ const useSynchronizedSendStamp = (
               evented: false,
               lockMovementX: true,
               lockMovementY: true,
+            });
+
+            ((presentMessage as unknown) as ICanvasObject).set({
+              stampObject: true,
             });
 
             canvas.add(presentText);
@@ -235,7 +242,6 @@ const useSynchronizedSendStamp = (
             (image as ICanvasObject).set({
               originX: 'left',
               originY: 'top',
-              stampObject: true,
             });
 
             animateObject(image, valuesToChange, duration, easeEffect);
