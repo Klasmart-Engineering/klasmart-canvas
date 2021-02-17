@@ -19,6 +19,7 @@ import {
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { IPointerType } from '../../interfaces/pointers/pointer-type';
 
 export type ToolType =
   | 'select'
@@ -172,7 +173,7 @@ export default function ToolbarContextProvider({
     (toolId: string, option: IToolbarSelectorOption) => {
       switch (toolId) {
         case ELEMENTS.POINTERS_TOOL:
-          updatePointer(option.value);
+          updatePointer(option.value as IPointerType);
           break;
 
         case ELEMENTS.LINE_TYPE_TOOL:
