@@ -66,9 +66,10 @@ export const mappedToolElements = (
     ) => {
       switch (elmnt.id) {
         case 'pointers': {
+          const available = true;
           const enabled =
             allToolbarIsEnabled || serializerToolbarState.cursorPointer;
-          return { ...elmnt, enabled };
+          return { ...elmnt, enabled, available };
         }
         case 'laser_pointer': {
           const available = true;
