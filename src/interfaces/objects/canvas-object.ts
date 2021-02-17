@@ -3,6 +3,7 @@ import { IBristle } from '../brushes/bristle';
 import { IPointerType } from '../pointers/pointer-type';
 
 export interface ICanvasObject extends fabric.Object {
+  shapeType?: string;
   bristles?: IBristle[];
   _objects?: ICanvasObject[];
   objects?: ICanvasObject[];
