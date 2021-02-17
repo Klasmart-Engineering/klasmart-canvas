@@ -27,7 +27,7 @@ const useSynchronizedAdded = (
   shouldHandleRemoteEvent: (id: string) => boolean,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
-  const { floodFillIsActive, isGif, image, setLocalImage } = useContext(
+  const { floodFillIsActive, isGif, image, setLocalImage, setLocalBackground } = useContext(
     WhiteboardContext
   );
   const {
@@ -138,9 +138,10 @@ const useSynchronizedAdded = (
           break;
 
         case 'image':
-          if (e.target.basePath) {
+          const element = e.target?.getElement();
+          if (element.currentSrc) {
             target = {
-              basePath: e.target.basePath,
+              basePath: { imageData: element.currentSrc },
               scaleX: e.target.scaleX,
               scaleY: e.target.scaleY,
               angle: e.target.angle,
@@ -184,13 +185,15 @@ const useSynchronizedAdded = (
           event,
         });
 
-        eventSerializer?.push('added', payload);
+        if (!isGif && e.type !== 'backgroundImage') {
+          eventSerializer?.push('added', payload);
+        }
       }
 
       if (isGif) {
         const payload: ObjectEvent = {
           type: 'gif',
-          target: URL.createObjectURL(image),
+          target: { src: image as string } as ICanvasObject,
           id: e.target.id,
         };
 
@@ -208,15 +211,6 @@ const useSynchronizedAdded = (
         eventSerializer?.push('added', payload);
 
         return;
-      }
-
-      if (type === 'image' && !e.target.basePath && isGif) {
-        const payload: ObjectEvent = {
-          type,
-          target: e.target,
-          id: e.target.id,
-        };
-        eventSerializer?.push('added', payload);
       }
     };
 
@@ -428,7 +422,7 @@ const useSynchronizedAdded = (
       if (objectType === 'gif') {
         (async function () {
           try {
-            const gif = await fabricGif(target + '', 200, 200, 2000);
+            const gif = await fabricGif(`${target.src} `, 200, 200, 2000);
             gif.set({ top: 0, left: 0, selectable: false, evented: false });
             gif.id = id;
             canvas?.add(gif);
@@ -449,6 +443,8 @@ const useSynchronizedAdded = (
             'transparent',
             canvas.renderAll.bind(canvas)
           );
+          setLocalImage('');
+          setLocalBackground(false);
 
         fabric.Image.fromURL(target.src as string, function (img) {
           canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
@@ -459,6 +455,8 @@ const useSynchronizedAdded = (
             // @ts-ignore
             id,
           });
+
+          canvas?.renderAll();
         });
 
         return;
@@ -501,6 +499,7 @@ const useSynchronizedAdded = (
     return () => {
       eventController?.removeListener('added', added);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     canvas,
     eventController,

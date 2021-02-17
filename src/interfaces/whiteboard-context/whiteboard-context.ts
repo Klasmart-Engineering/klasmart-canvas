@@ -111,4 +111,6 @@ export interface IWhiteboardContext {
   updateStampIsActive: (status: boolean) => void;
   stampAssignedStudents: string[];
   updateStampAssignedStudents: (studentIds: string[]) => void;
+  eventSerializer: any;
+  eventController: any;
 }

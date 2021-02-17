@@ -44,6 +44,7 @@ import { useStamp } from './hooks/useStamp';
 import { useStampIsActive } from './hooks/useStampIsActive';
 import { useStampAssignationModal } from './hooks/useStampAssignationModal';
 import { useStampAssignedStudents } from './hooks/useStampAssignedStudents';
+import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -79,6 +80,10 @@ export const WhiteboardProvider = ({
   const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
 
   const {
+    state: { eventSerializer, eventController },
+  } = useSharedEventSerializer();
+
+  const {
     ClearWhiteboardModal,
     openModal,
     closeModal,
@@ -112,7 +117,7 @@ export const WhiteboardProvider = ({
     UploadFileModal,
     openUploadFileModal,
     closeUploadFileModal,
-  } = useUploadFileModal();
+  } = useUploadFileModal(eventSerializer, userId as string);
   const {
     StampAssignationModal,
     openStampAssignationModal,
@@ -403,6 +408,8 @@ export const WhiteboardProvider = ({
     updateStampIsActive,
     stampAssignedStudents,
     updateStampAssignedStudents,
+    eventSerializer,
+    eventController,
   };
 
   return (
