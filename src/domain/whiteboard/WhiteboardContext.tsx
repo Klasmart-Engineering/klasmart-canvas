@@ -38,7 +38,9 @@ import store from './redux/store';
 import { getToolbarIsEnabled } from './redux/utils';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { usePointer } from './hooks/usePointer';
 import { useBackgroundColor } from './hooks/useBackgroundColor';
+import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
@@ -67,6 +69,7 @@ export const WhiteboardProvider = ({
   const { backgroundColor, updateBackgroundColor } = useBackgroundColor();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
+  const { pointer, updatePointer } = usePointer();
 
   const {
     state: { eventSerializer, eventController },
@@ -108,7 +111,6 @@ export const WhiteboardProvider = ({
   } = useUploadFileModal(eventSerializer, userId as string);
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
-  const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
   const [eraserIsActive, updateEraserIsActive] = useState(false);
@@ -146,7 +148,10 @@ export const WhiteboardProvider = ({
    * Opens ClearWhiteboardModal
    */
   const openClearWhiteboardModal = () => {
-    if (allToolbarIsEnabled || (store.getState().permissionsState as IPermissions).clearWhiteboard) {
+    if (
+      allToolbarIsEnabled ||
+      (store.getState().permissionsState as IPermissions).clearWhiteboard
+    ) {
       openModal();
     }
   };
@@ -179,13 +184,31 @@ export const WhiteboardProvider = ({
     [canvasActions]
   );
 
+  const findObjectById = useCallback(
+    (id: string) => {
+      if (!canvasActions) return undefined;
+
+      return canvasActions.findObjectById(id);
+    },
+    [canvasActions]
+  );
+
+  const isCursorObject = useCallback(
+    (object: ICanvasObject) => {
+      if (!canvasActions) return false;
+
+      return canvasActions.isCursorObject(object);
+    },
+    [canvasActions]
+  );
+
   const clearWhiteboardActionClearMyself = useCallback(() => {
     const toolbarIsEnabled = getToolbarIsEnabled(userId);
 
     if (clearWhiteboardPermissions.allowClearMyself && toolbarIsEnabled) {
       canvasActions?.clearWhiteboardClearMySelf();
     }
-  }, [canvasActions, clearWhiteboardPermissions, userId]);
+  }, [canvasActions, clearWhiteboardPermissions.allowClearMyself, userId]);
 
   const clearWhiteboardAllowClearOthersAction = useCallback(
     (userId) => {
@@ -247,11 +270,9 @@ export const WhiteboardProvider = ({
   }, [canvasActions]);
 
   const perfectShapeIsAvailable = () => {
-    const permissionsState = store.getState() as unknown as IPermissions;
+    const permissionsState = (store.getState() as unknown) as IPermissions;
     return (
-      allToolbarIsEnabled ||
-      permissionsState.shape ||
-      permissionsState.move
+      allToolbarIsEnabled || permissionsState.shape || permissionsState.move
     );
   };
 
@@ -372,6 +393,8 @@ export const WhiteboardProvider = ({
     updateBackgroundColor,
     fillBackgroundColor,
     setBackgroundColorInCanvas,
+    isCursorObject,
+    findObjectById,
     eventSerializer,
     eventController,
   };
@@ -389,17 +412,17 @@ export const WhiteboardProvider = ({
         Clear student
       </button>
       {(window.innerWidth <= 768 || window.innerHeight <= 768) &&
-        perfectShapeIsAvailable() ? (
-          <WhiteboardToggle
-            label="Perfect Shape Creation"
-            state={perfectShapeIsActive}
-            onStateChange={(value: boolean) => {
-              if (perfectShapeIsAvailable()) {
-                updatePerfectShapeIsActive(value);
-              }
-            }}
-          />
-        ) : null}
+      perfectShapeIsAvailable() ? (
+        <WhiteboardToggle
+          label="Perfect Shape Creation"
+          state={perfectShapeIsActive}
+          onStateChange={(value: boolean) => {
+            if (perfectShapeIsAvailable()) {
+              updatePerfectShapeIsActive(value);
+            }
+          }}
+        />
+      ) : null}
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />

@@ -1,5 +1,6 @@
 import { ObjectType } from '../../domain/whiteboard/event-serializer/PaintEventSerializer';
 import { IBristle } from '../brushes/bristle';
+import { IPointerType } from '../pointers/pointer-type';
 
 export interface ICanvasObject extends fabric.Object {
   bristles?: IBristle[];
@@ -28,5 +29,6 @@ export interface ICanvasObject extends fabric.Object {
   active?: boolean;
   isActiveErase?: boolean;
   backgroundImage?: string | File;
+  cursorPointer?: IPointerType;
   rawData?: any;
 }

@@ -143,7 +143,7 @@ const useSynchronizedAdded = (
 
         case 'image':
           const element = e.target?.getElement();
-          if (element.currentSrc) {
+          if (element.currentSrc && !e.target.cursorPointer) {
             target = {
               basePath: {
                 ...e.target.basePath,

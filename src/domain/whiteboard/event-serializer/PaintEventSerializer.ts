@@ -49,7 +49,8 @@ export type ObjectType =
   | 'gif'
   | 'backgroundImage'
   | 'localImage'
-  | 'svg';
+  | 'svg'
+  | 'cursorPointer';
 
 export type PayloadTarget =
   | ICanvasObject
