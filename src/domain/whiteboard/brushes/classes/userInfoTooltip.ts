@@ -75,7 +75,7 @@ export class UserInfoTooltip {
    * Singleton instance creator.
    * @param {string} displayUserInfo - The value of the selected option for displaying the info.
    */
-  static createInstance(displayUserInfo: string) {
+  static createInstance(displayUserInfo: string = 'none') {
     if (UserInfoTooltip.exists) {
       return UserInfoTooltip.instance;
     } else {
