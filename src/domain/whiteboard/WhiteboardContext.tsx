@@ -143,6 +143,7 @@ export const WhiteboardProvider = ({
   const [isBackgroundImage, setIsBackgroundImage] = useState(false);
   const [localImage, setLocalImage] = useState<string | File>('');
   const [localBackground, setLocalBackground] = useState(false);
+  const [copiedItem, setCopiedItem] = useState<ICanvasObject | null>(null);
   const [
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
@@ -432,6 +433,8 @@ export const WhiteboardProvider = ({
     findObjectById,
     eventSerializer,
     eventController,
+    copiedItem,
+    setCopiedItem,
   };
 
   return (
