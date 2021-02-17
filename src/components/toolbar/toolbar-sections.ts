@@ -4,10 +4,7 @@ import pointer from '../../assets/icons/toolbar/pointer.svg';
 import hand from '../../assets/icons/toolbar/hand.svg';
 import crosshair from '../../assets/icons/toolbar/crosshair.svg';
 import laser from '../../assets/icons/toolbar/point.svg';
-import left from '../../assets/icons/toolbar/left.svg';
 import right from '../../assets/icons/toolbar/right.svg';
-import up from '../../assets/icons/toolbar/up.svg';
-import down from '../../assets/icons/toolbar/down.svg';
 import trash from '../../assets/icons/toolbar/trash.svg';
 import eraser from '../../assets/icons/toolbar/eraser.svg';
 import pen from '../../assets/icons/toolbar/pen.svg';
@@ -212,7 +209,7 @@ const actionsSection: IBasicToolbarSection = {
 };
 
 const toolsSection: IBasicToolbarSection = {
-  active: 'pointers',
+  active: null,
   elements: [
     // Pointers - ToolbarSelector
     {
@@ -238,34 +235,6 @@ const toolsSection: IBasicToolbarSection = {
           title: 'Crosshair Pointer',
           iconSrc: crosshair,
           iconName: 'Crosshair',
-        },
-        {
-          id: 'left_pointer',
-          value: 'left',
-          title: 'Left Pointer',
-          iconSrc: left,
-          iconName: 'Left',
-        },
-        {
-          id: 'up_pointer',
-          value: 'up',
-          title: 'Up Pointer',
-          iconSrc: up,
-          iconName: 'Up',
-        },
-        {
-          id: 'right_pointer',
-          value: 'right',
-          title: 'Right Pointer',
-          iconSrc: right,
-          iconName: 'Right',
-        },
-        {
-          id: 'down_pointer',
-          value: 'down',
-          title: 'Down Pointer',
-          iconSrc: down,
-          iconName: 'Down',
         },
       ],
     },

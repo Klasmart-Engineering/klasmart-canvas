@@ -4,7 +4,7 @@ import IBasicSpecialSelector from '../toolbar-special-elements/basic-special-sel
 import { IBasicSecondOptionSelector } from '../toolbar-second-option-selector/basic-second-option-selector';
 
 export default interface IBasicToolbarSection {
-  active: string;
+  active: string | null;
   elements: (
     | IBasicToolbarButton
     | IBasicToolbarSelector

@@ -2,10 +2,12 @@ import { MutableRefObject } from 'react';
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
 import { IBrushType } from '../brushes/brush-type';
 import { IStampMode } from '../stamps/stamp-mode';
+import { ICanvasObject } from '../objects/canvas-object';
+import { IPointerType } from '../pointers/pointer-type';
 
 export interface IWhiteboardContext {
-  pointer: string;
-  updatePointer: (pointer: string) => void;
+  pointer: IPointerType;
+  updatePointer: (pointer: IPointerType) => void;
   eraseType: string | null;
   updateEraseType: (type: string | null) => void;
   text: string;
@@ -111,6 +113,8 @@ export interface IWhiteboardContext {
   updateStampIsActive: (status: boolean) => void;
   stampAssignedStudents: string[];
   updateStampAssignedStudents: (studentIds: string[]) => void;
+  isCursorObject: (object: ICanvasObject) => boolean;
+  findObjectById: (id: string) => ICanvasObject | undefined;
   eventSerializer: any;
   eventController: any;
 }

@@ -38,12 +38,14 @@ import store from './redux/store';
 import { getToolbarIsEnabled } from './redux/utils';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { usePointer } from './hooks/usePointer';
 import { useBackgroundColor } from './hooks/useBackgroundColor';
 import { useStampMode } from './hooks/useStampMode';
 import { useStamp } from './hooks/useStamp';
 import { useStampIsActive } from './hooks/useStampIsActive';
 import { useStampAssignationModal } from './hooks/useStampAssignationModal';
 import { useStampAssignedStudents } from './hooks/useStampAssignedStudents';
+import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
@@ -78,6 +80,7 @@ export const WhiteboardProvider = ({
   const { backgroundColor, updateBackgroundColor } = useBackgroundColor();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
+  const { pointer, updatePointer } = usePointer();
 
   const {
     state: { eventSerializer, eventController },
@@ -124,7 +127,6 @@ export const WhiteboardProvider = ({
   } = useStampAssignationModal();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
-  const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
   const [eraserIsActive, updateEraserIsActive] = useState(false);
 
@@ -210,13 +212,31 @@ export const WhiteboardProvider = ({
     [canvasActions]
   );
 
+  const findObjectById = useCallback(
+    (id: string) => {
+      if (!canvasActions) return undefined;
+
+      return canvasActions.findObjectById(id);
+    },
+    [canvasActions]
+  );
+
+  const isCursorObject = useCallback(
+    (object: ICanvasObject) => {
+      if (!canvasActions) return false;
+
+      return canvasActions.isCursorObject(object);
+    },
+    [canvasActions]
+  );
+
   const clearWhiteboardActionClearMyself = useCallback(() => {
     const toolbarIsEnabled = getToolbarIsEnabled(userId);
 
     if (clearWhiteboardPermissions.allowClearMyself && toolbarIsEnabled) {
       canvasActions?.clearWhiteboardClearMySelf();
     }
-  }, [canvasActions, clearWhiteboardPermissions, userId]);
+  }, [canvasActions, clearWhiteboardPermissions.allowClearMyself, userId]);
 
   const clearWhiteboardAllowClearOthersAction = useCallback(
     (userId) => {
@@ -408,6 +428,8 @@ export const WhiteboardProvider = ({
     updateStampIsActive,
     stampAssignedStudents,
     updateStampAssignedStudents,
+    isCursorObject,
+    findObjectById,
     eventSerializer,
     eventController,
   };

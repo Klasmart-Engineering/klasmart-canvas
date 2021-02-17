@@ -20,6 +20,7 @@ import { CSSProperties } from '@material-ui/core/styles/withStyles';
 import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 import { mappedActionElements, mappedToolElements } from './permissions-mapper';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { IPointerType } from '../../interfaces/pointers/pointer-type';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBasicSecondOptionSelector } from '../../interfaces/toolbar/toolbar-second-option-selector/basic-second-option-selector';
 import SecondOptionSelector from './second-option-selector/SecondOptionSelector';
@@ -96,6 +97,8 @@ function Toolbar(props: {
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
+  const cursorPointerToolIsActive =
+    allToolbarIsEnabled || props.permissions.cursorPointer;
   const pointerToolIsActive = allToolbarIsEnabled || props.permissions.pointer;
   const moveToolIsActive = allToolbarIsEnabled || props.permissions.move;
   const eraseToolIsActive =
@@ -116,6 +119,10 @@ function Toolbar(props: {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
+    if (tool === ELEMENTS.POINTERS_TOOL && !cursorPointerToolIsActive) {
+      return;
+    }
+
     if (tool === ELEMENTS.LASER_TOOL && !pointerToolIsActive) {
       return;
     }
@@ -283,7 +290,7 @@ function Toolbar(props: {
   function handleToolSelectorChange(tool: string, option: string) {
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
-        updatePointer(option);
+        updatePointer(option as IPointerType);
         break;
 
       case ELEMENTS.LINE_TYPE_TOOL:
@@ -505,7 +512,7 @@ function Toolbar(props: {
   /**
    * Indicates active tool.
    */
-  const getActiveTool = useMemo((): string => tools.active, [tools]);
+  const getActiveTool = useMemo((): string => tools.active as string, [tools]);
 
   /**
    * Returns tool elements.
@@ -514,6 +521,22 @@ function Toolbar(props: {
     (): IBasicToolbarSection['elements'] => [...tools.elements],
     [tools]
   );
+
+  /**
+   * Sets pointer tool as active for teacher user
+   */
+  useEffect(() => {
+    if (allToolbarIsEnabled) {
+      setTools({
+        active: ELEMENTS.POINTERS_TOOL,
+        elements: getToolElements,
+      });
+
+      setPointerEvents(false);
+    }
+    // If getToolElements and tools.active are added an infinite loop happens
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allToolbarIsEnabled, setPointerEvents]);
 
   /**
    * Checks if any tool permission is set to true. If not, and tool is selected,
@@ -526,7 +549,7 @@ function Toolbar(props: {
 
     if (!props.permissions.pointer && getActiveTool === ELEMENTS.LASER_TOOL) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }
@@ -536,7 +559,7 @@ function Toolbar(props: {
       getActiveTool === ELEMENTS.MOVE_OBJECTS_TOOL
     ) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }
@@ -546,7 +569,7 @@ function Toolbar(props: {
       getActiveTool === ELEMENTS.ERASE_TYPE_TOOL
     ) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }
@@ -561,7 +584,7 @@ function Toolbar(props: {
 
     if (!props.permissions.pen && getActiveTool === ELEMENTS.LINE_TYPE_TOOL) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }
@@ -571,21 +594,31 @@ function Toolbar(props: {
       getActiveTool === ELEMENTS.FLOOD_FILL_TOOL
     ) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }
 
     if (!props.permissions.text && getActiveTool === ELEMENTS.ADD_TEXT_TOOL) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
         elements: getToolElements,
       });
     }
 
     if (!props.permissions.shape && getActiveTool === ELEMENTS.ADD_SHAPE_TOOL) {
       setTools({
-        active: ELEMENTS.POINTERS_TOOL,
+        active: null,
+        elements: getToolElements,
+      });
+    }
+
+    if (
+      !props.permissions.cursorPointer &&
+      getActiveTool === ELEMENTS.POINTERS_TOOL
+    ) {
+      setTools({
+        active: null,
         elements: getToolElements,
       });
     }

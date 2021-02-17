@@ -27,9 +27,13 @@ const useSynchronizedAdded = (
   shouldHandleRemoteEvent: (id: string) => boolean,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
-  const { floodFillIsActive, isGif, image, setLocalImage, setLocalBackground } = useContext(
-    WhiteboardContext
-  );
+  const {
+    floodFillIsActive,
+    isGif,
+    image,
+    setLocalImage,
+    setLocalBackground,
+  } = useContext(WhiteboardContext);
   const {
     state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
@@ -139,9 +143,12 @@ const useSynchronizedAdded = (
 
         case 'image':
           const element = e.target?.getElement();
-          if (element.currentSrc) {
+          if (element.currentSrc && !e.target.cursorPointer) {
             target = {
-              basePath: { imageData: element.currentSrc },
+              basePath: {
+                ...e.target.basePath,
+                imageData: element.currentSrc,
+              },
               scaleX: e.target.scaleX,
               scaleY: e.target.scaleY,
               angle: e.target.angle,
@@ -443,8 +450,8 @@ const useSynchronizedAdded = (
             'transparent',
             canvas.renderAll.bind(canvas)
           );
-          setLocalImage('');
-          setLocalBackground(false);
+        setLocalImage('');
+        setLocalBackground(false);
 
         fabric.Image.fromURL(target.src as string, function (img) {
           canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
