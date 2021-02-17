@@ -119,6 +119,7 @@ export const useStampAssignationModal = () => {
               <FormGroup>
                 {studentsList.map((student) => (
                   <FormControlLabel
+                    key={student.id}
                     control={
                       <Checkbox
                         id={student.id}
