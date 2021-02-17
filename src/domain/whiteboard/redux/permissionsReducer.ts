@@ -1,4 +1,4 @@
-import { combineReducers } from 'redux'
+import { combineReducers } from 'redux';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
 import {
   UPDATE_CLEAR_WHITEBOARD,
@@ -34,14 +34,18 @@ const permissionsState: IPermissions = {
   downloadCanvas: false,
   uploadImage: false,
   backgroundColor: false,
-}
+  cursorPointer: false,
+};
 
 /**
  * Reducer
  * @param state Redux state
  * @param action Action
  */
-export function permissionsReducer(state: IPermissions = permissionsState, action: { type: string, payload: boolean | IPermissions }) {
+export function permissionsReducer(
+  state: IPermissions = permissionsState,
+  action: { type: string; payload: boolean | IPermissions }
+) {
   switch (action.type) {
     case UPDATE_POINTER: {
       return { ...state, pointer: action.payload };
@@ -80,10 +84,10 @@ export function permissionsReducer(state: IPermissions = permissionsState, actio
       return { ...state, floodFill: action.payload };
     }
     case UPDATE_RECEIVED: {
-      return { ...state, ...action.payload as IPermissions };
+      return { ...state, ...(action.payload as IPermissions) };
     }
     default:
-      return state
+      return state;
   }
 }
 

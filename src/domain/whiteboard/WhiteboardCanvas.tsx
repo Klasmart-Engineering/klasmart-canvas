@@ -10,7 +10,6 @@ import React, {
   useState,
 } from 'react';
 import { connect } from 'react-redux';
-import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { WhiteboardContext } from './WhiteboardContext';
 import { useCanvasActions } from './canvas-actions/useCanvasActions';
 import useSynchronizedAdded from './synchronization-hooks/useSynchronizedAdded';
@@ -48,6 +47,8 @@ import { useChangeLineWidth } from './canvas-features/useChangeLineWidth';
 import { useUndoRedo } from './canvas-features/useUndoRedo';
 import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
 import { v4 as uuidv4 } from 'uuid';
+import { usePointerFeature } from './canvas-features/usePointerFeature';
+import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
 import { useCopy } from './canvas-features/useCopy';
@@ -107,18 +108,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   const serializerToolbarState = permissions;
 
-  // Event serialization for synchronizing whiteboard state.
-  const {
-    state: { eventSerializer, eventController },
-  } = useSharedEventSerializer();
-
-  // Undo/Redo dispatcher
-  const { dispatch: undoRedoDispatch } = UndoRedo(
-    canvas as fabric.Canvas,
-    eventSerializer,
-    userId
-  );
-
   // Getting context variables for this file
   const {
     penColor,
@@ -135,7 +124,15 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     localImage,
     localBackground,
     backgroundColor,
+    eventSerializer,
+    eventController,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
+
+  const { dispatch: undoRedoDispatch } = UndoRedo(
+    canvas as fabric.Canvas,
+    eventSerializer,
+    userId
+  );
 
   // useEffects and logic to set canvas properties
   useSetCanvas(
@@ -285,6 +282,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     eventSerializer,
   );
 
+  // useEffects and logic for manage pointers
+  usePointerFeature(canvas as fabric.Canvas, userId, permissions);
+
   useSynchronizedMoved(
     canvas,
     userId,
@@ -375,6 +375,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     updatePermissions
   );
+  useSynchronizedCursorPointer(canvas, userId, filterIncomingEvents);
   useSynchronizedBackgroundColorChanged(filterIncomingEvents);
 
   // NOTE: Register canvas actions with context.

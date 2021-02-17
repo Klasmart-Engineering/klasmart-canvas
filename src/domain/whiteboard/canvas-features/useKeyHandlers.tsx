@@ -55,7 +55,7 @@ export const useKeyHandlers = (
 
         canvas.discardActiveObject();
 
-        if (active.type === 'activeSelection') {
+        if (active?.type === 'activeSelection') {
           const objectIds: string[] = [];
 
           (active as fabric.ActiveSelection).forEachObject(
@@ -172,6 +172,7 @@ export const useKeyHandlers = (
       //   canvas.renderAll();
       // }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       permissions.undoRedo,
       allToolbarIsEnabled,

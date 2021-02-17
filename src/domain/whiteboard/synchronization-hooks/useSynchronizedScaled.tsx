@@ -226,7 +226,10 @@ const useSynchronizedScaled = (
       }
 
       for (let i = 0; i < objectsToGroup.length; i++) {
-        let match = target?.eTarget?.objects?.filter((o: any) => o.id === objectsToGroup[i].id)[0] || {};
+        let match =
+          target?.eTarget?.objects?.filter(
+            (o: any) => o.id === objectsToGroup[i].id
+          )[0] || {};
         objectsToGroup[i].set(match);
       }
 
@@ -286,6 +289,12 @@ const useSynchronizedScaled = (
   ]);
 
   useEffect(() => {
+    /**
+     * Handles the logic for scale objects on canvas
+     * @param e - Scale or scaling event
+     * @param filtered - Flag to know if is a scaling (true)
+     * or scaled (false) event
+     */
     const objectScaled = async (
       e: fabric.IEvent | CanvasEvent,
       filtered?: boolean
@@ -304,9 +313,7 @@ const useSynchronizedScaled = (
           activeIds.push(activeObject.id as string);
         });
 
-        const groupPayloadData = e.target.toJSON([
-          'id'
-        ]);
+        const groupPayloadData = e.target.toJSON(['id']);
 
         const groupPayload: ObjectEvent = {
           id: userId,
@@ -317,7 +324,6 @@ const useSynchronizedScaled = (
         eventSerializer?.push('scaled', groupPayload);
 
         if (!filtered) {
-
           const activeObjects = canvas?.getActiveObjects();
           canvas?.discardActiveObject();
           const activeSelection = new fabric.ActiveSelection(activeObjects, {
@@ -388,6 +394,8 @@ const useSynchronizedScaled = (
           case 'crayon':
             if (!canvas || !userId) return;
 
+            if (filtered) break;
+
             const brush = new ChalkBrush(canvas, userId, brushType);
             const basePath = brushTarget.basePath;
             const newPoints = (basePath?.points as ICoordinate[]).map(
@@ -404,42 +412,45 @@ const useSynchronizedScaled = (
               Number(basePath?.strokeWidth)
             );
 
-            await brush
-              .createChalkPath(
+            try {
+              const newObject = await brush.createChalkPath(
                 String(brushTarget.id),
                 newPoints,
                 Number(basePath?.strokeWidth),
                 String(basePath?.stroke),
                 newRects
-              )
-              .then((newObject) => {
-                if (!e.target) return;
+              );
 
-                const id = brushTarget.id;
-                newObject.set({
-                  top: e.target.top,
-                  left: e.target.left,
-                  angle: e.target.angle,
-                  flipX: e.target.flipX,
-                  flipY: e.target.flipY,
-                });
+              if (!e.target) return;
 
-                // Id's are deleted to avoid add and remove event serializing
-                delete (e.target as ICanvasBrush).id;
-                delete newObject.id;
-
-                canvas.remove(e.target);
-                canvas.add(newObject);
-                canvas.setActiveObject(newObject);
-                canvas.renderAll();
-
-                // Id's are deleted to avoid add and remove event serializing
-                newObject.set({
-                  id: id,
-                });
-
-                target.type = 'image-based';
+              const id = brushTarget.id;
+              newObject.set({
+                top: e.target.top,
+                left: e.target.left,
+                angle: e.target.angle,
+                flipX: e.target.flipX,
+                flipY: e.target.flipY,
               });
+
+              // Id's are deleted to avoid add and remove event serializing
+              delete (e.target as ICanvasBrush).id;
+              delete newObject.id;
+
+              canvas.remove(e.target);
+              canvas.add(newObject);
+              canvas.setActiveObject(newObject);
+              canvas.renderAll();
+
+              // Id's are deleted to avoid add and remove event serializing
+              newObject.set({
+                id: id,
+              });
+
+              target.type = 'image-based';
+            } catch (e) {
+              console.warn(e);
+            }
+
             break;
         }
 

@@ -2,8 +2,8 @@ import IBasicToolbarSelector from '../../interfaces/toolbar/toolbar-selector/bas
 import IBasicToolbarSection from '../../interfaces/toolbar/toolbar-section/basic-toolbar-section';
 import IBasicToolbarButton from '../../interfaces/toolbar/toolbar-button/basic-toolbar-button';
 import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elements/basic-special-selector';
-import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
 import { IPermissions } from '../../interfaces/permissions/permissions';
+import IToolbarSelectorOption from '../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
 
 /**
  * Maps permissions to action tools.
@@ -58,13 +58,18 @@ export const mappedActionElements = (
 export const mappedToolElements = (
   tools: IBasicToolbarSection,
   allToolbarIsEnabled: boolean,
-  serializerToolbarState: IPermissions,
+  serializerToolbarState: IPermissions
 ) =>
   tools.elements.map(
     (
       elmnt: IBasicToolbarButton | IBasicToolbarSelector | IBasicSpecialSelector
     ) => {
       switch (elmnt.id) {
+        case 'pointers': {
+          const enabled =
+            allToolbarIsEnabled || serializerToolbarState.cursorPointer;
+          return { ...elmnt, enabled };
+        }
         case 'laser_pointer': {
           const enabled = allToolbarIsEnabled || serializerToolbarState.pointer;
           return { ...elmnt, enabled };
