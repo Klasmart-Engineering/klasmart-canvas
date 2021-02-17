@@ -117,7 +117,7 @@ export class PaintEventSerializer extends EventEmitter
 
     // console.log(`Serializing event for object: ${object.id}`);
 
-    const shape = (object.target as IShapeCreationTarget).shape;
+    const shape = (object.target as IShapeCreationTarget)?.shape;
 
     if (type === 'moving' && shape?.basePath) {
       (object.target as IShapeCreationTarget).shape = shape.toJSON([
