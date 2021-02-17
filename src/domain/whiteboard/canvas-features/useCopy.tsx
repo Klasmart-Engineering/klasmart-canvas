@@ -1,21 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { ICanvasKeyboardEvent } from "../../../interfaces/canvas-events/canvas-keyboard-event";
 import { ICanvasObject } from "../../../interfaces/objects/canvas-object";
 import { IPermissions } from "../../../interfaces/permissions/permissions";
-import { WhiteboardContext } from '../WhiteboardContext';
 import { v4 as uuidv4 } from 'uuid';
-import { useContext } from "react";
 import store from '../redux/store';
-import { ICanvasBrush } from "../../../interfaces/brushes/canvas-brush";
-import { ICanvasPathBrush } from "../../../interfaces/brushes/canvas-path-brush";
 import { IUndoRedoEvent } from "../../../interfaces/canvas-events/undo-redo-event";
 import { TypedShape } from "../../../interfaces/shapes/shapes";
-import { ObjectEvent } from "../event-serializer/PaintEventSerializer";
 import { SET } from "../reducers/undo-redo";
 import { CANVAS_OBJECT_PROPS } from "../../../config/undo-redo-values";
-import { requiredEllipseProps, requiredPencilDashedProps, requiredProps } from '../canvas-actions/shapeProps';
 import { objectSerializerFormatter } from "../utils/objectSerializerFormatter";
-
 
 export const useCopy = (
   canvas: fabric.Canvas,
@@ -26,9 +19,9 @@ export const useCopy = (
   eventSerializer: any,
 ) => {
 
-  const isShape = (type: string) => (
-    type === 'shape'
-  )
+  const hasPermission = (permissions: IPermissions, shape: ICanvasObject) => {
+    
+  }
 
   let copied: any = null;
 
