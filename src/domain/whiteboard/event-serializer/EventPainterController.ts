@@ -96,6 +96,10 @@ export class EventPainterController extends EventEmitter
           this.emit('backgroundColorChanged', data.id, data.target);
           break;
         }
+        case 'sendStamp': {
+          this.emit('sendStamp', data.id, data.target);
+          break;
+        }
       }
     };
 
