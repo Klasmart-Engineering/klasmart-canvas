@@ -9,6 +9,7 @@ import store from '../redux/store';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { IStampSyncTarget } from '../../../interfaces/stamps/stamp-sync-target';
 import { IUtilAminEaseFunction } from 'fabric/fabric-impl';
+import { v4 as uuidv4 } from 'uuid';
 
 const useSynchronizedSendStamp = (
   canvas: fabric.Canvas | undefined,
@@ -76,11 +77,11 @@ const useSynchronizedSendStamp = (
       const stampsInRow = Math.floor(Number(canvas?.width) / (stampWidth + 10));
       const stampsInColumn = Math.floor(Number(canvas?.height) / stampHeight);
 
-      let existentStamps =
-        (canvas
-          ?.getObjects()
-          .filter((obj: ICanvasObject) => obj.stampObject && !obj.fontFamily)
-          .length as number) - 1;
+      let existentStamps = canvas
+        ?.getObjects()
+        .filter(
+          (obj: ICanvasObject) => obj.stampObject && !obj.fontFamily && obj.id
+        ).length as number;
 
       if (existentStamps <= stampsInRow * stampsInColumn) {
         top = Math.floor(existentStamps / stampsInRow) * stampHeight + 10;
@@ -240,6 +241,7 @@ const useSynchronizedSendStamp = (
             const easeEffect = fabric.util.ease.easeInQuad;
 
             (image as ICanvasObject).set({
+              id: `${userId}:${uuidv4()}`,
               originX: 'left',
               originY: 'top',
             });
