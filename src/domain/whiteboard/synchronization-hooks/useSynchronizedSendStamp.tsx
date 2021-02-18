@@ -205,7 +205,7 @@ const useSynchronizedSendStamp = (
               lockMovementY: true,
             });
 
-            ((presentMessage as unknown) as ICanvasObject).set({
+            (presentText as ICanvasObject).set({
               stampObject: true,
             });
 
