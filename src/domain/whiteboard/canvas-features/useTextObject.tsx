@@ -152,8 +152,8 @@ export const useTextObject = (
     const studentHasPermission =
       toolbarIsEnabled && permissions.text && textIsActive;
 
-    if (teacherHasPermission || studentHasPermission) {
-      canvas.on('mouse:down', (e: fabric.IEvent) => {
+
+      const mouseDown = (e: fabric.IEvent) => {
         if (!e.pointer) return;
 
         const { target, pointer } = e;
@@ -224,7 +224,10 @@ export const useTextObject = (
             });
           });
         }
-      });
+      };
+
+    if (teacherHasPermission || studentHasPermission) {
+      canvas.on('mouse:down', mouseDown);
     } else {
       const active = canvas?.getActiveObject() as fabric.IText;
 
@@ -236,7 +239,7 @@ export const useTextObject = (
 
     return () => {
       if (!eraseType) {
-        canvas?.off('mouse:down');
+        canvas?.off('mouse:down', mouseDown);
       }
     };
   }, [

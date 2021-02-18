@@ -265,34 +265,36 @@ export const useFloodFill = (
     const studentHasPermission =
       floodFillIsActive && toolbarIsEnabled && serializerToolbarState.floodFill;
 
+    const mouseDownFill = async (event: fabric.IEvent) => {
+      if (!event.pointer) return;
+
+      // Flood-fill for no shape objects
+      if (needsFloodFillAlgorithm(event)) {
+        floodFillMouseEvent(
+          event,
+          canvas,
+          userId,
+          isLocalObject as (p1: string, p2: string) => boolean,
+          floodFill,
+          eventSerializer,
+          undoRedoDispatch
+        );
+
+        return;
+      }
+
+      // Click on shape object
+      if (event.target && isEmptyShape(event.target)) {
+        floodFillInShape(event);
+      }
+
+      canvas.renderAll();
+    };
+
     if (teacherHasPermission || studentHasPermission) {
       prepareObjects();
 
-      canvas.on('mouse:down', async (event: fabric.IEvent) => {
-        if (!event.pointer) return;
-
-        // Flood-fill for no shape objects
-        if (needsFloodFillAlgorithm(event)) {
-          floodFillMouseEvent(
-            event,
-            canvas,
-            userId,
-            isLocalObject as (p1: string, p2: string) => boolean,
-            floodFill,
-            eventSerializer,
-            undoRedoDispatch
-          );
-
-          return;
-        }
-
-        // Click on shape object
-        if (event.target && isEmptyShape(event.target)) {
-          floodFillInShape(event);
-        }
-
-        canvas.renderAll();
-      });
+      canvas.on('mouse:down', mouseDownFill);
     }
 
     return () => {
@@ -313,7 +315,7 @@ export const useFloodFill = (
 
       // Removing mouse:down event when it is not necessary
       if (!textIsActive && eraseType !== 'object') {
-        canvas?.off('mouse:down');
+        canvas?.off('mouse:down', mouseDownFill);
       }
     };
   }, [

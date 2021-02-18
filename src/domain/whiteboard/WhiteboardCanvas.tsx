@@ -130,6 +130,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     eventController,
     setLocalBackground,
     setLocalImage
+    activeTool,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { dispatch: undoRedoDispatch } = UndoRedo(
@@ -292,6 +293,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     allToolbarIsEnabled,
     undoRedoDispatch,
     eventSerializer,
+    activeTool
   );
 
   // useEffects and logic for stamp feature
