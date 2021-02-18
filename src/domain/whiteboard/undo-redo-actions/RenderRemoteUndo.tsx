@@ -87,7 +87,7 @@ export const RenderRemoteUndo = (
     case 'backgroundAdded': {
       const target = {
         // @ts-ignore
-        id: '',
+        id: nextEvent.event.id,
         target: {
           strategy: 'removeBackground',
           isBackgroundImage: true,
@@ -95,7 +95,6 @@ export const RenderRemoteUndo = (
       };
       
       eventSerializer?.push('removed', target as ObjectEvent);
-
 
       if (state.backgrounds.length && state.activeStateIndex !== null) {
         const payload: ObjectEvent = {

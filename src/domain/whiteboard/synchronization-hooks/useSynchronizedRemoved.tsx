@@ -112,6 +112,7 @@ const useSynchronizedRemoved = (
           });
           break;
         case 'removeBackground': {
+          if (!shouldHandleRemoteEvent(objectId) && objectId) return;
           // @ts-ignore
           canvas?.setBackgroundImage(0, canvas.renderAll.bind(canvas));
           setLocalImage('');

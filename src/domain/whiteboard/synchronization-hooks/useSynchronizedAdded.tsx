@@ -460,26 +460,27 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'backgroundImage') {
-        if (canvas)
+        if (canvas) {
           canvas.setBackgroundColor(
             'transparent',
             canvas.renderAll.bind(canvas)
           );
           setLocalImage('');
           setLocalBackground(false);
-        let src = (target as ICanvasPathBrush).basePath?.imageData || target.src;
+          let src = (target as ICanvasPathBrush).basePath?.imageData || target.src;
 
-        fabric.Image.fromURL(src as string, function (img) {
-          canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
-            scaleX: (canvas.width || 0) / (img.width || 0),
-            scaleY: (canvas.height || 0) / (img.height || 0),
-            originX: 'left',
-            originY: 'top',
-            id,
-          } as IImageOptions);
+          fabric.Image.fromURL(src as string, function (img) {
+            canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+              scaleX: (canvas.width || 0) / (img.width || 0),
+              scaleY: (canvas.height || 0) / (img.height || 0),
+              originX: 'left',
+              originY: 'top',
+              id,
+            } as IImageOptions);
 
-          canvas?.renderAll();
-        });
+            canvas?.renderAll();
+          });
+        }
 
         return;
       }
