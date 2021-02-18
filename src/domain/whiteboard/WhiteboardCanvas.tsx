@@ -277,7 +277,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   useCopy(
     canvas as fabric.Canvas,
     userId,
-    permissions,
     allToolbarIsEnabled,
     undoRedoDispatch,
     eventSerializer,
