@@ -40,31 +40,28 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
   useEffect(() => {
     if (!canvas) return;
 
-    if (isBackgroundImage) {
-      updateBackgroundColor('#000000');
-      setLocalBackground(false);
-      canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
+    const imageSetup = async () => {
+      try {
+        if (isBackgroundImage) {
+          updateBackgroundColor('#000000');
+          setLocalBackground(false);
+          canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
 
-      if (backgroundImageIsPartialErasable) {
-        createBackgroundImage(backgroundImage.toString(), userId, canvas).then(
-          () => {
-            if (canvas.backgroundImage) {
-              const payload: IBackgroundImageEvent = {
-                id: (canvas.backgroundImage as IBackgroundImage).id,
-                type: 'backgroundImage',
-                target: canvas.backgroundImage,
-              };
+          if (backgroundImageIsPartialErasable) {
+            await createBackgroundImage(backgroundImage.toString(), userId, canvas)
 
-              canvas.trigger('object:added', payload);
-            }
+            if (!canvas.backgroundImage) return;
+
+            const payload: IBackgroundImageEvent = {
+              id: (canvas.backgroundImage as IBackgroundImage).id,
+              type: 'backgroundImage',
+              target: canvas.backgroundImage,
+            };
+
+            canvas.trigger('object:added', payload);
+            return;
           }
-        );
-
-        return;
-      }
-
-      (async () => {
-        try {
+  
           await setLocalImage(backgroundImage);
           const id = `${userId}:${uuidv4()}`;
           const payload: IBackgroundImageEvent = {
@@ -74,33 +71,34 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
           };
 
           canvas.trigger('object:added', payload);
-        } catch (e) {
-          console.error(e);
+
+          return;
         }
-      })();
 
-      return;
-    }
+        if (isGif && image) {
+          /*
+            We use then to avoid inspector warning
+            about ignoring the promise returned
+          */
+          await createGif(image, userId, canvas);
+          return;
+        }
 
-    if (isGif && image) {
-      /*
-        We use then to avoid inspector warning
-        about ignoring the promise returned
-      */
-      createGif(image, userId, canvas).then();
-      return;
-    }
+        if (image && !isGif) {
+          createImageAsObject(image.toString(), userId, canvas, laserIsActive);
+        }
+      } catch(e) {
+        console.error(e);
+      }
+    };
 
-    if (image) {
-      createImageAsObject(image.toString(), userId, canvas, laserIsActive);
-    }
+
+    imageSetup();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    backgroundImage,
-    backgroundImageIsPartialErasable,
-    canvas,
     image,
-    isBackgroundImage,
-    isGif,
+    backgroundImage,
+    canvas,
     setLocalBackground,
     setLocalImage,
     updateBackgroundColor,

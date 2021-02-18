@@ -33,7 +33,8 @@ export const useCanvasActions = (
   dispatch: (action: CanvasAction) => void,
   canvasId: string,
   eventSerializer: any,
-  userId: string
+  userId: string,
+  ignoreDirectActions?: boolean,
 ) => {
   const {
     shapeIsActive,
@@ -52,12 +53,12 @@ export const useCanvasActions = (
     perfectShapeIsActive,
     partialEraseIsActive,
     eraseType,
-    backgroundImage,
     localImage,
     brushType,
     eraserIsActive,
     updateBackgroundColor,
     setLocalBackground,
+    backgroundImage,
     setIsBackgroundImage,
     setBackgroundImageIsPartialErasable,
     setLocalImage,
@@ -402,11 +403,33 @@ export const useCanvasActions = (
   }, [canvas]);
 
   /**
+   * Finds in the current canvas an object with the given id and returns it.
+   * @param {string} id - Id of the object to find
+   */
+  const findObjectById = useCallback(
+    (id: string) => {
+      return canvas
+        .getObjects()
+        .find((obj: ICanvasObject) => obj.id === id) as ICanvasObject;
+    },
+    [canvas]
+  );
+
+  /**
+   * Checks if the given object is a cursor object
+   * @param {ICanvasObject} object - Object to check
+   */
+  const isCursorObject = useCallback((object: ICanvasObject) => {
+    return object.id?.split(':')[1] === 'cursor';
+  }, []);
+
+  /**
    * Clears all whiteboard elements
    * */
   const clearWhiteboardClearAll = useClearWhiteboardClearAll(
     canvas,
     userId,
+    isCursorObject,
     updateClearIsActive,
     eventSerializer,
     dispatch
@@ -418,6 +441,7 @@ export const useCanvasActions = (
   const clearWhiteboardClearMySelf = useClearWhiteboardSelf(
     canvas,
     userId,
+    isCursorObject,
     closeModal,
     dispatch,
     isLocalObject,
@@ -434,6 +458,7 @@ export const useCanvasActions = (
    * */
   const clearWhiteboardAllowClearOthers = useClearWhiteboardOthers(
     canvas,
+    isCursorObject,
     updateClearIsActive,
     eventSerializer
   );
@@ -476,7 +501,7 @@ export const useCanvasActions = (
   const eraseObject = useEraseObject(canvas, userId, canvasId);
 
   useEffect(() => {
-    if (!canvas) {
+    if (!canvas || ignoreDirectActions) {
       return;
     }
 
@@ -597,6 +622,8 @@ export const useCanvasActions = (
       clearWhiteboardClearMySelf,
       fillBackgroundColor,
       setBackgroundColorInCanvas,
+      isCursorObject,
+      findObjectById,
     };
 
     return { actions, mouseDown };
@@ -618,8 +645,10 @@ export const useCanvasActions = (
     clearWhiteboardAllowClearOthers,
     clearWhiteboardClearMySelf,
     fillBackgroundColor,
-    mouseDown,
     setBackgroundColorInCanvas,
+    isCursorObject,
+    findObjectById,
+    mouseDown,
   ]);
 
   return state;
