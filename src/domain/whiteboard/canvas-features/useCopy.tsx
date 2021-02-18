@@ -9,7 +9,18 @@ import { TypedShape } from "../../../interfaces/shapes/shapes";
 import { SET } from "../reducers/undo-redo";
 import { CANVAS_OBJECT_PROPS } from "../../../config/undo-redo-values";
 import { objectSerializerFormatter } from "../utils/objectSerializerFormatter";
+import { ELEMENTS } from "../../../config/toolbar-element-names";
 
+/**
+ * Handles copy past functionality
+ * @param canvas 
+ * @param userId 
+ * @param permissions 
+ * @param allToolbarIsEnabled 
+ * @param undoRedoDispatch 
+ * @param eventSerializer 
+ * @param activeTool 
+ */
 export const useCopy = (
   canvas: fabric.Canvas,
   userId: string,
@@ -17,13 +28,35 @@ export const useCopy = (
   allToolbarIsEnabled: boolean,
   undoRedoDispatch: any,
   eventSerializer: any,
+  activeTool: string | null
 ) => {
 
-  const hasPermission = (permissions: IPermissions, shape: ICanvasObject) => {
-    
+  /**
+   * 
+   * @param permissions 
+   * @param shape 
+   */
+  const checkPermission = (permissions: IPermissions, shape: ICanvasObject) => {
+    if (shape.shapeType === 'shape'){
+      return permissions.shape;
+    }
+
+    if (shape.type === 'path') {
+      return permissions.pen;
+    }
+
+    if (shape.type === 'image') {
+      return permissions.uploadImage;
+    }
+
+    if (shape.type === 'textbox') {
+      return permissions.text;
+    }
   }
 
   let copied: any = null;
+  let target: any = null;
+  let unevented: any[] = [];
 
   const keyDownHandler = (e: KeyboardEvent) => {
     const event = e as ICanvasKeyboardEvent;
@@ -41,8 +74,9 @@ export const useCopy = (
 
     if (event.ctrlKey && event.key === 'v' && copied) {
       let permissions = store.getState().permissionsState;
+      let allowed = checkPermission(permissions, copied);
 
-      if (allToolbarIsEnabled) {
+      if (allToolbarIsEnabled || allowed) {
         canvas?.add(copied);
         canvas?.renderAll();
 
@@ -63,12 +97,66 @@ export const useCopy = (
     }
   };
 
+  const mouseDown = (e: any) => {
+    canvas.getObjects().forEach((o: any) => {
+      if (!o.evented) {
+        o.set({ 
+          evented: true,
+          lockMovementX: true,
+          lockMovementY: true,
+          lockScalingX: true,
+          lockScalingY: true,
+          lockRotation: true,
+        });
+        unevented.push(o);
+      }
+    });
+
+    target = canvas.findTarget(e.pointer, false);
+
+    if (target) {
+      canvas.setActiveObject(target);
+      canvas.renderAll();
+    }
+  };
+
+  const deactivateOther = () => {
+    unevented.forEach((o: any) => {
+      o.set({ 
+        evented: false,
+        lockMovementX: false,
+        lockMovementY: false,
+        lockScalingX: false,
+        lockScalingY: false,
+        lockRotation: false,
+      });
+    });
+
+    unevented = [];
+  };
+
   useEffect(() => {
     if (!canvas) return;
-    document.addEventListener('keydown', keyDownHandler, false);
+
+    if (activeTool === ELEMENTS.MOVE_OBJECTS_TOOL) {
+      document.addEventListener('keydown', keyDownHandler, false);
+
+      if (allToolbarIsEnabled) {
+        canvas?.on('mouse:down:before', mouseDown);
+      }
+    }
 
     return () => {
       document.removeEventListener('keydown', keyDownHandler);
+
+      if (allToolbarIsEnabled) {
+        canvas?.off('mouse:down:before', mouseDown);
+      }
+
+      if (activeTool !== ELEMENTS.MOVE_OBJECTS_TOOL && unevented.length) {
+        deactivateOther();
+        canvas.discardActiveObject();
+      }
     };
-  }, [canvas]);
+  }, [canvas, activeTool]);
 };

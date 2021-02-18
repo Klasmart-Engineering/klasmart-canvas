@@ -161,8 +161,12 @@ export const useCanvasActions = (
   /**
    * Clear mouse event handlers for cavnas
    */
-  const clearOnMouseEvent = useCallback((): void => {
-    canvas?.off('mouse:down');
+  const clearOnMouseEvent = useCallback((click?: (arg: fabric.IEvent) => void): void => {
+    if (click) {
+      canvas?.off('mouse:down', click);
+    } else {
+      canvas?.off('mouse:down');
+    }
   }, [canvas]);
 
   /**

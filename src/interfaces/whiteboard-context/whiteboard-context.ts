@@ -109,4 +109,6 @@ export interface IWhiteboardContext {
   findObjectById: (id: string) => ICanvasObject | undefined;
   eventSerializer: any;
   eventController: any;
+  activeTool: string | null;
+  setActiveTool: (arg: string | null) => void;
 }

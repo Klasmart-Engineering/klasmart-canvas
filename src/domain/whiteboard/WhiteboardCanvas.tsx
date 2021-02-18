@@ -126,6 +126,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     backgroundColor,
     eventSerializer,
     eventController,
+    activeTool,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { dispatch: undoRedoDispatch } = UndoRedo(
@@ -280,6 +281,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     allToolbarIsEnabled,
     undoRedoDispatch,
     eventSerializer,
+    activeTool
   );
 
   // useEffects and logic for manage pointers
