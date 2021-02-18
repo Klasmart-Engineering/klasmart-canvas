@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import goodStamp from '../../../assets/icons/toolbar/good-stamp.png';
 import wellDoneStamp from '../../../assets/icons/toolbar/well-done-stamp.png';
@@ -47,6 +47,9 @@ const useSynchronizedSendStamp = (
     animationDurations.reducing +
     animationDurations.afterShowing +
     animationDurations.stampGap;
+
+  // State for register the time in that the animation started
+  const [startTime, setStartTime] = useState<Date | null>(null);
 
   /**
    * Checks the received stamp and find its image src
@@ -396,21 +399,40 @@ const useSynchronizedSendStamp = (
         return !index || stampMode === 'student' ? 0 : totalDuration;
       };
 
-      // Iterates over all the students that will recieve a stamp
-      stampAssignedStudents.forEach((studentId, index) => {
-        setTimeout(() => {
-          const payload = {
-            id: `${userId}:stamp`,
-            target: {
-              stamp,
-              assignTo: studentId,
-              stampMode: stampMode,
-            },
-          };
+      // Taking the current time
+      const currentTime = new Date();
+      let timeLeft = 0;
 
-          eventSerializer.push('sendStamp', payload);
-        }, determineTimeout(index));
-      });
+      if (startTime) {
+        // Calculating timeElapsed to finish the current animation
+        const timeElapsed = currentTime.getTime() - startTime.getTime();
+        timeLeft =
+          totalDuration -
+          timeElapsed +
+          (stampAssignedStudents.length - 1) * totalDuration;
+      }
+
+      // Timeout for wait the end of the current animation
+      setTimeout(() => {
+        setStartTime(new Date());
+
+        // Iterates over all the students that will recieve a stamp
+        stampAssignedStudents.forEach((studentId, index) => {
+          // Timeout to show stamps in a properly ordered way
+          setTimeout(() => {
+            const payload = {
+              id: `${userId}:stamp`,
+              target: {
+                stamp,
+                assignTo: studentId,
+                stampMode: stampMode,
+              },
+            };
+
+            eventSerializer.push('sendStamp', payload);
+          }, determineTimeout(index));
+        });
+      }, timeLeft);
 
       updateStampAssignedStudents([]);
     }
@@ -419,6 +441,7 @@ const useSynchronizedSendStamp = (
     stamp,
     stampAssignedStudents,
     stampMode,
+    startTime,
     totalDuration,
     updateStampAssignedStudents,
     userId,
