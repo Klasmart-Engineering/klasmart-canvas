@@ -404,12 +404,15 @@ const useSynchronizedSendStamp = (
       let timeLeft = 0;
 
       if (startTime) {
-        // Calculating timeElapsed to finish the current animation
+        // Calculating timeElapsed since current animation start to now
         const timeElapsed = currentTime.getTime() - startTime.getTime();
-        timeLeft =
-          totalDuration -
-          timeElapsed +
-          (stampAssignedStudents.length - 1) * totalDuration;
+
+        // Calculating time left to finish current animation
+        if (stampMode === 'present') {
+          timeLeft = stampAssignedStudents.length * totalDuration - timeElapsed;
+        } else {
+          timeLeft = totalDuration - timeElapsed;
+        }
       }
 
       // Timeout for wait the end of the current animation
