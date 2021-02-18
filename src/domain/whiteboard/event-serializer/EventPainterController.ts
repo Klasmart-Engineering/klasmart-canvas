@@ -229,6 +229,7 @@ export class EventPainterController extends EventEmitter
         break;
       case 'cursorPointer':
         this.cursorPointer(event.id, target);
+        break;
       case 'setUserInfoToDisplay':
         this.setUserInfoToDisplay('setUserInfoToDisplay', target)
         break;
