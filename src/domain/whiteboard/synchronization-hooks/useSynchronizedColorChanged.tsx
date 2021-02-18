@@ -79,28 +79,12 @@ const useSynchronizedColorChanged = (
                   clearRects
                 )
                 .then((newPath) => {
-                  const id = obj.id;
-
-                  ((newPath as unknown) as ICanvasObject).set({
-                    angle: obj.angle,
-                    top: obj.top,
-                    left: obj.left,
-                    flipX: obj.flipX,
-                    flipY: obj.flipY,
-                    translateX: (obj as ICanvasObject).translateX,
-                    translateY: (obj as ICanvasObject).translateY,
+                  (obj as ICanvasBrush).set({
+                    basePath: newPath.basePath,
+                    _element: newPath._element,
                   });
 
-                  delete obj.id;
-                  delete newPath.id;
-
-                  canvas.remove(obj);
-                  canvas.add(newPath);
                   canvas.renderAll();
-
-                  newPath.set({
-                    id: id,
-                  });
                 })
                 .catch((error: Error) => {
                   console.warn(error);
