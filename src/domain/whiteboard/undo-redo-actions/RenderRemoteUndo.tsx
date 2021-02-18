@@ -1,3 +1,4 @@
+import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import {
   ObjectEvent,
@@ -23,7 +24,9 @@ export const RenderRemoteUndo = (
   canvas: fabric.Canvas,
   instanceId: string,
   state: CanvasHistoryState,
-  eventSerializer: PaintEventSerializer
+  eventSerializer: PaintEventSerializer,
+  setLocalImage: (img: string | File) => void,
+  setBackgroundImageIsPartialErasable: (state: boolean) => void
 ) => {
   const {
     currentEvent,
@@ -43,7 +46,7 @@ export const RenderRemoteUndo = (
     const currentIds = currentObject.target.joinedIds as string[];
     const objects = JSON.parse(currentState).objects;
 
-    if (currentIds) {
+    if (currentIds && joinedIds) {
       joinedIds = [...joinedIds, ...currentIds];
     }
 
@@ -76,6 +79,32 @@ export const RenderRemoteUndo = (
       is product of flood-filled object composed for other objects */
       if (nextObject.type === 'image') {
         reconstructJoinedObjects();
+      }
+
+      break;
+    }
+
+    case 'backgroundAdded': {
+      const target = {
+        // @ts-ignore
+        id: nextEvent.event.id,
+        target: {
+          strategy: 'removeBackground',
+          isBackgroundImage: true,
+        },
+      };
+      
+      eventSerializer?.push('removed', target as ObjectEvent);
+
+      if (state.backgrounds.length && state.activeStateIndex !== null) {
+        const payload: ObjectEvent = {
+          type: (state.backgrounds[state.eventIndex] as ICanvasObject).backgroundImageEditable ? 'backgroundImage' : 'localImage',
+          target: state.backgrounds[state.eventIndex] as ICanvasObject,
+          id: (state.backgrounds[state.eventIndex] as ICanvasObject).id as string,
+        };
+        
+        eventSerializer?.push('added', payload as ObjectEvent);
+        break;
       }
 
       break;

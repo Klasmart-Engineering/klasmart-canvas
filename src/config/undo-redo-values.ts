@@ -9,4 +9,5 @@ export const CANVAS_OBJECT_PROPS = [
   'isPartialErased',
   'basePath',
   'name',
+  'backgroundImageEditable',
 ];

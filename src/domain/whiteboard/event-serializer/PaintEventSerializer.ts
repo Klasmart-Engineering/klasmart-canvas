@@ -50,6 +50,7 @@ export type ObjectType =
   | 'group'
   | 'gif'
   | 'backgroundImage'
+  | 'backgroundAdded'
   | 'localImage'
   | 'svg'
   | 'cursorPointer'

@@ -19,10 +19,10 @@ import { RenderRemoteRedo } from '../undo-redo-actions/RenderRemoteRedo';
 export const UndoRedo = (
   canvas: Canvas,
   eventSerializer: PaintEventSerializer,
-  instanceId: string
+  instanceId: string,
 ) => {
   const { state, dispatch } = useUndoRedo();
-  const { shapesAreSelectable, setBackgroundColorInCanvas } = useContext(
+  const { shapesAreSelectable, setBackgroundColorInCanvas, setLocalImage, setBackgroundImageIsPartialErasable } = useContext(
     WhiteboardContext
   );
 
@@ -42,7 +42,9 @@ export const UndoRedo = (
         state,
         state.actionType,
         shapesAreSelectable,
-        setBackgroundColorInCanvas
+        setBackgroundColorInCanvas,
+        setLocalImage,
+        setBackgroundImageIsPartialErasable,
       );
     }
   }, [
@@ -58,7 +60,7 @@ export const UndoRedo = (
    */
   useEffect(() => {
     if (state.actionType === UNDO) {
-      RenderRemoteUndo(canvas, instanceId, state, eventSerializer);
+      RenderRemoteUndo(canvas, instanceId, state, eventSerializer, setLocalImage, setBackgroundImageIsPartialErasable);
     } else if (state.actionType === REDO) {
       RenderRemoteRedo(canvas, instanceId, state, eventSerializer);
     }

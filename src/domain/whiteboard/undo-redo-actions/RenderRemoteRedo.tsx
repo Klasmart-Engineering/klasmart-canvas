@@ -1,3 +1,4 @@
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import {
@@ -54,6 +55,17 @@ export const RenderRemoteRedo = (
           } as ObjectEvent);
         });
       }
+      break;
+    }
+
+    case 'backgroundAdded': {
+      const payload: ObjectEvent = {
+        type: (state.backgrounds[state.eventIndex] as ICanvasObject).backgroundImageEditable ? 'backgroundImage' : 'localImage',
+        target: state.backgrounds[state.eventIndex] as ICanvasObject,
+        id: (state.backgrounds[state.eventIndex] as ICanvasObject).id as string,
+      };
+      
+      eventSerializer?.push('added', payload as ObjectEvent);
       break;
     }
 

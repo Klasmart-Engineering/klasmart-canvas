@@ -82,7 +82,7 @@ export class DashedBrush extends fabric.PencilBrush {
       }
     );
 
-    ((dashedPath as unknown as ICanvasObject) as ICanvasPathBrush).set({
+    ((dashedPath as unknown as ICanvasObject) as unknown as ICanvasPathBrush).set({
       id: id,
       basePath: {
         type: 'dashed',

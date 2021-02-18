@@ -35,4 +35,5 @@ export interface ICanvasObject extends fabric.Object {
   translateX?: number;
   translateY?: number;
   stampObject?: boolean;
+  backgroundImageEditable?: boolean;
 }
