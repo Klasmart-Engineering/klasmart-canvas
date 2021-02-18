@@ -199,6 +199,8 @@ const useSynchronizedRemoved = (
           ((e.target as ICanvasObject)?.text?.trim().length ||
             (e.target as ICanvasObject).get('type') !== 'textbox')
         ) {
+          if (payload.id.split(':')[1] === 'cursor' ) return;
+
           let event = { event: payload, type: 'removed' } as IUndoRedoEvent;
 
           undoRedoDispatch({
