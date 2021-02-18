@@ -123,4 +123,6 @@ export interface IWhiteboardContext {
   updateIsDrawing: (isIt: boolean) => void;
   selectedTool: string;
   updateSelectedTool: (tool: string) => void;
+  activeTool: string | null;
+  setActiveTool: (arg: string | null) => void;
 }

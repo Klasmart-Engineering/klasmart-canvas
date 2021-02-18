@@ -153,6 +153,9 @@ export const WhiteboardProvider = ({
   const [isBackgroundImage, setIsBackgroundImage] = useState(false);
   const [localImage, setLocalImage] = useState<string | File>('');
   const [localBackground, setLocalBackground] = useState(false);
+  const [copiedItem, setCopiedItem] = useState<ICanvasObject | null>(null);
+  const [activeTool, setActiveTool] = useState<string | null>(null);
+
   const [
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
@@ -440,6 +443,8 @@ export const WhiteboardProvider = ({
     updateStampAssignedStudents,
     openSetUserInfoToDisplayModal,
     displayUserInfo,
+    copiedItem,
+    setCopiedItem,
     isCursorObject,
     findObjectById,
     eventSerializer,
@@ -447,7 +452,9 @@ export const WhiteboardProvider = ({
     isDrawing,
     updateIsDrawing,
     selectedTool,
-    updateSelectedTool
+    updateSelectedTool,
+    activeTool,
+    setActiveTool,
   };
 
   return (
