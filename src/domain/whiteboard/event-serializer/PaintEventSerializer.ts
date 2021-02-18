@@ -50,7 +50,8 @@ export type ObjectType =
   | 'backgroundImage'
   | 'backgroundAdded'
   | 'localImage'
-  | 'svg';
+  | 'svg'
+  | 'cursorPointer';
 
 export type PayloadTarget =
   | ICanvasObject
