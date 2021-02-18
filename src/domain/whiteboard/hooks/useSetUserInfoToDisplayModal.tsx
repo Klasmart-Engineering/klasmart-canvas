@@ -28,12 +28,9 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
 
   const [setUserInfoToDisplayModal, setOpen] = useState(false);
   const openSetUserInfoToDisplayModal = useCallback(() => {
-    setOpen(true);
-  }, []);
-
-  const closeInfoToDisplayModal = useCallback(() => {
-    setOpen(false);
-  }, []);
+    if(!setUserInfoToDisplayModal)
+      setOpen(true);
+  }, [setUserInfoToDisplayModal]);
 
   /**
    * Handles change on user info selection event received
@@ -49,7 +46,9 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
    * @param {ISetUserInfoToDisplayModal} props 
    */
   const SetUserInfoToDisplayModal = (props: ISetUserInfoToDisplayModal) => {
+    
     const { setSelection, selection } = props;
+    const [value, setValue] = useState(selection)
     
     /**
      * Handle input radio change
@@ -57,21 +56,29 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
      */
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       const value = (event.target as HTMLInputElement).value
+      setValue(value)
+    };
+
+    const confirm = () => {
       setSelection(value)
       const payload: ObjectEvent = {
         type: 'userInfoToDisplay',
         target: value,
         id: 'teacher',
       };
-
       eventSerializer.push('setUserInfoToDisplay', payload);
-    };
+      setOpen(false);
+    }
+
+    const cancel = () => {
+      setOpen(false);
+    }
 
     return (
       <div>
         <Dialog
           open={setUserInfoToDisplayModal}
-          onClose={closeInfoToDisplayModal}
+          onClose={cancel}
           aria-labelledby="user-info-to-display-dialog"
           aria-describedby="user-info-to-display-dialog"
         >
@@ -93,7 +100,7 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
                 {UserInfoTooltip.infoOptions.map(option => (
                   <FormControlLabel
                   key={option.value}
-                  checked={selection === option.value}
+                  checked={value === option.value}
                   value={option.value}
                   control={<Radio />}
                   label={option.label}
@@ -105,13 +112,19 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
           </div>
           <DialogActions>
             <Button
-              onClick={closeInfoToDisplayModal}
+              onClick={cancel}
+              color="default"
+              variant="contained"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirm}
               color="primary"
               variant="contained"
             >
-              Close
+              Confirm
             </Button>
-           
           </DialogActions>
         </Dialog>
       </div>
@@ -120,7 +133,6 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
 
   return {
     openSetUserInfoToDisplayModal,
-    closeInfoToDisplayModal,
     SetUserInfoToDisplayModal,
   };
 };
