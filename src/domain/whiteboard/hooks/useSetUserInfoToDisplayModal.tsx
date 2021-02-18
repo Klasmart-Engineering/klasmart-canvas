@@ -42,7 +42,7 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
     eventController.on("setUserInfoToDisplay", (event, payload)=> {
       setUserInfo(payload)
     })
-  }, [eventController])
+  }, [eventController, setUserInfo])
 
   /**
    * Component to display modal and handles change

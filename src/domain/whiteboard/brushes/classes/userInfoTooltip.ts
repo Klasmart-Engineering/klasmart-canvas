@@ -160,7 +160,7 @@ export class UserInfoTooltip {
    * @return {boolean}
    */
   public isInSamePosition(left: number, top: number) {
-    return this._left === left && this._top == top;
+    return this._left === left && this._top === top;
   }
 
   /**

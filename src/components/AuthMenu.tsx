@@ -54,8 +54,7 @@ function AuthMenu(props: {
     clearWhiteboard,
     downloadCanvas,
     uploadImage,
-    backgroundColor,
-    setUserInfoToDisplay
+    backgroundColor
   } = props.permissions;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
