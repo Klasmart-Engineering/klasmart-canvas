@@ -10,6 +10,7 @@ import { SET } from "../reducers/undo-redo";
 import { CANVAS_OBJECT_PROPS } from "../../../config/undo-redo-values";
 import { objectSerializerFormatter } from "../utils/objectSerializerFormatter";
 import { ELEMENTS } from "../../../config/toolbar-element-names";
+import { ICanvasBrush } from "../../../interfaces/brushes/canvas-brush";
 
 /**
  * Handles copy past functionality
@@ -24,7 +25,6 @@ import { ELEMENTS } from "../../../config/toolbar-element-names";
 export const useCopy = (
   canvas: fabric.Canvas,
   userId: string,
-  permissions: IPermissions,
   allToolbarIsEnabled: boolean,
   undoRedoDispatch: any,
   eventSerializer: any,
@@ -37,7 +37,7 @@ export const useCopy = (
    * @param shape 
    */
   const checkPermission = (permissions: IPermissions, shape: ICanvasObject) => {
-    if (shape.shapeType === 'shape'){
+    if (shape.shapeType === 'shape') {
       return permissions.shape;
     }
 
@@ -54,9 +54,9 @@ export const useCopy = (
     }
   }
 
-  let copied: any = null;
-  let target: any = null;
-  let unevented: any[] = [];
+  let copied: ICanvasObject | null = null;
+  let target: ICanvasObject | null = null;
+  let unevented: ICanvasObject[] = [];
 
   const keyDownHandler = (e: KeyboardEvent) => {
     const event = e as ICanvasKeyboardEvent;
@@ -80,7 +80,7 @@ export const useCopy = (
         canvas?.add(copied);
         canvas?.renderAll();
 
-        const payload = objectSerializerFormatter(copied, copied.basePath?.type, copied.id);
+        const payload = objectSerializerFormatter(copied, (copied as ICanvasBrush).basePath?.type as string, copied.id);
         const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
         undoRedoDispatch({
@@ -97,10 +97,10 @@ export const useCopy = (
     }
   };
 
-  const mouseDown = (e: any) => {
-    canvas.getObjects().forEach((o: any) => {
+  const mouseDown = (e: fabric.IEvent) => {
+    canvas.getObjects().forEach((o: ICanvasObject) => {
       if (!o.evented) {
-        o.set({ 
+        o.set({
           evented: true,
           lockMovementX: true,
           lockMovementY: true,
@@ -112,6 +112,7 @@ export const useCopy = (
       }
     });
 
+    // @ts-ignore findTarget expects a point, not Event.
     target = canvas.findTarget(e.pointer, false);
 
     if (target) {
@@ -121,8 +122,8 @@ export const useCopy = (
   };
 
   const deactivateOther = () => {
-    unevented.forEach((o: any) => {
-      o.set({ 
+    unevented.forEach((o: ICanvasObject) => {
+      o.set({
         evented: false,
         lockMovementX: false,
         lockMovementY: false,
