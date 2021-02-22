@@ -1,4 +1,5 @@
 import { fabric } from 'fabric';
+import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import {
   ObjectEvent,
@@ -81,21 +82,31 @@ export const RenderRemoteUndo = (
     }
   };
 
+  const undoAdd = (nextObject: IUndoRedoSingleEvent) => {
+    const payload: ObjectEvent = {
+      id: nextObject.id,
+    };
+
+    // If undoing the creation of an object, remove.
+    eventSerializer?.push('removed', payload);
+
+    /* If the object is an image, is necessary find if this image
+    is product of flood-filled object composed for other objects */
+    if (nextObject.type === 'image') {
+      reconstructJoinedObjects();
+    }
+  }
+
   switch (nextEvent.type) {
     case 'added': {
-      const payload: ObjectEvent = {
-        id: nextObject.id,
-      };
 
-      // If undoing the creation of an object, remove.
-      eventSerializer?.push('removed', payload);
-
-      /* If the object is an image, is necessary find if this image
-      is product of flood-filled object composed for other objects */
-      if (nextObject.type === 'image') {
-        reconstructJoinedObjects();
+      if (!Array.isArray(nextObject)) {
+        undoAdd(nextObject);
+      } else {
+        nextObject.forEach((o: IUndoRedoSingleEvent) => {
+          undoAdd(o);
+        });
       }
-
       break;
     }
 
