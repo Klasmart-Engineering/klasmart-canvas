@@ -44,16 +44,18 @@ export const RenderRemoteRedo = (
 
   switch (currentEvent.type) {
     case 'added': {
-      eventSerializer?.push('added', currentObject as ObjectEvent);
+      if (!Array.isArray(currentObject)) {
+        eventSerializer?.push('added', currentObject as ObjectEvent);
 
-      if (currentObject.type === 'image') {
-        const joinedIds = currentObject.target.joinedIds;
+        if (currentObject.type === 'image') {
+          const joinedIds = currentObject.target.joinedIds;
 
-        joinedIds?.forEach((id) => {
-          eventSerializer?.push('removed', {
-            id: id,
-          } as ObjectEvent);
-        });
+          joinedIds?.forEach((id) => {
+            eventSerializer?.push('removed', {
+              id: id,
+            } as ObjectEvent);
+          });
+        }
       }
       break;
     }

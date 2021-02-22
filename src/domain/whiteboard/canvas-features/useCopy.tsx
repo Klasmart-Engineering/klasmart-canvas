@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { fabric } from 'fabric';
 import { ICanvasKeyboardEvent } from "../../../interfaces/canvas-events/canvas-keyboard-event";
 import { ICanvasObject } from "../../../interfaces/objects/canvas-object";
 import { IPermissions } from "../../../interfaces/permissions/permissions";
@@ -11,6 +12,7 @@ import { CANVAS_OBJECT_PROPS } from "../../../config/undo-redo-values";
 import { objectSerializerFormatter } from "../utils/objectSerializerFormatter";
 import { ELEMENTS } from "../../../config/toolbar-element-names";
 import { ICanvasBrush } from "../../../interfaces/brushes/canvas-brush";
+import { ObjectEvent } from "../event-serializer/PaintEventSerializer";
 
 /**
  * Handles copy past functionality
@@ -54,26 +56,53 @@ export const useCopy = (
     }
   }
 
+  const copyGroup = (clipboard: fabric.Group, permissions: IPermissions): Promise<string[]> => (new Promise((resolve) => {
+    let ids: string[] = [];
+    clipboard.forEachObject((obj: ICanvasObject) => {
+      const allowed = checkPermission(permissions, obj);
+
+      if (allowed || allToolbarIsEnabled) {
+        const id = `${userId}:${uuidv4()}`;
+        obj.set({
+          active: true,
+          id,
+        });
+        ids.push(id);
+        canvas.add(obj)
+      };
+    });
+
+    resolve(ids);
+  }));
+
   let copied: ICanvasObject | null = null;
   let target: ICanvasObject | null = null;
   let unevented: ICanvasObject[] = [];
+  let clipboard: fabric.Group;
 
-  const keyDownHandler = (e: KeyboardEvent) => {
+  const keyDownHandler = async (e: KeyboardEvent) => {
     const event = e as ICanvasKeyboardEvent;
     if (event.ctrlKey && event.key === 'c') {
-      canvas?.getActiveObject()?.clone((cloned: ICanvasObject) => {
-        cloned.set({
-          id: `${userId}:${uuidv4()}`,
-          top: 0,
-          left: 0,
-        });
+      if((canvas.getActiveObject() as fabric.Group)?._objects?.length) {
+        canvas.getActiveObject().clone((cloneGroup: fabric.Group) => {
+        	clipboard = cloneGroup;
+        }, CANVAS_OBJECT_PROPS);
+      } else {
+        canvas?.getActiveObject()?.clone((cloned: ICanvasObject) => {
+          cloned.set({
+            top: 0,
+            left: 0,
+            id: `${userId}:${uuidv4()}`
+          });
 
-        copied = cloned;
-      }, CANVAS_OBJECT_PROPS);
+          copied = cloned;
+        }, CANVAS_OBJECT_PROPS);
+      }
     }
 
+    let permissions = store.getState().permissionsState;
+
     if (event.ctrlKey && event.key === 'v' && copied) {
-      let permissions = store.getState().permissionsState;
       let allowed = checkPermission(permissions, copied);
 
       if (allToolbarIsEnabled || allowed) {
@@ -94,6 +123,38 @@ export const useCopy = (
 
         return;
       }
+    } else if (event.ctrlKey && event.key === 'v' && clipboard) {
+      clipboard.set({
+        left: 0,
+        top: 0,
+        evented: true
+      });
+
+      let ids = await copyGroup(clipboard, permissions);
+      clipboard.destroy();
+      canvas.discardActiveObject();
+
+      let objects = canvas.getObjects().filter((o: ICanvasObject) => (
+        ids.indexOf(o.id as string) !== -1
+      ));
+
+      let payloads: ObjectEvent [] = [];
+
+      objects.forEach((copied: ICanvasObject) => {
+        const payload = objectSerializerFormatter(copied, (copied as ICanvasBrush).basePath?.type as string, copied.id, true);
+        payloads.push(payload as ObjectEvent);
+        eventSerializer?.push('added', payload);
+      });
+
+      const event = { event: payloads, type: 'added' };
+
+      undoRedoDispatch({
+        type: SET,
+        payload: (canvas?.getObjects() as unknown) as TypedShape[],
+        canvasId: userId,
+        event,
+      });
+
     }
   };
 
@@ -159,5 +220,6 @@ export const useCopy = (
         canvas.discardActiveObject();
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvas, activeTool]);
 };

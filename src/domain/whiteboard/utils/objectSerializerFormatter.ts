@@ -72,7 +72,7 @@ const formatNonStandardBrush = (shape: ICanvasObject, target: { [key: string]: a
  * @param brushType Brush type used for object
  * @param id Object id.
  */
-export const objectSerializerFormatter = (shape: ICanvasObject, brushType: string, id?: string) => {
+export const objectSerializerFormatter = (shape: ICanvasObject, brushType: string, id?: string, fromGroup?: boolean) => {
   const type: ObjectType = (shape.get('type') || 'path') as ObjectType;
 
   if (shape.shapeType === 'shape') {
@@ -97,8 +97,10 @@ export const objectSerializerFormatter = (shape: ICanvasObject, brushType: strin
       type,
       target: {
         ...target.toJSON(CANVAS_OBJECT_PROPS),
-        top: 0,
-        left: 0,
+        top: !fromGroup ? 0 : target.top,
+        left: !fromGroup ? 0 : target.left,
+        originX: 'left',
+        originY: 'top',
       } as ICanvasObject,
       id: id ? id : shape.id as string,
     };
