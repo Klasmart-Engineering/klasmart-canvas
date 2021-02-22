@@ -12,7 +12,6 @@ import { CANVAS_OBJECT_PROPS } from "../../../config/undo-redo-values";
 import { objectSerializerFormatter } from "../utils/objectSerializerFormatter";
 import { ELEMENTS } from "../../../config/toolbar-element-names";
 import { ICanvasBrush } from "../../../interfaces/brushes/canvas-brush";
-import shape from "@material-ui/core/styles/shape";
 import { ObjectEvent } from "../event-serializer/PaintEventSerializer";
 
 /**
@@ -221,5 +220,6 @@ export const useCopy = (
         canvas.discardActiveObject();
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvas, activeTool]);
 };

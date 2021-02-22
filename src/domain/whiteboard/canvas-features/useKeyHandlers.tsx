@@ -1,7 +1,6 @@
 import { fabric } from 'fabric';
 import { ITextOptions } from 'fabric/fabric-impl';
-import { useCallback, useContext, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { useCallback, useContext } from 'react';
 import { ICanvasKeyboardEvent } from '../../../interfaces/canvas-events/canvas-keyboard-event';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
@@ -153,26 +152,6 @@ export const useKeyHandlers = (
       ) {
         updatePerfectShapeIsActive(true);
       }
-
-      // if (event.ctrlKey && event.key === 'c' && setCopied) {
-      //   canvas.getActiveObject()?.clone((cloned: ICanvasObject) => {
-      //     cloned.set({
-      //       id: `${instanceId}:${uuidv4()}`,
-      //       top: 0,
-      //       left: 0,
-      //     });
-
-      //     // canvas.add(cloned);
-      //     // canvas.renderAll();
-      //     setCopied(cloned);
-      //   });
-      // }
-
-      // if (event.ctrlKey && event.key === 'v' && copied) {
-      //   debugger;
-      //   canvas.add(copied);
-      //   canvas.renderAll();
-      // }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
