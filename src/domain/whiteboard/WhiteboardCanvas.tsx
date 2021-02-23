@@ -51,6 +51,7 @@ import { usePointerFeature } from './canvas-features/usePointerFeature';
 import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
+import { IEvent } from 'fabric/fabric-impl';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -217,7 +218,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
   }, [canvas, eventController, generatedBy]);
 
-
   // useEffects and logic for manage the object manipulation in canvas
   useObjectManipulation(
     canvas as fabric.Canvas,
@@ -373,7 +373,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (!canvasActions && canvas) {
       updateCanvasActions(actions);
     }
-
   }, [actions, updateCanvasActions, canvas, canvasActions]);
 
   return (
@@ -391,6 +390,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
         width={pixelWidth}
         height={pixelHeight}
         id={instanceId}
+        placeholder={instanceId}
         style={{ ...initialStyle, backgroundColor: 'transparent' }}
         tabIndex={0}
         // onKeyDown={keyDown}
