@@ -217,7 +217,7 @@ export class PartialErase {
       }
 
       ctx.drawImage(background, 0, 0, width, height);
-   
+
       this.canvas.backgroundImage = '';
       this.canvas.renderAll();
     }
@@ -324,11 +324,12 @@ export class PartialErase {
   };
 
   private loadFromJSON = (
-    objects: string,
+    objects: ICanvasObject[],
     backgroundColor?: string | Pattern | undefined
   ): Promise<void> =>
     new Promise((resolve) => {
-      this.canvas.loadFromJSON(objects, () => {
+      let mapped = JSON.stringify({ objects: objects.map((o: ICanvasObject) => ({ ...o, fromJSON: true })) });
+      this.canvas.loadFromJSON(mapped, () => {
         if (backgroundColor) {
           this.canvas.backgroundColor = backgroundColor;
         }
@@ -355,7 +356,7 @@ export class PartialErase {
       });
   }
 
-  private backgroundToPermanent = async(): Promise<void> => {
+  private backgroundToPermanent = async (): Promise<void> => {
     return new Promise((resolve) => {
       const dataURL = this.bgRawCanvas.toDataURL();
 
@@ -405,7 +406,7 @@ export class PartialErase {
 
     objects = [...objects, ...foreignObjects];
 
-    await this.loadFromJSON(JSON.stringify({ objects }), backgroundColor);
+    await this.loadFromJSON(objects, backgroundColor);
 
     this.groupObjects();
     this.canvas.renderAll();
@@ -552,7 +553,7 @@ export class PartialErase {
           type: 'image',
           target: image.toJSON(CANVAS_OBJECT_PROPS) as ICanvasObject,
         };
-         
+
         this.updateState(payload);
         this.eventSerializer.push('added', payload);
       });
@@ -605,7 +606,8 @@ export class PartialErase {
 
     if (this.hasBackground && this.hasBgPermission) {
       const bgImage = this.bgRawCanvas.toDataURL();
-      let background = { ...(this.backgroundImage?.toJSON(CANVAS_OBJECT_PROPS)),
+      let background = {
+        ...(this.backgroundImage?.toJSON(CANVAS_OBJECT_PROPS)),
         backgroundImageEditable: true,
         src: bgImage,
         scaleX: 1,
