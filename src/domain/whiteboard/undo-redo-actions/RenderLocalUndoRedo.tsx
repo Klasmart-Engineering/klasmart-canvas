@@ -119,11 +119,11 @@ const loadFromJSON = (
     }
 
     if (
-      (action === (UNDO) && nextEvent.type === 'backgroundColorChanged') ||
-      (action === REDO && currentEvent.type === 'backgroundColorChanged') ||
+      (action === (UNDO) && nextEvent?.type === 'backgroundColorChanged') ||
+      (action === REDO && currentEvent?.type === 'backgroundColorChanged') ||
       (action === UNDO &&
-        currentEvent.type === 'backgroundColorChanged' &&
-        nextEvent.type === 'clearedWhiteboard')
+        currentEvent?.type === 'backgroundColorChanged' &&
+        nextEvent?.type === 'clearedWhiteboard')
     ) {
       const fill = getPreviousBackground(state.eventIndex, state.events);
       const divColorBackground = getPreviousBackgroundDivColor(
