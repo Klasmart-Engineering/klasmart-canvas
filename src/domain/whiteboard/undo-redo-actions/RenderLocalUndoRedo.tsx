@@ -105,6 +105,7 @@ const loadFromJSON = (
       } else if (target && !(target as ICanvasObject).backgroundImageEditable) {
         setBackgroundImageIsPartialErasable(false);
         setLocalImage((target as ICanvasObject).backgroundImage as string);
+        canvas?.trigger('background:modified', null);
       } else {
         setLocalImage('');
         canvas?.trigger('background:modified', null);
