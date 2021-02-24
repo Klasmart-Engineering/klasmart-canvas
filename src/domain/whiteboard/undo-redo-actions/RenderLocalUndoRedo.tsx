@@ -107,9 +107,14 @@ const loadFromJSON = (
         setLocalImage((target as ICanvasObject).backgroundImage as string);
       } else {
         setLocalImage('');
+        canvas?.trigger('background:modified', null);
+        // @ts-ignore
+        canvas?.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+        canvas?.renderAll();
       }
     } else if (state.backgrounds.length && state.activeStateIndex === null) {
       setLocalImage('');
+      canvas?.trigger('background:modified', null);
     }
 
     if (

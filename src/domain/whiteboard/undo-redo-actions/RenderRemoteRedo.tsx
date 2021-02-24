@@ -23,7 +23,7 @@ export const RenderRemoteRedo = (
   state: CanvasHistoryState,
   eventSerializer: PaintEventSerializer
 ) => {
-  const { currentEvent, currentObject, currentState } = getStateVariables(
+  const { currentEvent, currentObject, currentState, background } = getStateVariables(
     state
   );
 
@@ -47,13 +47,23 @@ export const RenderRemoteRedo = (
       eventSerializer?.push('added', currentObject as ObjectEvent);
 
       if (currentObject.type === 'image') {
-        const joinedIds = currentObject.target.joinedIds;
+        const joinedIds = currentObject?.target?.joinedIds;
 
         joinedIds?.forEach((id) => {
           eventSerializer?.push('removed', {
             id: id,
           } as ObjectEvent);
         });
+      }
+
+      if (background) {
+        const payload: ObjectEvent = {
+          type: (background as ICanvasObject).backgroundImageEditable ? 'backgroundImage' : 'localImage',
+          target: background as ICanvasObject,
+          id: (background as ICanvasObject).id as string,
+        };
+      
+        eventSerializer?.push('added', payload);
       }
       break;
     }

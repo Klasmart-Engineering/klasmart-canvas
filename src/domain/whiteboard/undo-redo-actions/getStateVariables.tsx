@@ -12,6 +12,7 @@ export const getStateVariables = (state: CanvasHistoryState) => {
   const currentState = state.states[state.activeStateIndex as number];
   const nextEvent = state.events[state.eventIndex + 1];
   const nextObject = nextEvent?.event as IUndoRedoSingleEvent;
+  const background = state.backgrounds[state.activeStateIndex as number];
 
-  return { currentEvent, currentObject, currentState, nextEvent, nextObject };
+  return { currentEvent, currentObject, currentState, nextEvent, nextObject, background };
 };

@@ -6,12 +6,16 @@ import { fabric } from 'fabric';
 import { TypedGroup } from '../../../interfaces/shapes/group';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { IImageOptions } from 'fabric/fabric-impl';
+import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
 
 const useSynchronizedReconstruct = (
   canvas: fabric.Canvas | undefined,
   shouldHandleRemoteEvent: (id: string) => boolean,
   userId: string,
-  undoRedoDispatch: React.Dispatch<CanvasAction>
+  undoRedoDispatch: React.Dispatch<CanvasAction>,
+  setLocalImage: (img: string | File) => void,
+  setLocalBackground: (condition: boolean) => void
 ) => {
   const {
     state: { eventController },
@@ -51,6 +55,38 @@ const useSynchronizedReconstruct = (
         canvas?.setBackgroundColor(parsed.background, () => {});
         canvas.renderAll();
         return;
+      }
+
+      if (parsed.backgroundImage && canvas) {
+        canvas.setBackgroundColor(
+          'transparent',
+          canvas.renderAll.bind(canvas)
+        );
+
+        if (parsed.backgroundImage.backgroundImageEditable) {
+          setLocalImage('');
+          setLocalBackground(false);
+          let src = (parsed.backgroundImage as ICanvasPathBrush).basePath?.imageData || parsed.backgroundImage.src;
+
+          fabric.Image.fromURL(src as string, function (img) {
+            canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+              scaleX: (canvas.width || 0) / (img.width || 0),
+              scaleY: (canvas.height || 0) / (img.height || 0),
+              originX: 'left',
+              originY: 'top',
+              id,
+            } as IImageOptions);
+
+            canvas?.renderAll();
+          });
+        } else {
+          canvas.setBackgroundColor(
+            'transparent',
+            canvas.renderAll.bind(canvas)
+          );
+
+          setLocalImage(parsed.backroundImage.src);
+        }
       }
 
       const objects = JSON.parse(target.param as string).objects;
