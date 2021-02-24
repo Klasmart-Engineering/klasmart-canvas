@@ -14,6 +14,7 @@ import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { PaintEventSerializer } from '../../../poc/whiteboard/event-serializer/PaintEventSerializer';
 import { IImageOptions, Pattern, Point } from 'fabric/fabric-impl';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
 
 /**
  * Class that handles all partial erasure methods.
@@ -147,7 +148,9 @@ export class PartialErase {
       this.generateBackground();
 
       this.canvas.on('background:modified', (e) => {
-        this.generateBackground(e);
+        // @ts-ignore
+        const src = (e as unknown as fabric.Image)?.getElement ? e : null;
+        this.generateBackground(src);
       });
     }
 
@@ -200,13 +203,21 @@ export class PartialErase {
     // Make sure the image is loaded first otherwise nothing will draw.
     background.onload = () => {
       const ctx = this.bgRawCanvas.getContext('2d');
-      // @ts-ignore  - linter ignoring backgroundImage type and optional chaining.
-      const width = background.width * this.canvas.backgroundImage?.scaleX;
-      // @ts-ignore  - linter ignoring backgroundImage type and optional chaining.
-      const height = background.height * this.canvas.backgroundImage?.scaleY;
+      let width;
+      let height;
+
+      if (!src) {
+        // @ts-ignore  - linter ignoring backgroundImage type and optional chaining.
+        width = background.width * this.canvas.backgroundImage?.scaleX;
+        // @ts-ignore  - linter ignoring backgroundImage type and optional chaining.
+        height = background.height * this.canvas.backgroundImage?.scaleY;
+      } else {
+        width = background.width * src.scaleX;
+        height = background.height * src.scaleY;
+      }
 
       ctx.drawImage(background, 0, 0, width, height);
-   
+
       this.canvas.backgroundImage = '';
       this.canvas.renderAll();
     }
@@ -313,11 +324,12 @@ export class PartialErase {
   };
 
   private loadFromJSON = (
-    objects: string,
+    objects: ICanvasObject[],
     backgroundColor?: string | Pattern | undefined
   ): Promise<void> =>
     new Promise((resolve) => {
-      this.canvas.loadFromJSON(objects, () => {
+      let mapped = JSON.stringify({ objects: objects.map((o: ICanvasObject) => ({ ...o, fromJSON: true })) });
+      this.canvas.loadFromJSON(mapped, () => {
         if (backgroundColor) {
           this.canvas.backgroundColor = backgroundColor;
         }
@@ -344,7 +356,7 @@ export class PartialErase {
       });
   }
 
-  private backgroundToPermanent = async(): Promise<void> => {
+  private backgroundToPermanent = async (): Promise<void> => {
     return new Promise((resolve) => {
       const dataURL = this.bgRawCanvas.toDataURL();
 
@@ -394,7 +406,7 @@ export class PartialErase {
 
     objects = [...objects, ...foreignObjects];
 
-    await this.loadFromJSON(JSON.stringify({ objects }), backgroundColor);
+    await this.loadFromJSON(objects, backgroundColor);
 
     this.groupObjects();
     this.canvas.renderAll();
@@ -539,9 +551,9 @@ export class PartialErase {
         let payload: ObjectEvent = {
           id: id as string,
           type: 'image',
-          target: image as ICanvasObject,
+          target: image.toJSON(CANVAS_OBJECT_PROPS) as ICanvasObject,
         };
-         
+
         this.updateState(payload);
         this.eventSerializer.push('added', payload);
       });
@@ -594,7 +606,14 @@ export class PartialErase {
 
     if (this.hasBackground && this.hasBgPermission) {
       const bgImage = this.bgRawCanvas.toDataURL();
-      const background = { ...(this.backgroundImage?.toJSON(CANVAS_OBJECT_PROPS)), backgroundImageEditable: true, src: bgImage }
+      let background = {
+        ...(this.backgroundImage?.toJSON(CANVAS_OBJECT_PROPS)),
+        backgroundImageEditable: true,
+        src: bgImage,
+        scaleX: 1,
+        scaleY: 1,
+      }
+
       // @ts-ignore - linter ignoring optinonal props.
       statePayload = { ...statePayload, background: background } as CanvasAction;
     };
