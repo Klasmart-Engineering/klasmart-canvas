@@ -50,7 +50,8 @@ export type ObjectType =
   | 'backgroundImage'
   | 'localImage'
   | 'svg'
-  | 'userInfoToDisplay';
+  | 'userInfoToDisplay'
+  | 'cursorPointer';
 
 export type PayloadTarget =
   | ICanvasObject
@@ -68,6 +69,7 @@ export type PayloadTarget =
     }
   | { type: string; svg: string }
   | IBrushSyncTarget
+  | { src: string }
   | string;
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {

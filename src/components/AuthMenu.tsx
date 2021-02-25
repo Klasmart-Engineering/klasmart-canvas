@@ -42,6 +42,7 @@ function AuthMenu(props: {
   };
   const classes = useStyles();
   const {
+    cursorPointer,
     pointer,
     move,
     erase,
@@ -71,6 +72,11 @@ function AuthMenu(props: {
   };
 
   const tools = [
+    {
+      checked: cursorPointer,
+      name: 'cursorPointer',
+      label: 'Cursor pointer tool',
+    },
     {
       checked: pointer,
       name: 'pointer',

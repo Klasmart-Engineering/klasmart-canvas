@@ -1,10 +1,12 @@
 import { MutableRefObject } from 'react';
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
 import { IBrushType } from '../brushes/brush-type';
+import { ICanvasObject } from '../objects/canvas-object';
+import { IPointerType } from '../pointers/pointer-type';
 
 export interface IWhiteboardContext {
-  pointer: string;
-  updatePointer: (pointer: string) => void;
+  pointer: IPointerType;
+  updatePointer: (pointer: IPointerType) => void;
   eraseType: string | null;
   updateEraseType: (type: string | null) => void;
   text: string;
@@ -45,6 +47,7 @@ export interface IWhiteboardContext {
   updateShapesAreSelectable: (status: boolean) => void;
   shapesAreEvented: boolean;
   updateShapesAreEvented: (status: boolean) => void;
+  canvasActions: ICanvasActions | undefined;
   updateCanvasActions: (actions: ICanvasActions) => void;
   laserIsActive: boolean;
   updateLaserIsActive: (status: boolean) => void;
@@ -94,6 +97,8 @@ export interface IWhiteboardContext {
   localImage: string | File;
   setLocalImage: (image: string | File) => void;
   openClearWhiteboardModal: () => void;
+  eraserIsActive: boolean;
+  updateEraserIsActive: (status: boolean) => void;
   backgroundColor: string;
   updateBackgroundColor: (color: string) => void;
   fillBackgroundColor: (color: string) => void;
@@ -106,4 +111,8 @@ export interface IWhiteboardContext {
   updateIsDrawing: (isIt: boolean) => void;
   selectedTool: string;
   updateSelectedTool: (tool: string) => void;
+  isCursorObject: (object: ICanvasObject) => boolean;
+  findObjectById: (id: string) => ICanvasObject | undefined;
+  eventSerializer: any;
+  eventController: any;
 }

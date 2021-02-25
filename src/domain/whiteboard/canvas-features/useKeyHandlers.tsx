@@ -52,7 +52,7 @@ export const useKeyHandlers = (
 
         canvas.discardActiveObject();
 
-        if (active.type === 'activeSelection') {
+        if (active?.type === 'activeSelection') {
           const objectIds: string[] = [];
 
           (active as fabric.ActiveSelection).forEachObject(
@@ -149,17 +149,19 @@ export const useKeyHandlers = (
         updatePerfectShapeIsActive(true);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      activeCanvas,
-      instanceId,
+      permissions.undoRedo,
+      allToolbarIsEnabled,
       perfectShapeIsActive,
       perfectShapeIsAvailable,
       canvas,
       eventSerializer,
+      activeCanvas,
+      instanceId,
       undo,
       redo,
       updatePerfectShapeIsActive,
-      permissions.undoRedo,
     ]
   );
 

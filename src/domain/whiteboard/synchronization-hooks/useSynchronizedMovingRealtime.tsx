@@ -46,7 +46,7 @@ const useSynchronizedRealtime = (
         eventType?: string;
       }
     ) => {
-      if (target.eventType !== 'added') {
+      if (target.eventType !== 'added' && userId !== id) {
         if (rt && !rt.isInitiated() && target.type === 'PencilBrush') {
           rt.init(
             canvas as fabric.Canvas,
@@ -62,6 +62,7 @@ const useSynchronizedRealtime = (
             target.shape.strokeWidth
           );
         } else if (rt && !rt.isInitiated() && target.type === 'circle') {
+          console.log(userId, id);
           rt.init(
             canvas as fabric.Canvas,
             'circle',

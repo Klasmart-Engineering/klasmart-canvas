@@ -16,4 +16,5 @@ export interface IPermissions {
   uploadImage: boolean;
   backgroundColor: boolean;
   setUserInfoToDisplay: boolean
+  cursorPointer: boolean;
 }

@@ -21,7 +21,7 @@ export class EventPainterController extends EventEmitter
 
     // Websocket is used for test purposes until event emitter is ready. TEMPORARY.
     // @ts-ignore
-    this.ws = new WebSocket('ws://localhost:6969');
+    this.ws = new WebSocket(`ws://${window.location.hostname}:6969`);
 
     this.ws.onopen = () => {
       console.log('opened');
@@ -91,6 +91,10 @@ export class EventPainterController extends EventEmitter
           this.emit('fontColorChanged', data.id, data.objectType, data.target);
           break;
         }
+        case 'cursorPointer': {
+          this.emit('cursorPointer', data.id, data.target);
+          break;
+        }
         case 'backgroundColorChanged': {
           this.emit('backgroundColorChanged', data.id, data.target);
           break;
@@ -99,10 +103,13 @@ export class EventPainterController extends EventEmitter
           this.emit('setUserInfoToDisplay', data.id, data.target)
           break;
         }
-        default:
+        case 'brushTypeChanged': {
+          this.emit('brushTypeChanged', data.id, data.target);
           break;
         }
-      
+        default:
+          break;
+      }
     };
 
     this.ws.onclose = () => {
@@ -215,6 +222,8 @@ export class EventPainterController extends EventEmitter
         this.setUserInfoToDisplay('setUserInfoToDisplay', target)
         break;
       default:
+      case 'cursorPointer':
+        this.cursorPointer(event.id, target);
         break;
     }
   }
@@ -385,8 +394,20 @@ export class EventPainterController extends EventEmitter
     this.ws?.send(JSON.stringify({ id, eventType: 'pointer', target }));
   }
 
+  private cursorPointer(id: string, target: ICanvasObject) {
+    this.emit('cursorPointer', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, eventType: 'cursorPointer', target }));
+  }
+
   private brushTypeChanged(id: string, target: ICanvasObject) {
     this.emit('brushTypeChanged', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, eventType: 'brushTypeChanged', target })
+    );
   }
 
   private backgroundColorChanged(id: string, target: ICanvasObject) {

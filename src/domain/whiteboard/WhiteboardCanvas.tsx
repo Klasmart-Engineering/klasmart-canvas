@@ -10,7 +10,6 @@ import React, {
   useState,
 } from 'react';
 import { connect } from 'react-redux';
-import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 import { WhiteboardContext } from './WhiteboardContext';
 import { useCanvasActions } from './canvas-actions/useCanvasActions';
 import useSynchronizedAdded from './synchronization-hooks/useSynchronizedAdded';
@@ -48,6 +47,8 @@ import { useChangeLineWidth } from './canvas-features/useChangeLineWidth';
 import { useUndoRedo } from './canvas-features/useUndoRedo';
 import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
 import { v4 as uuidv4 } from 'uuid';
+import { usePointerFeature } from './canvas-features/usePointerFeature';
+import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
 import { useObjectHover } from './canvas-features/useObjectHover';
@@ -107,23 +108,12 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   const serializerToolbarState = permissions;
 
-  // Event serialization for synchronizing whiteboard state.
-  const {
-    state: { eventSerializer, eventController },
-  } = useSharedEventSerializer();
-
-  // Undo/Redo dispatcher
-  const { dispatch: undoRedoDispatch } = UndoRedo(
-    canvas as fabric.Canvas,
-    eventSerializer,
-    userId
-  );
-
   // Getting context variables for this file
   const {
     penColor,
     isLocalObject,
     shape,
+    canvasActions,
     updateCanvasActions,
     laserIsActive,
     allToolbarIsEnabled,
@@ -134,8 +124,31 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     localImage,
     localBackground,
     backgroundColor,
-    displayUserInfo
+    displayUserInfo,
+    eventSerializer,
+    eventController,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
+
+  const { dispatch: undoRedoDispatch } = UndoRedo(
+    canvas as fabric.Canvas,
+    eventSerializer,
+    userId
+  );
+
+  // useEffects and logic to set canvas properties
+  useSetCanvas(
+    instanceId,
+    setCanvas,
+    canvas as fabric.Canvas,
+    wrapper as HTMLElement,
+    setWrapper,
+    pixelWidth,
+    pixelHeight,
+    pointerEvents,
+    scaleMode,
+    display,
+    initialStyle
+  );
 
   // Getting Canvas shared functions
   const { actions, mouseDown } = useCanvasActions(
@@ -206,20 +219,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
   }, [canvas, eventController, generatedBy]);
 
-  // useEffects and logic to set canvas properties
-  useSetCanvas(
-    instanceId,
-    setCanvas,
-    canvas as fabric.Canvas,
-    wrapper as HTMLElement,
-    setWrapper,
-    pixelWidth,
-    pixelHeight,
-    pointerEvents,
-    scaleMode,
-    display,
-    initialStyle
-  );
 
   // useEffects and logic for manage the object manipulation in canvas
   useObjectManipulation(
@@ -258,7 +257,13 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   useObjectSelection(canvas as fabric.Canvas, actions);
 
   // useEffects and logic for manage text object creation/edition
-  useTextObject(canvas as fabric.Canvas, instanceId, userId, permissions);
+  useTextObject(
+    canvas as fabric.Canvas,
+    instanceId,
+    userId,
+    actions,
+    permissions
+  );
 
   // useEffects and logic for manage image adding feature
   useAddImage(canvas as fabric.Canvas, userId);
@@ -271,6 +276,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for manage the changes that would happen when an object is hovered
   useObjectHover(canvas as fabric.Canvas, displayUserInfo);
+  
+  // useEffects and logic for manage pointers
+  usePointerFeature(canvas as fabric.Canvas, userId, permissions);
 
   useSynchronizedMoved(
     canvas,
@@ -360,14 +368,18 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     canvas,
     userId,
     filterIncomingEvents,
-    updatePermissions,
+    updatePermissions
   );
+  useSynchronizedCursorPointer(canvas, userId, filterIncomingEvents);
   useSynchronizedBackgroundColorChanged(filterIncomingEvents);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {
-    updateCanvasActions(actions);
-  }, [actions, updateCanvasActions]);
+    if (!canvasActions && canvas) {
+      updateCanvasActions(actions);
+    }
+
+  }, [actions, updateCanvasActions, canvas, canvasActions]);
 
   return (
     <>
@@ -418,10 +430,8 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
 const mapStateToProps = (state: any, ownProps: any) => ({
   ...ownProps,
-  permissions:
-    state.permissionsState,
+  permissions: state.permissionsState,
   toolbarIsEnabled: (state: any) => {
-
     for (const key in state.permissionsState) {
       if (state.permissionsState[key] === true) {
         return true;
@@ -432,7 +442,8 @@ const mapStateToProps = (state: any, ownProps: any) => ({
   },
 });
 const mapDispatchToProps = (dispatch: any) => ({
-  updatePermissions: (tool: string, payload: boolean) => dispatch({ type: tool, payload })
+  updatePermissions: (tool: string, payload: boolean) =>
+    dispatch({ type: tool, payload }),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(WhiteboardCanvas);

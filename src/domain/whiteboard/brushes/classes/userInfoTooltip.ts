@@ -23,7 +23,7 @@ export class UserInfoTooltip {
   private _text: fabric.Text;
   private _shapesGroup: fabric.Group = new fabric.Group();
   private _objectId: string | undefined = '';
-  public displayUserInfo: string = 'full';
+  public displayUserInfo: string = 'none';
   private optionUserInfo: IUserInfoOption;
   static instance: UserInfoTooltip;
   static exists = false;
@@ -105,6 +105,7 @@ export class UserInfoTooltip {
    */
   private setInfoOption = (optionValue: string) => {
     this.displayUserInfo = optionValue;
+    console.log(this.displayUserInfo)
     const infoOption = UserInfoTooltip.infoOptions.find(
       (option) => option.value === this.displayUserInfo
     );
@@ -209,19 +210,31 @@ export class UserInfoTooltip {
   }
 
   /**
-   * Check if tooltip assigned object is the same than the parameter one which is beign hovered
+   * Check if tooltip assigned object is the same than the parameter one which is beign hovered and the type is the same
    * @param {ICanvasObject} hoveredObject - canvasObject
    * @return {boolean}
    */
   public hasTheSameObject(hoveredObject: ICanvasObject) {
+    // console.log(this._objectId === hoveredObject.id, this._objectId,  hoveredObject.id)
     return this._objectId === hoveredObject.id;
   }
 
   /**
-   * Remove the assigned object
+   * Check if tooltip type of display user info selected is the same than the parameter value
+   * @param {string} displayUserInfo - displayUserInfo
+   * @return {boolean}
    */
-  public removeObject() {
+  public hasTheSameSelectedType(displayUserInfo: string) {
+    console.log(this.displayUserInfo === displayUserInfo, this.displayUserInfo,  displayUserInfo)
+    return this.displayUserInfo === displayUserInfo;
+  }
+
+  /**
+   * Remove the assigned object and reset display user info selected
+   */
+  public reset() {
     this._objectId = '';
+    this.displayUserInfo = 'none';
   }
 
   /**
@@ -230,6 +243,7 @@ export class UserInfoTooltip {
    */
   private setObject(hoveredObject: ICanvasObject) {
     this._objectId = hoveredObject.id;
+    // console.log("this._objectId", this._objectId)
     const userId = this._objectId
       ? this._objectId.substr(0, this._objectId.indexOf(':'))
       : '';
@@ -272,7 +286,7 @@ export class UserInfoTooltip {
   }
 
   /**
-   *
+   * Set the assigned object and display option and returns the group to be drawn 
    * @param {ICanvasObject} hoveredObject - hovered canvas object
    * @param {string} displayUserInfo - display option
    */

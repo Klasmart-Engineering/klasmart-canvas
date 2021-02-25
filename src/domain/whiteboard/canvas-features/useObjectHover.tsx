@@ -33,11 +33,11 @@ export const useObjectHover = (
     if (
       !tooltip ||
       !hoveredObject.hasOwnProperty('id') ||
-      tooltip.hasTheSameObject(hoveredObject)
+      (tooltip.hasTheSameObject(hoveredObject) && tooltip.hasTheSameSelectedType(displayUserInfo)) 
     ) {
       return;
     }
-
+    hideTooltip()
     tooltipShapesGroup = tooltip.getDrawing(hoveredObject, displayUserInfo);
     canvas.add(tooltipShapesGroup);
   };
@@ -48,7 +48,7 @@ export const useObjectHover = (
   const hideTooltip = () => {
     const canvasObjects = canvas.getObjects();
     if (tooltip && tooltip.isShown()) {
-      tooltip.removeObject();
+      tooltip.reset();
     }
     for (let x = 0; x < canvasObjects.length; x++) {
       if (
@@ -64,15 +64,22 @@ export const useObjectHover = (
    * @param {fabric.Ievent} e - fabric event
    */
   const checkIfIsHoverSomeObject = (e: fabric.IEvent) => {
-    hideTooltip();
-    if (!e.pointer || selectedTool !== DEFAULT_VALUES.SELECTED_TOOL) return;
+    // hideTooltip();
+    if (!e.pointer || selectedTool !== DEFAULT_VALUES.SELECTED_TOOL){
+      hideTooltip();
+      return;
+    } 
     const { pointer } = e;
     const canvasObjects = canvas.getObjects();
     const canvasObject = canvasObjects.find((obj) =>
       obj.containsPoint(pointer)
     );
 
-    if (canvasObject) showTooltip(canvasObject);
+    if (canvasObject)
+      showTooltip(canvasObject) 
+    else 
+      hideTooltip()
+
   };
 
   /**

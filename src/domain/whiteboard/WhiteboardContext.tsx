@@ -39,7 +39,10 @@ import store from './redux/store';
 import { getToolbarIsEnabled } from './redux/utils';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
+import { usePointer } from './hooks/usePointer';
 import { useBackgroundColor } from './hooks/useBackgroundColor';
+import { ICanvasObject } from '../../interfaces/objects/canvas-object';
+import { useSharedEventSerializer } from './SharedEventSerializerProvider';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -67,6 +70,11 @@ export const WhiteboardProvider = ({
   const { backgroundColor, updateBackgroundColor } = useBackgroundColor();
   const { pointerEvents, setPointerEvents } = usePointerEvents();
   const { imagePopupIsOpen, updateImagePopupIsOpen } = canvasImagePopup();
+  const { pointer, updatePointer } = usePointer();
+
+  const {
+    state: { eventSerializer, eventController },
+  } = useSharedEventSerializer();
 
   const {
     ClearWhiteboardModal,
@@ -101,7 +109,7 @@ export const WhiteboardProvider = ({
     UploadFileModal,
     openUploadFileModal,
     closeUploadFileModal,
-  } = useUploadFileModal();
+  } = useUploadFileModal(eventSerializer, userId as string);
 
   const [displayUserInfo, setUserInfoToDisplay] = useState(DEFAULT_VALUES.DISPLAY_USER_INFO_OPTION);
   const {
@@ -113,9 +121,9 @@ export const WhiteboardProvider = ({
   const [selectedTool, updateSelectedTool] = useState(DEFAULT_VALUES.SELECTED_TOOL);
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
-  const [pointer, updatePointer] = useState(DEFAULT_VALUES.POINTER);
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
+  const [eraserIsActive, updateEraserIsActive] = useState(false);
 
   // NOTE: Actions provided by canvas instance somewhere in the DOM.
   // The canvas instance will be responsible for registering the actions
@@ -151,7 +159,10 @@ export const WhiteboardProvider = ({
    * Opens ClearWhiteboardModal
    */
   const openClearWhiteboardModal = () => {
-    if (allToolbarIsEnabled || (store.getState().permissionsState as IPermissions).clearWhiteboard) {
+    if (
+      allToolbarIsEnabled ||
+      (store.getState().permissionsState as IPermissions).clearWhiteboard
+    ) {
       openModal();
     }
   };
@@ -184,13 +195,31 @@ export const WhiteboardProvider = ({
     [canvasActions]
   );
 
+  const findObjectById = useCallback(
+    (id: string) => {
+      if (!canvasActions) return undefined;
+
+      return canvasActions.findObjectById(id);
+    },
+    [canvasActions]
+  );
+
+  const isCursorObject = useCallback(
+    (object: ICanvasObject) => {
+      if (!canvasActions) return false;
+
+      return canvasActions.isCursorObject(object);
+    },
+    [canvasActions]
+  );
+
   const clearWhiteboardActionClearMyself = useCallback(() => {
     const toolbarIsEnabled = getToolbarIsEnabled(userId);
 
     if (clearWhiteboardPermissions.allowClearMyself && toolbarIsEnabled) {
       canvasActions?.clearWhiteboardClearMySelf();
     }
-  }, [canvasActions, clearWhiteboardPermissions]);
+  }, [canvasActions, clearWhiteboardPermissions.allowClearMyself, userId]);
 
   const clearWhiteboardAllowClearOthersAction = useCallback(
     (userId) => {
@@ -252,11 +281,9 @@ export const WhiteboardProvider = ({
   }, [canvasActions]);
 
   const perfectShapeIsAvailable = () => {
-    const permissionsState = store.getState() as unknown as IPermissions;
+    const permissionsState = (store.getState() as unknown) as IPermissions;
     return (
-      allToolbarIsEnabled ||
-      permissionsState.shape ||
-      permissionsState.move
+      allToolbarIsEnabled || permissionsState.shape || permissionsState.move
     );
   };
 
@@ -321,6 +348,7 @@ export const WhiteboardProvider = ({
     updateShapeColor,
     shapesAreSelectable,
     shapesAreEvented,
+    canvasActions,
     updateCanvasActions,
     laserIsActive,
     updateLaserIsActive,
@@ -368,6 +396,8 @@ export const WhiteboardProvider = ({
     setIsBackgroundImage,
     localImage,
     setLocalImage,
+    eraserIsActive,
+    updateEraserIsActive,
     localBackground,
     setLocalBackground,
     backgroundColor,
@@ -379,7 +409,11 @@ export const WhiteboardProvider = ({
     isDrawing,
     updateIsDrawing,
     selectedTool,
-    updateSelectedTool
+    updateSelectedTool,
+    isCursorObject,
+    findObjectById,
+    eventSerializer,
+    eventController,
   };
 
   return (
@@ -395,17 +429,17 @@ export const WhiteboardProvider = ({
         Clear student
       </button>
       {(window.innerWidth <= 768 || window.innerHeight <= 768) &&
-        perfectShapeIsAvailable() ? (
-          <WhiteboardToggle
-            label="Perfect Shape Creation"
-            state={perfectShapeIsActive}
-            onStateChange={(value: boolean) => {
-              if (perfectShapeIsAvailable()) {
-                updatePerfectShapeIsActive(value);
-              }
-            }}
-          />
-        ) : null}
+      perfectShapeIsAvailable() ? (
+        <WhiteboardToggle
+          label="Perfect Shape Creation"
+          state={perfectShapeIsActive}
+          onStateChange={(value: boolean) => {
+            if (perfectShapeIsAvailable()) {
+              updatePerfectShapeIsActive(value);
+            }
+          }}
+        />
+      ) : null}
       <ClearWhiteboardModal
         clearWhiteboard={clearWhiteboardActionClearMyself}
       />
