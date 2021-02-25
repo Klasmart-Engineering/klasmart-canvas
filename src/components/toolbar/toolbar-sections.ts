@@ -36,6 +36,15 @@ import goodStamp from '../../assets/icons/toolbar/good-stamp.png';
 import wellDoneStamp from '../../assets/icons/toolbar/well-done-stamp.png';
 import excellentStamp from '../../assets/icons/toolbar/excellent-stamp.png';
 
+import cubeShape from '../../assets/icons/toolbar/cube.svg';
+import sphereShape from '../../assets/icons/toolbar/sphere.svg';
+import cylinderShape from '../../assets/icons/toolbar/cylinder.svg';
+import triangleBasedPyramidShape from '../../assets/icons/toolbar/triangleBasedPyramid.svg';
+import coneShape from '../../assets/icons/toolbar/cone.svg';
+import triangularPrismShape from '../../assets/icons/toolbar/triangularPrism.svg';
+import rectangularPrismShape from '../../assets/icons/toolbar/rectangularPrism.svg';
+import squareBasedPyramidShape from '../../assets/icons/toolbar/squareBasedPyramid.svg';
+import torusShape from '../../assets/icons/toolbar/torus.svg';
 import FiberManualRecordRoundedIcon from '@material-ui/icons/FiberManualRecordRounded';
 import FormatColorFillRoundedIcon from '@material-ui/icons/FormatColorFillRounded';
 import PaletteIcon from '@material-ui/icons/Palette';
@@ -492,6 +501,74 @@ const toolsSection: IBasicToolbarSection = {
         },
       ],
     },
+    {
+      id: 'add_3d_shape',
+      options: [
+        {
+          id: 'cube_shape',
+          value: 'cube',
+          title: 'Cube Shape',
+          iconSrc: cubeShape,
+          iconName: 'Cube',
+        },
+        {
+          id: 'rectangularPrism_shape',
+          value: 'rectangularPrism',
+          title: 'Rectangular Prism Shape',
+          iconSrc: rectangularPrismShape,
+          iconName: 'Rectangular Prism',
+        },
+        {
+          id: 'triangularPrism_shape',
+          value: 'triangularPrism',
+          title: 'Triangular Prism Shape',
+          iconSrc: triangularPrismShape,
+          iconName: 'Triangular Prism',
+        },
+        {
+          id: 'sphere_shape',
+          value: 'sphere',
+          title: 'Sphere Shape',
+          iconSrc: sphereShape,
+          iconName: 'Sphere',
+        },
+        {
+          id: 'cylinder_shape',
+          value: 'cylinder',
+          title: 'Cylinder Shape',
+          iconSrc: cylinderShape,
+          iconName: 'Cylinder',
+        },
+        {
+          id: 'pyramid_shape',
+          value: 'pyramid',
+          title: 'PyramidTriangleBased Shape',
+          iconSrc: triangleBasedPyramidShape,
+          iconName: 'PyramidTriangleBased',
+        },
+        {
+          id: 'squareBasedPyramid_shape',
+          value: 'squareBasedPyramid',
+          title: 'Square Based Pyramid Shape',
+          iconSrc: squareBasedPyramidShape,
+          iconName: 'Square Based Pyramid',
+        },
+        {
+          id: 'cone_shape',
+          value: 'cone',
+          title: 'Cone Shape',
+          iconSrc: coneShape,
+          iconName: 'Cone',
+    },
+      {
+        id: 'torus_shape',
+        value: 'torus',
+        title: 'Torus Shape',
+        iconSrc: torusShape,
+        iconName: 'Torus',
+      }
+    ],
+    },    
     // Stamps - ToolbarSelector
     {
       id: 'add_stamp',
