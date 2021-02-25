@@ -87,6 +87,7 @@ function Toolbar(props: {
     openClearWhiteboardModal,
     updateEraserIsActive,
     fillBackgroundColor,
+    open3dModal
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
@@ -308,7 +309,9 @@ function Toolbar(props: {
       case ELEMENTS.ADD_SHAPE_TOOL:
         updateShape(option);
         break;
-
+      case ELEMENTS.ADD_3D_SHAPE:
+        open3dModal();
+        break;
       case ELEMENTS.ADD_STAMP_TOOL:
         updateStamp(option);
         break;
