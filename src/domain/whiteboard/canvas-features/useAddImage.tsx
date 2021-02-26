@@ -23,6 +23,7 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
   // Getting context variables
   const {
     isBackgroundImage,
+    setIsBackgroundImage,
     backgroundImageIsPartialErasable,
     backgroundImage,
     setLocalImage,
@@ -44,10 +45,17 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
         if (isBackgroundImage) {
           updateBackgroundColor('#000000');
           setLocalBackground(false);
-          canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
+          canvas.setBackgroundColor(
+            'transparent',
+            canvas.renderAll.bind(canvas)
+          );
 
           if (backgroundImageIsPartialErasable) {
-            await createBackgroundImage(backgroundImage.toString(), userId, canvas)
+            await createBackgroundImage(
+              backgroundImage.toString(),
+              userId,
+              canvas
+            );
 
             if (!canvas.backgroundImage) return;
 
@@ -60,7 +68,7 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
             canvas.trigger('object:added', payload);
             return;
           }
-  
+
           await setLocalImage(backgroundImage);
           const id = `${userId}:${uuidv4()}`;
           const payload: IBackgroundImageEvent = {
@@ -70,6 +78,7 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
           };
 
           canvas.trigger('object:added', payload);
+          setIsBackgroundImage(false);
 
           return;
         }
@@ -86,11 +95,10 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
         if (image && !isGif) {
           createImageAsObject(image as string, userId, canvas);
         }
-      } catch(e) {
+      } catch (e) {
         console.error(e);
       }
     };
-
 
     imageSetup();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -98,6 +106,8 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
     image,
     backgroundImage,
     canvas,
+    setIsBackgroundImage,
+    isGif,
     setLocalBackground,
     setLocalImage,
     updateBackgroundColor,
