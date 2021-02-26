@@ -23,6 +23,7 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
   // Getting context variables
   const {
     isBackgroundImage,
+    setIsBackgroundImage,
     backgroundImageIsPartialErasable,
     backgroundImage,
     setLocalImage,
@@ -78,6 +79,7 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
           };
 
           canvas.trigger('object:added', payload);
+          setIsBackgroundImage(false);
 
           return;
         }
@@ -105,6 +107,8 @@ export const useAddImage = (canvas: fabric.Canvas, userId: string) => {
     image,
     backgroundImage,
     canvas,
+    setIsBackgroundImage,
+    isGif,
     setLocalBackground,
     setLocalImage,
     updateBackgroundColor,
