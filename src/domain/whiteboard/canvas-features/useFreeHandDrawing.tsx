@@ -132,8 +132,6 @@ export const useFreeHandDrawing = (
       canvas.freeDrawingCursor = 'crosshair';
       canvas.isDrawingMode = canDraw;
 
-      console.log('draw mode: ', canvas.isDrawingMode);
-
       canvas.on('mouse:move', realTimePath);
 
       canvas.on('path:created', pathCreated);

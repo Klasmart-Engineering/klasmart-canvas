@@ -36,14 +36,14 @@ const whiteboardHeight = 460;
 const activeCanvas = null;
 
 const points = [
-  { clientX: 400, clientY: 400 },
-  { clientX: 405, clientY: 405 },
-  { clientX: 410, clientY: 410 },
-  { clientX: 415, clientY: 415 },
-  { clientX: 420, clientY: 420 },
-  { clientX: 425, clientY: 425 },
-  { clientX: 430, clientY: 430 },
-  { clientX: 431, clientY: 431 },
+  { clientX: 300, clientY: 300 },
+  { clientX: 305, clientY: 305 },
+  { clientX: 310, clientY: 310 },
+  { clientX: 315, clientY: 315 },
+  { clientX: 320, clientY: 320 },
+  { clientX: 325, clientY: 325 },
+  { clientX: 330, clientY: 330 },
+  { clientX: 331, clientY: 331 },
 ];
 
 /**

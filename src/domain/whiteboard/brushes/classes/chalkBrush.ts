@@ -4,6 +4,7 @@ import { ICoordinate } from '../../../../interfaces/brushes/coordinate';
 import { IClearRect } from '../../../../interfaces/brushes/clear-rects';
 import { v4 as uuidv4 } from 'uuid';
 import { ICanvasBrush } from '../../../../interfaces/brushes/canvas-brush';
+import { mockedChalkImageData } from '../../../../tests/mocked-chalk-image-data';
 
 interface IClearRectDimensions {
   width: number;
@@ -168,10 +169,21 @@ export class ChalkBrush extends fabric.PencilBrush {
     points: ICoordinate[],
     width: number,
     color: string,
-    clearRects: IClearRect[]
+    clearRects: IClearRect[],
+    simulated?: boolean
   ): Promise<ICanvasBrush> {
     try {
       let imagePath;
+      points = [
+        { x: 300, y: 300 },
+        { x: 305, y: 305 },
+        { x: 310, y: 310 },
+        { x: 315, y: 315 },
+        { x: 320, y: 320 },
+        { x: 325, y: 325 },
+        { x: 330, y: 330 },
+        { x: 331, y: 331 },
+      ];
       const line = super
         .convertPointsToSVGPath(
           points.map((point) => {
@@ -241,11 +253,23 @@ export class ChalkBrush extends fabric.PencilBrush {
       this.tempCanvas.setWidth(Number(path.width));
       this.tempCanvas.setHeight(Number(path.height));
 
-      const tempData = this.tempCanvas.toDataURL();
+      const tempData = !simulated
+        ? this.tempCanvas.toDataURL()
+        : this.getMockedImageData();
+
+      console.log(tempData);
 
       const imagePromise = new Promise((resolve, reject) => {
         try {
+          console.log('que omnda');
+          if (simulated) {
+            this.tempCanvas.clear();
+            this.tempCanvas.remove();
+            resolve(mockedChalkImageData);
+          }
+
           fabric.Image.fromURL(tempData, (image) => {
+            console.log('aqui estoy');
             ((image as unknown) as ICanvasBrush).set({
               id: id,
               top: top,
@@ -262,6 +286,7 @@ export class ChalkBrush extends fabric.PencilBrush {
             this.tempCanvas.clear();
             this.tempCanvas.remove();
 
+            console.log(image);
             resolve(image);
           });
         } catch (e) {
@@ -271,7 +296,9 @@ export class ChalkBrush extends fabric.PencilBrush {
 
       await imagePromise
         .then((response) => {
+          console.log('entra');
           imagePath = response;
+          // console.log((response as any).toJSON('id', 'basePath'));
         })
         .catch((e) => {
           throw e;
@@ -332,7 +359,8 @@ export class ChalkBrush extends fabric.PencilBrush {
   /**
    * Mouse Up Event, finishes canvas drawing
    */
-  public onMouseUp() {
+  public onMouseUp(e: any) {
+    console.log('Trust:', e.e.isTrusted);
     this.isDrawing = false;
 
     this.createChalkPath(
@@ -340,7 +368,8 @@ export class ChalkBrush extends fabric.PencilBrush {
       this.points,
       this.width,
       this.color,
-      this.clearRects
+      this.clearRects,
+      !e.e.isTrusted
     ).then((response) => {
       if (response) {
         this.canvas.add(response);
@@ -418,5 +447,11 @@ export class ChalkBrush extends fabric.PencilBrush {
     this.ctx.strokeStyle = tinycolor(this.color)
       .brighten(this.brightness)
       .toHexString();
+  }
+
+  private getMockedImageData() {
+    const imageData = this.style === 'chalk' ? mockedChalkImageData : '';
+
+    return imageData;
   }
 }
