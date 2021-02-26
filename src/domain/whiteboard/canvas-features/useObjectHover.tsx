@@ -13,17 +13,14 @@ export const useObjectHover = (
   canvas: fabric.Canvas,
   displayUserInfo: string
 ) => {
-
-  /** 
-   * Initializing the tooltip and tooltip group 
-  */
+  /**
+   * Initializing the tooltip and tooltip group
+   */
   let tooltipShapesGroup: fabric.Group;
   const tooltip = UserInfoTooltip.createInstance(displayUserInfo);
 
   // Getting necessary context variables
-  const {
-    selectedTool
-  } = useContext(WhiteboardContext);
+  const { selectedTool } = useContext(WhiteboardContext);
 
   /**
    * Get tooltip and add it to the canvas
@@ -33,11 +30,12 @@ export const useObjectHover = (
     if (
       !tooltip ||
       !hoveredObject.hasOwnProperty('id') ||
-      (tooltip.hasTheSameObject(hoveredObject) && tooltip.hasTheSameSelectedType(displayUserInfo)) 
+      (tooltip.hasTheSameObject(hoveredObject) &&
+        tooltip.hasTheSameSelectedType(displayUserInfo))
     ) {
       return;
     }
-    hideTooltip()
+    hideTooltip();
     tooltipShapesGroup = tooltip.getDrawing(hoveredObject, displayUserInfo);
     canvas.add(tooltipShapesGroup);
   };
@@ -64,22 +62,22 @@ export const useObjectHover = (
    * @param {fabric.Ievent} e - fabric event
    */
   const checkIfIsHoverSomeObject = (e: fabric.IEvent) => {
-    // hideTooltip();
-    if (!e.pointer || selectedTool !== DEFAULT_VALUES.SELECTED_TOOL){
+    if (!e.pointer || selectedTool !== DEFAULT_VALUES.SELECTED_TOOL) {
       hideTooltip();
       return;
-    } 
+    }
     const { pointer } = e;
     const canvasObjects = canvas.getObjects();
     const canvasObject = canvasObjects.find((obj) =>
       obj.containsPoint(pointer)
     );
 
-    if (canvasObject)
-      showTooltip(canvasObject) 
-    else 
-      hideTooltip()
+    if (canvasObject) showTooltip(canvasObject);
+    else hideTooltip();
+  };
 
+  const eventHandler = function (e: fabric.IEvent) {
+    checkIfIsHoverSomeObject(e);
   };
 
   /**
@@ -87,9 +85,10 @@ export const useObjectHover = (
    */
   useEffect(() => {
     if (canvas && displayUserInfo !== 'none') {
-      canvas.on('mouse:move', function (e) {
-        checkIfIsHoverSomeObject(e);
-      });
+      canvas.on('mouse:move', eventHandler);
     }
+    return () => {
+      canvas?.off('mouse:move', eventHandler);
+    };
   });
 };
