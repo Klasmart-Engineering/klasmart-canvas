@@ -1,5 +1,6 @@
 interface IProps {
   backgroundImage?: string | File;
+  backgroundColor?: string;
   localImage?: string | File;
   width: number;
   height: number;
@@ -41,7 +42,8 @@ export const downloadCanvas = (props: IProps, type: string) => {
     canvas.height = props.height;
 
     var background = new Image();
-    background.src = props.backgroundImage as string || props.localImage as string;
+    background.src =
+      (props.backgroundImage as string) || (props.localImage as string);
 
     background.onload = () => {
       const ext = type === 'image/png' ? 'png' : 'jpg';
@@ -53,13 +55,32 @@ export const downloadCanvas = (props: IProps, type: string) => {
       }
 
       ctx?.drawImage(background, 0, 0, props.width, props.height);
-      ctx?.drawImage(props.canvas.getElement(), 0, 0, props.width, props.height);
+      ctx?.drawImage(
+        props.canvas.getElement(),
+        0,
+        0,
+        props.width,
+        props.height
+      );
 
       const img = ((canvas as unknown) as HTMLCanvasElement).toDataURL(type, 1);
 
       generateLink(img, ext, type);
       props.onClose(false);
     };
+  } else if (props.backgroundColor) {
+    const currentColor = props.canvas.backgroundColor;
+    props.canvas.backgroundColor = props.backgroundColor;
+
+    const ext = type === 'image/png' ? 'png' : 'jpg';
+    const img = ((props.canvas as unknown) as HTMLCanvasElement).toDataURL(
+      type,
+      1
+    );
+
+    generateLink(img, ext, type);
+    props.onClose(false);
+    props.canvas.backgroundColor = currentColor;
   } else {
     const ext = type === 'image/png' ? 'png' : 'jpg';
     const img = ((props.canvas as unknown) as HTMLCanvasElement).toDataURL(
