@@ -63,6 +63,7 @@ export const useCanvasActions = (
     setBackgroundImageIsPartialErasable,
     setLocalImage,
     localBackground,
+    setBackgroundImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { changePenColorSync } = useSynchronization(userId as string);
@@ -97,6 +98,7 @@ export const useCanvasActions = (
       setIsBackgroundImage(false);
       setBackgroundImageIsPartialErasable(false);
       setLocalImage('');
+      setBackgroundImage('');
 
       canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
 
@@ -105,6 +107,7 @@ export const useCanvasActions = (
     },
     [
       canvas,
+      setBackgroundImage,
       setBackgroundImageIsPartialErasable,
       setIsBackgroundImage,
       setLocalBackground,
@@ -162,13 +165,16 @@ export const useCanvasActions = (
   /**
    * Clear mouse event handlers for cavnas
    */
-  const clearOnMouseEvent = useCallback((click?: (arg: fabric.IEvent) => void): void => {
-    if (click) {
-      canvas?.off('mouse:down', click);
-    } else {
-      canvas?.off('mouse:down');
-    }
-  }, [canvas]);
+  const clearOnMouseEvent = useCallback(
+    (click?: (arg: fabric.IEvent) => void): void => {
+      if (click) {
+        canvas?.off('mouse:down', click);
+      } else {
+        canvas?.off('mouse:down');
+      }
+    },
+    [canvas]
+  );
 
   /**
    * Clears all mouse event listeners from canvas.
