@@ -20,6 +20,7 @@ const permissionsState = {
   downloadCanvas: false,
   uploadImage: false,
   cursorPointer: false,
+  setUserInfoToDisplay: false,
 };
 
 describe('async actions', () => {
