@@ -51,7 +51,6 @@ import { usePointerFeature } from './canvas-features/usePointerFeature';
 import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
-import { IEvent } from 'fabric/fabric-impl';
 
 /**
  * @field instanceId: Unique ID for this canvas.
