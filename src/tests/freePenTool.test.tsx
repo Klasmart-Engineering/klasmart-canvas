@@ -1,4 +1,4 @@
-// @ts-nocheckd
+// @ts-nocheck
 import React, { CSSProperties } from 'react';
 import Enzyme, { shallow } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
@@ -19,7 +19,10 @@ import 'jest-canvas-mock';
 import 'canvas';
 import { createCanvas } from 'canvas';
 import { ChalkBrush } from '../domain/whiteboard/brushes/classes/chalkBrush';
-import { mockedChalkImageData } from './mocked-chalk-image-data';
+import {
+  mockedChalkImageData,
+  mockedCrayonImageData,
+} from './mocked-image-data';
 import { ICanvasBrush } from '../interfaces/brushes/canvas-brush';
 import { IBasePath } from '../interfaces/brushes/base-path';
 
@@ -271,7 +274,7 @@ describe('Free Pen Tool should work properly', () => {
 
     expect(basePath.points[0].x).toBeCloseTo(points[0].clientX, 1);
 
-    basePath.points.forEach((point: IPenPoint, index: number) => {
+    basePath.points.forEach((point: ICoordinate, index: number) => {
       if (index) {
         expect(point.x).toBeCloseTo(points[index - 1]?.clientX, -1);
       }
@@ -551,7 +554,7 @@ describe('Free Pen Tool should work properly', () => {
     expect(basePath).toHaveProperty('points');
     expect(basePath.points.length).toBe(points.length + 1);
 
-    basePath.points.forEach((point: IPenPoint, index: number) => {
+    basePath.points.forEach((point: ICoordinate, index: number) => {
       if (index) {
         expect(point.x).toBe(points[index - 1].clientX);
         expect(point.y).toBe(points[index - 1].clientY);
@@ -648,7 +651,7 @@ describe('Free Pen Tool should work properly', () => {
     expect(basePath).toHaveProperty('points');
     expect(basePath.points.length).toBe(points.length + 1);
 
-    basePath.points.forEach((point: IPenPoint, index: number) => {
+    basePath.points.forEach((point: ICoordinate, index: number) => {
       if (index) {
         expect(point.x).toBe(points[index - 1].clientX);
         expect(point.y).toBe(points[index - 1].clientY);
@@ -746,14 +749,9 @@ describe('Free Pen Tool should work properly', () => {
     expect(basePath).toHaveProperty('points');
     expect(basePath.points.length).toBe(points.length);
 
-    basePath.points.forEach((point: IPenPoint, index: number) => {
-      if (index) {
-        expect(point.x).toBe(points[index].clientX);
-        expect(point.y).toBe(points[index].clientY);
-      } else {
-        expect(point.x).toBe(points[index].clientX);
-        expect(point.y).toBe(points[index].clientY);
-      }
+    basePath.points.forEach((point: ICoordinate, index: number) => {
+      expect(point.x).toBe(points[index].clientX);
+      expect(point.y).toBe(points[index].clientY);
     });
 
     expect(basePath).toHaveProperty('stroke');
@@ -865,7 +863,7 @@ describe('Free Pen Tool should work properly', () => {
     (path as ICanvasBrush).set({
       basePath: {
         ...currentBasePath,
-        imageData: mockedChalkImageData,
+        imageData: mockedCrayonImageData,
       },
       width: objectWidth,
       height: objectHeight,
