@@ -174,6 +174,11 @@ function renderWhiteboard(context: IWhiteboardContext) {
   );
 }
 
+/**
+ * Calculates width and height of a pencil
+ * path object with the recieved points
+ * @param points - Points to calculate dimensions
+ */
 function getPencilDimensionsFromPoints(
   points: { clientX: number; clientY: number }[]
 ) {
@@ -183,6 +188,11 @@ function getPencilDimensionsFromPoints(
   return { objectWidth, objectHeight };
 }
 
+/**
+ * Calculates width and height of a custom brush
+ * path object with the recieved points
+ * @param points - Points to calculate dimensions
+ */
 function getCustomDimensionsFromPoints(
   points: { clientX: number; clientY: number }[]
 ) {
@@ -192,42 +202,65 @@ function getCustomDimensionsFromPoints(
   return { objectWidth, objectHeight };
 }
 
+/**
+ * Creates a path or group based path object.
+ * Pencil, Dashed, Pen, Marker, Felt and Paintbrush styles.
+ */
+function generatePathAndGroupBasedPathObject() {
+  const render = renderWhiteboard(context);
+  const getObjBtn = document.getElementById(
+    'get-objects-button'
+  ) as HTMLButtonElement;
+  const upperCanvas = render.baseElement
+    ?.getElementsByClassName('upper-canvas')
+    .item(0) as HTMLCanvasElement;
+
+  points.forEach((point, index) => {
+    if (!index) {
+      fireEvent.mouseDown(upperCanvas, point);
+    } else {
+      fireEvent.mouseMove(upperCanvas, point);
+
+      if (index === points.length - 1) {
+        fireEvent.mouseUp(upperCanvas, point);
+      }
+    }
+  });
+
+  fireEvent.click(getObjBtn);
+}
+
+/**
+ * Creates an image based path object.
+ * Chalk and Crayon styles.
+ */
+async function generateImageBasedPathObject() {
+  jest.spyOn(document, 'createElement').mockImplementation(() => canvasTest);
+
+  const brush = new ChalkBrush(canvasTest, userId, context.brushType);
+
+  brush.color = context.penColor;
+  brush.width = context.lineWidth;
+
+  for (let i = 0; i < points.length; i += 1) {
+    if (!i) {
+      brush.onMouseDown({ x: points[i].clientX, y: points[i].clientY });
+    } else if (i < points.length - 1) {
+      brush.onMouseMove({ x: points[i].clientX, y: points[i].clientY });
+    } else {
+      await brush.onMouseUp();
+    }
+  }
+}
+
 describe('Free Pen Tool should work properly', () => {
-  it('Should draw a pencil line', async () => {
-    // Updating context variables
+  it('Should draw a pencil line', () => {
     context.penColor = '#000000';
     context.lineWidth = 8;
     context.brushType = 'pencil';
 
-    // Rendering Whiteboard with the new values in context variables
-    const render = renderWhiteboard(context);
-    const getObjBtn = document.getElementById(
-      'get-objects-button'
-    ) as HTMLButtonElement;
-    const upperCanvas = render.baseElement
-      ?.getElementsByClassName('upper-canvas')
-      .item(0) as HTMLCanvasElement;
+    generatePathAndGroupBasedPathObject();
 
-    /**
-     * Simulating mouseDown, mouseMove and mouseUp actions
-     * with the predefined points
-     */
-    points.forEach((point, index) => {
-      if (!index) {
-        fireEvent.mouseDown(upperCanvas, point);
-      } else {
-        fireEvent.mouseMove(upperCanvas, point);
-
-        if (index === points.length - 1) {
-          fireEvent.mouseUp(upperCanvas, point);
-        }
-      }
-    });
-
-    // Click over get objects hidden button
-    fireEvent.click(getObjBtn);
-
-    // Getting current objects
     const objs = JSON.parse(localStorage.getItem('objects') as string);
     const { objectWidth, objectHeight } = getPencilDimensionsFromPoints(points);
 
@@ -287,34 +320,12 @@ describe('Free Pen Tool should work properly', () => {
     expect(basePath.strokeWidth).toBe(context.lineWidth);
   });
 
-  it('Should draw a dashed line', async () => {
-    // Updating context variables
+  it('Should draw a dashed line', () => {
     context.penColor = '#f8433f';
     context.lineWidth = 2;
     context.brushType = 'dashed';
 
-    const render = renderWhiteboard(context);
-    const getObjBtn = document.getElementById(
-      'get-objects-button'
-    ) as HTMLButtonElement;
-
-    const upperCanvas = render.baseElement
-      ?.getElementsByClassName('upper-canvas')
-      .item(0) as HTMLCanvasElement;
-
-    points.forEach((point, index) => {
-      if (!index) {
-        fireEvent.mouseDown(upperCanvas, point);
-      } else {
-        fireEvent.mouseMove(upperCanvas, point);
-
-        if (index === points.length - 1) {
-          fireEvent.mouseUp(upperCanvas, point);
-        }
-      }
-    });
-
-    fireEvent.click(getObjBtn);
+    generatePathAndGroupBasedPathObject();
 
     const objs = JSON.parse(localStorage.getItem('objects') as string);
     const { objectWidth, objectHeight } = getCustomDimensionsFromPoints(points);
@@ -374,33 +385,12 @@ describe('Free Pen Tool should work properly', () => {
     expect(basePath.strokeWidth).toBe(context.lineWidth);
   });
 
-  it('Should draw a pen line', async () => {
+  it('Should draw a pen line', () => {
     context.penColor = '#5fe119';
     context.lineWidth = 4;
     context.brushType = 'pen';
 
-    const render = renderWhiteboard(context);
-    const getObjBtn = document.getElementById(
-      'get-objects-button'
-    ) as HTMLButtonElement;
-
-    const upperCanvas = render.baseElement
-      ?.getElementsByClassName('upper-canvas')
-      .item(0) as HTMLCanvasElement;
-
-    points.forEach((point, index) => {
-      if (!index) {
-        fireEvent.mouseDown(upperCanvas, point);
-      } else {
-        fireEvent.mouseMove(upperCanvas, point);
-
-        if (index === points.length - 1) {
-          fireEvent.mouseUp(upperCanvas, point);
-        }
-      }
-    });
-
-    fireEvent.click(getObjBtn as HTMLElement);
+    generatePathAndGroupBasedPathObject();
 
     const objs = JSON.parse(localStorage.getItem('objects') as string);
     const { objectWidth, objectHeight } = getCustomDimensionsFromPoints(points);
@@ -474,33 +464,12 @@ describe('Free Pen Tool should work properly', () => {
     expect(basePath.strokeWidth).toBe(context.lineWidth);
   });
 
-  it('Should draw a marker line', async () => {
+  it('Should draw a marker line', () => {
     context.penColor = '#347dfa';
     context.lineWidth = 16;
     context.brushType = 'marker';
 
-    const render = renderWhiteboard(context);
-    const getObjBtn = document.getElementById(
-      'get-objects-button'
-    ) as HTMLButtonElement;
-
-    const upperCanvas = render.baseElement
-      ?.getElementsByClassName('upper-canvas')
-      .item(0) as HTMLCanvasElement;
-
-    points.forEach((point, index) => {
-      if (!index) {
-        fireEvent.mouseDown(upperCanvas, point);
-      } else {
-        fireEvent.mouseMove(upperCanvas, point);
-
-        if (index === points.length - 1) {
-          fireEvent.mouseUp(upperCanvas, point);
-        }
-      }
-    });
-
-    fireEvent.click(getObjBtn);
+    generatePathAndGroupBasedPathObject();
 
     const objs = JSON.parse(localStorage.getItem('objects') as string);
     const { objectWidth, objectHeight } = getCustomDimensionsFromPoints(points);
@@ -571,33 +540,12 @@ describe('Free Pen Tool should work properly', () => {
     expect(basePath.strokeWidth).toBe(context.lineWidth);
   });
 
-  it('Should draw a felt line', async () => {
+  it('Should draw a felt line', () => {
     context.penColor = '#44f9f9';
     context.lineWidth = 16;
     context.brushType = 'felt';
 
-    const render = renderWhiteboard(context);
-    const getObjBtn = document.getElementById(
-      'get-objects-button'
-    ) as HTMLButtonElement;
-
-    const upperCanvas = render.baseElement
-      ?.getElementsByClassName('upper-canvas')
-      .item(0) as HTMLCanvasElement;
-
-    points.forEach((point, index) => {
-      if (!index) {
-        fireEvent.mouseDown(upperCanvas, point);
-      } else {
-        fireEvent.mouseMove(upperCanvas, point);
-
-        if (index === points.length - 1) {
-          fireEvent.mouseUp((upperCanvas as unknown) as Element, point);
-        }
-      }
-    });
-
-    fireEvent.click(getObjBtn as HTMLElement);
+    generatePathAndGroupBasedPathObject();
 
     const objs = JSON.parse(localStorage.getItem('objects') as string);
     const { objectWidth, objectHeight } = getCustomDimensionsFromPoints(points);
@@ -668,33 +616,12 @@ describe('Free Pen Tool should work properly', () => {
     expect(basePath.strokeWidth).toBe(context.lineWidth);
   });
 
-  it('Should draw a paintbrush line', async () => {
+  it('Should draw a paintbrush line', () => {
     context.penColor = '#f289fe';
     context.lineWidth = 12;
     context.brushType = 'paintbrush';
 
-    const render = renderWhiteboard(context);
-    const getObjBtn = document.getElementById(
-      'get-objects-button'
-    ) as HTMLButtonElement;
-
-    const upperCanvas = render.baseElement
-      ?.getElementsByClassName('upper-canvas')
-      .item(0) as HTMLCanvasElement;
-
-    points.forEach((point, index) => {
-      if (!index) {
-        fireEvent.mouseDown(upperCanvas, point);
-      } else {
-        fireEvent.mouseMove(upperCanvas, point);
-
-        if (index === points.length - 1) {
-          fireEvent.mouseUp(upperCanvas, point);
-        }
-      }
-    });
-
-    fireEvent.click(getObjBtn);
+    generatePathAndGroupBasedPathObject();
 
     const objs = JSON.parse(localStorage.getItem('objects') as string);
     const { objectWidth, objectHeight } = getCustomDimensionsFromPoints(points);
@@ -766,23 +693,7 @@ describe('Free Pen Tool should work properly', () => {
     context.lineWidth = 8;
     context.brushType = 'chalk';
 
-    window.HTMLCanvasElement.prototype.getContext = () => jest.fn();
-    jest.spyOn(document, 'createElement').mockImplementation(() => canvasTest);
-
-    const brush = new ChalkBrush(canvasTest, userId, context.brushType);
-
-    brush.color = context.penColor;
-    brush.width = context.lineWidth;
-
-    for (let i = 0; i < points.length; i += 1) {
-      if (!i) {
-        brush.onMouseDown({ x: points[i].clientX, y: points[i].clientY });
-      } else if (i < points.length - 1) {
-        brush.onMouseMove({ x: points[i].clientX, y: points[i].clientY });
-      } else {
-        await brush.onMouseUp();
-      }
-    }
+    await generateImageBasedPathObject();
 
     const path = canvasTest.getObjects()[0] as ICanvasBrush;
     const currentBasePath = path.basePath as IBasePath;
@@ -838,23 +749,7 @@ describe('Free Pen Tool should work properly', () => {
     context.lineWidth = 8;
     context.brushType = 'crayon';
 
-    const fabricCanvas = new fabric.Canvas('canvas');
-    jest.spyOn(document, 'createElement').mockImplementation(() => canvasTest);
-
-    const brush = new ChalkBrush(canvasTest, userId, context.brushType);
-
-    brush.color = context.penColor;
-    brush.width = context.lineWidth;
-
-    for (let i = 0; i < points.length; i += 1) {
-      if (!i) {
-        brush.onMouseDown({ x: points[i].clientX, y: points[i].clientY });
-      } else if (i < points.length - 1) {
-        brush.onMouseMove({ x: points[i].clientX, y: points[i].clientY });
-      } else {
-        await brush.onMouseUp();
-      }
-    }
+    await generateImageBasedPathObject();
 
     const path = canvasTest.getObjects()[0] as ICanvasBrush;
     const currentBasePath = path.basePath as IBasePath;
