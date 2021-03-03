@@ -125,4 +125,6 @@ export interface IWhiteboardContext {
   eventController: any;
   activeTool: string | null;
   setActiveTool: (arg: string | null) => void;
+  is3dActive: boolean,
+  set3dActive: (isIt: boolean) => void
 }

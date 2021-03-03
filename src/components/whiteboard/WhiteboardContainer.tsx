@@ -1,5 +1,6 @@
 import React from 'react';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
+import { relative } from 'path';
 
 /**
  * Container for WhiteboardCanvas used to resize
@@ -30,6 +31,7 @@ export function WhiteboardContainer(props: {
     flexDirection: 'column',
     justifyContent: 'center',
     margin: '0 13px 0 8px',
+    position: 'relative'
   };
 
   const resizeDivStyle: CSSProperties = {

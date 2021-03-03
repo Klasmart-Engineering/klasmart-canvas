@@ -43,6 +43,7 @@ import { useFloodFill } from './canvas-features/useFloodFill';
 import { useObjectSelection } from './canvas-features/useObjectSelection';
 import { useTextObject } from './canvas-features/useTextObject';
 import { useAddImage } from './canvas-features/useAddImage';
+import { useAdd3dShape } from './canvas-features/useAdd3dShape'
 import { useChangeLineWidth } from './canvas-features/useChangeLineWidth';
 import { useUndoRedo } from './canvas-features/useUndoRedo';
 import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
@@ -294,6 +295,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for manage image adding feature
   useAddImage(canvas as fabric.Canvas, userId);
+
+  // useEffects and logic for manage image adding feature
+  useAdd3dShape(canvas as fabric.Canvas);
 
   // useEffects and logic for manage line width changes in objects
   useChangeLineWidth(canvas as fabric.Canvas, userId, undoRedoDispatch);

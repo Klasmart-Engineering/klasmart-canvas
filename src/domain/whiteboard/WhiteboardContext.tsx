@@ -140,6 +140,8 @@ export const WhiteboardProvider = ({
     DEFAULT_VALUES.SELECTED_TOOL
   );
 
+  const [ is3dModalOpen, set3dModalOpen] = useState(DEFAULT_VALUES.IS_3D_MODAL_OPEN);
+
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
   const [eraserIsActive, updateEraserIsActive] = useState(false);
@@ -458,7 +460,9 @@ export const WhiteboardProvider = ({
     eventSerializer,
     eventController,
     activeTool,
-    setActiveTool
+    setActiveTool,
+    is3dModalOpen,
+    set3dModalOpen
   };
 
   return (

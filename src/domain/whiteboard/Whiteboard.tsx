@@ -15,6 +15,7 @@ import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardConta
 import { Provider } from 'react-redux';
 import store from './redux/store';
 import AuthMenu from '../../components/AuthMenu';
+import Canvas3d from './three/Canvas3d';
 
 const users = store.getState().usersState;
 
