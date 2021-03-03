@@ -87,7 +87,7 @@ function Toolbar(props: {
     openClearWhiteboardModal,
     updateEraserIsActive,
     fillBackgroundColor,
-    open3dModal
+    set3dModalOpen
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
@@ -113,6 +113,7 @@ function Toolbar(props: {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
+
     if (tool === ELEMENTS.POINTERS_TOOL && !cursorPointerToolIsActive) {
       return;
     }
@@ -230,6 +231,9 @@ function Toolbar(props: {
         elements: [...tools.elements],
       });
     }
+
+    if(tool === ELEMENTS.ADD_3D_SHAPE_TOOL)
+      set3dModalOpen(true)
   }
 
   /**
@@ -309,9 +313,11 @@ function Toolbar(props: {
       case ELEMENTS.ADD_SHAPE_TOOL:
         updateShape(option);
         break;
-      case ELEMENTS.ADD_3D_SHAPE:
-        open3dModal();
-        break;
+      // case ELEMENTS.ADD_3D_SHAPE_TOOL:
+      //   console.log(option)
+      //   update3dShape(option);
+      //   open3dModal();
+      //   break;
       case ELEMENTS.ADD_STAMP_TOOL:
         updateStamp(option);
         break;
@@ -337,6 +343,9 @@ function Toolbar(props: {
 
       case ELEMENTS.ADD_SHAPE_TOOL:
         updateShape(specific);
+        break;
+      
+      default:
         break;
     }
   }

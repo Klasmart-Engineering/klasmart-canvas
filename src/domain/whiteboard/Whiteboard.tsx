@@ -10,6 +10,7 @@ import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardConta
 import { Provider } from 'react-redux'
 import store from './redux/store'
 import AuthMenu from '../../components/AuthMenu';
+import Canvas3d from './three/Canvas3d';
 
 const teacher = {
   allowClearAll: true,
@@ -89,6 +90,10 @@ function Whiteboard() {
               >
                 <button>Teacher</button>
               </WhiteboardCanvas>
+              <Canvas3d 
+                width={whiteboardWidth}
+                height={whiteboardHeight}
+              />
             </WhiteboardContainer>
           </div>
         </Provider>

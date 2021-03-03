@@ -109,4 +109,6 @@ export interface IWhiteboardContext {
   findObjectById: (id: string) => ICanvasObject | undefined;
   eventSerializer: any;
   eventController: any;
+  is3dActive: boolean,
+  set3dActive: (isIt: boolean) => void
 }

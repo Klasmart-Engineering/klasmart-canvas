@@ -110,6 +110,8 @@ export const WhiteboardProvider = ({
     closeUploadFileModal,
   } = useUploadFileModal(eventSerializer, userId as string);
 
+  const [ is3dModalOpen, set3dModalOpen] = useState(DEFAULT_VALUES.IS_3D_MODAL_OPEN);
+
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
   const [stamp, updateStamp] = useState(DEFAULT_VALUES.STAMP);
@@ -397,6 +399,8 @@ export const WhiteboardProvider = ({
     findObjectById,
     eventSerializer,
     eventController,
+    is3dModalOpen,
+    set3dModalOpen
   };
 
   return (
