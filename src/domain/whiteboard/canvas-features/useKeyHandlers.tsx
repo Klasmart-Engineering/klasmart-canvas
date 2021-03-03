@@ -52,6 +52,8 @@ export const useKeyHandlers = (
       const removeSelectedObjects = () => {
         let active = canvas.getActiveObject();
 
+        if ((active as fabric.IText).isEditing) return;
+
         canvas.discardActiveObject();
 
         if (active?.type === 'activeSelection') {
