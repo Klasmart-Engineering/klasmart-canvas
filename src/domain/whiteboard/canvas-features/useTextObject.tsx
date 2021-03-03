@@ -152,82 +152,88 @@ export const useTextObject = (
     const studentHasPermission =
       toolbarIsEnabled && permissions.text && textIsActive;
 
+    const mouseDown = (e: fabric.IEvent) => {
+      if (!e.pointer) return;
 
-      const mouseDown = (e: fabric.IEvent) => {
-        if (!e.pointer) return;
+      const { target, pointer } = e;
+      const type = target?.type;
 
-        const { target, pointer } = e;
-        const type = target?.type;
+      // If Click is made over anything except a text object
+      if (!target || (type !== 'textbox' && type !== 'i-text')) {
+        let text = new fabric.IText(' ', {
+          fontFamily: fontFamily,
+          fontSize: 30,
+          fontWeight: 400,
+          fill: fontColor,
+          fontStyle: 'normal',
+          top: pointer.y,
+          left: pointer.x,
+          cursorDuration: 500,
+          lockMovementX: true,
+          lockMovementY: true,
+          hasRotatingPoint: false,
+          hoverCursor: 'default',
+        });
 
-        // If Click is made over anything except a text object
-        if (!target || (type !== 'textbox' && type !== 'i-text')) {
-          let text = new fabric.IText(' ', {
-            fontFamily: fontFamily,
-            fontSize: 30,
-            fontWeight: 400,
-            fill: fontColor,
-            fontStyle: 'normal',
-            top: pointer.y,
-            left: pointer.x,
-            cursorDuration: 500,
-            lockMovementX: true,
-            lockMovementY: true,
-            hasRotatingPoint: false,
-            hoverCursor: 'default',
-          });
+        canvas.add(text);
+        canvas.setActiveObject(text);
+        text.enterEditing();
+        text?.hiddenTextarea?.focus();
 
+        // When text edition is out
+        text.on('editing:exited', () => {
+          const textCopy = text.text?.trim();
+          const toObject = text.toObject();
+
+          delete toObject.text;
+          delete toObject.type;
+
+          const clonedTextObj = JSON.parse(JSON.stringify(toObject));
+
+          clonedTextObj.id = `${userId}:${uuidv4()}`;
+          clonedTextObj.lockMovementX = true;
+          clonedTextObj.lockMovementY = true;
+          clonedTextObj.hasRotatingPoint = false;
+          clonedTextObj.hoverCursor = 'default';
+
+          // IText is converted to Textbox to could resise it
+          if (typeof textCopy === 'string') {
+            text = new fabric.Textbox(textCopy, clonedTextObj);
+          }
+
+          // IText object is removed
+          canvas.remove(canvas.getActiveObject());
+
+          // Textbox is added is setted like active object
           canvas.add(text);
           canvas.setActiveObject(text);
-          text.enterEditing();
-          text?.hiddenTextarea?.focus();
 
-          // When text edition is out
-          text.on('editing:exited', () => {
-            const textCopy = text.text?.trim();
-            const toObject = text.toObject();
-
-            delete toObject.text;
-            delete toObject.type;
-
-            const clonedTextObj = JSON.parse(JSON.stringify(toObject));
-
-            clonedTextObj.id = `${userId}:${uuidv4()}`;
-            clonedTextObj.lockMovementX = true;
-            clonedTextObj.lockMovementY = true;
-            clonedTextObj.hasRotatingPoint = false;
-            clonedTextObj.hoverCursor = 'default';
-
-            // IText is converted to Textbox to could resise it
-            if (typeof textCopy === 'string') {
-              text = new fabric.Textbox(textCopy, clonedTextObj);
-            }
-
-            // IText object is removed
+          // If Textbox is empty, it will be removed from canvas
+          if (text?.text?.replace(/\s/g, '').length === 0) {
             canvas.remove(canvas.getActiveObject());
+            return;
+          }
 
-            // Textbox is added is setted like active object
-            canvas.add(text);
-            canvas.setActiveObject(text);
-
-            // If Textbox is empty, it will be removed from canvas
+          /* If a created Textbox is modified,
+            it will be removed because a new Textbox object was be created */
+          text.on('modified', () => {
             if (text?.text?.replace(/\s/g, '').length === 0) {
               canvas.remove(canvas.getActiveObject());
-              return;
             }
-
-            /* If a created Textbox is modified,
-            it will be removed because a new Textbox object was be created */
-            text.on('modified', () => {
-              if (text?.text?.replace(/\s/g, '').length === 0) {
-                canvas.remove(canvas.getActiveObject());
-              }
-            });
           });
-        }
-      };
+        });
+      }
+    };
 
     if (teacherHasPermission || studentHasPermission) {
       canvas.on('mouse:down', mouseDown);
+    } else {
+      const active = canvas?.getActiveObject() as fabric.IText;
+
+      if (active && active.isEditing) {
+        canvas.discardActiveObject();
+        canvas.renderAll();
+      }
     }
 
     return () => {
