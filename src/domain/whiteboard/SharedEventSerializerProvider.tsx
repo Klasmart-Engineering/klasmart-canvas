@@ -143,7 +143,14 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     }
 
     let remoteEvents: PainterEvent[] = [];
+    const nonpersistentEventTypes = ['cursorPointer', 'moving'];
     const storeRemoteEvent = (payload: PainterEvent) => {
+      if (
+        nonpersistentEventTypes.includes(payload.type) ||
+        payload.id.split(':')[1] === 'cursor'
+      )
+        return;
+
       const length = remoteEvents.push(payload);
       console.log(`storing simulated persistance events: ${length}`);
 

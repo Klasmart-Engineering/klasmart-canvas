@@ -222,6 +222,7 @@ export class EventPainterController extends EventEmitter
     this.emit('textEdit', id, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({ id, eventType: 'textEdit', target: { ...target, id } })
     );
@@ -231,6 +232,7 @@ export class EventPainterController extends EventEmitter
     this.emit('added', id, objectType, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({
         id,
@@ -245,6 +247,7 @@ export class EventPainterController extends EventEmitter
     this.emit('moved', id, objectType, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({
         id,
@@ -259,6 +262,7 @@ export class EventPainterController extends EventEmitter
     this.emit('rotated', id, objectType, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({
         id,
@@ -273,6 +277,7 @@ export class EventPainterController extends EventEmitter
     this.emit('scaled', id, objectType, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({ id, objectType, eventType: 'scaled', target })
     );
@@ -282,6 +287,7 @@ export class EventPainterController extends EventEmitter
     this.emit('skewed', id, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(JSON.stringify({ id, eventType: 'skewed', target }));
   }
 
@@ -289,6 +295,7 @@ export class EventPainterController extends EventEmitter
     this.emit('colorChanged', id, objectType, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({ id, objectType, eventType: 'colorChanged', target })
     );
@@ -298,6 +305,7 @@ export class EventPainterController extends EventEmitter
     this.emit('modified', id, objectType, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({ id, objectType, target, eventType: 'modified' })
     );
@@ -307,6 +315,7 @@ export class EventPainterController extends EventEmitter
     this.emit('fontFamilyChanged', id, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({ id, target, eventType: 'fontFamilyChanged' })
     );
@@ -323,6 +332,7 @@ export class EventPainterController extends EventEmitter
     this.emit('removed', id, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(JSON.stringify({ id, target, eventType: 'removed' }));
   }
 
@@ -330,6 +340,7 @@ export class EventPainterController extends EventEmitter
     this.emit('moving', id, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(JSON.stringify({ id, target, eventType: 'moving' }));
   }
 
@@ -337,6 +348,7 @@ export class EventPainterController extends EventEmitter
     this.emit('setToolbarPermissions', id, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({ id, target, eventType: 'setToolbarPermissions' })
     );
@@ -350,6 +362,7 @@ export class EventPainterController extends EventEmitter
     this.emit('fontColorChanged', id, objectType, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({ id, objectType, eventType: 'fontColorChanged', target })
     );
@@ -363,6 +376,7 @@ export class EventPainterController extends EventEmitter
     this.emit('lineWidthChanged', id, objectType, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({ id, objectType, eventType: 'lineWidthChanged', target })
     );
@@ -372,6 +386,7 @@ export class EventPainterController extends EventEmitter
     this.emit('pointer', id, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(JSON.stringify({ id, eventType: 'pointer', target }));
   }
 
@@ -379,6 +394,7 @@ export class EventPainterController extends EventEmitter
     this.emit('cursorPointer', id, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(JSON.stringify({ id, eventType: 'cursorPointer', target }));
   }
 
@@ -386,6 +402,7 @@ export class EventPainterController extends EventEmitter
     this.emit('brushTypeChanged', id, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({ id, eventType: 'brushTypeChanged', target })
     );
@@ -395,6 +412,7 @@ export class EventPainterController extends EventEmitter
     this.emit('backgroundColorChanged', id, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({ id, eventType: 'backgroundColorChanged', target })
     );

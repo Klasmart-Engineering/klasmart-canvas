@@ -369,6 +369,12 @@ const useSynchronizedAdded = (
 
         canvas?.add(res);
         canvas?.renderAll();
+
+        if (userId === 'student2') {
+          console.log(canvas);
+          console.log(res);
+          console.log(canvas?.getObjects());
+        }
       } else if (
         (objectType === 'path' || objectType === 'polygon') &&
         target.name

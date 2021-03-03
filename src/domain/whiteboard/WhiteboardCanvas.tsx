@@ -193,6 +193,10 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     [isLocalObject, userId]
   );
 
+  useEffect(() => {
+    console.log(userId, canvas);
+  }, [canvas, userId]);
+
   /**
    * Reset the canvas state in case the event controller will replay all events.
    */
@@ -216,7 +220,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
       eventController.removeListener('aboutToReplayAll', reset);
     };
   }, [canvas, eventController, generatedBy]);
-
 
   // useEffects and logic for manage the object manipulation in canvas
   useObjectManipulation(
@@ -373,7 +376,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (!canvasActions && canvas) {
       updateCanvasActions(actions);
     }
-
   }, [actions, updateCanvasActions, canvas, canvasActions]);
 
   return (

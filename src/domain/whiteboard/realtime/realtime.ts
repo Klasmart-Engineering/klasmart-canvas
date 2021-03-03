@@ -114,8 +114,8 @@ export class Realtime {
       });
     }
 
-    let fabricCanvas = canvas.getElement();
-    fabricCanvas.parentNode?.insertBefore(this.canvas, fabricCanvas);
+    let fabricCanvas = canvas?.getElement();
+    fabricCanvas?.parentNode?.insertBefore(this.canvas, fabricCanvas);
     this.context = this.canvas.getContext('2d');
     this.color = this.hexToRgb(color);
     this.lineWidth = lineWidth;
