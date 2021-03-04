@@ -104,6 +104,8 @@ const loadFromJSON = (
         });
       } else if (target && !(target as ICanvasObject).backgroundImageEditable) {
         setBackgroundImageIsPartialErasable(false);
+        // @ts-ignore
+        canvas?.setBackgroundImage(0, canvas.renderAll.bind(canvas));
         setLocalImage((target as ICanvasObject).backgroundImage as string);
         canvas?.trigger('background:modified', null);
       } else {
