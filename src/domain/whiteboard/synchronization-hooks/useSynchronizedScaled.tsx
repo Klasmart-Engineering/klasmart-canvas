@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useContext } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
 import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
@@ -14,6 +14,7 @@ import { Group } from 'fabric/fabric-impl';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { PaintBrush } from '../brushes/classes/paintBrush';
 import { ChalkBrush } from '../brushes/classes/chalkBrush';
+import { WhiteboardContext } from '../WhiteboardContext';
 
 const useSynchronizedScaled = (
   canvas: fabric.Canvas | undefined,
@@ -22,6 +23,7 @@ const useSynchronizedScaled = (
   shouldHandleRemoteEvent: (id: string) => boolean,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
+  const { perfectShapeIsActive } = useContext(WhiteboardContext);
   const {
     state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
@@ -494,6 +496,12 @@ const useSynchronizedScaled = (
     undoRedoDispatch,
     userId,
   ]);
+
+  useEffect(() => {
+    if (perfectShapeIsActive) {
+      canvas?.renderAll();
+    }
+  }, [canvas, perfectShapeIsActive]);
 };
 
 export default useSynchronizedScaled;

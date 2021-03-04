@@ -1,7 +1,11 @@
-import { useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
 import { IRealtimeData, Realtime } from '../realtime/realtime';
+import { WhiteboardContext } from '../WhiteboardContext';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 
 /**
  * Handles laser pointer events.
@@ -15,9 +19,10 @@ const useSynchronizedRealtime = (
   userId: string
 ) => {
   const {
-    state: { eventController },
+    state: { eventController, eventSerializer },
   } = useSharedEventSerializer();
 
+  const { perfectShapeIsActive } = useContext(WhiteboardContext);
   let rt: Realtime | null;
   rt = new Realtime(
     canvas?.getWidth() as number,
@@ -173,6 +178,46 @@ const useSynchronizedRealtime = (
       }
     };
   }, [canvas, eventController, shouldHandleRemoteEvent, rt]);
+
+  useEffect(() => {
+    if (perfectShapeIsActive) {
+      const currentShape = canvas
+        ?.getObjects()
+        .reverse()
+        .find((obj: TypedShape) => {
+          return obj.shapeType === 'shape';
+        });
+      if (currentShape) {
+        const { width, height } = currentShape;
+        console.log(currentShape);
+
+        if (Number(width) > Number(height)) {
+          currentShape.set({
+            height: width,
+          });
+        } else {
+          currentShape.set({
+            width: height,
+          });
+        }
+        canvas?.renderAll();
+
+        const objectEvent = {
+          id: userId,
+          target: {
+            coordinates: [{ x: 0, y: 0 }],
+            lineWidth: currentShape.strokeWidth,
+            color: currentShape.stroke,
+            id: (currentShape as ICanvasObject).id,
+            type: currentShape.name,
+            shape: currentShape,
+            eventType: 'scaled',
+          },
+        };
+        eventSerializer.push('moving', objectEvent as ObjectEvent);
+      }
+    }
+  }, [canvas, eventSerializer, perfectShapeIsActive, userId]);
 };
 
 export default useSynchronizedRealtime;

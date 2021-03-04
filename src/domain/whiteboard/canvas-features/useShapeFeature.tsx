@@ -222,13 +222,15 @@ export const useShapeFeature = (
     /*
       Hide/Show resize middle controls in local shapes.
       When perfectShapeIsActive controls will be hidden
-      and when not will be showed
+      and when not will be shown
     */
     canvas.forEachObject((object: ICanvasObject) => {
       if (isLocalShape(object as TypedShape)) {
         object.set('lockUniScaling', perfectShapeIsActive);
       }
     });
+
+    canvas.renderAll();
 
     // Resets active shape like perfect
     if (activeShapeCanBePerfectSized()) {
