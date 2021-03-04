@@ -148,6 +148,12 @@ export class PartialErase {
       this.generateBackground();
 
       this.canvas.on('background:modified', (e) => {
+       
+        if (!e || !(e as unknown as ICanvasObject).id) {
+          this.generateBackground(null);
+          return;
+        }
+
         // @ts-ignore
         const src = (e as unknown as fabric.Image)?.getElement ? e : null;
         this.generateBackground(src);
@@ -194,13 +200,17 @@ export class PartialErase {
 
     let background = new Image();
 
-    if (!src) {
+    if (!src && (this.canvas.backgroundImage as fabric.Image)?.getElement) {
+      this.hasBackground = true;
       background.src = (this.canvas.backgroundImage as fabric.Image)?.getElement().currentSrc;
-    } else {
+    } else if (src && src.getElement) {
+      this.hasBackground = true;
       background.src = src.getElement().currentSrc;
+    } else {
+      this.hasBackground = false;
+      return;
     }
 
-    // Make sure the image is loaded first otherwise nothing will draw.
     background.onload = () => {
       const ctx = this.bgRawCanvas.getContext('2d');
       let width;
