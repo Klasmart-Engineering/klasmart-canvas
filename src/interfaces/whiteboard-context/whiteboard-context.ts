@@ -126,5 +126,7 @@ export interface IWhiteboardContext {
   activeTool: string | null;
   setActiveTool: (arg: string | null) => void;
   is3dActive: boolean,
-  set3dActive: (isIt: boolean) => void
+  set3dActive: (active: boolean) => void
+  shape3d: string;
+  update3dShape: (shape: string) => void;
 }
