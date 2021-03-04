@@ -78,7 +78,7 @@ export const useCopy = (
   let copied: ICanvasObject | null = null;
   let target: ICanvasObject | null = null;
   let unevented: ICanvasObject[] = [];
-  let clipboard: fabric.Group;
+  let clipboard: fabric.Group | null;
 
   const keyDownHandler = async (e: KeyboardEvent) => {
     const event = e as ICanvasKeyboardEvent;
@@ -86,6 +86,7 @@ export const useCopy = (
       if((canvas.getActiveObject() as fabric.Group)?._objects?.length) {
         canvas.getActiveObject().clone((cloneGroup: fabric.Group) => {
         	clipboard = cloneGroup;
+          copied = null;
         }, CANVAS_OBJECT_PROPS);
       } else {
         canvas?.getActiveObject()?.clone((cloned: ICanvasObject) => {
@@ -96,6 +97,7 @@ export const useCopy = (
           });
 
           copied = cloned;
+          clipboard = null;
         }, CANVAS_OBJECT_PROPS);
       }
     }
