@@ -36,6 +36,7 @@ import redo from '../../assets/icons/toolbar/redo.svg';
 import clear from '../../assets/icons/toolbar/clear.svg';
 import screenshot from '../../assets/icons/toolbar/screenshot.svg';
 import share from '../../assets/icons/toolbar/share.svg';
+import threeDShape from '../../assets/icons/toolbar/3d.svg';
 import cubeShape from '../../assets/icons/toolbar/cube.svg';
 import sphereShape from '../../assets/icons/toolbar/sphere.svg';
 import cylinderShape from '../../assets/icons/toolbar/cylinder.svg';
@@ -494,80 +495,87 @@ const toolsSection: IBasicToolbarSection = {
         },
       ],
     },
+    // {
+    //   id: 'three_scene',
+    //   title: 'Activate 3d',
+    //   iconSrc: threeDShape,
+    //   iconName: '3D',
+    // },
     {
       id: 'add_3d_shape',
-      title: 'Add 3d Objects',
-      iconSrc: cubeShape,
-      iconName: 'Cube',
+      options: [
+        {
+          id: 'three_scene',
+          title: 'Activate 3d',
+          iconSrc: threeDShape,
+          iconName: '3D',
+          value: 'three_scene',
+        },
+        {
+          id: 'cube_shape',
+          value: 'cube',
+          title: 'Cube Shape',
+          iconSrc: cubeShape,
+          iconName: 'Cube',
+        },
+        {
+          id: 'rectangularPrism_shape',
+          value: 'rectangularPrism',
+          title: 'Rectangular Prism Shape',
+          iconSrc: rectangularPrismShape,
+          iconName: 'Rectangular Prism',
+        },
+        {
+          id: 'triangularPrism_shape',
+          value: 'triangularPrism',
+          title: 'Triangular Prism Shape',
+          iconSrc: triangularPrismShape,
+          iconName: 'Triangular Prism',
+        },
+        {
+          id: 'sphere_shape',
+          value: 'sphere',
+          title: 'Sphere Shape',
+          iconSrc: sphereShape,
+          iconName: 'Sphere',
+        },
+        {
+          id: 'cylinder_shape',
+          value: 'cylinder',
+          title: 'Cylinder Shape',
+          iconSrc: cylinderShape,
+          iconName: 'Cylinder',
+        },
+        {
+          id: 'pyramid_shape',
+          value: 'pyramid',
+          title: 'PyramidTriangleBased Shape',
+          iconSrc: triangleBasedPyramidShape,
+          iconName: 'PyramidTriangleBased',
+        },
+        {
+          id: 'squareBasedPyramid_shape',
+          value: 'squareBasedPyramid',
+          title: 'Square Based Pyramid Shape',
+          iconSrc: squareBasedPyramidShape,
+          iconName: 'Square Based Pyramid',
+        },
+        {
+          id: 'cone_shape',
+          value: 'cone',
+          title: 'Cone Shape',
+          iconSrc: coneShape,
+          iconName: 'Cone',
     },
-    // {
-    //   id: 'add_3d_shape',
-    //   options: [
-    //     {
-    //       id: 'cube_shape',
-    //       value: 'cube',
-    //       title: 'Cube Shape',
-    //       iconSrc: cubeShape,
-    //       iconName: 'Cube',
-    //     },
-    //     {
-    //       id: 'rectangularPrism_shape',
-    //       value: 'rectangularPrism',
-    //       title: 'Rectangular Prism Shape',
-    //       iconSrc: rectangularPrismShape,
-    //       iconName: 'Rectangular Prism',
-    //     },
-    //     {
-    //       id: 'triangularPrism_shape',
-    //       value: 'triangularPrism',
-    //       title: 'Triangular Prism Shape',
-    //       iconSrc: triangularPrismShape,
-    //       iconName: 'Triangular Prism',
-    //     },
-    //     {
-    //       id: 'sphere_shape',
-    //       value: 'sphere',
-    //       title: 'Sphere Shape',
-    //       iconSrc: sphereShape,
-    //       iconName: 'Sphere',
-    //     },
-    //     {
-    //       id: 'cylinder_shape',
-    //       value: 'cylinder',
-    //       title: 'Cylinder Shape',
-    //       iconSrc: cylinderShape,
-    //       iconName: 'Cylinder',
-    //     },
-    //     {
-    //       id: 'pyramid_shape',
-    //       value: 'pyramid',
-    //       title: 'PyramidTriangleBased Shape',
-    //       iconSrc: triangleBasedPyramidShape,
-    //       iconName: 'PyramidTriangleBased',
-    //     },
-    //     {
-    //       id: 'squareBasedPyramid_shape',
-    //       value: 'squareBasedPyramid',
-    //       title: 'Square Based Pyramid Shape',
-    //       iconSrc: squareBasedPyramidShape,
-    //       iconName: 'Square Based Pyramid',
-    //     },
-    //     {
-    //       id: 'cone_shape',
-    //       value: 'cone',
-    //       title: 'Cone Shape',
-    //       iconSrc: coneShape,
-    //       iconName: 'Cone',
-    // },
-    //   {
-    //     id: 'torus_shape',
-    //     value: 'torus',
-    //     title: 'Torus Shape',
-    //     iconSrc: torusShape,
-    //     iconName: 'Torus',
-    //   }
-    // ],
-    // },    
+      {
+        id: 'torus_shape',
+        value: 'torus',
+        title: 'Torus Shape',
+        iconSrc: torusShape,
+        iconName: 'Torus',
+      }
+    ],
+    },    
     // Stamps - ToolbarSelector
     {
       id: 'add_stamp',

@@ -10,5 +10,6 @@ export const DEFAULT_VALUES = {
   SHAPE: 'rectangle',
   SHAPE_COLOR: '#000000',
   STAMP: 'yellowStar',
-  IS_3D_MODAL_OPEN: false
+  IS_3D_ACTIVE: false,
+  SHAPE_3D: 'cube'
 };

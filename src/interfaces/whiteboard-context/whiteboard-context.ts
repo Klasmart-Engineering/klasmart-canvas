@@ -110,5 +110,7 @@ export interface IWhiteboardContext {
   eventSerializer: any;
   eventController: any;
   is3dActive: boolean,
-  set3dActive: (isIt: boolean) => void
+  set3dActive: (active: boolean) => void
+  shape3d: string;
+  update3dShape: (shape: string) => void;
 }

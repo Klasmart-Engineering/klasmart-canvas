@@ -8,6 +8,7 @@ import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
+import { use3dShape } from './hooks/use3dShape';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
 import { usePointerEvents } from './hooks/usePointerEvents';
 import { useFontColor } from './hooks/useFontColor';
@@ -110,7 +111,8 @@ export const WhiteboardProvider = ({
     closeUploadFileModal,
   } = useUploadFileModal(eventSerializer, userId as string);
 
-  const [ is3dModalOpen, set3dModalOpen] = useState(DEFAULT_VALUES.IS_3D_MODAL_OPEN);
+  const [ is3dActive, set3dActive] = useState(DEFAULT_VALUES.IS_3D_ACTIVE);
+  const { shape3d, update3dShape } = use3dShape();
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
@@ -399,8 +401,10 @@ export const WhiteboardProvider = ({
     findObjectById,
     eventSerializer,
     eventController,
-    is3dModalOpen,
-    set3dModalOpen
+    is3dActive,
+    set3dActive,
+    shape3d,
+    update3dShape
   };
 
   return (
