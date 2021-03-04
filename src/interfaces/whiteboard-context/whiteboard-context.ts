@@ -79,6 +79,10 @@ export interface IWhiteboardContext {
   activeCanvas: MutableRefObject<string | null>;
   perfectShapeIsActive: boolean;
   updatePerfectShapeIsActive: (active: boolean) => void;
+  shapeInProgress: boolean;
+  updateShapeInProgress: (value: boolean) => void;
+  pointerPosition: { x: number; y: number };
+  updatePointerPosition: (value: { x: number; y: number }) => void;
   perfectShapeIsAvailable: () => boolean;
   partialEraseIsActive: boolean;
   updatePartialEraseIsActive: (status: boolean) => void;

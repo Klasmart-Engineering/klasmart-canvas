@@ -34,7 +34,7 @@ export const useCanvasActions = (
   canvasId: string,
   eventSerializer: any,
   userId: string,
-  ignoreDirectActions?: boolean,
+  ignoreDirectActions?: boolean
 ) => {
   const {
     shapeIsActive,
@@ -62,6 +62,8 @@ export const useCanvasActions = (
     setIsBackgroundImage,
     setBackgroundImageIsPartialErasable,
     setLocalImage,
+    updateShapeInProgress,
+    updatePointerPosition,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { changePenColorSync } = useSynchronization(userId as string);
@@ -242,7 +244,9 @@ export const useCanvasActions = (
           shapeToAdd,
           brushType,
           setShapeInProgress,
-          eventSerializer
+          eventSerializer,
+          updateShapeInProgress,
+          updatePointerPosition
         )
       );
       canvas?.on(
@@ -257,7 +261,8 @@ export const useCanvasActions = (
           penColor,
           setShapeInProgress,
           eventSerializer,
-          dispatch
+          dispatch,
+          updateShapeInProgress
         )
       );
     },

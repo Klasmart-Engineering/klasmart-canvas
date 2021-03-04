@@ -149,7 +149,6 @@ export const useKeyHandlers = (
         updatePerfectShapeIsActive(true);
       }
     },
-    // eslinst-disable-next-line react-hooks/exhaustive-deps
     [
       activeCanvas,
       allToolbarIsEnabled,
@@ -178,7 +177,6 @@ export const useKeyHandlers = (
         perfectShapeIsActive &&
         window.innerWidth > 768
       ) {
-        console.log('key up');
         updatePerfectShapeIsActive(false);
       }
     },

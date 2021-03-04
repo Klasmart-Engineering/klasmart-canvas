@@ -42,6 +42,8 @@ import { usePointer } from './hooks/usePointer';
 import { useBackgroundColor } from './hooks/useBackgroundColor';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
+import { useShapeInProgress } from './hooks/useShapeInProgress';
+import { usePointerPosition } from './hooks/usePointerPosition';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -95,6 +97,8 @@ export const WhiteboardProvider = ({
     perfectShapeIsActive,
     updatePerfectShapeIsActive,
   } = usePerfectShapeIsActive();
+  const { shapeInProgress, updateShapeInProgress } = useShapeInProgress();
+  const { pointerPosition, updatePointerPosition } = usePointerPosition();
 
   const {
     shapesAreSelectable,
@@ -369,6 +373,10 @@ export const WhiteboardProvider = ({
     updateImagePopupIsOpen,
     activeCanvas,
     perfectShapeIsAvailable,
+    shapeInProgress,
+    updateShapeInProgress,
+    pointerPosition,
+    updatePointerPosition,
     partialEraseIsActive,
     updatePartialEraseIsActive,
     openUploadFileModal,

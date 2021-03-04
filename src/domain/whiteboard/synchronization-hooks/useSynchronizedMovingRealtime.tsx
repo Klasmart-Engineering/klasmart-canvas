@@ -22,7 +22,10 @@ const useSynchronizedRealtime = (
     state: { eventController, eventSerializer },
   } = useSharedEventSerializer();
 
-  const { perfectShapeIsActive } = useContext(WhiteboardContext);
+  const { perfectShapeIsActive, shapeInProgress, pointerPosition } = useContext(
+    WhiteboardContext
+  );
+
   let rt: Realtime | null;
   rt = new Realtime(
     canvas?.getWidth() as number,
@@ -67,7 +70,6 @@ const useSynchronizedRealtime = (
             target.shape.strokeWidth
           );
         } else if (rt && !rt.isInitiated() && target.type === 'circle') {
-          console.log(userId, id);
           rt.init(
             canvas as fabric.Canvas,
             'circle',
@@ -179,45 +181,65 @@ const useSynchronizedRealtime = (
     };
   }, [canvas, eventController, shouldHandleRemoteEvent, rt]);
 
+  /**
+   * Updates current shape when is in creation and perfectShapeIsActive changes
+   */
   useEffect(() => {
+    if (!shapeInProgress) return;
+
+    const currentShape = canvas
+      ?.getObjects()
+      .reverse()
+      .find((obj: TypedShape) => {
+        return obj.shapeType === 'shape';
+      });
+
+    if (!currentShape) return;
+
     if (perfectShapeIsActive) {
-      const currentShape = canvas
-        ?.getObjects()
-        .reverse()
-        .find((obj: TypedShape) => {
-          return obj.shapeType === 'shape';
+      const { width, height } = currentShape;
+      console.log(currentShape);
+
+      if (Number(width) > Number(height)) {
+        currentShape.set({
+          height: width,
         });
-      if (currentShape) {
-        const { width, height } = currentShape;
-        console.log(currentShape);
-
-        if (Number(width) > Number(height)) {
-          currentShape.set({
-            height: width,
-          });
-        } else {
-          currentShape.set({
-            width: height,
-          });
-        }
-        canvas?.renderAll();
-
-        const objectEvent = {
-          id: userId,
-          target: {
-            coordinates: [{ x: 0, y: 0 }],
-            lineWidth: currentShape.strokeWidth,
-            color: currentShape.stroke,
-            id: (currentShape as ICanvasObject).id,
-            type: currentShape.name,
-            shape: currentShape,
-            eventType: 'scaled',
-          },
-        };
-        eventSerializer.push('moving', objectEvent as ObjectEvent);
+      } else {
+        currentShape.set({
+          width: height,
+        });
       }
+    } else {
+      const width = Math.abs(pointerPosition.x - Number(currentShape.left));
+      const height = Math.abs(pointerPosition.y - Number(currentShape.top));
+
+      currentShape.set({ width, height });
     }
-  }, [canvas, eventSerializer, perfectShapeIsActive, userId]);
+
+    canvas?.renderAll();
+
+    const objectEvent = {
+      id: userId,
+      target: {
+        coordinates: [{ x: 0, y: 0 }],
+        lineWidth: currentShape.strokeWidth,
+        color: currentShape.stroke,
+        id: (currentShape as ICanvasObject).id,
+        type: currentShape.name,
+        shape: currentShape,
+        eventType: 'scaled',
+      },
+    };
+    eventSerializer.push('moving', objectEvent as ObjectEvent);
+  }, [
+    canvas,
+    eventSerializer,
+    perfectShapeIsActive,
+    pointerPosition.x,
+    pointerPosition.y,
+    shapeInProgress,
+    userId,
+  ]);
 };
 
 export default useSynchronizedRealtime;
