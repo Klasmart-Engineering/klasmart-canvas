@@ -217,7 +217,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
   }, [canvas, eventController, generatedBy]);
 
-
   // useEffects and logic for manage the object manipulation in canvas
   useObjectManipulation(
     canvas as fabric.Canvas,
@@ -373,7 +372,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (!canvasActions && canvas) {
       updateCanvasActions(actions);
     }
-
   }, [actions, updateCanvasActions, canvas, canvasActions]);
 
   return (
@@ -386,6 +384,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
         localImage={localImage}
         width={width}
         height={height}
+        backgroundColor={localBackground ? backgroundColor : undefined}
       ></CanvasDownloadConfirm>
       <canvas
         width={pixelWidth}
