@@ -230,7 +230,11 @@ export const changeBrushTypeAction = async (
       const payload = {
         id: String((newPath as ICanvasObject).id),
         type: newPath.type,
-        target: (newPath as ICanvasBrush).basePath,
+        target: {
+          top: newPath.top,
+          left: newPath.left,
+          basePath: (newPath as ICanvasBrush).basePath,
+        },
       } as ObjectEvent;
 
       eventSerializer?.push('brushTypeChanged', payload);
