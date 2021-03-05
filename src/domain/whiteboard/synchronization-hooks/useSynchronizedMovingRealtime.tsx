@@ -3,7 +3,6 @@ import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
 import { IRealtimeData, Realtime } from '../realtime/realtime';
 import { WhiteboardContext } from '../WhiteboardContext';
-import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 
@@ -35,6 +34,12 @@ const useSynchronizedRealtime = (
 
   /** Register and handle remote moved event. */
   useEffect(() => {
+    // let rt: Realtime | null;
+    // rt = new Realtime(
+    //   canvas?.getWidth() as number,
+    //   canvas?.getHeight() as number,
+    //   userId
+    // );
     /**
      * Handles moving event for objects. Receives event.
      * @param id User ID. Used for determining if event should be handled.
@@ -179,7 +184,7 @@ const useSynchronizedRealtime = (
         rt = null;
       }
     };
-  }, [canvas, eventController, shouldHandleRemoteEvent, rt]);
+  }, [canvas, eventController, userId]);
 
   /**
    * Updates current shape when is in creation and perfectShapeIsActive changes
@@ -198,7 +203,6 @@ const useSynchronizedRealtime = (
 
     if (perfectShapeIsActive) {
       const { width, height } = currentShape;
-      console.log(currentShape);
 
       if (Number(width) > Number(height)) {
         currentShape.set({
@@ -221,13 +225,8 @@ const useSynchronizedRealtime = (
     const objectEvent = {
       id: userId,
       target: {
-        coordinates: [{ x: 0, y: 0 }],
-        lineWidth: currentShape.strokeWidth,
-        color: currentShape.stroke,
-        id: (currentShape as ICanvasObject).id,
         type: currentShape.name,
         shape: currentShape,
-        eventType: 'scaled',
       },
     };
     eventSerializer.push('moving', objectEvent as ObjectEvent);

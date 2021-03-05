@@ -211,11 +211,11 @@ export const useCanvasActions = (
       }
 
       // If shape creation was interrupted by a change in perfectShapeIsActive
-      if (shapeInProgress) {
-        let startPoint = shapeInProgress.startPoint;
-        store.dispatch({ type: 'SET_TRUE' });
-        store.dispatch({ type: 'SET_START_POINT', payload: startPoint });
-      }
+      // if (shapeInProgress) {
+      //   let startPoint = shapeInProgress.startPoint;
+      //   store.dispatch({ type: 'SET_TRUE' });
+      //   store.dispatch({ type: 'SET_START_POINT', payload: startPoint });
+      // }
 
       const activeObject = canvas?.getActiveObject();
 
@@ -562,16 +562,17 @@ export const useCanvasActions = (
       canvas?.off('path:created');
     };
   }, [
-    canvas,
-    eraserIsActive,
-    eraseType,
-    partialEraseIsActive,
     allToolbarIsEnabled,
-    userId,
-    lineWidth,
-    eventSerializer,
+    canvas,
     dispatch,
     eraseObject,
+    eraseType,
+    eraserIsActive,
+    eventSerializer,
+    ignoreDirectActions,
+    lineWidth,
+    partialEraseIsActive,
+    userId,
   ]);
 
   /**
