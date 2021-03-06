@@ -390,6 +390,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
         localImage={localImage}
         width={width}
         height={height}
+        backgroundColor={localBackground ? backgroundColor : undefined}
       ></CanvasDownloadConfirm>
       <canvas
         width={pixelWidth}

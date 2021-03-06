@@ -30,6 +30,8 @@ export interface ICanvasObject extends fabric.Object {
   isActiveErase?: boolean;
   backgroundImage?: string | File;
   stampObject?: boolean;
+  translateX?: number;
+  translateY?: number;
   cursorPointer?: IPointerType;
   rawData?: any;
 }
