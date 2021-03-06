@@ -3,7 +3,7 @@ import { useBackgroundColor } from './useBackgroundColor';
 
 test('should set background color from initial value', () => {
   const { result } = renderHook(() => useBackgroundColor());
-  expect(result.current.backgroundColor).toBe('#000000');
+  expect(result.current.backgroundColor).toBe('#ffffff');
   expect(typeof result.current.updateBackgroundColor).toBe('function');
   act(() => {
     result.current.updateBackgroundColor('green');
