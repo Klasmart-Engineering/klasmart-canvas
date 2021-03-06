@@ -415,6 +415,14 @@ const useSynchronizedAdded = (
             });
           }
 
+          if (
+            canvas?.getObjects().find((obj: ICanvasObject) => {
+              return obj.id === (data as ICanvasObject).id;
+            })
+          ) {
+            return;
+          }
+
           canvas?.add(data);
           canvas?.renderAll();
 
@@ -431,7 +439,6 @@ const useSynchronizedAdded = (
           try {
             const gif = await fabricGif(`${target.src} `, 200, 200, 2000);
             gif.set({ top: 0, left: 0, selectable: false, evented: false });
-            gif.id = id;
             canvas?.add(gif);
 
             fabric.util.requestAnimFrame(function render() {
@@ -514,7 +521,6 @@ const useSynchronizedAdded = (
     shouldHandleRemoteEvent,
     undoRedoDispatch,
     userId,
-    setLocalImage,
   ]);
 };
 
