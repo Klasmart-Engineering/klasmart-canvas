@@ -153,18 +153,18 @@ export const useKeyHandlers = (
         updatePerfectShapeIsActive(true);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslinst-disable-next-line react-hooks/exhaustive-deps
     [
-      permissions.undoRedo,
+      activeCanvas,
       allToolbarIsEnabled,
-      perfectShapeIsActive,
-      perfectShapeIsAvailable,
       canvas,
       eventSerializer,
-      activeCanvas,
       instanceId,
-      undo,
+      perfectShapeIsActive,
+      perfectShapeIsAvailable,
+      permissions.undoRedo,
       redo,
+      undo,
       updatePerfectShapeIsActive,
     ]
   );
@@ -182,6 +182,7 @@ export const useKeyHandlers = (
         perfectShapeIsActive &&
         window.innerWidth > 768
       ) {
+        console.log('key up');
         updatePerfectShapeIsActive(false);
       }
     },

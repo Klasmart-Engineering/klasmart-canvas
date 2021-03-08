@@ -16,9 +16,13 @@ import { PenBrush } from '../../brushes/classes/penBrush';
 import { setBasePathInNormalBrushes } from '../../brushes/utils/setBasePathInNormalBrushes';
 import { ObjectEvent } from '../../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET } from '../../reducers/undo-redo';
-import store from "../../redux/store";
-import { setShapeSize } from "../shapeActionUtils";
-import { requiredEllipseProps, requiredPencilDashedProps, requiredProps } from '../shapeProps';
+import store from '../../redux/store';
+import { setShapeSize } from '../shapeActionUtils';
+import {
+  requiredEllipseProps,
+  requiredPencilDashedProps,
+  requiredProps,
+} from '../shapeProps';
 
 /**
  * Mouse up event handler
@@ -41,11 +45,12 @@ export const mouseUpAction = (
   brushType: string,
   lineWidth: number,
   penColor: string,
-  setShapeInProgress: React.Dispatch<React.SetStateAction<IShapeInProgress | null | undefined>>,
+  setShapeInProgress: React.Dispatch<
+    React.SetStateAction<IShapeInProgress | null | undefined>
+  >,
   eventSerializer: PaintEventSerializer,
-  dispatch: (action: CanvasAction) => void,
-) => (async (e: fabric.IEvent) => {
-
+  dispatch: (action: CanvasAction) => void
+) => async (e: fabric.IEvent) => {
   let shape = store.getState().canvasBoardState.shape;
   if (!shape || !store.getState().canvasBoardState.resize) {
     return;
@@ -53,7 +58,16 @@ export const mouseUpAction = (
 
   let startPoint = store.getState().canvasBoardState.startPoint;
 
-  const size = setShapeSize(shape, e, perfectShapeIsActive, startPoint, shapeToAdd, brushType, canvas, userId);
+  const size = setShapeSize(
+    shape,
+    e,
+    perfectShapeIsActive,
+    startPoint,
+    shapeToAdd,
+    brushType,
+    canvas,
+    userId
+  );
   const id = `${userId}:${uuidv4()}`;
   store.dispatch({ type: 'SET_FALSE' });
 
@@ -99,8 +113,7 @@ export const mouseUpAction = (
           };
         };
 
-        const original =
-          shapePoints[shapeName as keyof IShapePointsIndex];
+        const original = shapePoints[shapeName as keyof IShapePointsIndex];
 
         const points: ICoordinate[] = original.points.map((point) => {
           return setScaledPoint(point);
@@ -186,6 +199,7 @@ export const mouseUpAction = (
         ((newPath as ICanvasObject) as ICanvasShapeBrush).set({
           id: id,
           name: shapeName,
+          shapeType: 'shape',
           top: shape.top,
           left: shape.left,
           angle: shape.angle,
@@ -292,4 +306,4 @@ export const mouseUpAction = (
 
     store.dispatch({ type: 'SET_SHAPE_NULL' });
   }
-});
+};

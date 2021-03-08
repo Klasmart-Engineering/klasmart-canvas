@@ -74,6 +74,7 @@ export type PayloadTarget =
   | { type: string; svg: string }
   | IBrushSyncTarget
   | IStampSyncTarget
+  | IShapeCreationTarget
   | { src: string }
   | string
   | IShapeCreationTarget;
