@@ -22,6 +22,7 @@ type Props = {
   children?: ReactChild | ReactChildren | null | Element[];
   simulateNetworkSynchronization?: boolean;
   simulatePersistence?: boolean;
+  canvasAreCreated?: boolean;
 };
 
 interface IEventSerializerState {
@@ -46,6 +47,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
   children,
   simulateNetworkSynchronization,
   simulatePersistence,
+  canvasAreCreated,
 }: Props): JSX.Element => {
   const [eventSerializer] = useState<PaintEventSerializer>(
     new PaintEventSerializer(NormalizeCoordinates)
@@ -104,10 +106,10 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
 
   // NOTE: Request fetching all events.
   const refetchEvents = useCallback(() => {
-    if (!eventSerializer || !eventController) return;
+    if (!eventSerializer || !eventController || !canvasAreCreated) return;
 
     eventController.requestRefetch();
-  }, [eventController, eventSerializer]);
+  }, [canvasAreCreated, eventController, eventSerializer]);
 
   // NOTE: This effect listens for refetch request
   // and resubmits all events when it's invoked.
@@ -124,7 +126,12 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     return () => {
       eventController.removeListener('refetch', refetchRequestHandler);
     };
-  }, [eventController, sendAllPersistentEvents, simulatePersistence]);
+  }, [
+    canvasAreCreated,
+    eventController,
+    sendAllPersistentEvents,
+    simulatePersistence,
+  ]);
 
   // NOTE: This effect sets up simulated persistance. This would simulate
   // events being sent from the server when the user reloads the page.

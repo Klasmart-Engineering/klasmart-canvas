@@ -65,6 +65,8 @@ import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBa
  * originating from userId's in this list.
  * @field scaleMode: Determines how the canvas should scale
  * if parent element doesn't match aspect ratio.
+ * @field onCanvasCreated: Is called when canvas changes from undefined
+ * to fabric canvas element
  */
 export type Props = {
   children?: ReactChild | ReactChildren | null;
@@ -80,6 +82,7 @@ export type Props = {
   display?: boolean;
   permissions: IPermissions;
   updatePermissions: (tool: string, payload: boolean) => void;
+  onCanvasCreated: (status: boolean) => void;
 };
 
 const WhiteboardCanvas: FunctionComponent<Props> = ({
@@ -94,6 +97,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   display,
   permissions,
   updatePermissions,
+  onCanvasCreated,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
   const [wrapper, setWrapper] = useState<HTMLElement>();
@@ -193,9 +197,14 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     [isLocalObject, userId]
   );
 
+  /**
+   * Sends the status of the current canvas to the parent
+   */
   useEffect(() => {
-    console.log(userId, canvas);
-  }, [canvas, userId]);
+    if (onCanvasCreated) {
+      onCanvasCreated(!!canvas);
+    }
+  }, [canvas, onCanvasCreated]);
 
   /**
    * Reset the canvas state in case the event controller will replay all events.

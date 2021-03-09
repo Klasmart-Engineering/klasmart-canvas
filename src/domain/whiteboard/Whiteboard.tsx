@@ -1,4 +1,9 @@
-import React, { CSSProperties, useEffect, useRef } from 'react';
+import React, {
+  CSSProperties,
+  FunctionComponent,
+  useEffect,
+  useRef,
+} from 'react';
 import '../../assets/style/whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
@@ -7,8 +12,8 @@ import { ICanvasKeyboardEvent } from '../../interfaces/canvas-events/canvas-keyb
 import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardContainer';
 
 // Redux
-import { Provider } from 'react-redux'
-import store from './redux/store'
+import { Provider } from 'react-redux';
+import store from './redux/store';
 import AuthMenu from '../../components/AuthMenu';
 
 const teacher = {
@@ -23,7 +28,16 @@ const student = {
   allowClearMyself: true,
 };
 
-function Whiteboard() {
+/**
+ * @field updateCanvasAreCreated: When all the canvases were loaded,
+ * this function is called to update the flag
+ * that is waiting for all the canvases
+ */
+export type Props = {
+  updateCanvasAreCreated: (status: boolean) => void;
+};
+
+const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
   const whiteboardWidth = 740;
   const whiteboardHeight = 460;
 
@@ -152,6 +166,9 @@ function Whiteboard() {
                 clearWhiteboardPermissions={student}
                 pixelWidth={whiteboardWidth}
                 pixelHeight={whiteboardHeight}
+                onCanvasCreated={(status: boolean) => {
+                  updateCanvasAreCreated(status);
+                }}
               >
                 <button>Student</button>
               </WhiteboardCanvas>
@@ -161,6 +178,6 @@ function Whiteboard() {
       </WhiteboardProvider>
     </>
   );
-}
+};
 
 export default Whiteboard;
