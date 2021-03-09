@@ -51,6 +51,8 @@ import { usePointerFeature } from './canvas-features/usePointerFeature';
 import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
+import { useStampFeature } from './canvas-features/useStampFeature';
+import useSynchronizedSendStamp from './synchronization-hooks/useSynchronizedSendStamp';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -284,6 +286,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   // useEffects and logic for manage undo/redo feature
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
 
+  // useEffects and logic for stamp feature
+  useStampFeature();
+
   // useEffects and logic for manage pointers
   usePointerFeature(canvas as fabric.Canvas, userId, permissions);
 
@@ -379,6 +384,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   );
   useSynchronizedCursorPointer(canvas, userId, filterIncomingEvents);
   useSynchronizedBackgroundColorChanged(filterIncomingEvents);
+  useSynchronizedSendStamp(canvas, userId, filterIncomingEvents);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {
@@ -397,6 +403,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
         localImage={localImage}
         width={width}
         height={height}
+        backgroundColor={localBackground ? backgroundColor : undefined}
       ></CanvasDownloadConfirm>
       <canvas
         width={pixelWidth}
@@ -404,7 +411,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
         id={instanceId}
         style={{ ...initialStyle, backgroundColor: 'transparent' }}
         tabIndex={0}
-        // onKeyDown={keyDown}
         onClick={() => {
           actions.addShape(shape);
         }}

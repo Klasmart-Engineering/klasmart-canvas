@@ -1,9 +1,9 @@
-import { createStore } from 'redux'
-import { rootReducer } from './permissionsReducer';
+import { createStore } from 'redux';
+import rootReducer from './rootReducer';
 
 /**
  * Redux store
  */
-const store = createStore(rootReducer)
+const store = createStore(rootReducer);
 
 export default store;
