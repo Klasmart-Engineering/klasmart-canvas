@@ -113,4 +113,6 @@ export interface IWhiteboardContext {
   set3dActive: (active: boolean) => void
   shape3d: string;
   update3dShape: (shape: string) => void;
+  new3dImage: string,
+  set3dImage: (dataUrl: string) => void 
 }
