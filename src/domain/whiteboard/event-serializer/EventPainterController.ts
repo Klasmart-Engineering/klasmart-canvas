@@ -159,7 +159,7 @@ export class EventPainterController extends EventEmitter
 
     switch (event.type) {
       case 'added':
-        this.added(event.id, event.objectType, target);
+        this.added(event.id, event.objectType, target, !!event.isPersistent);
         break;
       case 'moved':
         this.moved(event.id, event.objectType, target);
@@ -228,8 +228,13 @@ export class EventPainterController extends EventEmitter
     );
   }
 
-  private added(id: string, objectType: string, target: ICanvasObject) {
-    this.emit('added', id, objectType, target);
+  private added(
+    id: string,
+    objectType: string,
+    target: ICanvasObject,
+    isPersistent: boolean
+  ) {
+    this.emit('added', id, objectType, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
     if (!this.ws?.readyState) return;

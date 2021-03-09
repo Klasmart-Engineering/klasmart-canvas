@@ -30,4 +30,7 @@ export interface PainterEvent {
 
   // Optional parameters for this event.
   param?: string | undefined;
+
+  // Flag to know if this event comes from persistentEvents
+  isPersistent?: boolean;
 }

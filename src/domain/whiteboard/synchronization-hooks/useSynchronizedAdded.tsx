@@ -293,9 +293,20 @@ const useSynchronizedAdded = (
     }
   };
 
+  const objectAlreadyExists = (objectId: string) => {
+    return !!canvas?.getObjects().find((obj: ICanvasObject) => {
+      return obj.id === objectId;
+    });
+  };
+
   /** Register and handle remote added event. */
   useEffect(() => {
-    const added = (id: string, objectType: string, target: ICanvasObject) => {
+    const added = (
+      id: string,
+      objectType: string,
+      target: ICanvasObject,
+      isPersistent?: boolean
+    ) => {
       // TODO: We'll want to filter events based on the user ID. This can
       // be done like this. Example of extracting user id from object ID:
       // let { user } = new ShapeID(id);
@@ -309,7 +320,11 @@ const useSynchronizedAdded = (
       // Events come from another user
       // Pass as props to user context
       // Ids of shapes + userId  uuid()
-      if (!shouldHandleRemoteEvent(id)) return;
+      if (
+        (!shouldHandleRemoteEvent(id) && !isPersistent) ||
+        objectAlreadyExists(id)
+      )
+        return;
 
       if (objectType === 'textbox') {
         let text = new fabric.Textbox(target.text || '', {
@@ -369,12 +384,6 @@ const useSynchronizedAdded = (
 
         canvas?.add(res);
         canvas?.renderAll();
-
-        if (userId === 'student2') {
-          console.log(canvas);
-          console.log(res);
-          console.log(canvas?.getObjects());
-        }
       } else if (
         (objectType === 'path' || objectType === 'polygon') &&
         target.name
