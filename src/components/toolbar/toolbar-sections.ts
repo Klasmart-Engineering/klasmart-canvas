@@ -556,7 +556,7 @@ const toolsSection: IBasicToolbarSection = {
         {
           id: 'pyramid_shape',
           value: 'pyramid',
-          title: 'PyramidTriangleBased Shape',
+          title: 'Pyramid Triangle Based Shape',
           iconSrc: triangleBasedPyramidShape,
           iconName: 'PyramidTriangleBased',
         },

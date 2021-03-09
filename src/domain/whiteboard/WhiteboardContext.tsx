@@ -142,7 +142,10 @@ export const WhiteboardProvider = ({
   );
 
   const [ is3dActive, set3dActive] = useState(DEFAULT_VALUES.IS_3D_ACTIVE);
-  const { shape3d, update3dShape } = use3dShape();
+  // const { shape3d, update3dShape } = use3dShape();
+  const [shape3d, update3dShape] = useState("");
+  const [ new3dImage, set3dImage ] = useState("")
+ 
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
@@ -468,7 +471,9 @@ export const WhiteboardProvider = ({
     is3dActive,
     set3dActive,
     shape3d,
-    update3dShape
+    update3dShape,
+    new3dImage,
+    set3dImage
   };
 
   return (

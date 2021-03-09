@@ -8,6 +8,7 @@ import {
 import { WhiteboardContext } from '../WhiteboardContext';
 import { v4 as uuidv4 } from 'uuid';
 import { fabric } from 'fabric';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 
 /**
@@ -16,11 +17,12 @@ import { fabric } from 'fabric';
  * @param {fabric.Canvas} canvas - Canvas to set the image
  * @param {string} userId - User that will set the image
  */
-export const useAdd3dShape = (canvas: fabric.Canvas) => {
-  // Getting context variables
-  // const {
-  //   new3dShape
-  // } = useContext(WhiteboardContext);
+export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
+  // Getting context variables,
+  const {
+    new3dImage,
+    update3dShape
+  } = useContext(WhiteboardContext);
 
   /**
    * Handles the logic to add images and gifs as objects
@@ -29,10 +31,22 @@ export const useAdd3dShape = (canvas: fabric.Canvas) => {
   useEffect(() => {
     if (!canvas) return;
 
-    // console.log(new3dShape)
-    // fabric.Image.fromURL(new3dShape, function(oImg) {
-    //     canvas.add(oImg);
-    //   });
+    console.log(new3dImage)
+    // const img = createImageAsObject(new3dImage as string, userId, canvas);
+    fabric.Image.fromURL(new3dImage, function (img) {
+      const objectImage: ICanvasObject = img.set({
+        left: 0,
+        top: 0,
+      });
+      img.scaleToHeight(250);
+      img.scaleToWidth(250);
+  
+      objectImage.id = `${userId}:${uuidv4()}`;
+      canvas?.add(objectImage);
+      objectImage.center()
+      update3dShape("")
+    });
     
-  });
+    
+  }, [new3dImage]);
 };
