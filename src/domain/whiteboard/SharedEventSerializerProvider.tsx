@@ -126,12 +126,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     return () => {
       eventController.removeListener('refetch', refetchRequestHandler);
     };
-  }, [
-    canvasAreCreated,
-    eventController,
-    sendAllPersistentEvents,
-    simulatePersistence,
-  ]);
+  }, [eventController, sendAllPersistentEvents, simulatePersistence]);
 
   // NOTE: This effect sets up simulated persistance. This would simulate
   // events being sent from the server when the user reloads the page.
