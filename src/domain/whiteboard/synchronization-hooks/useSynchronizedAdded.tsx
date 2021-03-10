@@ -19,6 +19,7 @@ import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { fabricGif } from '../gifs-actions/fabricGif';
 import { addSynchronizationInSpecialBrushes } from '../brushes/actions/addSynchronizationInSpecialBrushes';
 import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
+import FontFaceObserver from 'fontfaceobserver';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -326,29 +327,43 @@ const useSynchronizedAdded = (
       )
         return;
 
-      if (objectType === 'textbox') {
+      const renderTextObject = async () => {
         let text = new fabric.Textbox(target.text || '', {
           fontSize: 30,
           fontWeight: 400,
           fontStyle: 'normal',
-          fontFamily: target.fontFamily,
           fill: target.stroke,
           top: target.top,
           left: target.left,
           width: target.width,
           selectable: false,
+          hoverCursor: isPersistent ? 'none' : 'default',
         });
 
         (text as ICanvasObject).id = id;
+
         canvas?.add(text);
+        const fontObserver = new FontFaceObserver(target.fontFamily as string);
+        try {
+          const font = (await fontObserver.load()) as any;
 
-        undoRedoDispatch({
-          type: SET_OTHER,
-          payload: (canvas?.getObjects() as unknown) as TypedShape[],
-          canvasId: userId,
-        });
+          text.set({ fontFamily: font.family });
+          canvas?.renderAll();
 
-        return;
+          undoRedoDispatch({
+            type: SET_OTHER,
+            payload: (canvas?.getObjects() as unknown) as TypedShape[],
+            canvasId: userId,
+          });
+
+          return;
+        } catch (error) {
+          return;
+        }
+      };
+
+      if (objectType === 'textbox') {
+        renderTextObject();
       }
 
       if ((objectType === 'group' || objectType === 'path') && canvas) {
@@ -408,6 +423,11 @@ const useSynchronizedAdded = (
       if (objectType === 'image') {
         const src = (target as ICanvasBrush).basePath?.imageData || target.src;
 
+        const provisionalImage = new fabric.Image() as ICanvasObject;
+
+        canvas?.add(provisionalImage);
+        provisionalImage.set({ id });
+
         fabric.Image.fromURL(src as string, (data: fabric.Image) => {
           (data as TypedShape).set({
             id,
@@ -429,6 +449,9 @@ const useSynchronizedAdded = (
               basePath: (target as ICanvasBrush).basePath,
             });
           }
+
+          delete provisionalImage.id;
+          canvas?.remove(provisionalImage);
 
           canvas?.add(data);
           canvas?.renderAll();
