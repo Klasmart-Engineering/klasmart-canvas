@@ -204,9 +204,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
    */
   useEffect(() => {
     if (onCanvasCreated) {
-      onCanvasCreated(!!canvas);
+      onCanvasCreated(!!canvasActions);
     }
-  }, [canvas, onCanvasCreated]);
+  }, [canvasActions, onCanvasCreated]);
 
   /**
    * Reset the canvas state in case the event controller will replay all events.
@@ -391,7 +391,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (!canvasActions && canvas) {
       updateCanvasActions(actions);
     }
-  }, [actions, updateCanvasActions, canvas, canvasActions]);
+  }, [actions, updateCanvasActions, canvasActions, canvas]);
 
   return (
     <>

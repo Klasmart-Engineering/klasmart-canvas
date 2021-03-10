@@ -570,6 +570,7 @@ export const useCanvasActions = (
     eventSerializer,
     dispatch,
     eraseObject,
+    ignoreDirectActions,
   ]);
 
   /**
