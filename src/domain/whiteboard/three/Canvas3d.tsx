@@ -10,6 +10,8 @@ type ICanvas3dProps = {
   height: number;
 };
 
+type modeCreation = 'editing' | 'exporting'
+
 class Canvas3d extends React.Component<ICanvas3dProps> {
   static contextType = WhiteboardContext;
 
@@ -17,7 +19,7 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
   scene: THREE.Scene;
   renderer: THREE.WebGLRenderer;
   camera: THREE.PerspectiveCamera;
-  mesh: THREE.Mesh;
+  shape?: THREE.Mesh | THREE.LineSegments;
   dataURL: string = '';
   renderRequested: boolean | undefined = false;
 
@@ -26,7 +28,6 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
     this.scene = new THREE.Scene();
     this.renderer = new THREE.WebGLRenderer();
     this.camera = new THREE.PerspectiveCamera();
-    this.mesh = new THREE.Mesh();
   }
 
   init = () => {
@@ -57,6 +58,22 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
     this.addLight(-1, 2, 4);
     this.addLight(1, -1, -2);
 
+    this.shapeCreation('editing')
+
+    this.rendererRender();
+
+    const requestRenderIfNotRequested = () => {
+      if (!this.renderRequested) {
+        this.renderRequested = true;
+        requestAnimationFrame(this.rendererRender);
+      }
+    };
+
+    controls.addEventListener('change', requestRenderIfNotRequested);
+    window.addEventListener('resize', requestRenderIfNotRequested);
+  };
+
+  shapeCreation = (mode: modeCreation) => {
     let geometry: THREE.BufferGeometry;
     let thresholdAngle = 15;
     let size = 32; //16
@@ -115,19 +132,19 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
         );
         break;
 
-        case 'triangularPrism':
-          radiusTop = 20;
-          radiusBottom = 20;
-          height = 46;
-          radialSegments = 3;
-  
-          geometry = new THREE.CylinderGeometry(
-            radiusTop,
-            radiusBottom,
-            height,
-            radialSegments
-          );
-          break;
+      case 'triangularPrism':
+        radiusTop = 20;
+        radiusBottom = 20;
+        height = 46;
+        radialSegments = 3;
+
+        geometry = new THREE.CylinderGeometry(
+          radiusTop,
+          radiusBottom,
+          height,
+          radialSegments
+        );
+        break;
 
       case 'sphere':
         radius = 30;
@@ -147,8 +164,8 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
       case 'torus':
         radius = 22;
         const tubeRadius = 8;
-        radialSegments = 8;
-        const tubularSegments = 16;
+        radialSegments = 6;
+        const tubularSegments = 10;
         geometry = new THREE.TorusGeometry(
           radius,
           tubeRadius,
@@ -161,7 +178,7 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
         geometry = new THREE.TetrahedronGeometry(radius);
         break;
       default:
-        size = 32; //16
+        size = 32//32
         widthSegments = 1;
         heightSegments = 1;
         depthSegments = 1;
@@ -178,20 +195,9 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
 
     const edgeGeometry = new THREE.EdgesGeometry(geometry, thresholdAngle);
 
-    this.makeInstance(edgeGeometry, 0, 0, 0);
-
-    this.rendererRender();
-
-    const requestRenderIfNotRequested = () => {
-      if (!this.renderRequested) {
-        this.renderRequested = true;
-        requestAnimationFrame(this.rendererRender);
-      }
-    };
-
-    controls.addEventListener('change', requestRenderIfNotRequested);
-    window.addEventListener('resize', requestRenderIfNotRequested);
-  };
+    this.shape = this.makeInstance(edgeGeometry, 0, 0, 0, false);
+    this.scene.add(this.shape);
+  }
 
   resizeRendererToDisplaySize = () => {
     const canvas = this.renderer.domElement;
@@ -226,15 +232,9 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
     x: number,
     y: number,
     z: number,
+    dashed: boolean,
     color: string | number | undefined | THREE.Color = 0x2194ce
   ) {
-    const material = new THREE.LineBasicMaterial({
-      color: 0x494949,
-    });
-    const mesh = new THREE.LineSegments(geometry, material);
-    // mesh.rotateX(22.5)
-    mesh.rotateY(22.5);
-
     // const material = new THREE.MeshPhongMaterial({
     //   color: 0x000000,
     //   opacity: 0.1,
@@ -242,13 +242,43 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
     // });
     // const mesh = new THREE.Mesh(geometry, material);
 
-    this.scene.add(mesh);
+    // const material = new THREE.LineBasicMaterial({
+    //   color: 0x494949,
+    // });
+    // const mesh = new THREE.LineSegments(geometry, material);
+    // mesh.rotateY(22.5);
+    // this.scene.add(mesh);
 
-    mesh.position.x = x;
-    mesh.position.set(x, y, z);
+    let material: THREE.LineBasicMaterial;
+    if (dashed) {
+      material = new THREE.LineDashedMaterial({
+        color: 0x494949,
+        linewidth: 1,
+        scale: 1,
+        dashSize: 3,
+        gapSize: 1,
+        depthTest: dashed,
+        polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1
+      });
+    } else {
+      material = new THREE.LineBasicMaterial({
+        color: 0x494949,
+        linewidth: 1,
+        depthTest: dashed,
+        polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1
+      });
+    }
+    const shape = new THREE.LineSegments(geometry, material);
+    if(dashed)
+      shape.computeLineDistances();
+    shape.rotateY(22.5);
 
-    return mesh;
+    shape.position.x = x;
+    shape.position.set(x, y, z);
+
+    return shape;
   }
+
   addLight = (x: number, y: number, z: number) => {
     const color = 0xffffff;
     const intensity = 1;
