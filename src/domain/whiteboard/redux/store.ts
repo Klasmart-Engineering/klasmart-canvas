@@ -1,5 +1,5 @@
 import { createStore } from 'redux'
-import { rootReducer } from './permissionsReducer';
+import rootReducer from './rootReducer';
 
 /**
  * Redux store
