@@ -38,8 +38,8 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
         left: 0,
         top: 0,
       });
-      img.scaleToHeight(250);
-      img.scaleToWidth(250);
+      // img.scaleToHeight(250);
+      // img.scaleToWidth(250);
   
       objectImage.id = `${userId}:${uuidv4()}`;
       canvas?.add(objectImage);
