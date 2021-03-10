@@ -166,8 +166,12 @@ const useSynchronizedScaled = (
 
   /** Register and handle remote event. */
   useEffect(() => {
-    const objectScaled = (id: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const objectScaled = (
+      id: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
+      if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
@@ -196,10 +200,15 @@ const useSynchronizedScaled = (
           }
         }
       });
+
       canvas?.renderAll();
     };
 
-    const groupScaled = (id: string, target: ICanvasObject) => {
+    const groupScaled = (
+      id: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
       const isLocalGroup = (id: string, canvasId: string | undefined) => {
         const object = id.split(':');
 
@@ -210,7 +219,7 @@ const useSynchronizedScaled = (
         return object[0] === canvasId;
       };
 
-      if (isLocalGroup(id, userId)) {
+      if (isLocalGroup(id, userId) && !isPersistent) {
         return;
       }
 
@@ -265,13 +274,18 @@ const useSynchronizedScaled = (
       canvas?.discardActiveObject();
     };
 
-    const scaled = (id: string, _type: string, target: ICanvasObject) => {
+    const scaled = (
+      id: string,
+      _type: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
       if (target.isGroup) {
-        groupScaled(id, target);
+        groupScaled(id, target, isPersistent);
         return;
       }
 
-      objectScaled(id, target);
+      objectScaled(id, target, isPersistent);
     };
 
     eventController?.on('scaled', scaled);

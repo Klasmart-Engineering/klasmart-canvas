@@ -21,9 +21,10 @@ const useSynchronizedColorChanged = (
     const colorChanged = (
       id: string,
       objectType: string,
-      target: ICanvasObject
+      target: ICanvasObject,
+      isPersistent?: boolean
     ) => {
-      if (id && !shouldHandleRemoteEvent(id)) return;
+      if (id && !shouldHandleRemoteEvent(id) && !isPersistent) return;
 
       if (objectType === 'background' && canvas) {
         canvas.backgroundColor = target.fill?.toString();

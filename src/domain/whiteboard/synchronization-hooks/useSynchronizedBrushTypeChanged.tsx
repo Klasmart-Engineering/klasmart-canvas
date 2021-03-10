@@ -56,8 +56,12 @@ const useSynchronizedBrushTypeChanged = (
       canvas?.add(path as ICanvasObject);
     };
 
-    const brushTypeChanged = (id: string, target: ICanvasBrush) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const brushTypeChanged = (
+      id: string,
+      target: ICanvasBrush,
+      isPersistent?: boolean
+    ) => {
+      if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
 
       canvas?.forEachObject(async (object: ICanvasObject) => {
         if (object.id && object.id === id) {

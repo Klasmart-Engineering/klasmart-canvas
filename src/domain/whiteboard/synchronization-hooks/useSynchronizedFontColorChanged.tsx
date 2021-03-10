@@ -17,9 +17,10 @@ const useSynchronizedFontColorChanged = (
     const colorChanged = (
       id: string,
       objectType: string,
-      target: ICanvasObject
+      target: ICanvasObject,
+      isPersistent?: boolean
     ) => {
-      if (id && !shouldHandleRemoteEvent(id)) return;
+      if (id && !shouldHandleRemoteEvent(id) && !isPersistent) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {

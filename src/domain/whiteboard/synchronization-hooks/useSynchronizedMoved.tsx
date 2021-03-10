@@ -188,8 +188,13 @@ const useSynchronizedMoved = (
 
   /** Register and handle remote moved event. */
   useEffect(() => {
-    const moved = (id: string, objectType: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const moved = (
+      id: string,
+      objectType: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
+      if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {

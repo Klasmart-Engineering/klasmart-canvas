@@ -145,11 +145,16 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     }
 
     let remoteEvents: PainterEvent[] = [];
-    const nonpersistentEventTypes = ['cursorPointer', 'moving'];
+    const nonpersistentEventTypes = [
+      'cursorPointer',
+      'moving',
+      'textEdit',
+      'pointer',
+    ];
     const storeRemoteEvent = (payload: PainterEvent) => {
       if (
         nonpersistentEventTypes.includes(payload.type) ||
-        payload.id.split(':')[1] === 'cursor'
+        payload.id?.split(':')[1] === 'cursor'
       )
         return;
 

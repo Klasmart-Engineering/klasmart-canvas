@@ -167,37 +167,47 @@ export class EventPainterController extends EventEmitter
         this.added(event.id, event.objectType, target, !!event.isPersistent);
         break;
       case 'moved':
-        this.moved(event.id, event.objectType, target);
+        this.moved(event.id, event.objectType, target, !!event.isPersistent);
         break;
       case 'rotated':
-        this.rotated(event.id, event.objectType, target);
+        this.rotated(event.id, event.objectType, target, !!event.isPersistent);
         break;
       case 'scaled':
-        this.scaled(event.id, event.objectType, target);
+        this.scaled(event.id, event.objectType, target, !!event.isPersistent);
         break;
       case 'skewed':
         this.skewed(event.id, target);
         break;
       case 'colorChanged':
-        this.colorChanged(event.id, event.objectType, target);
+        this.colorChanged(
+          event.id,
+          event.objectType,
+          target,
+          !!event.isPersistent
+        );
         break;
       case 'modified':
         this.modified(event.id, event.objectType, target);
         break;
       case 'fontFamilyChanged':
-        this.fontFamilyChanged(event.id, target);
+        this.fontFamilyChanged(event.id, target, !!event.isPersistent);
         break;
       case 'removed':
-        this.removed(event.id, target);
+        this.removed(event.id, target, !!event.isPersistent);
         break;
       case 'moving':
         this.moving(event.id, target);
         break;
       case 'setToolbarPermissions':
-        this.setToolbarPermissions(event.id, target);
+        this.setToolbarPermissions(event.id, target, !!event.isPersistent);
         break;
       case 'lineWidthChanged':
-        this.lineWidthChanged(event.id, event.objectType, target);
+        this.lineWidthChanged(
+          event.id,
+          event.objectType,
+          target,
+          !!event.isPersistent
+        );
         break;
       case 'pointer':
         this.pointer(event.id, target);
@@ -206,19 +216,24 @@ export class EventPainterController extends EventEmitter
         this.textEdit(event.id, target);
         break;
       case 'brushTypeChanged':
-        this.brushTypeChanged(event.id, target);
+        this.brushTypeChanged(event.id, target, !!event.isPersistent);
         break;
       case 'backgroundColorChanged':
         this.backgroundColorChanged(event.id, target);
         break;
       case 'sendStamp':
-        this.sendStamp(event.id, target);
+        this.sendStamp(event.id, target, !!event.isPersistent);
         break;
       case 'fontColorChanged':
-        this.fontColorChanged(event.id, event.objectType, target);
+        this.fontColorChanged(
+          event.id,
+          event.objectType,
+          target,
+          !!event.isPersistent
+        );
         break;
       case 'reconstruct':
-        this.emit('reconstruct', event.id, target);
+        this.reconstruct(event.id, target, !!event.isPersistent);
         break;
       case 'cursorPointer':
         this.cursorPointer(event.id, target);
@@ -256,8 +271,13 @@ export class EventPainterController extends EventEmitter
     );
   }
 
-  private moved(id: string, objectType: string, target: ICanvasObject) {
-    this.emit('moved', id, objectType, target);
+  private moved(
+    id: string,
+    objectType: string,
+    target: ICanvasObject,
+    isPersistent: boolean
+  ) {
+    this.emit('moved', id, objectType, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
     if (!this.ws?.readyState) return;
@@ -271,8 +291,13 @@ export class EventPainterController extends EventEmitter
     );
   }
 
-  private rotated(id: string, objectType: string, target: ICanvasObject) {
-    this.emit('rotated', id, objectType, target);
+  private rotated(
+    id: string,
+    objectType: string,
+    target: ICanvasObject,
+    isPersistent: boolean
+  ) {
+    this.emit('rotated', id, objectType, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
     if (!this.ws?.readyState) return;
@@ -286,8 +311,13 @@ export class EventPainterController extends EventEmitter
     );
   }
 
-  private scaled(id: string, objectType: string, target: ICanvasObject) {
-    this.emit('scaled', id, objectType, target);
+  private scaled(
+    id: string,
+    objectType: string,
+    target: ICanvasObject,
+    isPersistent: boolean
+  ) {
+    this.emit('scaled', id, objectType, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
     if (!this.ws?.readyState) return;
@@ -304,8 +334,13 @@ export class EventPainterController extends EventEmitter
     this.ws?.send(JSON.stringify({ id, eventType: 'skewed', target }));
   }
 
-  private colorChanged(id: string, objectType: string, target: ICanvasObject) {
-    this.emit('colorChanged', id, objectType, target);
+  private colorChanged(
+    id: string,
+    objectType: string,
+    target: ICanvasObject,
+    isPersistent: boolean
+  ) {
+    this.emit('colorChanged', id, objectType, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
     if (!this.ws?.readyState) return;
@@ -324,8 +359,12 @@ export class EventPainterController extends EventEmitter
     );
   }
 
-  private fontFamilyChanged(id: string, target: ICanvasObject) {
-    this.emit('fontFamilyChanged', id, target);
+  private fontFamilyChanged(
+    id: string,
+    target: ICanvasObject,
+    isPersistent: boolean
+  ) {
+    this.emit('fontFamilyChanged', id, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
     if (!this.ws?.readyState) return;
@@ -334,15 +373,16 @@ export class EventPainterController extends EventEmitter
     );
   }
 
-  // private reconstruct(id: string, target: PainterEvent) {
-  //   this.emit('reconstruct', id, target);
+  private reconstruct(id: string, target: PainterEvent, isPersistent: boolean) {
+    this.emit('reconstruct', id, target, isPersistent);
 
-  //   // TEMPORARY for realtime testing purposes.
-  //   this.ws?.send(JSON.stringify({ id, target, eventType: 'reconstruct' }));
-  // }
+    // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
+    this.ws?.send(JSON.stringify({ id, target, eventType: 'reconstruct' }));
+  }
 
-  private removed(id: string, target: boolean) {
-    this.emit('removed', id, target);
+  private removed(id: string, target: boolean, isPersistent: boolean) {
+    this.emit('removed', id, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
     if (!this.ws?.readyState) return;
@@ -357,8 +397,12 @@ export class EventPainterController extends EventEmitter
     this.ws?.send(JSON.stringify({ id, target, eventType: 'moving' }));
   }
 
-  private setToolbarPermissions(id: string, target: ICanvasObject) {
-    this.emit('setToolbarPermissions', id, target);
+  private setToolbarPermissions(
+    id: string,
+    target: ICanvasObject,
+    isPersistent: boolean
+  ) {
+    this.emit('setToolbarPermissions', id, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
     if (!this.ws?.readyState) return;
@@ -370,9 +414,10 @@ export class EventPainterController extends EventEmitter
   private fontColorChanged(
     id: string,
     objectType: string,
-    target: ICanvasObject
+    target: ICanvasObject,
+    isPersistent: boolean
   ) {
-    this.emit('fontColorChanged', id, objectType, target);
+    this.emit('fontColorChanged', id, objectType, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
     if (!this.ws?.readyState) return;
@@ -384,9 +429,10 @@ export class EventPainterController extends EventEmitter
   private lineWidthChanged(
     id: string,
     objectType: string,
-    target: ICanvasObject
+    target: ICanvasObject,
+    isPersistent: boolean
   ) {
-    this.emit('lineWidthChanged', id, objectType, target);
+    this.emit('lineWidthChanged', id, objectType, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
     if (!this.ws?.readyState) return;
@@ -411,8 +457,12 @@ export class EventPainterController extends EventEmitter
     this.ws?.send(JSON.stringify({ id, eventType: 'cursorPointer', target }));
   }
 
-  private brushTypeChanged(id: string, target: ICanvasObject) {
-    this.emit('brushTypeChanged', id, target);
+  private brushTypeChanged(
+    id: string,
+    target: ICanvasObject,
+    isPersistent: boolean
+  ) {
+    this.emit('brushTypeChanged', id, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
     if (!this.ws?.readyState) return;
@@ -431,10 +481,15 @@ export class EventPainterController extends EventEmitter
     );
   }
 
-  private sendStamp(id: string, target: IStampSyncTarget) {
-    this.emit('sendStamp', id, target);
+  private sendStamp(
+    id: string,
+    target: IStampSyncTarget,
+    isPersistent: boolean
+  ) {
+    this.emit('sendStamp', id, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(JSON.stringify({ id, eventType: 'sendStamp', target }));
   }
 }
