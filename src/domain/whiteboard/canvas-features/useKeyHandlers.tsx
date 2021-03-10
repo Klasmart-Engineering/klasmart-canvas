@@ -17,7 +17,7 @@ export const useKeyHandlers = (
   canvas: fabric.Canvas,
   instanceId: string,
   permissions: IPermissions,
-  allToolbarIsEnabled: boolean,
+  allToolbarIsEnabled: boolean
 ) => {
   // Getting context variables
   const {
@@ -42,9 +42,7 @@ export const useKeyHandlers = (
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
-
-
-      if (!(permissions.undoRedo || allToolbarIsEnabled)) return;
+      if (instanceId !== activeCanvas.current) return;
 
       /**
        * Removes the current active objects in canvas
@@ -120,13 +118,13 @@ export const useKeyHandlers = (
       const event = e as ICanvasKeyboardEvent;
 
       // UNDO Keyboard Shortcut
-      if (isUndoShortcut()) {
+      if (isUndoShortcut() && (permissions.undoRedo || allToolbarIsEnabled)) {
         undo();
         return;
       }
 
       // REDO Keyboard Shortcut
-      if (isRedoShortcut()) {
+      if (isRedoShortcut() && (permissions.undoRedo || allToolbarIsEnabled)) {
         redo();
         return;
       }
@@ -153,7 +151,6 @@ export const useKeyHandlers = (
         updatePerfectShapeIsActive(true);
       }
     },
-    // eslinst-disable-next-line react-hooks/exhaustive-deps
     [
       activeCanvas,
       allToolbarIsEnabled,

@@ -311,7 +311,7 @@ export const WhiteboardProvider = ({
   }, [canvasActions]);
 
   const perfectShapeIsAvailable = () => {
-    const permissionsState = (store.getState() as unknown) as IPermissions;
+    const permissionsState = store.getState().permissionsState as IPermissions;
     return (
       allToolbarIsEnabled || permissionsState.shape || permissionsState.move
     );
