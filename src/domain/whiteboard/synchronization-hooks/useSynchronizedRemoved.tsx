@@ -50,7 +50,11 @@ const useSynchronizedRemoved = (
         case 'allowClearMyself':
           if (!shouldHandleRemoteEvent(objectId)) return;
           canvas?.forEachObject(function (obj: ICanvasObject) {
-            if (obj.id === objectId && !isCursorObject(obj)) {
+            if (
+              obj.id === objectId &&
+              !isCursorObject(obj) &&
+              !obj.stampObject
+            ) {
               canvas?.remove(obj);
             }
           });
@@ -69,7 +73,7 @@ const useSynchronizedRemoved = (
         case 'allowClearAll':
           if (shouldHandleRemoteEvent(objectId)) return;
           canvas?.forEachObject(function (obj: ICanvasObject) {
-            if (!isCursorObject(obj)) {
+            if (!isCursorObject(obj) && !obj.stampObject) {
               canvas?.remove(obj);
             }
           });
@@ -84,7 +88,11 @@ const useSynchronizedRemoved = (
                 throw new Error('Invalid ID');
               }
 
-              if (object[0] === target.userId && !isCursorObject(obj)) {
+              if (
+                object[0] === target.userId &&
+                !isCursorObject(obj) &&
+                !obj.stampObject
+              ) {
                 canvas?.remove(obj);
               }
             }
