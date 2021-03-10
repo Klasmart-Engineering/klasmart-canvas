@@ -4,6 +4,8 @@ import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { IToolbarUI } from '../../../interfaces/toolbar/toolbar-ui';
 import { IBrushSyncTarget } from '../../../interfaces/brushes/brush-sync-target';
 import { Image } from 'fabric/fabric-impl';
+import { IStampSyncTarget } from '../../../interfaces/stamps/stamp-sync-target';
+import { IShapeCreationTarget } from '../../../interfaces/brushes/shape-creation-target';
 
 // TODO: This service should probably implement some sort of
 // event batching, especially the line drawing can generate
@@ -68,6 +70,8 @@ export type PayloadTarget =
     }
   | { type: string; svg: string }
   | IBrushSyncTarget
+  | IStampSyncTarget
+  | IShapeCreationTarget
   | { src: string }
   | string;
 export class PaintEventSerializer extends EventEmitter
@@ -111,6 +115,14 @@ export class PaintEventSerializer extends EventEmitter
     //
 
     // console.log(`Serializing event for object: ${object.id}`);
+
+    const shape = (object.target as IShapeCreationTarget)?.shape;
+
+    if (type === 'moving' && shape?.basePath) {
+      (object.target as IShapeCreationTarget).shape = shape.toJSON([
+        'basePath',
+      ]);
+    }
 
     const uniqueObjectId = object.id;
     const serialized: PainterEvent = {

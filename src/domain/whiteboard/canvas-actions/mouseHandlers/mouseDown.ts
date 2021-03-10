@@ -1,8 +1,8 @@
-import { IBrushType } from "../../../../interfaces/brushes/brush-type";
-import { ISpecialShapeSelectorPropsType } from "../../../../interfaces/canvas-events/special-shape-selector";
-import { TypedShape } from "../../../../interfaces/shapes/shapes";
-import store from "../../redux/store";
-import { cancelShapeCreation, allowMovementInShape } from "../objectHandlers";
+import { IBrushType } from '../../../../interfaces/brushes/brush-type';
+import { ISpecialShapeSelectorPropsType } from '../../../../interfaces/canvas-events/special-shape-selector';
+import { TypedShape } from '../../../../interfaces/shapes/shapes';
+import store from '../../redux/store';
+import { cancelShapeCreation, allowMovementInShape } from '../objectHandlers';
 
 /**
  * Mouse down event handler
@@ -22,7 +22,7 @@ export const mouseDownAction = (
   specialShapeSelector: (arg1: ISpecialShapeSelectorPropsType) => any,
   lineWidth: number,
   penColor: string
-) => (async (e: fabric.IEvent) => {
+) => async (e: fabric.IEvent) => {
   if (store.getState().canvasBoardState.resize) {
     return;
   }
@@ -39,7 +39,13 @@ export const mouseDownAction = (
     let shape = shapeSelector(shapeToAdd);
     store.dispatch({ type: 'SET_SHAPE', payload: shape });
   } else {
-    let shape = await specialShapeSelector({ canvas, shape: shapeToAdd, brushType, lineWidth, penColor }) as TypedShape;
+    let shape = (await specialShapeSelector({
+      canvas,
+      shape: shapeToAdd,
+      brushType,
+      lineWidth,
+      penColor,
+    })) as TypedShape;
     store.dispatch({ type: 'SET_SHAPE', payload: shape });
   }
 
@@ -80,4 +86,4 @@ export const mouseDownAction = (
     'object:scaled': allowMovementInShape,
     'object:rotated': allowMovementInShape,
   });
-});
+};

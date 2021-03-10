@@ -111,10 +111,10 @@ export const useFreeHandDrawing = (
               coordinates,
               color: penColor || DEFAULT_VALUES.PEN_COLOR,
               lineWidth,
-              id: 'teacher',
-              type: 'PencilBrush',
+              id: userId,
+              type: brushType,
             },
-            id: 'teacher',
+            id: userId,
           };
 
           eventSerializer.push('moving', payload);

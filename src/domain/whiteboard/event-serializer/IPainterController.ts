@@ -1,5 +1,6 @@
 import { PainterEventType } from './PainterEvent';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { IStampSyncTarget } from '../../../interfaces/stamps/stamp-sync-target';
 
 export interface IPainterController {
   on(
@@ -90,6 +91,11 @@ export interface IPainterController {
     listener: (id: string, target: ICanvasObject) => void
   ): this;
   on(event: 'refetch', listener: () => void): this;
+  on(
+    event: 'sendStamp',
+    listener: (id: string, target: IStampSyncTarget) => void
+  ): this;
+  on(event: 'refetch', listener: () => void): this;
 
   on(
     event: 'pointer',
@@ -174,6 +180,10 @@ export interface IPainterController {
   removeListener(
     event: 'lineWidthChanged',
     listener: (id: string, target: ICanvasObject) => void
+  ): this;
+  removeListener(
+    event: 'sendStamp',
+    listener: (id: string, target: IStampSyncTarget) => void
   ): this;
   removeListener(
     event: 'pointer',

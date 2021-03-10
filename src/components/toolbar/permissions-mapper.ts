@@ -66,19 +66,23 @@ export const mappedToolElements = (
     ) => {
       switch (elmnt.id) {
         case 'pointers': {
+          const available = true;
           const enabled =
             allToolbarIsEnabled || serializerToolbarState.cursorPointer;
-          return { ...elmnt, enabled };
+          return { ...elmnt, enabled, available };
         }
         case 'laser_pointer': {
+          const available = true;
           const enabled = allToolbarIsEnabled || serializerToolbarState.pointer;
-          return { ...elmnt, enabled };
+          return { ...elmnt, enabled, available };
         }
         case 'move_objects': {
+          const available = true;
           const enabled = allToolbarIsEnabled || serializerToolbarState.move;
-          return { ...elmnt, enabled };
+          return { ...elmnt, enabled, available };
         }
         case 'erase_type': {
+          const available = true;
           const enabled =
             allToolbarIsEnabled ||
             serializerToolbarState.erase ||
@@ -94,44 +98,56 @@ export const mappedToolElements = (
                     enabled:
                       allToolbarIsEnabled ||
                       serializerToolbarState.partialErase,
+                    available,
                   };
                 } else {
                   return {
                     ...option,
                     enabled:
                       allToolbarIsEnabled || serializerToolbarState.erase,
+                    available,
                   };
                 }
               }
             ),
           };
 
-          return { ...elmnt, enabled };
+          return { ...elmnt, enabled, available };
         }
         case 'line_type': {
+          const available = true;
           const enabled = allToolbarIsEnabled || serializerToolbarState.pen;
-          return { ...elmnt, enabled };
+          return { ...elmnt, enabled, available };
         }
         case 'flood_fill': {
+          const available = true;
           const enabled =
             allToolbarIsEnabled || serializerToolbarState.floodFill;
-          return { ...elmnt, enabled };
+          return { ...elmnt, enabled, available };
         }
         case 'background_color': {
+          const available = true;
           const enabled =
             allToolbarIsEnabled || serializerToolbarState.backgroundColor;
-          return { ...elmnt, enabled };
+          return { ...elmnt, enabled, available };
         }
         case 'add_text': {
+          const available = true;
           const enabled = allToolbarIsEnabled || serializerToolbarState.text;
-          return { ...elmnt, enabled };
+          return { ...elmnt, enabled, available };
         }
         case 'add_shape': {
+          const available = true;
           const enabled = allToolbarIsEnabled || serializerToolbarState.shape;
-          return { ...elmnt, enabled };
+          return { ...elmnt, enabled, available };
+        }
+        case 'add_stamp': {
+          const available = allToolbarIsEnabled;
+          const enabled = allToolbarIsEnabled;
+          return { ...elmnt, enabled, available };
         }
         default: {
-          return { ...elmnt, enabled: true };
+          return { ...elmnt, enabled: true, available: true };
         }
       }
     }
