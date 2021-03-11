@@ -136,25 +136,29 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     if (!simulatePersistence) return;
 
     const stored = window.localStorage.getItem('canvas:simulated:events');
+    let persistentEvents = [];
+
     if (stored !== null) {
-      const persistentEvents = JSON.parse(stored);
+      persistentEvents = JSON.parse(stored);
       console.log(
         `applying simulated persistent events: ${persistentEvents.length}`
       );
       eventController.handlePainterEvent(persistentEvents);
     }
 
-    let remoteEvents: PainterEvent[] = [];
+    let remoteEvents: PainterEvent[] = [...persistentEvents];
     const nonpersistentEventTypes = [
       'cursorPointer',
       'moving',
-      'textEdit',
       'pointer',
+      'textEdit',
     ];
+
     const storeRemoteEvent = (payload: PainterEvent) => {
       if (
         nonpersistentEventTypes.includes(payload.type) ||
-        payload.id?.split(':')[1] === 'cursor'
+        payload.id?.split(':')[1] === 'cursor' ||
+        payload.avoidPersistentStoring
       )
         return;
 

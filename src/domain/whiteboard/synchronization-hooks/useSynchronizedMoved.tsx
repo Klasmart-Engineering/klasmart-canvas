@@ -51,6 +51,7 @@ const useSynchronizedMoved = (
         type,
         target,
         id: e.target.id,
+        avoidPersistentStoring: filteredState,
       };
 
       if (canvas && !filteredState) {
@@ -118,6 +119,7 @@ const useSynchronizedMoved = (
           type,
           target,
           id: activeObject.id || '',
+          avoidPersistentStoring: filteredState,
         };
 
         activeIds.push(activeObject.id as string);

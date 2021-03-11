@@ -112,7 +112,7 @@ const useSynchronizedScaled = (
       );
 
       // new points creation based on the new scale
-      const newPoints = (basePath?.points as ICoordinate[]).map((point) => {
+      const newPoints = (basePath?.points as ICoordinate[])?.map((point) => {
         return {
           x: point.x * Number(path?.scaleX),
           y: point.y * Number(path?.scaleY),
@@ -333,6 +333,7 @@ const useSynchronizedScaled = (
           id: userId,
           type,
           target: { activeIds, eTarget: groupPayloadData, isGroup: true },
+          avoidPersistentStoring: filtered,
         };
 
         eventSerializer?.push('scaled', groupPayload);
@@ -472,6 +473,7 @@ const useSynchronizedScaled = (
           id: id as string,
           type: type as ObjectType,
           target: { eTarget: target, isGroup: false },
+          avoidPersistentStoring: filtered,
         };
 
         eventSerializer?.push('scaled', payload);

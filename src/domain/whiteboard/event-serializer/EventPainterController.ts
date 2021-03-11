@@ -187,7 +187,7 @@ export class EventPainterController extends EventEmitter
         );
         break;
       case 'modified':
-        this.modified(event.id, event.objectType, target);
+        this.modified(event.id, event.objectType, target, !!event.isPersistent);
         break;
       case 'fontFamilyChanged':
         this.fontFamilyChanged(event.id, target, !!event.isPersistent);
@@ -349,8 +349,13 @@ export class EventPainterController extends EventEmitter
     );
   }
 
-  private modified(id: string, objectType: string, target: ICanvasObject) {
-    this.emit('modified', id, objectType, target);
+  private modified(
+    id: string,
+    objectType: string,
+    target: ICanvasObject,
+    isPersistent: boolean
+  ) {
+    this.emit('modified', id, objectType, target, isPersistent);
 
     // TEMPORARY for realtime testing purposes.
     if (!this.ws?.readyState) return;

@@ -293,7 +293,7 @@ export class ChalkBrush extends fabric.PencilBrush {
     let clearRects: IClearRect[] = [];
     let lastPoint: ICoordinate;
 
-    points.forEach((point) => {
+    points?.forEach((point) => {
       if (!lastPoint) {
         lastPoint = point;
       } else {

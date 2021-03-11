@@ -203,6 +203,7 @@ export const useTextObject = (
             }
 
             // IText object is removed
+            delete (canvas.getActiveObject() as ICanvasObject).id;
             canvas.remove(canvas.getActiveObject());
 
             // Textbox is added is setted like active object
@@ -211,6 +212,7 @@ export const useTextObject = (
 
             // If Textbox is empty, it will be removed from canvas
             if (text?.text?.replace(/\s/g, '').length === 0) {
+              delete (canvas.getActiveObject() as ICanvasObject).id;
               canvas.remove(canvas.getActiveObject());
               return;
             }
@@ -219,6 +221,7 @@ export const useTextObject = (
             it will be removed because a new Textbox object was be created */
             text.on('modified', () => {
               if (text?.text?.replace(/\s/g, '').length === 0) {
+                delete (canvas.getActiveObject() as ICanvasObject).id;
                 canvas.remove(canvas.getActiveObject());
               }
             });
@@ -280,6 +283,7 @@ export const useTextObject = (
             });
           };
 
+          delete ((textCopy as unknown) as ICanvasObject).id;
           canvas.remove(textboxCopy);
           currentTextbox = e.target as Textbox;
           setLines();
@@ -321,7 +325,7 @@ export const useTextObject = (
           const payload: ObjectEvent = {
             type: 'textbox',
             target: e.target,
-            id: 'teacher',
+            id: (e.target as ICanvasObject).id as string,
           };
           eventSerializer.push('textEdit', payload);
         } else {
@@ -329,6 +333,7 @@ export const useTextObject = (
             type: 'textbox',
             target: e.target,
             id: (e.target as ICanvasObject).id as string,
+            avoidPersistentStoring: true,
           };
 
           eventSerializer.push('modified', payload);
@@ -403,5 +408,5 @@ export const useTextObject = (
       document.removeEventListener('keydown', keyDownHandler);
       document.removeEventListener('keyup', keyUpHandler);
     };
-  }, [fontFamily, fontFamilyLoader, keyDownHandler, keyUpHandler]);
+  }, [canvas, fontFamily, fontFamilyLoader, keyDownHandler, keyUpHandler]);
 };

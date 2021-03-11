@@ -340,9 +340,9 @@ const useSynchronizedAdded = (
           hoverCursor: isPersistent ? 'none' : 'default',
         });
 
-        (text as ICanvasObject).id = id;
-
         canvas?.add(text);
+
+        (text as ICanvasObject).id = id;
         const fontObserver = new FontFaceObserver(target.fontFamily as string);
         try {
           const font = (await fontObserver.load()) as any;
@@ -430,7 +430,6 @@ const useSynchronizedAdded = (
 
         fabric.Image.fromURL(src as string, (data: fabric.Image) => {
           (data as TypedShape).set({
-            id,
             top: target.top,
             left: target.left,
             angle: target.angle,
@@ -454,6 +453,7 @@ const useSynchronizedAdded = (
           canvas?.remove(provisionalImage);
 
           canvas?.add(data);
+          (data as ICanvasObject).set({ id });
           canvas?.renderAll();
 
           undoRedoDispatch({

@@ -35,4 +35,7 @@ export interface PainterEvent {
 
   // Flag to know if this event comes from persistentEvents
   isPersistent?: boolean;
+
+  // Flag to know if this event should saved in the persistentEvents or not
+  avoidPersistentStoring?: boolean;
 }
