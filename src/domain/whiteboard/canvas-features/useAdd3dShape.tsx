@@ -21,7 +21,9 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
   // Getting context variables,
   const {
     new3dImage,
-    update3dShape
+    update3dShape,
+    json3D,
+    set3dJson
   } = useContext(WhiteboardContext);
 
   /**
@@ -33,7 +35,7 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
 
     console.log(new3dImage)
     // const img = createImageAsObject(new3dImage as string, userId, canvas);
-    fabric.Image.fromURL(new3dImage, function (img) {
+    fabric.Image.fromURL(new3dImage, (img) => {
       const objectImage: ICanvasObject = img.set({
         left: 0,
         top: 0,
@@ -42,9 +44,12 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
       // img.scaleToWidth(250);
   
       objectImage.id = `${userId}:${uuidv4()}`;
+      objectImage.threeObject = json3D
       canvas?.add(objectImage);
       objectImage.center()
       update3dShape("")
+      set3dJson("")
+      
     });
     
     

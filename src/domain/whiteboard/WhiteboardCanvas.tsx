@@ -56,6 +56,7 @@ import { useCopy } from './canvas-features/useCopy';
 import { useStampFeature } from './canvas-features/useStampFeature';
 import useSynchronizedSendStamp from './synchronization-hooks/useSynchronizedSendStamp';
 import { useObjectHover } from './canvas-features/useObjectHover';
+import { use2To3d } from './canvas-features/use2To3d';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -298,6 +299,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for manage image adding feature
   useAdd3dShape(canvas as fabric.Canvas, userId);
+
+  // useEffects and logic for manage image adding feature
+  use2To3d(canvas as fabric.Canvas)
 
   // useEffects and logic for manage line width changes in objects
   useChangeLineWidth(canvas as fabric.Canvas, userId, undoRedoDispatch);

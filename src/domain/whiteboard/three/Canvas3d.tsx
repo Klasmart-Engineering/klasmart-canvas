@@ -2,26 +2,26 @@ import React from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { WhiteboardContext } from '../WhiteboardContext';
+import { toolsSection } from '../../../components/toolbar/toolbar-sections';
 import './styles.css';
+import IBasicToolbarSelector from '../../../interfaces/toolbar/toolbar-selector/basic-toolbar-selector';
 
 type ICanvas3dProps = {
-  // set3dImage: (image: string) => void;
   width: number;
   height: number;
 };
 
-type modeCreation = 'editing' | 'exporting'
-
 class Canvas3d extends React.Component<ICanvas3dProps> {
   static contextType = WhiteboardContext;
 
-  // mount: HTMLDivElement | null | undefined;
   scene: THREE.Scene;
   renderer: THREE.WebGLRenderer;
   camera: THREE.PerspectiveCamera;
   shape?: THREE.Mesh | THREE.LineSegments;
   dataURL: string = '';
   renderRequested: boolean | undefined = false;
+  canvas?: Element | null;
+  controls?: OrbitControls
 
   constructor(props: ICanvas3dProps) {
     super(props);
@@ -31,49 +31,95 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
   }
 
   init = () => {
-    this.scene.clear();
-    const canvas = document.querySelector('#three');
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: canvas as HTMLCanvasElement,
-      alpha: true,
-      antialias: true,
-    });
-    this.renderer.setClearColor(0xffffff, 0);
-    this.renderer.setSize(this.props.width / 3, this.props.height / 3);
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.initRenderer();
+    this.initCamera();
+    this.initLights();
+    this.initControls();
+    if (this.context.json3D !== '') {
+      console.log('recovering...');
+      this.recoverScene();
+      
+    } else {
+      this.shape = this.shapeCreation();
+      this.scene.add(this.shape);
+      
+      
+      // this.initControls();
+    }
+    this.rendererRender();
+    // window.addEventListener('resize', this.requestRenderIfNotRequested);
+  };
 
+  recoverScene = () => {
+    const loader = new THREE.ObjectLoader();
+    const jsonObj = JSON.parse(this.context.json3D);
+    console.log(jsonObj)
+    this.scene = loader.parse(jsonObj.scene);
+
+    // this.initControls();
+    // controls.update();
+    // controls.addEventListener('change', this.requestRenderIfNotRequested);
+
+    const cameraPos = jsonObj.cameraPosition
+    this.camera.position.set( cameraPos.x, cameraPos.y, cameraPos.z );
+    this.controls?.update();
+    console.log("scene recovered!")
+  };
+
+  requestRenderIfNotRequested = () => {
+    if (!this.renderRequested) {
+      this.renderRequested = true;
+      requestAnimationFrame(this.rendererRender);
+    }
+  };
+
+  initControls = () => {
+    this.controls = new OrbitControls(this.camera, this.canvas as HTMLElement);
+    this.controls.enableDamping = true;
+    this.controls.target.set(0, 0, 0);
+    this.controls.enableZoom = false;
+    this.controls.update();
+    this.controls.addEventListener('change', this.requestRenderIfNotRequested);
+  };
+
+  initLights = () => {
+    this.addLight(-1, 2, 4);
+    this.addLight(1, -1, -2);
+  };
+
+  initCamera = () => {
     const fov = 40;
     const aspect = this.props.width / this.props.height; //2; // the canvas default
     const near = 0.1;
     const far = 125; //25;
     this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
     this.camera.position.z = 90;
-
-    const controls = new OrbitControls(this.camera, canvas as HTMLElement);
-    controls.enableDamping = true;
-    controls.target.set(0, 0, 0);
-    controls.enableZoom = false;
-    controls.update();
-
-    this.addLight(-1, 2, 4);
-    this.addLight(1, -1, -2);
-
-    this.shapeCreation('editing')
-
-    this.rendererRender();
-
-    const requestRenderIfNotRequested = () => {
-      if (!this.renderRequested) {
-        this.renderRequested = true;
-        requestAnimationFrame(this.rendererRender);
-      }
-    };
-
-    controls.addEventListener('change', requestRenderIfNotRequested);
-    window.addEventListener('resize', requestRenderIfNotRequested);
   };
 
-  shapeCreation = (mode: modeCreation) => {
+  initRenderer = () => {
+    this.renderer = new THREE.WebGLRenderer();
+    this.scene.clear();
+    this.canvas = document.querySelector('#three');
+    this.renderer = new THREE.WebGLRenderer({
+      canvas: this.canvas as HTMLCanvasElement,
+      alpha: true,
+      antialias: true,
+    });
+    this.renderer.setClearColor(0xffffff, 0);
+    this.renderer.setSize(this.props.width / 3, this.props.height / 3);
+    this.renderer.setPixelRatio(window.devicePixelRatio);
+  };
+
+  shapeCreation = () => {
+    // if (!this.isNewShape()) {
+    //   const jsonObj = JSON.parse(this.context.shape3d);
+    //   console.log('is not new', jsonObj);
+
+    //   const loader = new THREE.ObjectLoader();
+
+    //   const object = loader.parse(jsonObj);
+    // }
+    // console.log('is new');
     let geometry: THREE.BufferGeometry;
     let thresholdAngle = 15;
     let size = 32; //16
@@ -178,7 +224,7 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
         geometry = new THREE.TetrahedronGeometry(radius);
         break;
       default:
-        size = 32//32
+        size = 32; //32
         widthSegments = 1;
         heightSegments = 1;
         depthSegments = 1;
@@ -193,11 +239,12 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
         break;
     }
 
-    const edgeGeometry = new THREE.EdgesGeometry(geometry, thresholdAngle);
+    // const edgeGeometry = new THREE.EdgesGeometry(geometry, thresholdAngle);
 
-    this.shape = this.makeInstance(edgeGeometry, 0, 0, 0, false);
-    this.scene.add(this.shape);
-  }
+    const shape = this.makeInstance(geometry, 0, 0, 0, false);
+    return shape;
+    // this.scene.add(this.shape);
+  };
 
   resizeRendererToDisplaySize = () => {
     const canvas = this.renderer.domElement;
@@ -258,19 +305,22 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
         dashSize: 3,
         gapSize: 1,
         depthTest: dashed,
-        polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1
+        polygonOffset: true,
+        polygonOffsetFactor: 1,
+        polygonOffsetUnits: 1,
       });
     } else {
       material = new THREE.LineBasicMaterial({
         color: 0x494949,
         linewidth: 1,
         depthTest: dashed,
-        polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1
+        polygonOffset: true,
+        polygonOffsetFactor: 1,
+        polygonOffsetUnits: 1,
       });
     }
     const shape = new THREE.LineSegments(geometry, material);
-    if(dashed)
-      shape.computeLineDistances();
+    if (dashed) shape.computeLineDistances();
     shape.rotateY(22.5);
 
     shape.position.x = x;
@@ -287,26 +337,47 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
     this.scene.add(light);
   };
 
+  isNewShape = () => {
+    const shapesElements = toolsSection.elements.filter(
+      (element) => element.id === 'add_3d_shape'
+    );
+    const shapesElement: IBasicToolbarSelector = shapesElements[0] as IBasicToolbarSelector;
+    const exists = shapesElement.options.find(
+      (option) => option.value === this.context.shape3d
+    );
+    if (typeof exists === 'undefined') return false;
+    return true;
+  };
+
   // componentDidMount() {
-  //   this.init();
+  //   this.isNewShape()
+  //   //this.init();
   // }
 
   componentDidUpdate() {
     console.log(this.context.is3dActive);
     if (!this.context.is3dActive) {
       if (this.dataURL !== '') {
+        // console.log(this.shape?.toJSON())
         this.context.set3dImage(this.dataURL);
+        const jsonObj = {scene: this.scene.toJSON(), cameraPosition: {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z}}
+        console.log(this.camera.position.x, this.camera.position.y, this.camera.position.z)
+        console.log(jsonObj)
+        this.context.set3dJson(JSON.stringify(jsonObj));
         this.dataURL = '';
       }
     } else {
-      if (this.context.shape3d !== '') this.init();
+      if (this.context.shape3d !== '' || this.context.json3D !== '')
+        this.init();
     }
   }
 
   renderScene = () => {
     return (
       this.context.is3dActive &&
-      this.context.shape3d !== '' && <canvas id="three"></canvas>
+      (this.context.shape3d !== '' || this.context.json3D !== '') && (
+        <canvas id="three"></canvas>
+      )
     );
     // this.context.is3dActive && <div id="three" ref={(ref) => (this.mount = ref)}></div>
   };
