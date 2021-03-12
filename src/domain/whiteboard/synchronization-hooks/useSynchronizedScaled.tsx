@@ -101,6 +101,8 @@ const useSynchronizedScaled = (
     async (path: ICanvasBrush) => {
       if (!canvas || !userId) return;
 
+      eventController.setEventRunning(true);
+
       // Data to generate a new chalk/crayon path
       const basePath = path.basePath;
 
@@ -134,7 +136,7 @@ const useSynchronizedScaled = (
           newRects
         );
 
-        if (!path) return;
+        if (!path || !path.id) return;
 
         const id = path.id;
         newObject.set({
@@ -155,13 +157,15 @@ const useSynchronizedScaled = (
 
         // Id's are deleted to avoid add and remove event serializing
         newObject.set({
-          id: id,
+          id,
         });
+
+        eventController.setEventRunning(true);
       } catch (error) {
         console.warn(error);
       }
     },
-    [canvas, userId]
+    [canvas, eventController, userId]
   );
 
   /** Register and handle remote event. */
@@ -188,7 +192,15 @@ const useSynchronizedScaled = (
               originX: object.originX || 'left',
               originY: object.originY || 'top',
             });
+
             obj.setCoords();
+
+            if (isPersistent && object.scaleX === 1 && object.scaleY === 1) {
+              obj.set({
+                scaleX: Number(object.width) / Number(obj.width),
+                scaleY: Number(object.height) / Number(obj.height),
+              });
+            }
 
             if (object.type === 'group-marker') {
               fixLines(obj as ICanvasBrush);
@@ -387,6 +399,8 @@ const useSynchronizedScaled = (
         let target = {
           top: e.target.top,
           left: e.target.left,
+          width: e.target.width,
+          height: e.target.height,
           angle: e.target.angle,
           scaleX: e.target.scaleX,
           scaleY: e.target.scaleY,

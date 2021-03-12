@@ -172,7 +172,7 @@ const useSynchronizedSendStamp = (
       currentStampCount: number,
       image: fabric.Image
     ) => {
-      if (stampAlreadyExists(stampId) || !canvas) return;
+      if (stampAlreadyExists(stampId) || !canvas || assignTo !== userId) return;
       const { top, left } = determineStampPosition(
         stampWidth,
         stampHeight,
@@ -197,7 +197,7 @@ const useSynchronizedSendStamp = (
         payload: { studentId: assignTo, stamp },
       });
     },
-    [canvas, determineStampPosition, stamp, stampAlreadyExists]
+    [canvas, determineStampPosition, stamp, stampAlreadyExists, userId]
   );
 
   // Handling remote. Receives the event.

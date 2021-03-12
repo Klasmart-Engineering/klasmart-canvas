@@ -328,6 +328,8 @@ const useSynchronizedAdded = (
         return;
 
       const renderTextObject = async () => {
+        eventController.setEventRunning(true);
+
         let text = new fabric.Textbox(target.text || '', {
           fontSize: 30,
           fontWeight: 400,
@@ -356,10 +358,25 @@ const useSynchronizedAdded = (
             canvasId: userId,
           });
 
+          eventController.setEventRunning(false);
+
           return;
         } catch (error) {
           return;
         }
+      };
+
+      const renderSpecialBrushObject = async () => {
+        eventController.setEventRunning(false);
+
+        await addSynchronizationInSpecialBrushes(
+          canvas as fabric.Canvas,
+          userId,
+          id,
+          target as ICanvasBrush
+        );
+
+        eventController.setEventRunning(false);
       };
 
       if (objectType === 'textbox') {
@@ -367,12 +384,7 @@ const useSynchronizedAdded = (
       }
 
       if ((objectType === 'group' || objectType === 'path') && canvas) {
-        addSynchronizationInSpecialBrushes(
-          canvas,
-          userId,
-          id,
-          target as ICanvasBrush
-        );
+        renderSpecialBrushObject();
       }
 
       let shape = null;
@@ -425,6 +437,8 @@ const useSynchronizedAdded = (
 
         const provisionalImage = new fabric.Image() as ICanvasObject;
 
+        eventController.setEventRunning(true);
+
         canvas?.add(provisionalImage);
         provisionalImage.set({ id });
 
@@ -461,6 +475,8 @@ const useSynchronizedAdded = (
             payload: (canvas?.getObjects() as unknown) as TypedShape[],
             canvasId: userId,
           });
+
+          eventController.setEventRunning(false);
         });
       }
 

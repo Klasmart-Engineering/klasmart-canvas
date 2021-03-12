@@ -19,66 +19,76 @@ export const addSynchronizationInSpecialBrushes = (
   id: string,
   target: ICanvasBrush
 ) => {
-  let brush: PenBrush | MarkerBrush | PaintBrush | DashedBrush;
-  let path;
-  const basePath = target.basePath;
-  const brushType = target.basePath?.type;
+  return new Promise<void>((resolve, reject) => {
+    let brush: PenBrush | MarkerBrush | PaintBrush | DashedBrush;
+    let path;
+    const basePath = target.basePath;
+    const brushType = target.basePath?.type;
 
-  switch (brushType) {
-    case 'dashed':
-      brush = new DashedBrush(canvas, userId);
-      path = brush.createDashedPath(
-        id,
-        (basePath?.points as ICoordinate[]) || [],
-        Number(basePath?.strokeWidth),
-        String(basePath?.stroke)
-      );
-      break;
+    try {
+      switch (brushType) {
+        case 'dashed':
+          brush = new DashedBrush(canvas, userId);
+          path = brush.createDashedPath(
+            'provisional',
+            (basePath?.points as ICoordinate[]) || [],
+            Number(basePath?.strokeWidth),
+            String(basePath?.stroke)
+          );
+          break;
 
-    case 'pen':
-      brush = new PenBrush(canvas, userId);
-      path = brush.createPenPath(
-        id,
-        (basePath?.points as IPenPoint[]) || [],
-        Number(basePath?.strokeWidth),
-        String(basePath?.stroke)
-      );
-      break;
+        case 'pen':
+          brush = new PenBrush(canvas, userId);
+          path = brush.createPenPath(
+            'provisional',
+            (basePath?.points as IPenPoint[]) || [],
+            Number(basePath?.strokeWidth),
+            String(basePath?.stroke)
+          );
+          break;
 
-    case 'marker':
-    case 'felt':
-      brush = new MarkerBrush(canvas, userId, brushType);
-      path = brush.createMarkerPath(
-        id,
-        (basePath?.points as ICoordinate[]) || [],
-        Number(basePath?.strokeWidth),
-        String(basePath?.stroke)
-      );
-      break;
+        case 'marker':
+        case 'felt':
+          brush = new MarkerBrush(canvas, userId, brushType);
+          path = brush.createMarkerPath(
+            'provisional',
+            (basePath?.points as ICoordinate[]) || [],
+            Number(basePath?.strokeWidth),
+            String(basePath?.stroke)
+          );
+          break;
 
-    case 'paintbrush':
-      brush = new PaintBrush(canvas, userId);
-      path = brush.modifyPaintBrushPath(
-        id,
-        (basePath?.points as ICoordinate[]) || [],
-        Number(basePath?.strokeWidth),
-        String(basePath?.stroke),
-        basePath?.bristles || []
-      );
-      break;
-  }
+        case 'paintbrush':
+          brush = new PaintBrush(canvas, userId);
+          path = brush.modifyPaintBrushPath(
+            'provisional',
+            (basePath?.points as ICoordinate[]) || [],
+            Number(basePath?.strokeWidth),
+            String(basePath?.stroke),
+            basePath?.bristles || []
+          );
+          break;
+      }
 
-  if (!path) return;
+      if (!path) return;
 
-  (path as ICanvasBrush).set({
-    top: target.top,
-    left: target.left,
-    originX: target.originX,
-    originY: target.originY,
-    selectable: false,
-    evented: false,
+      (path as ICanvasBrush).set({
+        top: target.top,
+        left: target.left,
+        originX: target.originX,
+        originY: target.originY,
+        selectable: false,
+        evented: false,
+      });
+
+      canvas.add(path);
+
+      (path as ICanvasBrush).set({ id });
+      canvas.renderAll();
+
+      resolve();
+    } catch (error) {
+      reject();
+    }
   });
-
-  canvas.add(path);
-  canvas.renderAll();
 };

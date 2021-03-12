@@ -17,6 +17,8 @@ export class EventPainterController extends EventEmitter
 
   public ws: WebSocket | null;
 
+  private isEventRunning: boolean = false;
+
   constructor() {
     super();
 
@@ -122,11 +124,17 @@ export class EventPainterController extends EventEmitter
     }
   }
 
-  handlePainterEvent(events: PainterEvent[]): void {
+  handlePainterEvent(events: PainterEvent[]) {
     for (const event of events) {
-      this.events.push(event);
-
-      this.parseAndEmitEvent(event);
+      if (event.isPersistent) {
+        this.waitForEventRunningChanges().then(() => {
+          this.events.push(event);
+          this.parseAndEmitEvent(event);
+        });
+      } else {
+        this.events.push(event);
+        this.parseAndEmitEvent(event);
+      }
 
       // TODO: We can clear the list of events if we receive a
       // 'clear all' event. We know there wont be any events to
@@ -143,6 +151,48 @@ export class EventPainterController extends EventEmitter
 
   requestRefetch(): void {
     this.emit('refetch');
+  }
+
+  public setEventRunning(value: boolean) {
+    this.isEventRunning = value;
+  }
+
+  public getEventRunning() {
+    return this.isEventRunning;
+  }
+
+  private waitForEventRunningChanges() {
+    return new Promise<void>(async (resolve, reject) => {
+      let totalTime = 0;
+      const limitTime = 1000;
+      const timePerIteration = 10;
+
+      const timeout = (ms: number) => {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      };
+
+      const isFinished = (): Promise<boolean> => {
+        return new Promise(async (resolve) => {
+          if (totalTime >= limitTime) resolve(false);
+
+          if (!this.getEventRunning()) {
+            resolve(true);
+          } else {
+            await timeout(timePerIteration);
+            totalTime += timePerIteration;
+            resolve(isFinished());
+          }
+        });
+      };
+
+      const result = await isFinished();
+
+      if (result === true) {
+        resolve();
+      } else if (result === false) {
+        reject();
+      }
+    });
   }
 
   private parseAndEmitEvent(event: PainterEvent) {
