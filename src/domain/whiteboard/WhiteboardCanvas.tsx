@@ -52,6 +52,7 @@ import { usePointerFeature } from './canvas-features/usePointerFeature';
 import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
+import { use2To3d } from './canvas-features/use2To3d';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -269,6 +270,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for manage image adding feature
   useAdd3dShape(canvas as fabric.Canvas, userId);
+
+  // useEffects and logic for manage image adding feature
+  use2To3d(canvas as fabric.Canvas)
 
   // useEffects and logic for manage line width changes in objects
   useChangeLineWidth(canvas as fabric.Canvas, userId, undoRedoDispatch);

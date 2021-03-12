@@ -115,6 +115,7 @@ export const WhiteboardProvider = ({
   // const { shape3d, update3dShape } = use3dShape();
   const [shape3d, update3dShape] = useState("");
   const [ new3dImage, set3dImage ] = useState("")
+  const [ json3D, set3dJson ] = useState("")
  
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
@@ -409,7 +410,9 @@ export const WhiteboardProvider = ({
     shape3d,
     update3dShape,
     new3dImage,
-    set3dImage
+    set3dImage,
+    json3D,
+    set3dJson
   };
 
   return (

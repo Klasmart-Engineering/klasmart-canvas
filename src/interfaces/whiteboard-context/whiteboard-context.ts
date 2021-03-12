@@ -115,4 +115,6 @@ export interface IWhiteboardContext {
   update3dShape: (shape: string) => void;
   new3dImage: string,
   set3dImage: (dataUrl: string) => void 
+  json3D: string,
+  set3dJson: (stringifiedJson: string) => void 
 }
