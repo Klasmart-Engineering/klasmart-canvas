@@ -94,7 +94,14 @@ export const useFreeHandDrawing = (
     };
 
     const realTimePath = (e: IEvent) => {
-      if ((e.e as MouseEvent).which && (e.e as MouseEvent).buttons && canvas) {
+      const hasPermission =
+        allToolbarIsEnabled || (toolbarIsEnabled && serializerToolbarState.pen);
+      if (
+        (e.e as MouseEvent).which &&
+        (e.e as MouseEvent).buttons &&
+        canvas &&
+        hasPermission
+      ) {
         coordinates.push(e.pointer as ICoordinate);
 
         if (coordinates.length && coordinates.length % 10 === 0) {

@@ -228,6 +228,13 @@ export const useTextObject = (
           });
         }
       });
+    } else {
+      const active = canvas?.getActiveObject() as fabric.IText;
+
+      if (active && active.isEditing) {
+        canvas.discardActiveObject();
+        canvas.renderAll();
+      }
     }
 
     return () => {
