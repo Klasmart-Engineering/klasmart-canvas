@@ -5,11 +5,13 @@ import { WhiteboardContext } from '../WhiteboardContext';
 import { toolsSection } from '../../../components/toolbar/toolbar-sections';
 import './styles.css';
 import IBasicToolbarSelector from '../../../interfaces/toolbar/toolbar-selector/basic-toolbar-selector';
+import { BufferGeometry } from 'three';
 
 type ICanvas3dProps = {
   width: number;
   height: number;
 };
+
 
 class Canvas3d extends React.Component<ICanvas3dProps> {
   static contextType = WhiteboardContext;
@@ -17,11 +19,14 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
   scene: THREE.Scene;
   renderer: THREE.WebGLRenderer;
   camera: THREE.PerspectiveCamera;
+  geometry?: THREE.BufferGeometry
   shape?: THREE.Mesh | THREE.LineSegments;
   dataURL: string = '';
   renderRequested: boolean | undefined = false;
   canvas?: Element | null;
   controls?: OrbitControls
+  canvasStyle?: {left: number, top: number}
+  canvasSize?: {width: number, height: number}
 
   constructor(props: ICanvas3dProps) {
     super(props);
@@ -52,18 +57,28 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
 
   recoverScene = () => {
     const loader = new THREE.ObjectLoader();
-    const jsonObj = JSON.parse(this.context.json3D);
-    console.log(jsonObj)
+    let jsonObj = JSON.parse(this.context.json3D);
     this.scene = loader.parse(jsonObj.scene);
-
-    // this.initControls();
-    // controls.update();
-    // controls.addEventListener('change', this.requestRenderIfNotRequested);
-
     const cameraPos = jsonObj.cameraPosition
     this.camera.position.set( cameraPos.x, cameraPos.y, cameraPos.z );
     this.controls?.update();
-    console.log("scene recovered!")
+    this.context.update3dShape(jsonObj.shape)
+    this.shape = this.shapeCreation()
+    this.scene.clear()
+    this.scene.add(this.shape);
+    this.canvasStyle = jsonObj.canvasStyle
+    this.canvasSize = {width: jsonObj.canvasSize.width, height: jsonObj.canvasSize.height}
+    console.log(this.canvasSize.width, this.canvasSize.height)
+    this.renderer.setSize(this.canvasSize.width, this.canvasSize.height)
+    // this.setState({canvasStyle : {top: 0, left: 0}})
+    this.rendererRender();
+    // const geometryLoader = new THREE.BufferGeometryLoader();
+    // console.log(jsonObj.geometry)
+    // this.geometry = geometryLoader.parse(jsonObj.geometry)
+    // console.log(this.geometry)
+    // // \\\this.geometryToEdges()
+    // this.context.update3dShape("")
+    // this.context.set3dJson("")
   };
 
   requestRenderIfNotRequested = () => {
@@ -106,22 +121,15 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
       antialias: true,
     });
     this.renderer.setClearColor(0xffffff, 0);
-    this.renderer.setSize(this.props.width / 3, this.props.height / 3);
+    const width = this.props.width / 3
+    const height = this.props.height / 3
+    this.renderer.setSize(width, height);
+    this.canvasSize = {width, height}
     this.renderer.setPixelRatio(window.devicePixelRatio);
   };
 
   shapeCreation = () => {
-    // if (!this.isNewShape()) {
-    //   const jsonObj = JSON.parse(this.context.shape3d);
-    //   console.log('is not new', jsonObj);
-
-    //   const loader = new THREE.ObjectLoader();
-
-    //   const object = loader.parse(jsonObj);
-    // }
-    // console.log('is new');
-    let geometry: THREE.BufferGeometry;
-    let thresholdAngle = 15;
+    
     let size = 32; //16
     let widthSegments = 1;
     let heightSegments = 1;
@@ -140,7 +148,7 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
         widthSegments = 1;
         heightSegments = 1;
         depthSegments = 1;
-        geometry = new THREE.BoxGeometry(
+        this.geometry = new THREE.BoxGeometry(
           width,
           height,
           depth,
@@ -154,14 +162,14 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
         radius = 20;
         height = 46;
         radialSegments = 12;
-        geometry = new THREE.ConeGeometry(radius, height, radialSegments);
+        this.geometry = new THREE.ConeGeometry(radius, height, radialSegments);
         break;
 
       case 'squareBasedPyramid':
         radius = 20;
         height = 46;
         radialSegments = 4;
-        geometry = new THREE.ConeGeometry(radius, height, radialSegments);
+        this.geometry = new THREE.ConeGeometry(radius, height, radialSegments);
         break;
 
       case 'cylinder':
@@ -170,7 +178,7 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
         height = 46;
         radialSegments = 24;
 
-        geometry = new THREE.CylinderGeometry(
+        this.geometry = new THREE.CylinderGeometry(
           radiusTop,
           radiusBottom,
           height,
@@ -184,7 +192,7 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
         height = 46;
         radialSegments = 3;
 
-        geometry = new THREE.CylinderGeometry(
+        this.geometry = new THREE.CylinderGeometry(
           radiusTop,
           radiusBottom,
           height,
@@ -196,7 +204,7 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
         radius = 30;
         widthSegments = 12;
         heightSegments = 11;
-        geometry = new THREE.SphereGeometry(
+        this.geometry = new THREE.SphereGeometry(
           radius,
           widthSegments,
           heightSegments
@@ -205,14 +213,14 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
 
       case 'pyramid':
         radius = 30;
-        geometry = new THREE.TetrahedronGeometry(radius);
+        this.geometry = new THREE.TetrahedronGeometry(radius);
         break;
       case 'torus':
         radius = 22;
         const tubeRadius = 8;
         radialSegments = 6;
         const tubularSegments = 10;
-        geometry = new THREE.TorusGeometry(
+        this.geometry = new THREE.TorusGeometry(
           radius,
           tubeRadius,
           radialSegments,
@@ -221,14 +229,14 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
         break;
       case 'rectangularPrism':
         radius = 30;
-        geometry = new THREE.TetrahedronGeometry(radius);
+        this.geometry = new THREE.TetrahedronGeometry(radius);
         break;
       default:
         size = 32; //32
         widthSegments = 1;
         heightSegments = 1;
         depthSegments = 1;
-        geometry = new THREE.BoxGeometry(
+        this.geometry = new THREE.BoxGeometry(
           size,
           size,
           size,
@@ -239,12 +247,37 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
         break;
     }
 
-    // const edgeGeometry = new THREE.EdgesGeometry(geometry, thresholdAngle);
+    const edgeGeometry = this.generateEdges()
 
-    const shape = this.makeInstance(geometry, 0, 0, 0, false);
+    const shape = this.makeInstance(edgeGeometry, 0, 0, 0, false);
     return shape;
     // this.scene.add(this.shape);
   };
+
+  generateEdges = () => {
+    const geometry = this.geometry ?? new BufferGeometry()
+    const thresholdAngle = 15;
+    return new THREE.EdgesGeometry(geometry, thresholdAngle);
+  }
+
+  geometryToEdges = () => {
+    // const rotateX = this.shape?.rotateX
+    // const rotateY = this.shape?.rotateY
+    this.scene.clear()
+    const edgeGeometry = this.generateEdges()
+    this.shape = this.makeInstance(edgeGeometry, 0, 0, 0, false);
+    this.scene.add(this.shape)
+    this.rendererRender()
+  }
+
+  edgesToGeometry = () => {
+    // const rotateX = this.shape?.rotateX
+    // const rotateY = this.shape?.rotateY
+    this.scene.clear()
+    this.shape = this.makeInstance(this.geometry, 0, 0, 0, false);
+    this.scene.add(this.shape)
+    // this.rendererRender()
+  }
 
   resizeRendererToDisplaySize = () => {
     const canvas = this.renderer.domElement;
@@ -329,6 +362,8 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
     return shape;
   }
 
+
+
   addLight = (x: number, y: number, z: number) => {
     const color = 0xffffff;
     const intensity = 1;
@@ -358,9 +393,11 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
     console.log(this.context.is3dActive);
     if (!this.context.is3dActive) {
       if (this.dataURL !== '') {
+        console.log("saving...")
         // console.log(this.shape?.toJSON())
         this.context.set3dImage(this.dataURL);
-        const jsonObj = {scene: this.scene.toJSON(), cameraPosition: {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z}}
+        this.edgesToGeometry()
+        const jsonObj = {scene: this.scene.toJSON(), canvasStyle: this.canvasStyle, canvasSize: this.canvasSize, shape: this.context.shape3d, geometry: this.geometry?.toJSON(), rendererSize: {width: 0, height: 0 }, rendererPosition: {top:0, left:0}, cameraPosition: {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z}}
         console.log(this.camera.position.x, this.camera.position.y, this.camera.position.z)
         console.log(jsonObj)
         this.context.set3dJson(JSON.stringify(jsonObj));
@@ -376,7 +413,8 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
     return (
       this.context.is3dActive &&
       (this.context.shape3d !== '' || this.context.json3D !== '') && (
-        <canvas id="three"></canvas>
+        <canvas style={(this.canvasStyle) ?? {} }  
+         id="three"></canvas>
       )
     );
     // this.context.is3dActive && <div id="three" ref={(ref) => (this.mount = ref)}></div>
