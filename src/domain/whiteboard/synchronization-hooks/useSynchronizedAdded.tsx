@@ -466,6 +466,8 @@ const useSynchronizedAdded = (
           delete provisionalImage.id;
           canvas?.remove(provisionalImage);
 
+          if (objectAlreadyExists(id) && isPersistent) return;
+
           canvas?.add(data);
           (data as ICanvasObject).set({ id });
           canvas?.renderAll();

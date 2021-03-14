@@ -129,6 +129,7 @@ const useSynchronizedRemoved = (
         default:
           canvas?.forEachObject(function (obj: ICanvasObject | TypedShape) {
             if (obj.id && obj.id === objectId) {
+              delete obj.id;
               canvas?.remove(obj);
             }
           });
