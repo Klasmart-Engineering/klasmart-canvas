@@ -129,7 +129,7 @@ const useSynchronizedScaled = (
 
       try {
         const newObject = await brush.createChalkPath(
-          String(path.id),
+          'provisional',
           newPoints,
           Number(basePath?.strokeWidth),
           String(basePath?.stroke),
@@ -160,12 +160,34 @@ const useSynchronizedScaled = (
           id,
         });
 
-        eventController.setEventRunning(true);
+        eventController.setEventRunning(false);
       } catch (error) {
         console.warn(error);
       }
     },
     [canvas, eventController, userId]
+  );
+
+  /**
+   * Checks if an image-based path object should be scaled
+   * when this comes from persistent events
+   * @param object - Object to check
+   * @param target - Target with the properties to set in the given object
+   */
+  const chalkCrayonObjectShouldBeScaled = useCallback(
+    (object: ICanvasBrush, target: ICanvasBrush) => {
+      const objectWidth = Number(object.width);
+      const objectHeight = Number(object.height);
+      const targetWidth = Number(target.width);
+      const targetHeight = Number(target.height);
+      const objectStrokeWidth = Number(object.basePath?.strokeWidth);
+
+      return (
+        objectWidth > targetWidth + objectStrokeWidth / 4 ||
+        objectHeight > targetHeight + objectStrokeWidth / 4
+      );
+    },
+    []
   );
 
   /** Register and handle remote event. */
@@ -180,6 +202,18 @@ const useSynchronizedScaled = (
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
           const object = target.eTarget;
+
+          if (
+            isPersistent &&
+            object?.type === 'image-based' &&
+            chalkCrayonObjectShouldBeScaled(
+              obj as ICanvasBrush,
+              object as ICanvasBrush
+            )
+          ) {
+            return;
+          }
+
           if (object) {
             obj.set({
               angle: object.angle,
@@ -195,7 +229,12 @@ const useSynchronizedScaled = (
 
             obj.setCoords();
 
-            if (isPersistent && object.scaleX === 1 && object.scaleY === 1) {
+            if (
+              isPersistent &&
+              object.type === 'group-marker' &&
+              object.scaleX === 1 &&
+              object.scaleY === 1
+            ) {
               obj.set({
                 scaleX: Number(object.width) / Number(obj.width),
                 scaleY: Number(object.height) / Number(obj.height),
@@ -307,6 +346,7 @@ const useSynchronizedScaled = (
     };
   }, [
     canvas,
+    chalkCrayonObjectShouldBeScaled,
     eventController,
     fixLines,
     remakePathSync,
