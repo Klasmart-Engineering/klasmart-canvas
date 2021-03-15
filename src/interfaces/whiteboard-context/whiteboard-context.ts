@@ -117,4 +117,6 @@ export interface IWhiteboardContext {
   set3dImage: (dataUrl: string) => void 
   json3D: string,
   set3dJson: (stringifiedJson: string) => void 
+  resizing3d: boolean,
+  setResizing3d: (isIt: boolean) => void 
 }

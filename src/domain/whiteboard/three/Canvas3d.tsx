@@ -68,9 +68,7 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
     this.scene.add(this.shape);
     this.canvasStyle = jsonObj.canvasStyle
     this.canvasSize = {width: jsonObj.canvasSize.width, height: jsonObj.canvasSize.height}
-    console.log(this.canvasSize.width, this.canvasSize.height)
     this.renderer.setSize(this.canvasSize.width, this.canvasSize.height)
-    // this.setState({canvasStyle : {top: 0, left: 0}})
     this.rendererRender();
     // const geometryLoader = new THREE.BufferGeometryLoader();
     // console.log(jsonObj.geometry)
@@ -389,23 +387,32 @@ class Canvas3d extends React.Component<ICanvas3dProps> {
   //   //this.init();
   // }
 
+  export = () => {
+    if (this.dataURL === '') return
+    console.log("saving...")
+    this.context.update3dShape("")
+    // console.log(this.shape?.toJSON())
+    this.context.set3dImage(this.dataURL);
+    this.edgesToGeometry()
+    const jsonObj = {scene: this.scene.toJSON(), canvasStyle: this.canvasStyle, canvasSize: this.canvasSize, shape: this.context.shape3d, geometry: this.geometry?.toJSON(), rendererSize: {width: 0, height: 0 }, rendererPosition: {top:0, left:0}, cameraPosition: {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z}}
+    console.log(this.camera.position.x, this.camera.position.y, this.camera.position.z)
+    console.log(jsonObj)
+    this.context.set3dJson(JSON.stringify(jsonObj));
+    this.dataURL = '';
+    this.context.setResizing3d(false)
+  }
+
   componentDidUpdate() {
-    console.log(this.context.is3dActive);
     if (!this.context.is3dActive) {
-      if (this.dataURL !== '') {
-        console.log("saving...")
-        // console.log(this.shape?.toJSON())
-        this.context.set3dImage(this.dataURL);
-        this.edgesToGeometry()
-        const jsonObj = {scene: this.scene.toJSON(), canvasStyle: this.canvasStyle, canvasSize: this.canvasSize, shape: this.context.shape3d, geometry: this.geometry?.toJSON(), rendererSize: {width: 0, height: 0 }, rendererPosition: {top:0, left:0}, cameraPosition: {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z}}
-        console.log(this.camera.position.x, this.camera.position.y, this.camera.position.z)
-        console.log(jsonObj)
-        this.context.set3dJson(JSON.stringify(jsonObj));
-        this.dataURL = '';
-      }
+      this.export()
     } else {
-      if (this.context.shape3d !== '' || this.context.json3D !== '')
+      if (this.context.shape3d !== '' || this.context.json3D !== ''){
         this.init();
+       
+        // if(this.context.resizing3d)
+        //   this.export()
+        
+      }
     }
   }
 

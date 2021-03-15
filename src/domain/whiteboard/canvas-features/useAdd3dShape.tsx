@@ -27,12 +27,6 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
   } = useContext(WhiteboardContext);
 
 
-  const redrawOnResize = (e: fabric.IEvent) => {
-    // const target = 
-      console.log(e)
-      //(e.target as ICanvasObject)
-  }
-
   /**
    * Handles the logic to add images and gifs as objects
    * and background images to the whiteboard.
@@ -40,7 +34,6 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
   useEffect(() => {
     if (!canvas) return;
 
-    console.log(new3dImage)
     // const img = createImageAsObject(new3dImage as string, userId, canvas);
     fabric.Image.fromURL(new3dImage, (img) => {
 
@@ -63,18 +56,12 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
       objectImage.threeObject = json3D
       canvas?.add(objectImage);
       if(typeof three.canvasStyle === "undefined"){
-        console.log(three.canvasStyle)
         objectImage.center()
       }
       update3dShape("")
       set3dJson("")
-      canvas.on('object:scaled', redrawOnResize);
       
     });
-
-    return () => {
-      canvas?.off('object:scaled', redrawOnResize);
-    };
     
     
   }, [new3dImage]);
