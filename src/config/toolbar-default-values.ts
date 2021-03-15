@@ -15,5 +15,6 @@ export const DEFAULT_VALUES = {
   SELECTED_TOOL: 'pointers',
   IS_3D_MODAL_OPEN: false,
   IS_3D_ACTIVE: false,
-  SHAPE_3D: 'cube'
+  SHAPE_3D: 'cube',
+  RESIZING_3D: false
 };

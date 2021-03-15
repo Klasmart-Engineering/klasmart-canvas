@@ -146,6 +146,7 @@ export const WhiteboardProvider = ({
   const [shape3d, update3dShape] = useState("");
   const [ new3dImage, set3dImage ] = useState("")
   const [ json3D, set3dJson ] = useState("")
+  const [ resizing3d, setResizing3d] = useState(DEFAULT_VALUES.RESIZING_3D)
  
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
@@ -476,7 +477,9 @@ export const WhiteboardProvider = ({
     new3dImage,
     set3dImage,
     json3D,
-    set3dJson
+    set3dJson,
+    resizing3d,
+    setResizing3d
   };
 
   return (
