@@ -42,7 +42,7 @@ export const useKeyHandlers = (
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
-      if (!(permissions.undoRedo || allToolbarIsEnabled)) return;
+      if (instanceId !== activeCanvas.current) return;
 
       /**
        * Removes the current active objects in canvas
@@ -118,13 +118,13 @@ export const useKeyHandlers = (
       const event = e as ICanvasKeyboardEvent;
 
       // UNDO Keyboard Shortcut
-      if (isUndoShortcut()) {
+      if (isUndoShortcut() && (permissions.undoRedo || allToolbarIsEnabled)) {
         undo();
         return;
       }
 
       // REDO Keyboard Shortcut
-      if (isRedoShortcut()) {
+      if (isRedoShortcut() && (permissions.undoRedo || allToolbarIsEnabled)) {
         redo();
         return;
       }
@@ -151,18 +151,17 @@ export const useKeyHandlers = (
         updatePerfectShapeIsActive(true);
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
-      permissions.undoRedo,
+      activeCanvas,
       allToolbarIsEnabled,
-      perfectShapeIsActive,
-      perfectShapeIsAvailable,
       canvas,
       eventSerializer,
-      activeCanvas,
       instanceId,
-      undo,
+      perfectShapeIsActive,
+      perfectShapeIsAvailable,
+      permissions.undoRedo,
       redo,
+      undo,
       updatePerfectShapeIsActive,
     ]
   );
@@ -180,6 +179,7 @@ export const useKeyHandlers = (
         perfectShapeIsActive &&
         window.innerWidth > 768
       ) {
+        console.log('key up');
         updatePerfectShapeIsActive(false);
       }
     },

@@ -5,6 +5,8 @@ import { IBristle } from './bristle';
 
 export interface ICanvasShapeBrush extends ICanvasObject {
   name: string;
+  shapeType: string;
+  blockResize?: boolean;
   basePath: {
     type: IBrushType;
     points: ICoordinate[];
