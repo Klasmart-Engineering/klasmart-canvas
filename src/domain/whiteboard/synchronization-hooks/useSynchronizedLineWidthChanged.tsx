@@ -18,7 +18,8 @@ const useSynchronizedLineWidthChanged = (
     const widthChanged = (
       id: string,
       objectType: string,
-      target: ICanvasObject
+      target: ICanvasObject,
+      isPersistent: boolean
     ) => {
       const validTypes: string[] = [
         'rect',
@@ -30,7 +31,7 @@ const useSynchronizedLineWidthChanged = (
         'image',
       ];
 
-      if (id && !shouldHandleRemoteEvent(id)) return;
+      if (id && !shouldHandleRemoteEvent(id) && !isPersistent) return;
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
           if (validTypes.includes(objectType)) {

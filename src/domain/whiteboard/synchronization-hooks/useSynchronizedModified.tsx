@@ -8,6 +8,7 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET } from '../reducers/undo-redo';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
+import FontFaceObserver from 'fontfaceobserver';
 
 const useSynchronizedModified = (
   canvas: fabric.Canvas | undefined,
@@ -25,23 +26,45 @@ const useSynchronizedModified = (
     const modified = (
       id: string,
       objectType: string,
-      target: ICanvasObject
+      target: ICanvasObject,
+      isPersistent: boolean
     ) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+      if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
+
+      /**
+       * Renders text object calling the fontFamily loader
+       * to load the current font
+       * @param obj - Text object to set the fontFamily
+       * @param target - Yarget to get the properties that will change
+       */
+      const renderTextObject = async (
+        obj: ICanvasObject,
+        target: ICanvasObject
+      ) => {
+        obj.set({
+          text: target.text,
+          stroke: target.fill?.toString(),
+          top: target.top,
+          left: Number(target.left) + 1,
+          width: target.width,
+        });
+
+        obj.set({ left: Number(obj.left) - 1 });
+        obj.setCoords();
+
+        const fontObserver = new FontFaceObserver(target.fontFamily as string);
+        try {
+          const font = (await fontObserver.load()) as any;
+
+          obj.set({ fontFamily: font.family });
+          canvas?.renderAll();
+        } catch (error) {}
+      };
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
           if (objectType === 'textbox' && target.left && obj.left) {
-            obj.set({
-              text: target.text,
-              fontFamily: target.fontFamily,
-              stroke: target.fill?.toString(),
-              top: target.top,
-              left: target.left + 1,
-              width: target.width,
-            });
-            obj.set({ left: obj.left - 1 });
-            obj.setCoords();
+            renderTextObject(obj, target);
           }
         }
       });

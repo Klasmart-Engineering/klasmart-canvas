@@ -41,10 +41,10 @@ export const updateAfterCustomFloodFill = async (
     scaleY: 0.5 * (2 / window.devicePixelRatio),
     selectable: false,
     evented: false,
-    id,
   });
 
   canvas.add(image);
+  (image as ICanvasObject).set({ id });
   canvas.discardActiveObject();
 
   const objectsAtPoint = findIntersectedObjects(
@@ -69,7 +69,10 @@ export const updateAfterCustomFloodFill = async (
     }
 
     canvas.remove(o);
-    eventSerializer.push('removed', { id: o.id as string });
+    eventSerializer.push('removed', {
+      id: o.id as string,
+      avoidPersistentStoring: true,
+    });
   });
 
   const clonedImage: Promise<ICanvasObject> = new Promise((resolve, reject) => {

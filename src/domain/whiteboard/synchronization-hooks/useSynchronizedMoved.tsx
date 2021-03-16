@@ -51,6 +51,7 @@ const useSynchronizedMoved = (
         type,
         target,
         id: e.target.id,
+        avoidPersistentStoring: filteredState,
       };
 
       if (canvas && !filteredState) {
@@ -118,6 +119,7 @@ const useSynchronizedMoved = (
           type,
           target,
           id: activeObject.id || '',
+          avoidPersistentStoring: filteredState,
         };
 
         activeIds.push(activeObject.id as string);
@@ -188,8 +190,13 @@ const useSynchronizedMoved = (
 
   /** Register and handle remote moved event. */
   useEffect(() => {
-    const moved = (id: string, objectType: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const moved = (
+      id: string,
+      objectType: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
+      if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {

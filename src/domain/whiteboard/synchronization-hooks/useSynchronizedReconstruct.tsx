@@ -28,8 +28,12 @@ const useSynchronizedReconstruct = (
   }
 
   useEffect(() => {
-    const reconstruct = (id: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const reconstruct = (
+      id: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
+      if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
 
       if (typeof target === 'object' && !target.param) {
         target.param = JSON.stringify(target);
@@ -58,15 +62,14 @@ const useSynchronizedReconstruct = (
       }
 
       if (parsed.backgroundImage && canvas) {
-        canvas.setBackgroundColor(
-          'transparent',
-          canvas.renderAll.bind(canvas)
-        );
+        canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
 
         if (parsed.backgroundImage.backgroundImageEditable) {
           setLocalImage('');
           setLocalBackground(false);
-          let src = (parsed.backgroundImage as ICanvasPathBrush).basePath?.imageData || parsed.backgroundImage.src;
+          let src =
+            (parsed.backgroundImage as ICanvasPathBrush).basePath?.imageData ||
+            parsed.backgroundImage.src;
 
           fabric.Image.fromURL(src as string, function (img) {
             canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
@@ -226,6 +229,8 @@ const useSynchronizedReconstruct = (
   }, [
     canvas,
     eventController,
+    setLocalBackground,
+    setLocalImage,
     shouldHandleRemoteEvent,
     undoRedoDispatch,
     userId,

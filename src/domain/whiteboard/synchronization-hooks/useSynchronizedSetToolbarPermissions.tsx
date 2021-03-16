@@ -13,8 +13,12 @@ const useSynchronizedSetToolbarPermissions = (
   } = useSharedEventSerializer();
 
   useEffect(() => {
-    const setToolbarPermissions = (id: string, target: any) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const setToolbarPermissions = (
+      id: string,
+      target: any,
+      isPersistent: boolean
+    ) => {
+      if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
       updatePermissions(UPDATE_RECEIVED, target);
     };
 

@@ -24,8 +24,12 @@ const useSynchronizedRotated = (
 
   /** Register and handle remote event. */
   useEffect(() => {
-    const objectRotated = (id: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const objectRotated = (
+      id: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
+      if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
@@ -49,7 +53,11 @@ const useSynchronizedRotated = (
       canvas?.renderAll();
     };
 
-    const groupRotated = (id: string, target: ICanvasObject) => {
+    const groupRotated = (
+      id: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
       const isLocalGroup = (id: string, canvasId: string | undefined) => {
         const object = id.split(':');
 
@@ -60,7 +68,7 @@ const useSynchronizedRotated = (
         return object[0] === canvasId;
       };
 
-      if (isLocalGroup(id, userId)) {
+      if (isLocalGroup(id, userId) && !isPersistent) {
         return;
       }
 
@@ -76,7 +84,10 @@ const useSynchronizedRotated = (
       }
 
       for (let i = 0; i < objectsToGroup.length; i++) {
-        let match = target?.eTarget?.objects?.filter((o: any) => o.id === objectsToGroup[i].id)[0] || {};
+        let match =
+          target?.eTarget?.objects?.filter(
+            (o: any) => o.id === objectsToGroup[i].id
+          )[0] || {};
         objectsToGroup[i].set(match);
       }
 
@@ -110,13 +121,18 @@ const useSynchronizedRotated = (
       canvas?.discardActiveObject();
     };
 
-    const rotation = (id: string, _type: string, target: ICanvasObject) => {
+    const rotation = (
+      id: string,
+      _type: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
       if (target.isGroup) {
-        groupRotated(id, target);
+        groupRotated(id, target, isPersistent);
         return;
       }
 
-      objectRotated(id, target);
+      objectRotated(id, target, isPersistent);
     };
 
     eventController?.on('rotated', rotation);
@@ -128,7 +144,10 @@ const useSynchronizedRotated = (
 
   /** Register and handle local event. */
   useEffect(() => {
-    const objectRotated = (e: fabric.IEvent | CanvasEvent, filteredState?: boolean) => {
+    const objectRotated = (
+      e: fabric.IEvent | CanvasEvent,
+      filteredState?: boolean
+    ) => {
       if (!e.target) return;
 
       const type = (e.target as ICanvasObject).get('type');
@@ -144,9 +163,7 @@ const useSynchronizedRotated = (
           activeIds.push(activeObject.id as string);
         });
 
-        const groupPayloadData = e.target.toJSON([
-          'id'
-        ]);
+        const groupPayloadData = e.target.toJSON(['id']);
 
         const groupPayload: ObjectEvent = {
           id: userId,
