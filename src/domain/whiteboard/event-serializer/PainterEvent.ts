@@ -18,6 +18,7 @@ export type PainterEventType =
   | 'brushTypeChanged'
   | 'backgroundColorChanged'
   | 'sendStamp'
+  | 'setUserInfoToDisplay'
   | 'cursorPointer'
   | 'backgroundColorChanged';
 

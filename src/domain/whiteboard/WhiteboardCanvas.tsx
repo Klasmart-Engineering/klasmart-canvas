@@ -53,6 +53,7 @@ import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
 import { useStampFeature } from './canvas-features/useStampFeature';
 import useSynchronizedSendStamp from './synchronization-hooks/useSynchronizedSendStamp';
+import { useObjectHover } from './canvas-features/useObjectHover';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -129,6 +130,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     localImage,
     localBackground,
     backgroundColor,
+    displayUserInfo,
     eventSerializer,
     eventController,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
@@ -288,6 +290,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for stamp feature
   useStampFeature();
+
+  // useEffects and logic for manage the changes that would happen when an object is hovered
+  useObjectHover(canvas as fabric.Canvas, displayUserInfo);
 
   // useEffects and logic for manage pointers
   usePointerFeature(canvas as fabric.Canvas, userId, permissions);

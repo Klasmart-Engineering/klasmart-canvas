@@ -53,6 +53,7 @@ export type ObjectType =
   | 'backgroundImage'
   | 'localImage'
   | 'svg'
+  | 'userInfoToDisplay'
   | 'cursorPointer';
 
 export type PayloadTarget =

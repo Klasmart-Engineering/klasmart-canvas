@@ -106,10 +106,16 @@ export class EventPainterController extends EventEmitter
           this.emit('sendStamp', data.id, data.target);
           break;
         }
+        case 'setUserInfoToDisplay': {
+          this.emit('setUserInfoToDisplay', data.id, data.target);
+          break;
+        }
         case 'brushTypeChanged': {
           this.emit('brushTypeChanged', data.id, data.target);
           break;
         }
+        default:
+          break;
       }
     };
 
@@ -285,10 +291,23 @@ export class EventPainterController extends EventEmitter
       case 'reconstruct':
         this.reconstruct(event.id, target, !!event.isPersistent);
         break;
+      case 'setUserInfoToDisplay':
+        this.setUserInfoToDisplay('setUserInfoToDisplay', target);
+        break;
+      default:
       case 'cursorPointer':
         this.cursorPointer(event.id, target);
         break;
     }
+  }
+
+  private setUserInfoToDisplay(id: string, target: ICanvasObject) {
+    this.emit('setUserInfoToDisplay', id, target);
+
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(
+      JSON.stringify({ id, eventType: 'setUserInfoToDisplay', target })
+    );
   }
 
   private textEdit(id: string, target: ICanvasObject) {

@@ -16,17 +16,7 @@ import { Provider } from 'react-redux';
 import store from './redux/store';
 import AuthMenu from '../../components/AuthMenu';
 
-const teacher = {
-  allowClearAll: true,
-  allowClearOthers: true,
-  allowClearMyself: true,
-};
-
-const student = {
-  allowClearAll: false,
-  allowClearOthers: false,
-  allowClearMyself: true,
-};
+const users = store.getState().usersState;
 
 /**
  * @field updateCanvasAreCreated: When all the canvases were loaded,
@@ -73,7 +63,44 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
 
   return (
     <>
-      <WhiteboardProvider
+      {users.map(user => (
+        <WhiteboardProvider
+        key={user.id}
+        clearWhiteboardPermissions={user.permissions}
+        allToolbarIsEnabled={user.role === 'teacher'}
+        activeCanvas={activeCanvas}
+        userId={user.id}
+      >
+        <Provider store={store}>
+          <AuthMenu userId={user.id} />
+          <div
+            className="whiteboard"
+            onClick={() => {
+              activeCanvas.current = `canvas${user.id}`;
+            }}
+          >
+            <Toolbar />
+            <WhiteboardContainer
+              width={whiteboardWidth}
+              height={whiteboardHeight}
+            >
+              <WhiteboardCanvas
+                instanceId={`canvas${user.id}`}
+                userId={user.id}
+                initialStyle={canvasStyle}
+                pointerEvents={true}
+                clearWhiteboardPermissions={user.permissions}
+                pixelWidth={whiteboardWidth}
+                pixelHeight={whiteboardHeight}
+              >
+                <button>{user.role}</button>
+              </WhiteboardCanvas>
+            </WhiteboardContainer>
+          </div>
+        </Provider>
+      </WhiteboardProvider>
+      ))}
+      {/* <WhiteboardProvider
         clearWhiteboardPermissions={teacher}
         allToolbarIsEnabled={true}
         activeCanvas={activeCanvas}
@@ -175,7 +202,7 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
             </WhiteboardContainer>
           </div>
         </Provider>
-      </WhiteboardProvider>
+      </WhiteboardProvider> */}
     </>
   );
 };

@@ -91,9 +91,11 @@ function Toolbar(props: {
     brushType,
     updateImagePopupIsOpen,
     openUploadFileModal,
+    openSetUserInfoToDisplayModal,
     openClearWhiteboardModal,
     updateEraserIsActive,
     fillBackgroundColor,
+    updateSelectedTool
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
@@ -218,6 +220,11 @@ function Toolbar(props: {
     */
     setPointerEvents(tool !== ELEMENTS.POINTERS_TOOL);
 
+    /**
+     * Update selected tool
+     */
+    updateSelectedTool(tool)
+
     updateEventedObjects(tool === ELEMENTS.MOVE_OBJECTS_TOOL);
 
     if (tool === ELEMENTS.MOVE_OBJECTS_TOOL) {
@@ -276,6 +283,14 @@ function Toolbar(props: {
             (toolbarIsEnabled && props.permissions.uploadImage)
           ) {
             openUploadFileModal();
+          }
+          break;
+        case ELEMENTS.SET_USER_INFO_TO_DISPLAY:
+          if (
+            teacherHasPermission ||
+            (toolbarIsEnabled && props.permissions.uploadImage)
+          ) {
+            openSetUserInfoToDisplayModal();
           }
           break;
       }

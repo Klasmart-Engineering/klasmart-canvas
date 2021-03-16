@@ -113,6 +113,12 @@ export interface IWhiteboardContext {
   updateStampIsActive: (status: boolean) => void;
   stampAssignedStudents: string[];
   updateStampAssignedStudents: (studentIds: string[]) => void;
+  displayUserInfo: string;
+  openSetUserInfoToDisplayModal: () => void;
+  isDrawing: boolean;
+  updateIsDrawing: (isIt: boolean) => void;
+  selectedTool: string;
+  updateSelectedTool: (tool: string) => void;
   isCursorObject: (object: ICanvasObject) => boolean;
   findObjectById: (id: string) => ICanvasObject | undefined;
   eventSerializer: any;
