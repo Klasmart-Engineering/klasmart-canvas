@@ -14,8 +14,8 @@ export const isFreeDrawing = (object: fabric.Object) => {
 
 export const isSpecialFreeDrawing = (object: fabric.Object) => {
   return (
-    (object.type === 'group' && (object as ICanvasBrush).basePath) ||
-    (object.type === 'image' && (object as ICanvasBrush).basePath)
+    (object?.type === 'group' && (object as ICanvasBrush).basePath) ||
+    (object?.type === 'image' && (object as ICanvasBrush).basePath)
   );
 };
 
@@ -24,11 +24,14 @@ export const isSpecialFreeDrawing = (object: fabric.Object) => {
  * @param {fabric.Object} object - object to check
  */
 export const isShape = (object: fabric.Object) => {
-  if (object.get('type') === 'path' && object.name) {
+  if (
+    (object?.get('type') === 'path' || isSpecialFreeDrawing(object)) &&
+    object.name
+  ) {
     return true;
   }
 
-  return object.fill && !(object as fabric.TextOptions).text;
+  return object?.fill && !(object as fabric.TextOptions).text;
 };
 
 /**
@@ -53,30 +56,35 @@ export const isEmptyShape = (object: TypedShape) => {
  * between startPoint.x - point.x and startPoint.y - point.y
  * @param {Point} point - Point to find the difference with startPoint
  */
-export const getBiggerDifference = (point: fabric.Point, startPoint: fabric.Point) => {
-  return Math.abs(point.x - startPoint.x) >
-    Math.abs(point.y - startPoint.y)
+export const getBiggerDifference = (
+  point: fabric.Point,
+  startPoint: fabric.Point
+) => {
+  return Math.abs(point.x - startPoint.x) > Math.abs(point.y - startPoint.y)
     ? point.x - startPoint.x
     : point.y - startPoint.y;
 };
 
-export const setScaledPoint = (shape: any, original: any, point: ICoordinate) => {
+export const setScaledPoint = (
+  shape: any,
+  original: any,
+  point: ICoordinate
+) => {
   return {
-    x:
-      (point.x * Number(shape.width) * Number(shape.scaleX)) /
-      original.width,
+    x: (point.x * Number(shape.width) * Number(shape.scaleX)) / original.width,
     y:
-      (point.y * Number(shape.height) * Number(shape.scaleY)) /
-      original.height,
+      (point.y * Number(shape.height) * Number(shape.scaleY)) / original.height,
   };
 };
 
-export const penPointsMapping = (points: any[], brush: any, min: number, max: number) => (
-  points.map((point) => (
-    {
-      x: point.x,
-      y: point.y,
-      width: (brush as PenBrush).getRandomInt(min, max),
-    }
-  )
-));
+export const penPointsMapping = (
+  points: any[],
+  brush: any,
+  min: number,
+  max: number
+) =>
+  points.map((point) => ({
+    x: point.x,
+    y: point.y,
+    width: (brush as PenBrush).getRandomInt(min, max),
+  }));

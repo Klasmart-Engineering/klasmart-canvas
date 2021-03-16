@@ -5,6 +5,7 @@ import { ICanvasBrush } from '../../../../interfaces/brushes/canvas-brush';
 import { IPenPoint } from '../../../../interfaces/brushes/pen-point';
 import { ICoordinate } from '../../../../interfaces/brushes/coordinate';
 import { DashedBrush } from '../classes/dashedBrush';
+import { ICanvasObject } from '../../../../interfaces/objects/canvas-object';
 
 /**
  * Logic for synchronize special brushes creation
@@ -26,6 +27,11 @@ export const addSynchronizationInSpecialBrushes = (
     const brushType = target.basePath?.type;
 
     try {
+      if (
+        canvas.getObjects().find((obj: ICanvasObject) => obj.id === target.id)
+      )
+        return;
+
       switch (brushType) {
         case 'dashed':
           brush = new DashedBrush(canvas, userId);
