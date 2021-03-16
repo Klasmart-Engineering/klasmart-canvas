@@ -51,6 +51,7 @@ export type ObjectType =
   | 'group'
   | 'gif'
   | 'backgroundImage'
+  | 'backgroundAdded'
   | 'localImage'
   | 'svg'
   | 'cursorPointer';
@@ -59,6 +60,7 @@ export type PayloadTarget =
   | ICanvasObject
   | { objects: ICanvasObject[] }
   | { background: string }
+  | { backgroundImage: fabric.Image }
   | { pointer: boolean }
   | boolean
   | { activeIds?: string[]; eTarget?: ICanvasObject; isGroup?: boolean }

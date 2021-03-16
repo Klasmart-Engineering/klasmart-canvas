@@ -1,3 +1,4 @@
+import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import {
   ObjectEvent,
@@ -23,7 +24,9 @@ export const RenderRemoteUndo = (
   canvas: fabric.Canvas,
   instanceId: string,
   state: CanvasHistoryState,
-  eventSerializer: PaintEventSerializer
+  eventSerializer: PaintEventSerializer,
+  setLocalImage: (img: string | File) => void,
+  setBackgroundImageIsPartialErasable: (state: boolean) => void
 ) => {
   const {
     currentEvent,
@@ -33,17 +36,30 @@ export const RenderRemoteUndo = (
     nextObject,
   } = getStateVariables(state);
 
+  const checkPreviousBackgroundImage = () => {
+    const backgrounds = state.backgrounds;
+    const currentIndex = state.eventIndex;
+    const background = backgrounds.slice(0, currentIndex + 1).reverse().find((bg: string | fabric.Image | null) => bg !== null) || null;
+
+    return background;
+  };
+
   /**
    * Gets the joinedIds property from the given object and finds the objects
    * with those ids to reconstruct them in the whiteboard
    */
   const reconstructJoinedObjects = () => {
+
+    if (!currentState) {
+      return;
+    }
+  
     let joinedIds = nextObject.target.joinedIds as string[];
     const id = nextObject.id;
-    const currentIds = currentObject.target.joinedIds as string[];
+    const currentIds = currentObject?.target?.joinedIds as string[] | [];
     const objects = JSON.parse(currentState).objects;
 
-    if (currentIds) {
+    if (currentIds && joinedIds) {
       joinedIds = [...joinedIds, ...currentIds];
     }
 
@@ -53,9 +69,11 @@ export const RenderRemoteUndo = (
         (o: ObjectEvent) => joinedIds?.indexOf(o.id) !== -1
       ) as ICanvasObject[];
 
+      const previousBg = checkPreviousBackgroundImage();
+
       let payload: ObjectEvent = {
         id,
-        target: { objects: filteredObjects },
+        target: { objects: filteredObjects, backgroundImage: previousBg as fabric.Image },
         type: 'reconstruct',
       };
 
@@ -76,6 +94,36 @@ export const RenderRemoteUndo = (
       is product of flood-filled object composed for other objects */
       if (nextObject.type === 'image') {
         reconstructJoinedObjects();
+      }
+
+      break;
+    }
+
+    case 'backgroundAdded': {
+      const target = {
+        // @ts-ignore
+        id: nextEvent.event.id,
+        target: {
+          strategy: 'removeBackground',
+          isBackgroundImage: true,
+        },
+      };
+      
+      eventSerializer?.push('removed', target as ObjectEvent);
+
+      if (state.backgrounds.length && state.activeStateIndex !== null) {
+        const previous = state.backgrounds[state.eventIndex] || checkPreviousBackgroundImage();
+
+        if (!previous) return;
+        
+        const payload: ObjectEvent = {
+          type: (previous as ICanvasObject)?.backgroundImageEditable ? 'backgroundImage' : 'localImage',
+          target: previous as ICanvasObject,
+          id: (previous as ICanvasObject).id as string,
+        };
+        
+        eventSerializer?.push('added', payload as ObjectEvent);
+        break;
       }
 
       break;

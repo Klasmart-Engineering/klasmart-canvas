@@ -14,6 +14,7 @@ export const SET = 'CANVAS_SET';
 export const SET_GROUP = 'CANVAS_SET_GROUP';
 export const UPDATE_OTHER = 'CANVAS_UPDATE_OTHER';
 export const SET_OTHER = 'CANVAS_SET_OTHER';
+export const SET_BACKGROUND = 'CANVAS_SET_BACKGROUND';
 
 /**
  * Model for storing the canvas history for undo/redo functionality.
@@ -60,6 +61,11 @@ export interface CanvasHistoryState {
    * Used for group manipulation.
    */
   activeObjects: ICanvasObject[];
+
+  /**
+   * 
+   */
+  backgrounds: (string | fabric.Image | null)[];
 }
 
 /**
@@ -74,7 +80,7 @@ export interface CanvasAction {
   /**
    * Array of fabric objects.
    */
-  payload?: fabric.Object[];
+  payload?: fabric.Object [];
 
   /**
    * ID of canvas.
@@ -95,6 +101,11 @@ export interface CanvasAction {
    * Event ID. Used to determine if an event is grouped.
    */
   eventId?: string | undefined;
+
+  /**
+   * Canvas background payload
+   */
+  background?: fabric.Image;
 }
 
 /**
@@ -109,6 +120,7 @@ const defaultState: CanvasHistoryState = {
   events: [],
   eventIndex: -1,
   activeObjects: [], // This is a work in progress, does not work.
+  backgrounds: [],
 };
 
 /**
@@ -231,6 +243,21 @@ const spliceStates = (
   return states;
 };
 
+const spliceBackgroundStates = (
+  activeStateIndex: number | null,
+  backgroundStates: any[]
+): string[] => {
+  let states = [...backgroundStates];
+
+  if (activeStateIndex !== null && activeStateIndex + 1 < states.length) {
+    states.splice(activeStateIndex + 1, 9e9);
+  } else if (activeStateIndex === null) {
+    states = [];
+  }
+
+  return states;
+};
+
 /**
  * Removes future events if a new event has
  * been created after an undo.
@@ -263,18 +290,21 @@ const reducer = (
   switch (action.type) {
     // Sets state when new object is created.
     case SET: {
-      if (
-        !action.event ||
-        (action.event.type === 'removed' && state.activeStateIndex === null) ||
-        (action.event.type !== 'backgroundColorChanged' &&
-          !action.payload?.length &&
-          !state.states.length)
-      ) {
-        return state;
+      if (!action.background) {
+        if (
+          !action.event ||
+          (action.event.type === 'removed' && state.activeStateIndex === null) ||
+          (action.event.type !== 'backgroundColorChanged' &&
+            !action.payload?.length &&
+            !state.states.length)
+        ) {
+          return state;
+        }
       }
 
       let states = [...state.states];
       let events = [...state.events];
+
       const selfItems = filterById(
         action.canvasId as string,
         action.payload,
@@ -292,6 +322,7 @@ const reducer = (
       ] as unknown) as [fabric.Object | TypedShape]);
 
       states = spliceStates(state.activeStateIndex, state.states);
+      let backgrounds = spliceBackgroundStates(state.activeStateIndex, state.backgrounds);
 
       // Formats and creates new state.
       const mappedSelfState = objectStringifier(selfItems);
@@ -318,6 +349,7 @@ const reducer = (
           ...stateItems,
           events,
           eventIndex: events.length - 1,
+          backgrounds: [ ...backgrounds, action.background || null ],
         };
       } else if (action.event && Array.isArray(action.event)) {
         events = [...events, ...action.event];
@@ -325,6 +357,7 @@ const reducer = (
           ...stateItems,
           events,
           eventIndex: events.length - 1,
+          backgrounds: [ ...backgrounds, action.background || null ],
         };
       }
 

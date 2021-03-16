@@ -131,6 +131,8 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     backgroundColor,
     eventSerializer,
     eventController,
+    setLocalBackground,
+    setLocalImage
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { dispatch: undoRedoDispatch } = UndoRedo(
@@ -341,7 +343,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     canvas,
     filterIncomingEvents,
     userId,
-    undoRedoDispatch
+    undoRedoDispatch,
+    setLocalImage,
+    setLocalBackground
   );
   useSynchronizedColorChanged(
     canvas,
