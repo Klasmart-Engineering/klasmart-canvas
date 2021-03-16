@@ -99,7 +99,7 @@ const useSynchronizedScaled = (
    */
   const remakePathSync = useCallback(
     async (path: ICanvasBrush) => {
-      if (!canvas || !userId) return;
+      if (!canvas || !userId || !path.basePath) return;
 
       eventController.setEventRunning(true);
 
