@@ -283,6 +283,7 @@ export const useShapeFeature = (
         top: top,
         left: left,
         blockResize: true,
+        lockUniScaling: perfectShapeIsActive,
       });
 
       ((path as unknown) as Group).addWithUpdate();
@@ -350,6 +351,7 @@ export const useShapeFeature = (
               name: shapeToFix.name,
               shapeType: (shapeToFix as ICanvasShapeBrush).shapeType,
               blockResize: true,
+              lockUniScaling: perfectShapeIsActive,
             });
 
             // Id's are deleted to avoid add and remove event serializing
@@ -372,6 +374,7 @@ export const useShapeFeature = (
           target.type = 'group-pen';
           break;
         }
+
         case 'marker':
         case 'felt':
         case 'paintbrush': {
@@ -418,6 +421,7 @@ export const useShapeFeature = (
               flipY: shapeToFix.flipY,
               name: shapeToFix.name,
               shapeType: (shapeToFix as ICanvasShapeBrush).shapeType,
+              lockUniScaling: perfectShapeIsActive,
               blockResize: true,
             });
 
@@ -473,7 +477,9 @@ export const useShapeFeature = (
     */
     canvas.forEachObject((object: ICanvasObject) => {
       if (isLocalShape(object as TypedShape)) {
-        object.set('lockUniScaling', perfectShapeIsActive);
+        object.set({
+          lockUniScaling: perfectShapeIsActive,
+        });
       }
     });
 
