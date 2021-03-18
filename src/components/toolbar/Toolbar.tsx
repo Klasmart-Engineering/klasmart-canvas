@@ -22,12 +22,16 @@ import { mappedActionElements, mappedToolElements } from './permissions-mapper';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
 import { IPointerType } from '../../interfaces/pointers/pointer-type';
 import { IPermissions } from '../../interfaces/permissions/permissions';
+import { IBasicSecondOptionSelector } from '../../interfaces/toolbar/toolbar-second-option-selector/basic-second-option-selector';
+import SecondOptionSelector from './second-option-selector/SecondOptionSelector';
+import { IStampMode } from '../../interfaces/stamps/stamp-mode';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
   | IBasicToolbarButton
   | IBasicToolbarSelector
-  | IBasicSpecialSelector;
+  | IBasicSpecialSelector
+  | IBasicSecondOptionSelector;
 
 /**
  * Render the toolbar that will be used in the whiteboard
@@ -65,6 +69,9 @@ function Toolbar(props: {
     updateFloodFillIsActive,
     updateEventedObjects,
     backgroundColor,
+    stampMode,
+    updateStampMode,
+    updateStampIsActive,
     // Just for control selectors' value may be changed in the future
     pointer,
     updatePointer,
@@ -150,6 +157,7 @@ function Toolbar(props: {
     ) {
       return;
     }
+
     /*
       If you click on another button different than
       the mentioned below the selected object will be deselected;
@@ -316,6 +324,20 @@ function Toolbar(props: {
   }
 
   /**
+   * Is executed when a change value happens in
+   * a Tools ToolbarSecondOptionSelector in its second option
+   * @param {string} tool - index of the selector in ToolbarSection
+   * @param {string} value - new selected value
+   */
+  function handleToolSecondSelectorChange(tool: string, option: string) {
+    switch (tool) {
+      case ELEMENTS.ADD_STAMP_TOOL:
+        updateStampMode(option as IStampMode);
+        break;
+    }
+  }
+
+  /**
    * Is executed when the action of the element is triggered
    * @param {number} index - index that the element has in the ToolbarSection
    * @param {string} specific (optional) - specific value/option to use
@@ -335,6 +357,10 @@ function Toolbar(props: {
       case ELEMENTS.ADD_SHAPE_TOOL:
         updateShape(specific);
         break;
+
+      case ELEMENTS.ADD_STAMP_TOOL:
+        updateStampIsActive(true);
+        updateStamp(specific);
     }
   }
 
@@ -448,6 +474,19 @@ function Toolbar(props: {
 
       default:
         return '';
+    }
+  }
+
+  /**
+   * Set the parent's definedSecondOptionName in the given tool
+   * @param {string} tool - Tool to set the definedSecondOption
+   */
+  function setSelectedSecondOptionSelector(tool: string) {
+    switch (tool) {
+      case ELEMENTS.ADD_STAMP_TOOL:
+        return stampMode;
+      default:
+        return null;
     }
   }
 
@@ -633,48 +672,68 @@ function Toolbar(props: {
     <div style={toolbarContainerStyle}>
       <div style={toolbarStyle}>
         <ToolbarSection>
-          {toolElements.map(
-            (
-              tool:
-                | IBasicToolbarButton
-                | IBasicToolbarSelector
-                | IBasicSpecialSelector
-            ) =>
-              determineIfIsToolbarButton(tool)
-                ? createToolbarButton(
-                    tool.id,
-                    tool.title,
-                    tool.iconSrc,
-                    tool.iconName,
-                    tools.active === tool.id,
-                    handleToolsElementClick,
-                    tool.enabled
-                  )
-                : determineIfIsToolbarSelector(tool)
-                ? createToolbarSelector(
-                    tool.id,
-                    tool.options,
-                    tools.active === tool.id,
-                    handleToolsElementClick,
-                    handleToolSelectorChange,
-                    handleToolsElementAction,
-                    setSelectedOptionSelector(tool.id, tool),
-                    setColorPalette(tool),
-                    tool.enabled
-                  )
-                : determineIfIsSpecialSelector(tool)
-                ? createSpecialSelector(
-                    tool.id,
-                    tool.icon,
-                    tools.active === tool.id,
-                    setSelectedOptionSelector(tool.id),
-                    tool.styleOptions,
-                    handleToolsElementClick,
-                    handleToolSelectorChange,
-                    tool.enabled
-                  )
-                : null
-          )}
+          {toolElements
+            .filter((tool) => {
+              return tool.available;
+            })
+            .map(
+              (
+                tool:
+                  | IBasicToolbarButton
+                  | IBasicToolbarSelector
+                  | IBasicSpecialSelector
+                  | IBasicSecondOptionSelector
+              ) =>
+                determineIfIsToolbarButton(tool)
+                  ? createToolbarButton(
+                      tool.id,
+                      tool.title,
+                      tool.iconSrc,
+                      tool.iconName,
+                      tools.active === tool.id,
+                      handleToolsElementClick,
+                      tool.enabled
+                    )
+                  : determineIfIsToolbarSelector(tool)
+                  ? createToolbarSelector(
+                      tool.id,
+                      tool.options,
+                      tools.active === tool.id,
+                      handleToolsElementClick,
+                      handleToolSelectorChange,
+                      handleToolsElementAction,
+                      setSelectedOptionSelector(tool.id, tool),
+                      setColorPalette(tool),
+                      tool.enabled
+                    )
+                  : determineIfIsSpecialSelector(tool)
+                  ? createSpecialSelector(
+                      tool.id,
+                      tool.icon,
+                      tools.active === tool.id,
+                      setSelectedOptionSelector(tool.id),
+                      tool.styleOptions,
+                      handleToolsElementClick,
+                      handleToolSelectorChange,
+                      tool.enabled
+                    )
+                  : determineIfIsToolbarSecondOptionSelector(tool)
+                  ? createToolbarSecondOptionSelector(
+                      tool.id,
+                      tool.options,
+                      tool.secondOptions,
+                      tools.active === tool.id,
+                      handleToolsElementClick,
+                      handleToolSelectorChange,
+                      handleToolSecondSelectorChange,
+                      handleToolsElementAction,
+                      setSelectedOptionSelector(tool.id, tool),
+                      setSelectedSecondOptionSelector(tool.id),
+                      setColorPalette(tool),
+                      tool.enabled
+                    )
+                  : null
+            )}
         </ToolbarSection>
 
         <ToolbarSection>
@@ -772,6 +831,61 @@ function createToolbarSelector(
 }
 
 /**
+ * Creates a ToolbarSecondOptionSelector
+ * @param {string} id - id of the selector
+ * @param {IToolbarSelectorOption[]} options - options that the selector
+ * will have
+ * @param {IToolbarSelectorOption[]} secondOptions - options that the selector
+ * will have in the second options array
+ * @param {boolean} active - flag to set this selector like active
+ * @param {(index: number) => void} onClick - function to execute
+ * when selector is clicked
+ * @param {(value: string) => void} onChange - function to execute
+ * when selector's value changes
+ * @param {(value: string) => void} onSecondChange - function to execute
+ * when selector's second value changes
+ * @param {(index: number) => void} onAction - function to execute when
+ * the action of this element is triggered
+ * @param {string} definedOptionName - selected option name defined by parent
+ * @param {string} definedSecondOptionName - selected second option
+ * name defined by parent
+ * @param {IColorPalette} colorPalette (optional) - Describes
+ * the color palette to use
+ */
+function createToolbarSecondOptionSelector(
+  id: string,
+  options: IToolbarSelectorOption[],
+  secondOptions: IToolbarSelectorOption[],
+  active: boolean,
+  onClick: (tool: string) => void,
+  onChange: (tool: string, value: string) => void,
+  onSecondChange: (tool: string, value: string) => void,
+  onAction: (tool: string, value: string) => void,
+  selectedValue: string | number | null,
+  selectedSecondValue: string | number | null,
+  colorPalette?: IColorPalette,
+  enabled?: boolean
+): JSX.Element {
+  return (
+    <SecondOptionSelector
+      key={id}
+      id={id}
+      options={options}
+      secondOptions={secondOptions}
+      active={active}
+      selectedSecondValue={selectedSecondValue as string}
+      selectedValue={selectedValue as string}
+      colorPalette={colorPalette}
+      onAction={onAction as any}
+      onClick={onClick}
+      onChange={onChange}
+      onSecondChange={onSecondChange}
+      enabled={enabled === false ? false : true}
+    />
+  );
+}
+
+/**
  * Create an SpecialToolbarSelector
  * @param {string} id - id of the selector
  * @param {OverridableComponent<SvgIconTypeMap<{}, 'svg'>>} Icon - Icon
@@ -825,7 +939,10 @@ function determineIfIsToolbarButton(
 function determineIfIsToolbarSelector(
   toBeDetermined: ToolbarElementTypes
 ): toBeDetermined is IBasicToolbarSelector {
-  return !!(toBeDetermined as IBasicToolbarSelector).options;
+  return (
+    !!(toBeDetermined as IBasicToolbarSelector).options &&
+    !(toBeDetermined as IBasicSecondOptionSelector).secondOptions
+  );
 }
 
 /**
@@ -837,6 +954,20 @@ function determineIfIsSpecialSelector(
 ): toBeDetermined is IBasicSpecialSelector {
   return !!(toBeDetermined as IBasicSpecialSelector).icon;
 }
+
+/**
+ * Validate if the given object has ToolbarSecondOptionSelector Props
+ * @param {ToolbarElementTypes} toBeDetermined - Object to validate
+ */
+function determineIfIsToolbarSecondOptionSelector(
+  toBeDetermined: ToolbarElementTypes
+): toBeDetermined is IBasicToolbarSelector {
+  return (
+    !!(toBeDetermined as IBasicToolbarSelector).options &&
+    !!(toBeDetermined as IBasicSecondOptionSelector).secondOptions
+  );
+}
+
 /**
  * Maps state to props.
  * @param state Redux state

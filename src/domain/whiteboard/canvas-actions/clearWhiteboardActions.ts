@@ -63,7 +63,12 @@ export const useClearWhiteboardSelf = (
       }
       await updateClearIsActive(true);
       await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-        if (obj.id && isLocalObject(obj.id, userId) && !isCursorObject(obj)) {
+        if (
+          obj.id &&
+          isLocalObject(obj.id, userId) &&
+          !isCursorObject(obj) &&
+          !obj.stampObject
+        ) {
           const target = {
             id: obj.id,
             target: {
@@ -154,7 +159,11 @@ export const useClearWhiteboardOthers = (
             throw new Error('Invalid ID');
           }
 
-          if (object[0] === userId && !isCursorObject(obj)) {
+          if (
+            object[0] === userId &&
+            !isCursorObject(obj) &&
+            !obj.stampObject
+          ) {
             canvas?.remove(obj);
           }
 
@@ -185,7 +194,7 @@ export const useClearWhiteboardClearAll = (
   useCallback(async () => {
     await updateClearIsActive(true);
     await canvas?.getObjects().forEach((obj: ICanvasObject) => {
-      if (obj.id && !isCursorObject(obj)) {
+      if (obj.id && !isCursorObject(obj) && !obj.stampObject) {
         obj.set({ groupClear: true });
         canvas?.remove(obj);
       }

@@ -47,10 +47,10 @@ const useSynchronizedRealtime = (
       }
     ) => {
       if (target.eventType !== 'added' && userId !== id) {
-        if (rt && !rt.isInitiated() && target.type === 'PencilBrush') {
+        if (rt && !rt.isInitiated() && target.type === 'pencil') {
           rt.init(
             canvas as fabric.Canvas,
-            'PencilBrush',
+            'pencil',
             target.color,
             target.lineWidth
           );
@@ -62,7 +62,6 @@ const useSynchronizedRealtime = (
             target.shape.strokeWidth
           );
         } else if (rt && !rt.isInitiated() && target.type === 'circle') {
-          console.log(userId, id);
           rt.init(
             canvas as fabric.Canvas,
             'circle',
@@ -117,6 +116,13 @@ const useSynchronizedRealtime = (
             'chatBubble',
             '#555555',
             target.shape.strokeWidth
+          );
+        } else if (rt && !rt.isInitiated()) {
+          rt.init(
+            canvas as fabric.Canvas,
+            target.type,
+            target.color,
+            target.lineWidth
           );
         }
       }

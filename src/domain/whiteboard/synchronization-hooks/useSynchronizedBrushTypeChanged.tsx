@@ -7,7 +7,6 @@ import { MarkerBrush } from '../brushes/classes/markerBrush';
 import { PaintBrush } from '../brushes/classes/paintBrush';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
-import { IBasePath } from '../../../interfaces/brushes/base-path';
 import { IPenPoint } from '../../../interfaces/brushes/pen-point';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { isEmptyShape } from '../utils/shapes';
@@ -32,12 +31,17 @@ const useSynchronizedBrushTypeChanged = (
      * @param {ICanvasBrush} path - Path to add
      * @param {ICanvasObject} oldPath - Previous path
      * with properties to set in the new one
+     * @param {ICanvasBrush} target - received target from event
      */
-    const addPathInCanvas = (path: ICanvasObject, oldPath: ICanvasObject) => {
+    const addPathInCanvas = (
+      path: ICanvasObject,
+      oldPath: ICanvasObject,
+      target: ICanvasBrush
+    ) => {
       (path as ICanvasObject).set({
         id: (oldPath as ICanvasObject).id,
-        top: oldPath.top,
-        left: oldPath.left,
+        top: target.top,
+        left: target.left,
         angle: oldPath.angle,
         scaleX: oldPath.scaleX,
         scaleY: oldPath.scaleY,
@@ -52,14 +56,14 @@ const useSynchronizedBrushTypeChanged = (
       canvas?.add(path as ICanvasObject);
     };
 
-    const brushTypeChanged = (id: string, target: IBasePath) => {
+    const brushTypeChanged = (id: string, target: ICanvasBrush) => {
       if (!shouldHandleRemoteEvent(id)) return;
 
       canvas?.forEachObject(async (object: ICanvasObject) => {
         if (object.id && object.id === id) {
           let brush;
           let newPath;
-          const basePath = target;
+          const basePath = target.basePath;
           const type = basePath?.type;
           let points = (basePath?.points as ICoordinate[]).map(
             (point: ICoordinate) => {
@@ -140,7 +144,7 @@ const useSynchronizedBrushTypeChanged = (
 
             case 'chalk':
             case 'crayon':
-              const imageSrc = String(target.imageData);
+              const imageSrc = String(target.basePath?.imageData);
               await fabric.Image.fromURL(imageSrc, (data: fabric.Image) => {
                 newPath = data;
 
@@ -148,14 +152,14 @@ const useSynchronizedBrushTypeChanged = (
                   basePath: basePath,
                 });
 
-                addPathInCanvas(newPath as ICanvasObject, object);
+                addPathInCanvas(newPath as ICanvasObject, object, target);
               });
               break;
           }
 
           if (!newPath) return;
 
-          addPathInCanvas(newPath as ICanvasObject, object);
+          addPathInCanvas(newPath as ICanvasObject, object, target);
         }
       });
 
