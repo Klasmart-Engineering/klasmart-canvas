@@ -1,6 +1,7 @@
 import { MutableRefObject } from 'react';
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
 import { IBrushType } from '../brushes/brush-type';
+import { IStampMode } from '../stamps/stamp-mode';
 import { ICanvasObject } from '../objects/canvas-object';
 import { IPointerType } from '../pointers/pointer-type';
 
@@ -97,6 +98,7 @@ export interface IWhiteboardContext {
   localImage: string | File;
   setLocalImage: (image: string | File) => void;
   openClearWhiteboardModal: () => void;
+  openStampModal: () => void;
   eraserIsActive: boolean;
   updateEraserIsActive: (status: boolean) => void;
   backgroundColor: string;
@@ -105,6 +107,12 @@ export interface IWhiteboardContext {
   setBackgroundColorInCanvas: (color: string) => void;
   localBackground: boolean;
   setLocalBackground: (condition: boolean) => void;
+  stampMode: IStampMode;
+  updateStampMode: (mode: IStampMode) => void;
+  stampIsActive: boolean;
+  updateStampIsActive: (status: boolean) => void;
+  stampAssignedStudents: string[];
+  updateStampAssignedStudents: (studentIds: string[]) => void;
   isCursorObject: (object: ICanvasObject) => boolean;
   findObjectById: (id: string) => ICanvasObject | undefined;
   eventSerializer: any;

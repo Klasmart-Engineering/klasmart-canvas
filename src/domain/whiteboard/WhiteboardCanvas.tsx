@@ -52,6 +52,8 @@ import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronize
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
 import { useCopy } from './canvas-features/useCopy';
+import { useStampFeature } from './canvas-features/useStampFeature';
+import useSynchronizedSendStamp from './synchronization-hooks/useSynchronizedSendStamp';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -219,7 +221,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
   }, [canvas, eventController, generatedBy]);
 
-
   // useEffects and logic for manage the object manipulation in canvas
   useObjectManipulation(
     canvas as fabric.Canvas,
@@ -282,6 +283,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     eventSerializer,
     activeTool
   );
+
+  // useEffects and logic for stamp feature
+  useStampFeature();
 
   // useEffects and logic for manage pointers
   usePointerFeature(canvas as fabric.Canvas, userId, permissions);
@@ -378,13 +382,13 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   );
   useSynchronizedCursorPointer(canvas, userId, filterIncomingEvents);
   useSynchronizedBackgroundColorChanged(filterIncomingEvents);
+  useSynchronizedSendStamp(canvas, userId, filterIncomingEvents);
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {
     if (!canvasActions && canvas) {
       updateCanvasActions(actions);
     }
-
   }, [actions, updateCanvasActions, canvas, canvasActions]);
 
   return (
@@ -397,6 +401,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
         localImage={localImage}
         width={width}
         height={height}
+        backgroundColor={localBackground ? backgroundColor : undefined}
       ></CanvasDownloadConfirm>
       <canvas
         width={pixelWidth}
@@ -404,7 +409,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
         id={instanceId}
         style={{ ...initialStyle, backgroundColor: 'transparent' }}
         tabIndex={0}
-        // onKeyDown={keyDown}
         onClick={() => {
           actions.addShape(shape);
         }}
