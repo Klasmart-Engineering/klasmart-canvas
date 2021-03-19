@@ -1,15 +1,9 @@
 import { useContext, useEffect } from 'react';
-import { IBackgroundImageEvent } from '../event-serializer/PaintEventSerializer';
-import {
-  createBackgroundImage,
-  createGif,
-  createImageAsObject,
-} from '../gifs-actions/util';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { v4 as uuidv4 } from 'uuid';
 import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
-
+import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 
 /**
  * Handles the logic for upload images on Whiteboard
@@ -21,29 +15,30 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
   // Getting context variables,
   const {
     new3dImage,
-    update3dShape,
+    set3dImage,
     json3D,
-    set3dJson
+    set3dJson,
+    setShoud3dClose
   } = useContext(WhiteboardContext);
-
 
   /**
    * Handles the logic to add images and gifs as objects
    * and background images to the whiteboard.
    */
   useEffect(() => {
-    if (!canvas) return;
-
-    // const img = createImageAsObject(new3dImage as string, userId, canvas);
+     if (!canvas || new3dImage === "" || json3D === "") return;  
+     setShoud3dClose(false)
     fabric.Image.fromURL(new3dImage, (img) => {
-
+      set3dImage("")
       const three = JSON.parse(json3D)
+      // eventSerializer.push('three', {type: 'exporting3d', target: three.shapeType, id: "teacher"});
+      console.log("drawing img in 2d", three)
 
       let top = 0
       let left = 0
-      if(typeof three.canvasStyle !== "undefined"){
-        top = three.canvasStyle.top
-        left = three.canvasStyle.left
+      if(typeof three.canvasPosition !== "undefined"){
+        top = three.canvasPosition.top
+        left = three.canvasPosition.left
       }
       const objectImage: ICanvasObject = img.set({
         left,
@@ -55,14 +50,14 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
       objectImage.id = `${userId}:${uuidv4()}`;
       objectImage.threeObject = json3D
       canvas?.add(objectImage);
-      if(typeof three.canvasStyle === "undefined"){
+      if(typeof three.canvasPosition === "undefined"){
         objectImage.center()
       }
-      update3dShape("")
       set3dJson("")
+      
       
     });
     
     
-  }, [new3dImage]);
+  }, [new3dImage/*, json3D*/]);
 };

@@ -8,7 +8,6 @@ import { useText } from './hooks/useText';
 import { useFontFamily } from './hooks/useFontFamily';
 import { useShapeColor } from './hooks/useShapeColor';
 import { useShape } from './hooks/useShape';
-import { use3dShape } from './hooks/use3dShape';
 import { useWhiteboardClearModal } from './hooks/useWhiteboardClearModal';
 import { usePointerEvents } from './hooks/usePointerEvents';
 import { useFontColor } from './hooks/useFontColor';
@@ -112,12 +111,16 @@ export const WhiteboardProvider = ({
   } = useUploadFileModal(eventSerializer, userId as string);
 
   const [ is3dActive, set3dActive] = useState(DEFAULT_VALUES.IS_3D_ACTIVE);
-  // const { shape3d, update3dShape } = use3dShape();
-  const [shape3d, update3dShape] = useState("");
+  const [new3dShape, setNew3dShape] = useState("");
   const [ new3dImage, set3dImage ] = useState("")
   const [ json3D, set3dJson ] = useState("")
-  const [ resizing3d, setResizing3d] = useState(DEFAULT_VALUES.RESIZING_3D)
- 
+  const [ redrawing3d, setRedrawing3d] = useState(DEFAULT_VALUES.REDRAWING_3D)
+  const [ editing3d, setEditing3d] = useState(DEFAULT_VALUES.EDITING_3D)
+  const [ creating3d, setCreating3d] = useState(DEFAULT_VALUES.CREATING_3D)
+  const [ canvas3dPosition, set3dCanvasPosition ] = useState({top:DEFAULT_VALUES.OUT_OF_RANGE, left:DEFAULT_VALUES.OUT_OF_RANGE})
+  const [ shoud3dClose, setShoud3dClose ] = useState(false)
+  const [ shoud3dUpdate, setShoud3dUpdate ] = useState(false)
+  const [ camera3d, setCamera3d ] = useState({x:0, y:0, z:0})
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
@@ -408,14 +411,26 @@ export const WhiteboardProvider = ({
     eventController,
     is3dActive,
     set3dActive,
-    shape3d,
-    update3dShape,
+    new3dShape,
+    setNew3dShape,
     new3dImage,
     set3dImage,
     json3D,
     set3dJson,
-    resizing3d,
-    setResizing3d
+    redrawing3d,
+    setRedrawing3d,
+    editing3d,
+    setEditing3d,
+    creating3d,
+    setCreating3d,
+    canvas3dPosition,
+    set3dCanvasPosition,
+    shoud3dClose,
+    setShoud3dClose,
+    shoud3dUpdate,
+    setShoud3dUpdate,
+    camera3d, 
+    setCamera3d
   };
 
   return (

@@ -50,7 +50,10 @@ export type ObjectType =
   | 'backgroundImage'
   | 'localImage'
   | 'svg'
-  | 'cursorPointer';
+  | 'cursorPointer'
+  | 'creating3d'
+  | 'exporting3d'
+  | 'camera3d';
 
 export type PayloadTarget =
   | ICanvasObject
@@ -69,7 +72,8 @@ export type PayloadTarget =
   | { type: string; svg: string }
   | IBrushSyncTarget
   | { src: string }
-  | string;
+  | string
+  | { x: number; y: number; z: number };
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {
   readonly multiplier: number;

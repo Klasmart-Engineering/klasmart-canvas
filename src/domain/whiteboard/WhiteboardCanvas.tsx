@@ -53,6 +53,8 @@ import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronize
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
 import { use2To3d } from './canvas-features/use2To3d';
+import useSynchronized3d from './synchronization-hooks/useSynchronized3d';
+
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -375,6 +377,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   );
   useSynchronizedCursorPointer(canvas, userId, filterIncomingEvents);
   useSynchronizedBackgroundColorChanged(filterIncomingEvents);
+  useSynchronized3d(userId)
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {

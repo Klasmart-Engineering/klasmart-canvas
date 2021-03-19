@@ -74,7 +74,7 @@ function Whiteboard() {
               activeCanvas.current = 'canvas1';
             }}
           >
-            <Toolbar />
+            <Toolbar userId="teacher" />
             <WhiteboardContainer
               width={whiteboardWidth}
               height={whiteboardHeight}
@@ -91,6 +91,7 @@ function Whiteboard() {
                 <button>Teacher</button>
               </WhiteboardCanvas>
               <Canvas3d 
+                userId="teacher"
                 width={whiteboardWidth}
                 height={whiteboardHeight}
               />
@@ -111,7 +112,7 @@ function Whiteboard() {
               activeCanvas.current = 'canvas2';
             }}
           >
-            <Toolbar />
+            <Toolbar userId="student" />
             <WhiteboardContainer
               width={whiteboardWidth}
               height={whiteboardHeight}
@@ -127,6 +128,11 @@ function Whiteboard() {
               >
                 <button>Student</button>
               </WhiteboardCanvas>
+              <Canvas3d 
+                userId="student"
+                width={whiteboardWidth}
+                height={whiteboardHeight}
+              />
             </WhiteboardContainer>
           </div>
         </Provider>
@@ -144,7 +150,7 @@ function Whiteboard() {
               activeCanvas.current = 'canvas3';
             }}
           >
-            <Toolbar />
+            <Toolbar userId="student2" />
             <WhiteboardContainer
               width={whiteboardWidth}
               height={whiteboardHeight}
@@ -160,6 +166,11 @@ function Whiteboard() {
               >
                 <button>Student</button>
               </WhiteboardCanvas>
+              <Canvas3d 
+                userId="student2"
+                width={whiteboardWidth}
+                height={whiteboardHeight}
+              />
             </WhiteboardContainer>
           </div>
         </Provider>

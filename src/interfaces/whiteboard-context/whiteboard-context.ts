@@ -111,12 +111,24 @@ export interface IWhiteboardContext {
   eventController: any;
   is3dActive: boolean,
   set3dActive: (active: boolean) => void
-  shape3d: string;
-  update3dShape: (shape: string) => void;
+  new3dShape: string;
+  setNew3dShape: (shape: string) => void;
   new3dImage: string,
   set3dImage: (dataUrl: string) => void 
   json3D: string,
   set3dJson: (stringifiedJson: string) => void 
-  resizing3d: boolean,
-  setResizing3d: (isIt: boolean) => void 
+  creating3d: boolean,
+  setCreating3d: (isIt: boolean) => void 
+  redrawing3d: boolean,
+  setRedrawing3d: (isIt: boolean) => void 
+  editing3d: boolean,
+  setEditing3d: (isIt: boolean) => void,
+  canvas3dPosition: {top:number, left: number},
+  set3dCanvasPosition: (pos: {top:number, left: number}) => void, 
+  shoud3dClose: boolean,
+  setShoud3dClose: (shouldIt: boolean) => void,
+  shoud3dUpdate: boolean,
+  setShoud3dUpdate: (shouldIt: boolean) => void,
+  camera3d: {x:number, y: number, z: number},
+  setCamera3d: (pos: {x:number, y: number, z: number}) => void, 
 }
