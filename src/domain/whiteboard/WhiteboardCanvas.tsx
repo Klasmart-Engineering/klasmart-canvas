@@ -57,6 +57,8 @@ import { useStampFeature } from './canvas-features/useStampFeature';
 import useSynchronizedSendStamp from './synchronization-hooks/useSynchronizedSendStamp';
 import { useObjectHover } from './canvas-features/useObjectHover';
 import { use2To3d } from './canvas-features/use2To3d';
+import useSynchronized3d from './synchronization-hooks/useSynchronized3d';
+
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -424,6 +426,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   useSynchronizedCursorPointer(canvas, userId, filterIncomingEvents);
   useSynchronizedBackgroundColorChanged(filterIncomingEvents);
   useSynchronizedSendStamp(canvas, userId, filterIncomingEvents);
+  useSynchronized3d(userId)
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {

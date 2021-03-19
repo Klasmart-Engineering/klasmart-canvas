@@ -1,6 +1,5 @@
 import React from 'react';
 import { CSSProperties } from '@material-ui/core/styles/withStyles';
-import { relative } from 'path';
 
 /**
  * Container for WhiteboardCanvas used to resize

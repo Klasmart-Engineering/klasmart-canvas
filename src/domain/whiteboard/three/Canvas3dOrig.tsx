@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { WhiteboardContext } from '../WhiteboardContext';
@@ -6,21 +6,19 @@ import './styles.css';
 import { BufferGeometry } from 'three';
 import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
-import { PaintEventSerializer } from '../../../poc/whiteboard/event-serializer/PaintEventSerializer';
+
+// const {
+//   state: { eventSerializer },
+// } = useSharedEventSerializer();
 
 type ICanvas3dProps = {
   userId: string,
   width: number,
-  height: number,
-  eventSerializer: PaintEventSerializer,
-  cameraPos: {x:0, y:0}
+  height: number
 };
 
-type ICanvas3dState = {
-  isActive: boolean
-}
 
-class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
+class Canvas3d extends React.Component<ICanvas3dProps> {
   static contextType = WhiteboardContext;
 
   scene: THREE.Scene;
@@ -42,11 +40,9 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     this.scene = new THREE.Scene();
     this.renderer = new THREE.WebGLRenderer();
     this.camera = new THREE.PerspectiveCamera();
-    this.state = {isActive: false }
   }
 
   init = () => {
-    this.setState({isActive: true})
     this.initRenderer();
     this.initCamera();
     this.initControls();
@@ -92,11 +88,6 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   requestRenderIfNotRequested = () => {
     if (!this.renderRequested) {
       this.renderRequested = true;
-      console.log("changed" , this.camera.position)
-      /**
-       * Emits Real time exporting message
-       */
-      this.props.eventSerializer.push('three', {type: 'camera3d', target: {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z}, id: this.props.userId});
       requestAnimationFrame(this.rendererRender);
     }
   };
@@ -138,21 +129,8 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     const height = this.props.height / 3
     this.renderer.setSize(width, height);
     this.canvasSize = {width, height}
-    this.canvasPosition = {top: height, left: width}
     this.renderer.setPixelRatio(window.devicePixelRatio);
   };
-
-  update = () => {
-    console.log("updating?????", this.context.camera3d)
-      // console.log(this.context.shoud3dUpdate)
-      this.camera.position.x = this.context.camera3d.x
-      this.camera.position.y = this.context.camera3d.y
-      this.camera.position.z = this.context.camera3d.z
-      this.initControls()
-      this.camera.updateProjectionMatrix();
-      this.rendererRender()
-      
-  }
 
   shapeCreation = () => {
     
@@ -433,33 +411,33 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     this.context.setCreating3d(false)
     this.context.setNew3dShape("")
     this.context.set3dCanvasPosition({top:DEFAULT_VALUES.OUT_OF_RANGE, left:DEFAULT_VALUES.OUT_OF_RANGE})
-    this.setState({isActive: false})
-
-    /**
-     * Emits Real time exporting message
-     */
-    this.props.eventSerializer.push('three', {type: 'exporting3d', target: this.shapeType, id: this.props.userId});
   }
 
   componentDidUpdate() {
-    if(!this.state || ((!this.context.shoud3dUpdate) && this.state.isActive === this.context.is3dActive)) return
-    console.log("is3dActive", this.context.is3dActive, this.props.userId,this.context.shoud3dUpdate)
-    if(this.context.shoud3dUpdate){
-      this.update()
-      this.context.setShoud3dUpdate(false)
-      return
-    }
+    console.log("is3dActive", this.context.is3dActive)
     if (this.is3dDrawing()){
       this.init();
       if(this.context.redrawing3d)
         this.export()
     }else{
+      // eventSerializer.push('three', {type: 'creating3d', target: this.shapeType, id: this.props.userId});
       this.export()
     }
+    // if (!this.context.is3dActive) {
+    //   this.export()
+    // } else {
+    //   if (this.context.new3dShape !== '' || this.context.json3D !== ''){
+    //     this.init();
+       
+    //     // if(this.context.resizing3d)
+    //     //   this.export()
+        
+    //   }
+    // }
   }
 
   is3dDrawing = () => {
-    return !this.context.shoud3dClose && this.context.is3dActive && (this.context.creating3d || this.context.editing3d || this.context.redrawing3d)
+    return this.context.is3dActive && (this.context.creating3d || this.context.editing3d || this.context.redrawing3d)
   }
 
   getCanvasPosition = () => {
@@ -468,6 +446,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       console.log(style)
       return style
     }  
+    console.log("no canv pos")
     return {}
   }
 
@@ -484,34 +463,4 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     return this.renderScene();
   }
 }
-
-export const withEventSerializerHOC = (Component: any) => {
-
-  return (props: any) => {
-
-    // const {
-    //   shoud3dUpdate,
-    //   setShoud3dUpdate,
-    //   setCamera3d,
-    //   camera3d
-    // } = useContext(WhiteboardContext);
-  
-    // const [cameraPos, setCameraPos] = useState({x:0, y:0})
-  
-    // useEffect(() => {
-      
-    //   setCameraPos({x: camera3d.x, y: camera3d.y})
-  
-    //   // return () => {
-    //   // };
-    // }, [camera3d]);
-
-    const {
-      state: { eventSerializer },
-    } = useSharedEventSerializer();
-
-    return <Component /*cameraPos={cameraPos}*/ eventSerializer={eventSerializer} {...props} />;
-  };
-};
-
-export default withEventSerializerHOC(Canvas3d);
+export default Canvas3d;

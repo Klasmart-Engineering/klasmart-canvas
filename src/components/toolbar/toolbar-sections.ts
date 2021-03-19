@@ -513,10 +513,10 @@ const toolsSection: IBasicToolbarSection = {
       options: [
         {
           id: 'three_scene',
+          value: 'three_scene',
           title: 'Activate 3d',
           iconSrc: threeDShape,
-          iconName: '3D',
-          value: 'three_scene',
+          iconName: '3D'
         },
         {
           id: 'cube_shape',

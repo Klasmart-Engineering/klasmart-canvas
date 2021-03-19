@@ -1,10 +1,8 @@
 import { useContext, useEffect } from 'react';
-
 import { fabric } from 'fabric';
-
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
-
 import { WhiteboardContext } from '../WhiteboardContext';
+import {  is3DShape } from '../utils/shapes';
 
 
 /**
@@ -20,24 +18,25 @@ import { WhiteboardContext } from '../WhiteboardContext';
 export const use2To3d = (canvas: fabric.Canvas) => {
   // Getting necessary context variables
 
-  const { is3dActive, set3dActive, set3dJson, new3dImage, setResizing3d } = useContext(
+  const { is3dActive, set3dActive, set3dJson, new3dImage, setRedrawing3d, setEditing3d, set3dCanvasPosition } = useContext(
     WhiteboardContext
   );
 
   const to3D = (canvasObject: ICanvasObject) => {
-    console.log(canvasObject);
+    
     const three = JSON.parse(
       (canvasObject as ICanvasObject).threeObject as string
     );
-    three.canvasStyle = { left: canvasObject.left, top: canvasObject.top };
+    three.canvasPosition = { left: canvasObject.left, top: canvasObject.top };
+    set3dCanvasPosition(three.canvasPosition)
     const width = (canvasObject.width ?? 1) * (canvasObject.scaleX ?? 1);
     const height = (canvasObject.height ?? 1) * (canvasObject.scaleY ?? 1);
     three.canvasSize = { width, height };
+    console.log("exporting from 2d...", three);
     const threeObjectString = JSON.stringify(three);
 
     canvas.remove(canvasObject);
     set3dJson(threeObjectString);
-    set3dActive(true);
   };
 
   /**
@@ -64,12 +63,19 @@ export const use2To3d = (canvas: fabric.Canvas) => {
       typeof canvasObject !== 'undefined' &&
       canvasObject.hasOwnProperty('threeObject')
     ) {
-      to3D(canvasObject);
+      return canvasObject
     }
+    return false
   };
 
-  const eventHandler = function (e: fabric.IEvent) {
-    checkIfHasClickedSome3dObject(e);
+  const onMouseDown = function (e: fabric.IEvent) {
+    const canvasObject = checkIfHasClickedSome3dObject(e)
+    if(canvasObject){
+      console.log("3d clicked")
+      to3D(canvasObject);
+      setEditing3d(true)
+      set3dActive(true);
+    }
   };
 
   /**
@@ -78,23 +84,25 @@ export const use2To3d = (canvas: fabric.Canvas) => {
 
    */
 
-  const redrawOnResize = (e: fabric.IEvent) => {
+  const redraw = (e: fabric.IEvent) => {
     const canvasObject = e.target as ICanvasObject;
-    if (canvasObject.hasOwnProperty('threeObject')) {
-      // setResizing3d(true)
+    if(is3DShape(canvasObject)){
+      console.log("(scaled/moved) redrawing...")
       to3D(canvasObject);
+      setRedrawing3d(true)
+      set3dActive(true);
     }
   };
 
   useEffect(() => {
-    if (canvas && is3dActive) {
-      canvas.on('mouse:down', eventHandler);
+    if (canvas) {
+      canvas.on('mouse:down', onMouseDown);
     }
 
     return () => {
-      canvas?.off('mouse:down', eventHandler);
+      canvas?.off('mouse:down', onMouseDown);
     };
-  }, [is3dActive]);
+  }, [is3dActive, canvas]);
 
   /**
    * Handles the logic to add images and gifs as objects
@@ -103,10 +111,13 @@ export const use2To3d = (canvas: fabric.Canvas) => {
   useEffect(() => {
     if (!canvas) return;
 
-    canvas.on('object:scaled', redrawOnResize);
+    canvas.on('object:scaled', redraw);
+    canvas.on('object:moved', redraw);
 
     return () => {
-      canvas?.off('object:scaled', redrawOnResize);
+      canvas?.off('object:scaled', redraw);
+      canvas?.off('object:moved', redraw);
     };
-  }, [new3dImage]);
+  }, [new3dImage, canvas]);
+  
 };

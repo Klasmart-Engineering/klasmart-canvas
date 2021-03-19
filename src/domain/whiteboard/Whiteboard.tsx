@@ -80,7 +80,7 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
               activeCanvas.current = `canvas${user.id}`;
             }}
           >
-            <Toolbar />
+            <Toolbar userId="student" />
             <WhiteboardContainer
               width={whiteboardWidth}
               height={whiteboardHeight}
@@ -96,6 +96,11 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
               >
                 <button>{user.role}</button>
               </WhiteboardCanvas>
+              <Canvas3d 
+                userId="student2"
+                width={whiteboardWidth}
+                height={whiteboardHeight}
+              />
             </WhiteboardContainer>
           </div>
         </Provider>

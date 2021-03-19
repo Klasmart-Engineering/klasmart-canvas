@@ -25,6 +25,7 @@ import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBasicSecondOptionSelector } from '../../interfaces/toolbar/toolbar-second-option-selector/basic-second-option-selector';
 import SecondOptionSelector from './second-option-selector/SecondOptionSelector';
 import { IStampMode } from '../../interfaces/stamps/stamp-mode';
+import { useSharedEventSerializer } from '../../domain/whiteboard/SharedEventSerializerProvider';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -41,6 +42,7 @@ function Toolbar(props: {
     permissionsState: { [key: string]: boolean };
   }) => boolean;
   permissions: IPermissions;
+  userId: string
 }) {
   const [tools, setTools] = useState(toolsSection);
   const [actions] = useState(actionsSection);
@@ -100,8 +102,14 @@ function Toolbar(props: {
     open3dModal,
     set3dModalOpen,
     set3dActive,
-    update3dShape
+    setCreating3d,
+    setNew3dShape,
+    is3dActive
   } = useContext(WhiteboardContext);
+
+  const {
+    state: { eventSerializer },
+  } = useSharedEventSerializer();
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
   const cursorPointerToolIsActive =
@@ -262,8 +270,7 @@ function Toolbar(props: {
     if(tool === ELEMENTS.ADD_3D_SHAPE_TOOL)
       set3dModalOpen(true)
 
-    set3dActive(tool === ELEMENTS.THREE_SCENE || tool === ELEMENTS.ADD_3D_SHAPE_TOOL)
-
+    set3dActive(tool === ELEMENTS.ADD_3D_SHAPE_TOOL)
   }
 
   /**
@@ -323,6 +330,7 @@ function Toolbar(props: {
    * @param {string} value - new selected value
    */
   function handleToolSelectorChange(tool: string, option: string) {
+    
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
         updatePointer(option as IPointerType);
@@ -353,8 +361,27 @@ function Toolbar(props: {
         break;
       case ELEMENTS.ADD_3D_SHAPE_TOOL:
         console.log(option)
-        update3dShape(option);
-        // set3dActive(true)
+        set3dActive(false)
+          setTimeout(() => {
+            setNew3dShape(option);
+            setCreating3d(true)
+            set3dActive(true)
+            eventSerializer.push('three', {type: 'creating3d', target: option, id: props.userId});
+          }, 100);
+        // if(is3dActive){
+        //   set3dActive(false)
+        //   setTimeout(() => {
+        //     setNew3dShape(option);
+        //     setCreating3d(true)
+        //     set3dActive(true)
+        //     eventSerializer.push('creating3d', {type: 'shape3d', target: option, id: props.userId});
+        //   }, 100);
+        // }else{
+        //   setNew3dShape(option);
+        //   setCreating3d(true)
+        //   set3dActive(true)
+          
+        // }
         break;
       case ELEMENTS.ADD_STAMP_TOOL:
         updateStamp(option);
