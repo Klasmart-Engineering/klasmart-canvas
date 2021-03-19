@@ -40,6 +40,7 @@ type Props = {
   open: boolean;
   onClose: (open: boolean) => void;
   canvas: fabric.Canvas;
+  backgroundColor?: string | undefined;
   backgroundImage?: string | File | undefined;
   localImage?: string | File | undefined;
   width: number;

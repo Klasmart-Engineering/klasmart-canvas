@@ -15,10 +15,10 @@ const permissionsState = {
   text: false,
   shape: false,
   undoRedo: false,
+  backgroundColor: false,
   clearWhiteboard: false,
   downloadCanvas: false,
   uploadImage: false,
-  backgroundColor: false,
   cursorPointer: false,
 };
 

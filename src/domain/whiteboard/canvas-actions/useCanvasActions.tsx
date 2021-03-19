@@ -62,6 +62,7 @@ export const useCanvasActions = (
     setIsBackgroundImage,
     setBackgroundImageIsPartialErasable,
     setLocalImage,
+    setBackgroundImage,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { changePenColorSync } = useSynchronization(userId as string);
@@ -96,6 +97,7 @@ export const useCanvasActions = (
       setIsBackgroundImage(false);
       setBackgroundImageIsPartialErasable(false);
       setLocalImage('');
+      setBackgroundImage('');
 
       canvas.setBackgroundColor('transparent', canvas.renderAll.bind(canvas));
 
@@ -104,6 +106,7 @@ export const useCanvasActions = (
     },
     [
       canvas,
+      setBackgroundImage,
       setBackgroundImageIsPartialErasable,
       setIsBackgroundImage,
       setLocalBackground,

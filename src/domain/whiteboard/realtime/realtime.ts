@@ -1,4 +1,17 @@
 import { fabric } from 'fabric';
+import { shapePoints } from '../../../assets/shapes-points';
+import { IBrushType } from '../../../interfaces/brushes/brush-type';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
+import { ICanvasShapeBrush } from '../../../interfaces/brushes/canvas-shape-brush';
+import { ICoordinate } from '../../../interfaces/brushes/coordinate';
+import { IShapePointsIndex } from '../../../interfaces/brushes/shape-points-index';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { ChalkBrush } from '../brushes/classes/chalkBrush';
+import { DashedBrush } from '../brushes/classes/dashedBrush';
+import { MarkerBrush } from '../brushes/classes/markerBrush';
+import { PaintBrush } from '../brushes/classes/paintBrush';
+import { PenBrush } from '../brushes/classes/penBrush';
 import * as shapes from '../shapes/shapes';
 
 /**
@@ -13,7 +26,7 @@ export interface IRealtimeData {
   type: string;
   target: fabric.Object;
   coordinates?: IPoint[];
-  shape?: { [key: string]: string | number | undefined };
+  shape?: { [key: string]: string | number | ICanvasShapeBrush | undefined };
 }
 
 /**x
@@ -107,7 +120,7 @@ export class Realtime {
     color: string,
     lineWidth: number
   ) {
-    if (type !== 'PencilBrush' && type !== 'text') {
+    if (type !== 'pencil' && type !== 'text') {
       this.tempCanvas = new fabric.Canvas(this.canvas, {
         width: this.width,
         height: this.height,
@@ -149,43 +162,56 @@ export class Realtime {
    *
    * @param target Contains shape information.
    */
-  public draw(target: IRealtimeData) {
-    switch (this.type) {
-      case 'PencilBrush': {
-        this.drawPath(target.coordinates as IPoint[]);
-        break;
+  public async draw(target: IRealtimeData) {
+    if (!((target.shape as unknown) as ICanvasShapeBrush)?.basePath) {
+      switch (this.type) {
+        case 'pencil': {
+          this.drawPath(target.coordinates as IPoint[]);
+          break;
+        }
+        case 'rectangle': {
+          this.rectDraw(target);
+          break;
+        }
+        case 'circle': {
+          this.ellipseDraw(target);
+          break;
+        }
+        case 'triangle': {
+          this.triangleDraw(target);
+          break;
+        }
+        case 'pentagon': {
+          this.pentagonDraw(target);
+          break;
+        }
+        case 'hexagon': {
+          this.hexagonDraw(target);
+          break;
+        }
+        case 'star': {
+          this.starDraw(target);
+          break;
+        }
+        case 'chatBubble': {
+          this.chatDraw(target);
+          break;
+        }
+        case 'arrow': {
+          this.arrowDraw(target);
+          break;
+        }
+        default: {
+          this.customBrushPath(target);
+        }
       }
-      case 'rectangle': {
-        this.rectDraw(target);
-        break;
-      }
-      case 'circle': {
-        this.ellipseDraw(target);
-        break;
-      }
-      case 'triangle': {
-        this.triangleDraw(target);
-        break;
-      }
-      case 'pentagon': {
-        this.pentagonDraw(target);
-        break;
-      }
-      case 'hexagon': {
-        this.hexagonDraw(target);
-        break;
-      }
-      case 'star': {
-        this.starDraw(target);
-        break;
-      }
-      case 'chatBubble': {
-        this.chatDraw(target);
-        break;
-      }
-      case 'arrow': {
-        this.arrowDraw(target);
-        break;
+    } else if (this.type) {
+      let shape = await this.customBrushShape(this.type, target);
+
+      if (shape) {
+        this.clear();
+        this.tempCanvas?.add(shape);
+        this.tempCanvas?.renderAll();
       }
     }
   }
@@ -449,5 +475,330 @@ export class Realtime {
 
     this.clear();
     this.canvas?.remove();
+  }
+
+  /**
+   * Fix the dimensions of the given shape
+   * @param newShape - Shape to set dimensions
+   * @param targetShape - Reference shape to set dimensions in the new one
+   * @param brushType - Shape Brush Type
+   */
+  private fixCustomBrushShapeDimensions(
+    newShape: ICanvasObject,
+    targetShape: ICanvasObject,
+    brushType: IBrushType
+  ) {
+    newShape.set({
+      scaleX: targetShape.scaleX,
+      scaleY: targetShape.scaleY,
+      top: targetShape.top,
+      left: targetShape.left,
+      originX: targetShape.originX,
+      originY: targetShape.originY,
+    });
+
+    if (
+      brushType === 'paintbrush' ||
+      brushType === 'marker' ||
+      brushType === 'felt'
+    ) {
+      const scaleX = Number(targetShape.width) / Number(newShape.width);
+      const scaleY = Number(targetShape.height) / Number(newShape.height);
+      let top = targetShape.top;
+      let left = targetShape.left;
+
+      newShape.set({
+        top: targetShape.top,
+        left: targetShape.left,
+        width: targetShape.width,
+        height: targetShape.height,
+        scaleX,
+        scaleY,
+      });
+
+      if (brushType === 'paintbrush') {
+        const brush = new PaintBrush(
+          this.tempCanvas as fabric.Canvas,
+          this.canvas.id
+        );
+        const newPoints = ((newShape as ICanvasPathBrush).basePath
+          ?.points as ICoordinate[]).map((point) => {
+          return {
+            x: point.x * Number(newShape?.scaleX),
+            y: point.y * Number(newShape?.scaleY),
+          };
+        });
+
+        const newPath = brush.modifyPaintBrushPath(
+          'provisional',
+          newPoints,
+          Number((newShape as ICanvasPathBrush).basePath?.strokeWidth),
+          String((newShape as ICanvasPathBrush).basePath?.stroke),
+          (newShape as ICanvasBrush).basePath?.bristles || []
+        );
+
+        (newShape as ICanvasPathBrush).set({ ...newPath });
+
+        (newShape as fabric.Group).addWithUpdate();
+
+        newShape.set({
+          top,
+          left,
+        });
+
+        (newShape as fabric.Group).addWithUpdate();
+      } else {
+        (newShape as fabric.Group).forEachObject((line) => {
+          line.set({
+            top: Number(line.top) / Number(newShape?.scaleY),
+            left: Number(line.left) / Number(newShape?.scaleX),
+          });
+        });
+
+        (newShape as fabric.Group).addWithUpdate();
+
+        newShape.set({
+          top,
+          left,
+        });
+
+        (newShape as fabric.Group).addWithUpdate();
+      }
+    }
+
+    return newShape;
+  }
+
+  /**
+   * Draws a custom brush shape in tempCanvas
+   * @param shape - Shape to draw
+   * @param target - Object with the required properties to render the shape
+   */
+  private async customBrushShape(shape: string, target: any) {
+    const userId: string = this.canvas.id;
+    const original = shapePoints[shape as keyof IShapePointsIndex];
+    const brushType = target.shape.basePath.type;
+    const lineWidth = target.shape.basePath.strokeWidth;
+    const penColor = target.shape.basePath.stroke;
+
+    let brush: PenBrush | MarkerBrush | PaintBrush | ChalkBrush;
+    let newShape: fabric.Object | null = null;
+
+    if (!original) {
+      return;
+    }
+
+    switch (brushType) {
+      case 'pen':
+        brush = new PenBrush(this.tempCanvas as fabric.Canvas, userId);
+
+        const { min, max } = brush.setMinMaxWidth(lineWidth);
+        const penPoints = original.points.map((point) => {
+          return {
+            x: point.x,
+            y: point.y,
+            width: (brush as PenBrush).getRandomInt(min, max),
+          };
+        });
+
+        newShape = brush.createPenPath(
+          'provisional',
+          penPoints,
+          lineWidth,
+          penColor
+        );
+        break;
+
+      case 'marker':
+      case 'felt':
+        brush = new MarkerBrush(
+          this.tempCanvas as fabric.Canvas,
+          userId,
+          brushType
+        );
+        newShape = brush.createMarkerPath(
+          'provisional',
+          original.points,
+          lineWidth,
+          penColor
+        );
+        break;
+
+      case 'paintbrush':
+        brush = new PaintBrush(this.tempCanvas as fabric.Canvas, userId);
+        newShape = brush.modifyPaintBrushPath(
+          'provisional',
+          original.points,
+          lineWidth,
+          penColor,
+          target.shape.basePath.bristles
+        );
+        break;
+
+      case 'chalk':
+      case 'crayon':
+        const imagePromise = new Promise<fabric.Object>((resolve, reject) => {
+          try {
+            fabric.Image.fromURL(target.shape.basePath.imageData, (image) => {
+              resolve(image);
+            });
+          } catch (e) {
+            reject(e);
+          }
+        });
+
+        newShape = await imagePromise;
+    }
+
+    if (!newShape) return;
+
+    newShape = this.fixCustomBrushShapeDimensions(
+      newShape,
+      target.shape,
+      brushType
+    );
+
+    return newShape;
+  }
+
+  /**
+   * Draws a custom brush path in tempCanvas
+   * @param target - Object with the required properties to render the shape
+   */
+  private async customBrushPath(target: any) {
+    let brush: DashedBrush | PenBrush | MarkerBrush | PaintBrush | ChalkBrush;
+    let newPath;
+
+    if (!this.tempCanvas) return;
+
+    this.clear();
+
+    switch (target.type) {
+      case 'dashed':
+        brush = new DashedBrush(
+          this.tempCanvas as fabric.Canvas,
+          this.canvas.id
+        );
+
+        newPath = brush.createDashedPath(
+          'provisional',
+          target.coordinates,
+          target.lineWidth,
+          target.color
+        );
+        break;
+
+      case 'pen':
+        brush = new PenBrush(this.tempCanvas as fabric.Canvas, this.canvas.id);
+
+        const { min, max } = brush.setMinMaxWidth(target.lineWidth);
+        const points = target.coordinates.map((point: ICoordinate) => {
+          return {
+            x: point.x,
+            y: point.y,
+            width: (brush as PenBrush).getRandomInt(min, max),
+          };
+        });
+
+        newPath = brush.createPenPath(
+          'provisional',
+          points,
+          target.lineWidth,
+          target.color
+        );
+        break;
+
+      case 'marker':
+      case 'felt':
+        brush = new MarkerBrush(
+          this.tempCanvas as fabric.Canvas,
+          this.canvas.id,
+          target.type
+        );
+
+        newPath = brush.createMarkerPath(
+          'provisional',
+          target.coordinates,
+          target.lineWidth,
+          target.color
+        );
+        break;
+
+      case 'paintbrush':
+        brush = new PaintBrush(
+          this.tempCanvas as fabric.Canvas,
+          this.canvas.id
+        );
+
+        const bristles = brush.makeBrush(target.color, target.lineWidth);
+
+        newPath = brush.modifyPaintBrushPath(
+          'provisional',
+          target.coordinates,
+          target.lineWidth,
+          target.color,
+          bristles
+        );
+        break;
+
+      case 'chalk':
+      case 'crayon':
+        // const currentCanvas = new fabric.Canvas(this.canvas);
+        // currentCanvas.freeDrawingBrush = new ChalkBrush(
+        //   currentCanvas,
+        //   this.canvas.id,
+        //   target.type
+        // );
+
+        // currentCanvas.freeDrawingBrush.color = target.color;
+        // currentCanvas.freeDrawingBrush.width = target.lineWidth;
+        // currentCanvas.isDrawingMode = true;
+
+        // (target.coordinates as ICoordinate[]).forEach(
+        //   (coordinate: { x: number; y: number }, index: number) => {
+        //     if (!index) {
+        //       currentCanvas?.trigger('mouse:down', {
+        //         pointer: {
+        //           x: coordinate.x,
+        //           y: coordinate.y,
+        //         },
+        //       });
+
+        //       return;
+        //     }
+        //     currentCanvas?.trigger('mouse:move', {
+        //       pointer: {
+        //         x: coordinate.x,
+        //         y: coordinate.y,
+        //       },
+        //     });
+        //   }
+        // );
+
+        brush = new ChalkBrush(
+          this.tempCanvas as fabric.Canvas,
+          this.canvas.id,
+          target.type
+        );
+
+        const clearRects = brush.createChalkEffect(
+          target.coordinates,
+          target.lineWidth
+        );
+
+        newPath = await brush.createChalkPath(
+          'provisional',
+          target.coordinates,
+          target.lineWidth,
+          target.color,
+          clearRects
+        );
+        break;
+    }
+
+    if (!newPath) return;
+
+    this.tempCanvas?.add(newPath);
+    this.tempCanvas?.renderAll();
   }
 }
