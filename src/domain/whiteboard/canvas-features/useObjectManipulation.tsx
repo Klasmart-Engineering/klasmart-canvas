@@ -72,17 +72,12 @@ export const useObjectManipulation = (
   const getLocalObjectPermissions = useCallback(() => {
     const toolbarIsEnabled = getToolbarIsEnabled();
     const studentHasPermission =
-      toolbarIsEnabled &&
-      (permissions.move || permissions.erase);
+      toolbarIsEnabled && (permissions.move || permissions.erase);
 
     return {
       isEvented: allToolbarIsEnabled || studentHasPermission,
     };
-  }, [
-    allToolbarIsEnabled,
-    permissions.erase,
-    permissions.move,
-  ]);
+  }, [allToolbarIsEnabled, permissions.erase, permissions.move]);
 
   /**
    * Objects UseEffect.
@@ -134,6 +129,10 @@ export const useObjectManipulation = (
       isEvented,
     } = getPointerMoveToolPermissions();
 
+    if (!isEvented || (!permissions.shape && !isEvented)) {
+      canvas?.discardActiveObject().renderAll();
+    }
+
     if (teacherHasPermission || studentHasPermission) {
       canvas?.forEachObject((object: ICanvasObject) => {
         if (object.id && isLocalObject(object.id, userId)) {
@@ -157,6 +156,7 @@ export const useObjectManipulation = (
     allToolbarIsEnabled,
     permissions.move,
     getPointerMoveToolPermissions,
+    permissions.shape,
   ]);
 
   /**
@@ -164,6 +164,7 @@ export const useObjectManipulation = (
    */
   useEffect(() => {
     if (
+      permissions &&
       canvas &&
       !eraseType &&
       !brushIsActive &&
@@ -197,6 +198,7 @@ export const useObjectManipulation = (
     eventedObjects,
     isLocalObject,
     lineWidthIsActive,
+    permissions,
     shapeIsActive,
     textIsActive,
     userId,
@@ -240,4 +242,21 @@ export const useObjectManipulation = (
     shapesAreSelectable,
     getLocalObjectPermissions,
   ]);
+
+  /**
+   * Is executed each time that the permissions changes
+   * to set the current objects in the correct status
+   */
+  useEffect(() => {
+    if (!permissions.move) {
+      canvas?.forEachObject((obj) => {
+        obj.set({
+          selectable: false,
+          evented: false,
+          lockMovementX: true,
+          lockMovementY: true,
+        });
+      });
+    }
+  }, [permissions, canvas]);
 };
