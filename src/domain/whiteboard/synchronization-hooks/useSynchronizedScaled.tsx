@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useContext } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
 import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
@@ -14,6 +14,10 @@ import { Group } from 'fabric/fabric-impl';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { PaintBrush } from '../brushes/classes/paintBrush';
 import { ChalkBrush } from '../brushes/classes/chalkBrush';
+import { WhiteboardContext } from '../WhiteboardContext';
+import { PenBrush } from '../brushes/classes/penBrush';
+import { IPenPoint } from '../../../interfaces/brushes/pen-point';
+import { ICanvasShapeBrush } from '../../../interfaces/brushes/canvas-shape-brush';
 
 const useSynchronizedScaled = (
   canvas: fabric.Canvas | undefined,
@@ -22,6 +26,7 @@ const useSynchronizedScaled = (
   shouldHandleRemoteEvent: (id: string) => boolean,
   undoRedoDispatch: React.Dispatch<CanvasAction>
 ) => {
+  const { perfectShapeIsActive } = useContext(WhiteboardContext);
   const {
     state: { eventSerializer, eventController },
   } = useSharedEventSerializer();
@@ -29,7 +34,7 @@ const useSynchronizedScaled = (
   /**
    * When the lines to fix are paintbrush type is necessary
    * create a new paintbrush path based on its current data
-   * @param {ICanvasBrush} path
+   * @param {ICanvasBrush} path - Path to take base to create the new one
    */
   const fixPaintBrushLines = useCallback(
     (path: ICanvasBrush) => {
@@ -82,9 +87,10 @@ const useSynchronizedScaled = (
       });
       (path as Group).addWithUpdate();
 
-      path.set({
+      ((path as unknown) as ICanvasShapeBrush).set({
         top: top,
         left: left,
+        blockResize: false,
       });
 
       (path as Group).addWithUpdate();
@@ -137,6 +143,70 @@ const useSynchronizedScaled = (
         );
 
         if (!path || !path.id) return;
+
+        const id = path.id;
+        newObject.set({
+          top: path.top,
+          left: path.left,
+          angle: path.angle,
+          flipX: path.flipX,
+          flipY: path.flipY,
+        });
+
+        // Id's are deleted to avoid add and remove event serializing
+        delete path.id;
+        delete newObject.id;
+
+        canvas.add(newObject);
+        canvas.remove(path);
+        canvas.renderAll();
+
+        // Id's are deleted to avoid add and remove event serializing
+        newObject.set({
+          id: id,
+        });
+
+        eventController.setEventRunning(false);
+      } catch (error) {
+        console.warn(error);
+      }
+    },
+    [canvas, eventController, userId]
+  );
+
+  /**
+   * Remove the given pen path from canvas
+   * and add a new one in the current whiteboard
+   * @param {ICanvasBrush} path - Path to remove
+   */
+  const remakePenPath = useCallback(
+    (path: ICanvasBrush) => {
+      if (!canvas || !userId) return;
+
+      // Data to generate a new chalk/crayon path
+      const basePath = path.basePath;
+
+      // Brush creation
+      const brush = new PenBrush(canvas, userId);
+
+      // new points creation based on the new scale
+      const newPoints = (basePath?.points as IPenPoint[]).map((point) => {
+        return {
+          x: point.x * Number(path?.scaleX),
+          y: point.y * Number(path?.scaleY),
+          width: point.width,
+        };
+      });
+
+      try {
+        const newObject = brush.createPenPath(
+          String(path.id),
+          newPoints,
+          Number(basePath?.strokeWidth),
+          String(basePath?.stroke)
+        );
+
+        if (!path) return;
 
         const id = path.id;
         newObject.set({
@@ -248,6 +318,10 @@ const useSynchronizedScaled = (
             if (object.type === 'image-based') {
               remakePathSync(obj as ICanvasBrush);
             }
+
+            if (object.type === 'group-pen') {
+              remakePenPath(obj as ICanvasBrush);
+            }
           }
         }
       });
@@ -350,6 +424,7 @@ const useSynchronizedScaled = (
     eventController,
     fixLines,
     remakePathSync,
+    remakePenPath,
     shouldHandleRemoteEvent,
     userId,
   ]);
@@ -448,19 +523,79 @@ const useSynchronizedScaled = (
           flipY: e.target.flipY,
           originX: e.target.originX,
           originY: e.target.originY,
+          name: e.target.name,
         } as ICanvasObject;
 
         switch (brushType) {
+          case 'pen': {
+            if (!canvas || !userId) return;
+
+            if (filtered) break;
+
+            const brush = new PenBrush(canvas, userId);
+            const basePath = brushTarget.basePath;
+            const newPoints = (basePath?.points as IPenPoint[]).map((point) => {
+              return {
+                x: point.x * Number(e.target?.scaleX),
+                y: point.y * Number(e.target?.scaleY),
+                width: point.width,
+              };
+            });
+
+            try {
+              const newObject = await brush.createPenPath(
+                String(brushTarget.id),
+                newPoints,
+                Number(basePath?.strokeWidth),
+                String(basePath?.stroke)
+              );
+
+              if (!e.target) return;
+
+              console.log(e.target);
+              const id = brushTarget.id;
+              ((newObject as unknown) as ICanvasShapeBrush).set({
+                top: e.target.top,
+                left: e.target.left,
+                angle: e.target.angle,
+                flipX: e.target.flipX,
+                flipY: e.target.flipY,
+                name: e.target.name,
+                shapeType: (e.target as ICanvasShapeBrush).shapeType,
+              });
+
+              // Id's are deleted to avoid add and remove event serializing
+              delete (e.target as ICanvasBrush).id;
+              delete newObject.id;
+
+              canvas.remove(e.target);
+              canvas.add(newObject);
+              canvas.setActiveObject(newObject);
+              canvas.renderAll();
+
+              // Id's are deleted to avoid add and remove event serializing
+              newObject.set({
+                id: id,
+              });
+
+              // target.type = 'image-based';
+            } catch (e) {
+              console.warn(e);
+            }
+
+            target.type = 'group-pen';
+            break;
+          }
           case 'marker':
           case 'felt':
-          case 'paintbrush':
+          case 'paintbrush': {
             fixLines(brushTarget);
             canvas?.renderAll();
             target.type = 'group-marker';
             break;
-
+          }
           case 'chalk':
-          case 'crayon':
+          case 'crayon': {
             if (!canvas || !userId) return;
 
             if (filtered) break;
@@ -493,12 +628,14 @@ const useSynchronizedScaled = (
               if (!e.target) return;
 
               const id = brushTarget.id;
-              newObject.set({
+              ((newObject as unknown) as ICanvasShapeBrush).set({
                 top: e.target.top,
                 left: e.target.left,
                 angle: e.target.angle,
                 flipX: e.target.flipX,
                 flipY: e.target.flipY,
+                name: e.target.name,
+                shapeType: (e.target as ICanvasShapeBrush).shapeType,
               });
 
               // Id's are deleted to avoid add and remove event serializing
@@ -521,6 +658,7 @@ const useSynchronizedScaled = (
             }
 
             break;
+          }
         }
 
         const payload: ObjectEvent = {
@@ -564,6 +702,12 @@ const useSynchronizedScaled = (
     undoRedoDispatch,
     userId,
   ]);
+
+  useEffect(() => {
+    if (perfectShapeIsActive) {
+      canvas?.renderAll();
+    }
+  }, [canvas, perfectShapeIsActive]);
 };
 
 export default useSynchronizedScaled;
