@@ -12,12 +12,15 @@ import { I3dObject } from './I3dObject';
 
 type ICanvas3dProps = {
   userId: string,
-  ownerId: string,
   width: number,
   height: number,
   eventSerializer: PaintEventSerializer,
   canvasId:string,
-  isOwn: boolean,
+  active?: boolean,
+  creating?:boolean,
+  editing?: boolean,
+  redrawing?:boolean,
+  isOwn:boolean,
   json?: I3dObject
 };
 
@@ -28,7 +31,8 @@ type ICanvas3dState = {
 class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   static contextType = WhiteboardContext;
 
-  id?: string
+  canvasId?: string
+  userId?: string 
   json: any
   scene: THREE.Scene;
   renderer: THREE.WebGLRenderer;
@@ -52,57 +56,52 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     this.state = {isActive: false }
   }
 
+  addRt3d = () => {
+    this.setState({isActive: true})
+    this.initRenderer();
+    this.initCamera();
+    this.initControls();
+    this.recoverScene((this.props.json as I3dObject));
+    this.initLights();
+    this.rendererRender();
+    // window.addEventListener('resize', this.requestRenderIfNotRequested);
+  };
+
   init = () => {
     this.setState({isActive: true})
     this.initRenderer();
     this.initCamera();
     this.initControls();
-    this.controls?.addEventListener('change', this.requestRenderIfNotRequested);
-    if(this.context.creating3d){
+    if(this.props.creating){
       this.shapeType = this.context.new3dShape
       this.shape = this.shapeCreation();
       this.scene.add(this.shape);
-      this.id = uuidv4()
+      this.canvasId = uuidv4()
+      this.userId = this.props.userId
     }else{
-      this.recoverScene();
+      this.recoverScene(JSON.parse(this.context.json3D));
     } 
     this.initLights();
     this.rendererRender();
-    if(this.context.creating3d){
+    if(this.props.creating){
       this.emitAdd3d()
     }
     // window.addEventListener('resize', this.requestRenderIfNotRequested);
   };
 
-  addRt3d = () => {
-    console.log("adding rt 3d...")
-    this.setState({isActive: true})
-    this.initRenderer();
-    this.initCamera();
-    this.initControls();
-    this.recoverScene(this.props.json);
-    this.initLights();
-    this.rendererRender();
-    // window.addEventListener('resize', this.requestRenderIfNotRequested);
-  };
-
-  recoverScene = (jsObj?: I3dObject) => {
+  recoverScene = (json3D: I3dObject) => {
     const loader = new THREE.ObjectLoader();
-    let jsonObj = jsObj ?? JSON.parse(this.context.json3D);
-    // if(jsObj){
-    //   jsonObj = JSON.parse(this.context.json3D);
-    // }
-    // let jsonObj = JSON.parse(this.context.json3D);
-    console.log('recovering...', jsonObj);
-    this.canvasPosition = jsonObj.canvasPosition
-    this.canvasSize = {width: jsonObj.canvasSize.width, height: jsonObj.canvasSize.height}
+    // let jsonObj = JSON.parse(json3D);
+    console.log('recovering...', json3D);
+    this.canvasPosition = json3D.canvasPosition
+    this.canvasSize = {width: json3D.canvasSize.width, height: json3D.canvasSize.height}
     this.renderer.setSize(this.canvasSize.width, this.canvasSize.height)
-    this.scene = loader.parse(jsonObj.scene);
-    const cameraPos = jsonObj.cameraPosition
+    this.scene = loader.parse(json3D.scene);
+    const cameraPos = json3D.cameraPosition
     this.camera.position.set( cameraPos.x, cameraPos.y, cameraPos.z );
     this.controls?.update();
-    this.shapeType = jsonObj.shape
-    this.shapeColor = jsonObj.shapeColor
+    this.shapeType = json3D.shape
+    this.shapeColor = json3D.shapeColor
     this.shape = this.shapeCreation()
     this.scene.clear()
     this.scene.add(this.shape);
@@ -112,14 +111,10 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   requestRenderIfNotRequested = () => {
     if (!this.renderRequested) {
       this.renderRequested = true;
-      // console.log("changed" , this.camera.position)
       /**
        * Emits Real time exporting message
        */
       // this.props.eventSerializer.push('three', {type: 'move3d', target: {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z}, id: this.props.userId});
-      this.generateJson()
-      this.props.eventSerializer.push('three', {type: 'move3d', target: JSON.stringify(this.json), id: this.props.userId ?? ''});
-      // this.props.eventSerializer.push('three', {type: 'move3d', target: JSON.stringify(this.json), id: this.props.userId ?? ''});
       requestAnimationFrame(this.rendererRender);
     }
   };
@@ -130,7 +125,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     this.controls.target.set(0, 0, 0);
     this.controls.enableZoom = false;
     this.controls.update();
-    // this.controls.addEventListener('change', this.requestRenderIfNotRequested);
+    this.controls.addEventListener('change', this.requestRenderIfNotRequested);
   };
 
   initLights = () => {
@@ -150,8 +145,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   initRenderer = () => {
     this.renderer = new THREE.WebGLRenderer();
     this.scene.clear();
-    console.log('#three-'+this.props.userId+"-"+this.props.canvasId)
-    this.canvas = document.querySelector('#three-'+this.props.userId+"-"+this.props.canvasId);
+    this.canvas = document.querySelector('#three-'+this.props.canvasId);
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas as HTMLCanvasElement,
       alpha: true,
@@ -167,10 +161,11 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   };
 
   update = () => {
-       if(!this.props.json) return
-      this.recoverScene(this.props.json);
-      // const cameraPos = this.props.json.cameraPosition
-      // this.camera.position.set( cameraPos.x, cameraPos.y, cameraPos.z );
+    console.log("updating?????", this.context.camera3d)
+      // console.log(this.context.shoud3dUpdate)
+      this.camera.position.x = this.context.camera3d.x
+      this.camera.position.y = this.context.camera3d.y
+      this.camera.position.z = this.context.camera3d.z
       this.initControls()
       this.camera.updateProjectionMatrix();
       this.rendererRender()
@@ -324,9 +319,12 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   }
 
   edgesToGeometry = () => {
+    // const rotateX = this.shape?.rotateX
+    // const rotateY = this.shape?.rotateY
     this.scene.clear()
     this.shape = this.makeInstance(this.geometry, 0, 0, 0, false);
     this.scene.add(this.shape)
+    // this.rendererRender()
   }
 
   resizeRendererToDisplaySize = () => {
@@ -407,6 +405,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
           polygonOffsetUnits: 1,
         });
         shape = new THREE.LineSegments(geometry, material);
+        // shape.computeLineDistances();
       }
     } 
     
@@ -427,7 +426,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   };
 
   generateJson = () => {
-    this.json = {canvasId: this.id, ownerId: this.props.ownerId, scene: this.scene.toJSON(), shapeColor: this.shapeColor, canvasPosition: this.canvasPosition, canvasSize: this.canvasSize, shape: this.shapeType, geometry: this.geometry?.toJSON(), cameraPosition: {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z}}
+    this.json = {canvasId: this.canvasId, userId: this.props.userId, scene: this.scene.toJSON(), shapeColor: this.shapeColor, canvasPosition: this.canvasPosition, canvasSize: this.canvasSize, shape: this.shapeType, geometry: this.geometry?.toJSON(), cameraPosition: {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z}}
   }
 
   export = () => {
@@ -462,39 +461,26 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     /**
      * Emits Real time exporting message
      */
-    this.props.eventSerializer.push('three', {type: 'remove3d', target: JSON.stringify(this.json), id: this.props.userId ?? ''});
     // this.props.eventSerializer.push('three', {type: 'exporting3d', target: this.shapeType, id: this.props.userId});
   }
 
   emitAdd3d = () => {
     if(typeof this.canvasSize === "undefined") return
-    // this.edgesToGeometry()
-    const scene = new THREE.Scene();
-    scene.clear()
-    const shape = this.makeInstance(this.geometry, 0, 0, 0, false);
-    scene.add(shape)
-    
-    // this.generateJson()
-    const jsonObj = {canvasId: this.id, ownerId: this.props.ownerId, scene: scene.toJSON(), shapeColor: this.shapeColor, canvasPosition: this.canvasPosition, canvasSize: this.canvasSize, shape: this.shapeType, geometry: this.geometry?.toJSON(), cameraPosition: {x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z}}
+    this.edgesToGeometry()
+    this.generateJson()
+    // JSON.stringify(this.json)
     /**
      * Emits Real time exporting message
      */
-    this.props.eventSerializer.push('three', {type: 'add3d', target: JSON.stringify(jsonObj), id: this.props.userId ?? ''});
-  }
-
-  componentDidMount(){
-    console.log("mounting?", this.props.isOwn, this.props.ownerId, this.props.canvasId)
-    if(!this.props.isOwn){
-      this.addRt3d()
-    }
+    console.log("emitting")
+    this.props.eventSerializer.push('three', {type: 'add3d', target: JSON.stringify(this.json), id: this.userId ?? ''});
   }
 
   componentDidUpdate() {
-    console.log("updating?", this.props.isOwn, this.props.ownerId, this.props.canvasId)
-    if(!this.state || (  (this.props.isOwn && this.state.isActive === this.context.is3dActive) )) return
-    console.log(this.props.isOwn, this.context.is3dActive, this.props.userId,this.context.shoud3dUpdate)
+    if(!this.props.isOwn || !this.state || ((!this.context.shoud3dUpdate) && this.state.isActive === this.props.active)) return
+    console.log(this.state.isActive, this.props.active, this.props.userId,this.context.shoud3dUpdate)
     if(!this.props.isOwn){
-      this.update()
+      this.addRt3d()
       return
     }
     if(this.context.shoud3dUpdate){
@@ -504,7 +490,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     }
     if (this.is3dDrawing()){
       this.init();
-      if(this.context.redrawing3d)
+      if(this.props.redrawing)
         this.export()
     }else{
       this.export()
@@ -512,22 +498,15 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   }
 
   is3dDrawing = () => {
-    return !this.props.isOwn || ( !this.context.shoud3dClose && this.context.is3dActive && (this.context.creating3d || this.context.editing3d || this.context.redrawing3d) )
+    return !this.context.shoud3dClose && this.props.active && (this.props.creating || this.props.editing || this.props.redrawing || !this.props.isOwn)
   }
 
   getCanvasPosition = () => {
-    //
     if(this.context.canvas3dPosition.top !== DEFAULT_VALUES.OUT_OF_RANGE){
       const style = {left: this.context.canvas3dPosition.left+'px', top: this.context.canvas3dPosition.top+'px'}
       console.log(style)
       return style
     }  
-    if(!this.props.isOwn){
-      if(!this.props.json) return
-      const style = {left: this.props.json.canvasPosition.left+'px', top: this.props.json.canvasPosition.top+'px'}
-      console.log(style)
-      return style
-    }
     return {}
   }
 
@@ -535,7 +514,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     return (
       this.is3dDrawing() && (
         <canvas className="three" style={this.getCanvasPosition()}  
-         id={'three-'+this.props.userId+"-"+this.props.canvasId}></canvas>
+         id={"three-"+this.props.canvasId}></canvas>
       )
     );
   };

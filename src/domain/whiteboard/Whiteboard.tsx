@@ -11,6 +11,7 @@ import { Provider } from 'react-redux'
 import store from './redux/store'
 import AuthMenu from '../../components/AuthMenu';
 import Canvas3d from './three/Canvas3d';
+import Canvas3dSync from './three/Canvas3dSync';
 
 const teacher = {
   allowClearAll: true,
@@ -91,9 +92,17 @@ function Whiteboard() {
                 <button>Teacher</button>
               </WhiteboardCanvas>
               <Canvas3d 
+                isOwn={true}
+                canvasId="teacher-root"
                 userId="teacher"
+                ownerId="teacher"
                 width={whiteboardWidth}
                 height={whiteboardHeight}
+              />
+              <Canvas3dSync 
+              userId="teacher"
+              width={whiteboardWidth}
+              height={whiteboardHeight}
               />
             </WhiteboardContainer>
           </div>
@@ -129,9 +138,17 @@ function Whiteboard() {
                 <button>Student</button>
               </WhiteboardCanvas>
               <Canvas3d 
+                isOwn={true}
+                canvasId="student-root"
                 userId="student"
+                ownerId="student"
                 width={whiteboardWidth}
                 height={whiteboardHeight}
+              />
+              <Canvas3dSync 
+              userId="student"
+              width={whiteboardWidth}
+              height={whiteboardHeight}
               />
             </WhiteboardContainer>
           </div>
@@ -167,9 +184,17 @@ function Whiteboard() {
                 <button>Student</button>
               </WhiteboardCanvas>
               <Canvas3d 
+                isOwn={true}
+                canvasId="student2-root"
                 userId="student2"
+                ownerId="student2"
                 width={whiteboardWidth}
                 height={whiteboardHeight}
+              />
+              <Canvas3dSync 
+              userId="student2"
+              width={whiteboardWidth}
+              height={whiteboardHeight}
               />
             </WhiteboardContainer>
           </div>

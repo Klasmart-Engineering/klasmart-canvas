@@ -235,7 +235,7 @@ export class EventPainterController extends EventEmitter
   }
 
 
-  private three(id: string, objectType: string, target: ICanvasObject) {
+  private three(id: string, objectType: string, target: string) {
 
     this.emit('three', id, objectType, target);
     this.ws?.send(
