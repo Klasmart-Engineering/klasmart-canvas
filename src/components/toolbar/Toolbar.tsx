@@ -366,7 +366,6 @@ function Toolbar(props: {
             setNew3dShape(option);
             setCreating3d(true)
             set3dActive(true)
-            eventSerializer.push('three', {type: 'creating3d', target: option, id: props.userId});
           }, 100);
         // if(is3dActive){
         //   set3dActive(false)

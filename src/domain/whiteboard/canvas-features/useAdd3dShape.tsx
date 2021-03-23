@@ -18,7 +18,7 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
     set3dImage,
     json3D,
     set3dJson,
-    setShoud3dClose
+    // setShoud3dClose
   } = useContext(WhiteboardContext);
 
   /**
@@ -27,7 +27,7 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
    */
   useEffect(() => {
      if (!canvas || new3dImage === "" || json3D === "") return;  
-     setShoud3dClose(false)
+    //  setShoud3dClose(false)
     fabric.Image.fromURL(new3dImage, (img) => {
       set3dImage("")
       const three = JSON.parse(json3D)

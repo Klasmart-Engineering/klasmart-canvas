@@ -56,9 +56,9 @@ export type ObjectType =
   | 'svg'
   | 'userInfoToDisplay'
   | 'cursorPointer'
-  | 'creating3d'
-  | 'exporting3d'
-  | 'camera3d';
+  | 'add3d'
+  | 'move3d'
+  | 'remove3d';
 
 export type PayloadTarget =
   | ICanvasObject

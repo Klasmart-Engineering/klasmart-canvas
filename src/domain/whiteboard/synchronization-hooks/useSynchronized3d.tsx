@@ -1,43 +1,45 @@
 import { useEffect, useContext } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { WhiteboardContext } from '../WhiteboardContext';
+import { I3dObject } from '../three/I3dObject';
 
 const useSynchronized3d = (userId: string) => {
   const {
-    setNew3dShape,
-    set3dActive,
-    setCreating3d,
-    is3dActive,
-    setShoud3dClose,
-    setShoud3dUpdate,
-    setCamera3d,
-    // new3dImage,
-    // setRedrawing3d,
-    // setEditing3d,
-    // set3dCanvasPosition,
+    // setNew3dShape,
+    // set3dActive,
+    // setCreating3d,
+    // is3dActive,
+    // setShoud3dClose,
+    // setShoud3dUpdate,
+    // setCamera3d,
+    // setRtAdding3d,
+    setRtAdding3dObject,
+    setRtRemoving3dObject,
+    setRtMoving3dObject,
+    // addCanvas3dId,
+    // addCanvas3d,
+    // canvas3ds
   } = useContext(WhiteboardContext);
   const {
     state: { eventController },
   } = useSharedEventSerializer();
 
-  const three = (id: string, objectType: string, target: string | { x: number; y: number; z: number }) => {
+  const three = (id: string, objectType: string, target: string ) => {
     // console.log(id, objectType, target)
     if(userId === id) return
+    console.log("listening")
+    const jsonObject = JSON.parse(target)
+    // const canvasId = jsonObject.canvasId
     switch (objectType) {
-        case "creating3d":
-              setNew3dShape((target as string));
-              setCreating3d(true);
-              set3dActive(true);
+        case "add3d":
+            setRtAdding3dObject(jsonObject)
             break;
-        case "exporting3d":
-            setShoud3dClose(true);
+        case "remove3d":
+            setRtRemoving3dObject(jsonObject)
             break;
-        case "camera3d":
-            // console.log("setShoud3dUpdate", id, objectType, target)
-            setShoud3dUpdate(true);
-            setCamera3d({x:(target as { x: number; y: number; z: number }).x, y:(target as { x: number; y: number; z: number }).y, z:(target as { x: number; y: number; z: number }).z})
+        case "move3d":
+            setRtMoving3dObject(jsonObject)
             break;
-    
         default:
             break;
     }

@@ -48,6 +48,7 @@ import { useStampAssignationModal } from './hooks/useStampAssignationModal';
 import { useStampAssignedStudents } from './hooks/useStampAssignedStudents';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
+import { I3dObject } from './three/I3dObject';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -148,9 +149,25 @@ export const WhiteboardProvider = ({
   const [ editing3d, setEditing3d] = useState(DEFAULT_VALUES.EDITING_3D)
   const [ creating3d, setCreating3d] = useState(DEFAULT_VALUES.CREATING_3D)
   const [ canvas3dPosition, set3dCanvasPosition ] = useState({top:DEFAULT_VALUES.OUT_OF_RANGE, left:DEFAULT_VALUES.OUT_OF_RANGE})
-  const [ shoud3dClose, setShoud3dClose ] = useState(false)
-  const [ shoud3dUpdate, setShoud3dUpdate ] = useState(false)
-  const [ camera3d, setCamera3d ] = useState({x:0, y:0, z:0})
+  // const [ shoud3dClose, setShoud3dClose ] = useState(false)
+  // const [ shoud3dUpdate, setShoud3dUpdate ] = useState(false)
+  // const [ camera3d, setCamera3d ] = useState({x:0, y:0, z:0})
+  // const emptyIdsArray: string[] = []
+  
+  // const [ canvas3dIds, setCanvas3dIds ] = useState(emptyIdsArray)
+  // const addCanvas3dId = (id: string) => {
+  //   let origCanvas3dIds: string[] = canvas3dIds
+  //   origCanvas3dIds.push(id)
+  //   setCanvas3dIds(origCanvas3dIds)
+  // }
+  // const removeCanvas3dId = (id: string) => {
+  //   const newCanvas3dIds = canvas3dIds.filter(canvasId => canvasId !== id)
+  //   setCanvas3dIds(newCanvas3dIds)
+  // }
+  const [ rtAdding3dObject, setRtAdding3dObject ] = useState(null)
+  const [ rtRemoving3dObject, setRtRemoving3dObject ] = useState(null)
+  const [ rtMoving3dObject, setRtMoving3dObject ] = useState(null)
+
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
@@ -489,12 +506,30 @@ export const WhiteboardProvider = ({
     setCreating3d,
     canvas3dPosition,
     set3dCanvasPosition,
-    shoud3dClose,
-    setShoud3dClose,
-    shoud3dUpdate,
-    setShoud3dUpdate,
-    camera3d, 
-    setCamera3d
+    // shoud3dClose,
+    // setShoud3dClose,
+    // shoud3dUpdate,
+    // setShoud3dUpdate,
+    // camera3d, 
+    // setCamera3d,
+    
+    // canvas3dIds,
+    // addCanvas3dId,
+    // removeCanvas3dId,
+    
+    // rtAdding3d,
+    // setRtAdding3d,
+    
+    rtAdding3dObject,
+    setRtAdding3dObject,
+    rtRemoving3dObject,
+    setRtRemoving3dObject,
+    rtMoving3dObject,
+    setRtMoving3dObject,
+
+    // canvas3ds,
+    // addCanvas3d,
+    // removeCanvas3d,
   };
 
   return (
