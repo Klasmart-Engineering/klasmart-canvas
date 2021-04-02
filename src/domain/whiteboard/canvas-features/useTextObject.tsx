@@ -392,7 +392,7 @@ export const useTextObject = (
    * will unselect whiteboard active objects
    * */
   useEffect(() => {
-    if (text.length) {
+    if (text?.length) {
       actions.discardActiveObject();
     }
   }, [actions, text, textIsActive]);

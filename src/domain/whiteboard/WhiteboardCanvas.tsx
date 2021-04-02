@@ -221,6 +221,15 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     };
   }, [canvas, eventController, generatedBy]);
 
+  const getObjects = useCallback(() => {
+    const objects = canvas?.getObjects().map((object) => {
+      return object.toJSON(['basePath']);
+    });
+
+    localStorage.setItem('objects', JSON.stringify(objects));
+    return canvas?.getObjects();
+  }, [canvas]);
+
   // useEffects and logic for manage the object manipulation in canvas
   useObjectManipulation(
     canvas as fabric.Canvas,
@@ -396,10 +405,19 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
         height={height}
         backgroundColor={localBackground ? backgroundColor : undefined}
       ></CanvasDownloadConfirm>
+      <button
+        id="get-objects-button"
+        onClick={() => getObjects()}
+        hidden={true}
+        disabled={!canvas?.getObjects().length}
+      >
+        Picale bro
+      </button>
       <canvas
         width={pixelWidth}
         height={pixelHeight}
         id={instanceId}
+        placeholder={instanceId}
         style={{ ...initialStyle, backgroundColor: 'transparent' }}
         tabIndex={0}
         onClick={() => {
