@@ -63,7 +63,8 @@ export const mappedActionElements = (
 export const mappedToolElements = (
   tools: IBasicToolbarSection,
   allToolbarIsEnabled: boolean,
-  serializerToolbarState: IPermissions
+  serializerToolbarState: IPermissions,
+  is3dSelected: boolean
 ) =>
   tools.elements.map(
     (
@@ -122,7 +123,29 @@ export const mappedToolElements = (
         case 'line_type': {
           const available = true;
           const enabled = allToolbarIsEnabled || serializerToolbarState.pen;
-          return { ...elmnt, enabled, available };
+          elmnt = {
+            ...elmnt,
+            options: (elmnt as IBasicToolbarSelector).options.map(
+              (option: IToolbarSelectorOption) => {
+                if (option.id !== 'pencil_line' && option.id !== 'dashed_line') {
+                  return {
+                    ...option,
+                    enabled: !is3dSelected,
+                  };
+                } else {
+                  return {
+                    ...option,
+                    enabled,
+                  };
+                }
+              }
+            ),
+          };
+          return { ...elmnt, enabled };
+        }
+        case 'line_width': {
+          const enabled = !is3dSelected;
+          return { ...elmnt, enabled };
         }
         case 'flood_fill': {
           const available = true;
@@ -150,6 +173,10 @@ export const mappedToolElements = (
           const available = allToolbarIsEnabled;
           const enabled = allToolbarIsEnabled;
           return { ...elmnt, enabled, available };
+        }
+        case 'add_3d_shape': {
+          const enabled = allToolbarIsEnabled || serializerToolbarState.shape3d;
+          return { ...elmnt, enabled };
         }
         default: {
           return { ...elmnt, enabled: true, available: true };

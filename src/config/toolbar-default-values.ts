@@ -20,5 +20,6 @@ export const DEFAULT_VALUES = {
   EDITING_3D: false,
   CREATING_3D: false,
   PAINTING_3D: false,
-  OUT_OF_RANGE: 999999
+  OUT_OF_RANGE: 999999,
+  IS_3D_ACTIVE: false
 };

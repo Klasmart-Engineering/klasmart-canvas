@@ -13,7 +13,8 @@ import {
   PaintEventSerializer,
 } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
-import { isShape, isFreeDrawing } from '../utils/shapes';
+import { isShape, isFreeDrawing, is3DShape } from "../utils/shapes";
+import { I3dObject } from '../three/I3dObject'
 
 /**
  * Changes the penColor value and if one or more objects are selected
@@ -56,7 +57,30 @@ export const useChangeStrokeColor = (
 
         canvas.discardActiveObject();
 
+         /**
+         * If the object has a 3d relation its relation needs to be updated.
+         * The object will be removed from the canvas and the context state updated in order
+         * to react an export to the 3d canvas
+         */
+        const objects3d: I3dObject[] = [] 
         for (const object of activeObjects) {
+          if(is3DShape(object as ICanvasObject)){
+            /**
+             * to 3D
+             */
+            const three = JSON.parse(
+              (object as ICanvasObject).threeObject as string
+            );
+            three.penColor = color
+            three.canvasPosition = { left: object.left, top: object.top };
+            const width = (object.width ?? 1) * (object.scaleX ?? 1);
+            const height = (object.height ?? 1) * (object.scaleY ?? 1);
+            three.canvasSize = { width, height };
+
+            canvas.remove(object);
+            objects3d.push(three)
+            continue
+          }
           if (
             ((isShape(object) && object.shapeType === 'shape') ||
               isFreeDrawing(object)) &&
@@ -117,6 +141,11 @@ export const useChangeStrokeColor = (
           }
         }
 
+        if(objects3d.length > 0){
+          setRedrawing3dObjects(objects3d)
+          setGroupRedrawing3d("redrawing")
+          set3dActive(true)
+        } 
         if (newActives.length === 1) {
           canvas?.setActiveObject(newActives[0]);
         } else if (newActives.length >= 2) {

@@ -63,6 +63,9 @@ export const useCanvasActions = (
     setBackgroundImageIsPartialErasable,
     setLocalImage,
     setBackgroundImage,
+    setRedrawing3dObjects,
+    set3dActive,
+    setGroupRedrawing3dStatus
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { changePenColorSync } = useSynchronization(userId as string);
@@ -293,7 +296,10 @@ export const useCanvasActions = (
     eventSerializer,
     updatePenColor,
     dispatch,
-    changePenColorSync
+    changePenColorSync,
+    setGroupRedrawing3dStatus,
+    set3dActive,
+    setRedrawing3dObjects
   );
 
   /**
@@ -307,7 +313,10 @@ export const useCanvasActions = (
         eventSerializer,
         updateBrushType,
         type,
-        dispatch
+        dispatch,
+        setGroupRedrawing3dStatus,
+        set3dActive,
+        setRedrawing3dObjects
       );
     },
     [canvas, dispatch, eventSerializer, updateBrushType, userId]

@@ -68,7 +68,6 @@ const loadFromJSON = (
   setBackgroundImageIsPartialErasable: (state: boolean) => void
 ) => {
   const { currentEvent, nextEvent } = getStateVariables(state);
-
   canvas.loadFromJSON(JSON.stringify({ objects: mapped }), () => {
     canvas
       .getObjects()

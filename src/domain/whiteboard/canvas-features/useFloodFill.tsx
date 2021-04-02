@@ -312,28 +312,13 @@ export const useFloodFill = (
         return;
       }
 
-      canvas.on('mouse:down', async (event: fabric.IEvent) => {
-        if (!event.pointer) return;
-        
-        // Flood-fill for no shape objects
-        if (needsFloodFillAlgorithm(event)) {
-          floodFillMouseEvent(
-            event,
-            canvas,
-            userId,
-            isLocalObject as (p1: string, p2: string) => boolean,
-            floodFill,
-            eventSerializer,
-            undoRedoDispatch
-          );
+      // Click on shape object
+      if (event.target && (isEmptyShape(event.target) || is3DShape(event.target) ) ) {
+        floodFillInShape(event);
+      }
 
-          return;
-        }
-
-        // Click on shape object
-        if (event.target && (isEmptyShape(event.target) || is3DShape(event.target) ) ) {
-          floodFillInShape(event);
-        }
+      canvas.renderAll();
+    };
 
     if (teacherHasPermission || studentHasPermission) {
       prepareObjects();

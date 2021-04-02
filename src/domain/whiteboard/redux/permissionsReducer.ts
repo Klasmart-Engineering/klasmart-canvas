@@ -13,6 +13,7 @@ import {
   UPDATE_TEXT,
   UPDATE_UNDO_REDO,
   UPDATE_UPLOAD_IMAGE,
+  UPDATE_SHAPE_3D
 } from './actions';
 
 /**
@@ -33,8 +34,9 @@ const permissionsState: IPermissions = {
   uploadImage: false,
   backgroundColor: false,
   setUserInfoToDisplay: false,
-  cursorPointer: false
-}
+  cursorPointer: false,
+  shape3d: false,
+};
 
 /**
  * Reducer
@@ -84,6 +86,9 @@ export function permissionsReducer(
     }
     case UPDATE_RECEIVED: {
       return { ...state, ...(action.payload as IPermissions) };
+    }
+    case UPDATE_SHAPE_3D: {
+      return { ...state, shape3d: action.payload };
     }
     default:
       return state;
