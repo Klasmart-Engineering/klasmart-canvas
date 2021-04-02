@@ -16,4 +16,5 @@ export interface IPermissions {
   uploadImage: boolean;
   backgroundColor: boolean;
   cursorPointer: boolean;
+  shape3d: boolean
 }

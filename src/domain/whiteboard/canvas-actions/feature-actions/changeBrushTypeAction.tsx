@@ -18,8 +18,9 @@ import {
   PaintEventSerializer,
 } from '../../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET } from '../../reducers/undo-redo';
-import { isEmptyShape } from '../../utils/shapes';
+import { isEmptyShape, is3DShape } from '../../utils/shapes';
 import { changeBrushTypeUndoRedoGroup } from './changeBrushTypeUndoRedoGroup';
+import { I3dObject } from '../../three/I3dObject';
 
 /**
  * Changes brushType value and if one or more objects are selected
@@ -38,7 +39,10 @@ export const changeBrushTypeAction = async (
   eventSerializer: PaintEventSerializer,
   updateBrushType: (type: IBrushType) => void,
   type: IBrushType,
-  undoRedoDispatch: (action: CanvasAction) => void
+  undoRedoDispatch: (action: CanvasAction) => void,
+  setGroupRedrawing3d: (status: string) => void,
+  set3dActive: (active: boolean) => void,
+  setRedrawing3dObjects: (objs: I3dObject[]) => void
 ) => {
   let newActives: ICanvasObject[] = [];
   let activeObjects: ICanvasObject[] = [];
@@ -75,7 +79,29 @@ export const changeBrushTypeAction = async (
   canvas.discardActiveObject();
 
   // Iterating over activeObjects
+  const objects3d: I3dObject[] = [];
   for (const object of activeObjects) {
+    /**
+     * If the object has a 3d relation its relation needs to be updated.
+     * The object will be removed from the canvas and the context state updated in order
+     * to react an export to the 3d canvas
+     */
+    if ((type === 'pencil' || type === 'dashed') && is3DShape(object)) {
+      /**
+       * to 3D
+       */
+      const three = JSON.parse(object.threeObject as string);
+      three.brushType = type;
+
+      three.canvasPosition = { left: object.left, top: object.top };
+      const width = (object.width ?? 1) * (object.scaleX ?? 1);
+      const height = (object.height ?? 1) * (object.scaleY ?? 1);
+      three.canvasSize = { width, height };
+
+      canvas.remove(object);
+      objects3d.push(three);
+      continue;
+    }
     if (
       (object as ICanvasBrush).basePath &&
       canvas &&
@@ -247,6 +273,11 @@ export const changeBrushTypeAction = async (
         });
       }
     }
+  }
+  if (objects3d.length > 0) {
+    setRedrawing3dObjects(objects3d);
+    setGroupRedrawing3d('redrawing');
+    set3dActive(true);
   }
 
   if (newActives.length === 1) {

@@ -12,4 +12,9 @@ export interface I3dObject {
     y: number,
     z: number,
   }
+  previousState: I3dObject,
+  brushType: string,
+  dataURL: string,
+  penColor: string,
+  lineWidth: number
 };

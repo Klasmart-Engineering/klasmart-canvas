@@ -15,3 +15,4 @@ export const UPDATE_CLEAR_WHITEBOARD = 'clearWhiteboard';
 export const UPDATE_DOWNLOAD_CANVAS = 'downloadCanvas';
 export const UPDATE_UPLOAD_IMAGE = 'uploadImage';
 export const UPDATE_RECEIVED = 'updateReceived';
+export const UPDATE_SHAPE_3D = 'shape';

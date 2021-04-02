@@ -88,6 +88,11 @@ export const useFloodFill = (
 
   const changeStrokeAndFill = (target: fabric.Object | fabric.Group, stroke: string | undefined, fill: string | Pattern | Gradient | undefined) => {
     
+    /**
+     * If the object has a 3d relation its relation needs to be updated.
+     * The object will be removed from the canvas and the context state updated in order
+     * to react an export to the 3d canvas
+     */
     if(target && is3DShape(target as ICanvasObject)){
       const three = JSON.parse(
         (target as ICanvasObject).threeObject as string
@@ -133,6 +138,7 @@ export const useFloodFill = (
 
       // Change stroke and fill to provisional colors to be identified
       changeStrokeAndFill(event.target, differentStroke, differentFill)
+      if(event.target && is3DShape(event.target as ICanvasObject)) return
       // event.target.set({
       //   stroke: differentStroke,
       //   fill: differentFill,

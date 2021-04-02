@@ -92,7 +92,7 @@ function Toolbar(props: {
     set3dActive,
     setCreating3d,
     setNew3dShape,
-    is3dActive
+    is3dSelected
   } = useContext(WhiteboardContext);
 
   const {
@@ -115,6 +115,7 @@ function Toolbar(props: {
   const shapeToolIsActive = allToolbarIsEnabled || props.permissions.shape;
   const backgroundColorToolIsActive =
     allToolbarIsEnabled || props.permissions.backgroundColor;
+    const shape3dToolIsActive = allToolbarIsEnabled || props.permissions.shape3d; 
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -154,6 +155,12 @@ function Toolbar(props: {
     if (tool === ELEMENTS.ADD_SHAPE_TOOL && !shapeToolIsActive) {
       return;
     }
+
+    if (tool === ELEMENTS.ADD_3D_SHAPE_TOOL && !shape3dToolIsActive) {
+      return;
+    }
+
+    if(tool === ELEMENTS.LINE_WIDTH_TOOL && is3dSelected) return
 
     if (
       tool === ELEMENTS.BACKGROUND_COLOR_TOOL &&
@@ -241,8 +248,10 @@ function Toolbar(props: {
       });
     }
 
-    // console.log(tool, new3dShape)
-    set3dActive(tool === ELEMENTS.ADD_3D_SHAPE_TOOL)
+    /**
+     * Indicates if 3d tool is active
+     */
+    set3dActive(tool === ELEMENTS.ADD_3D_SHAPE_TOOL || (is3dSelected && ELEMENTS.LINE_TYPE_TOOL === tool))
   }
 
   /**
@@ -293,7 +302,7 @@ function Toolbar(props: {
    * @param {string} tool - index of the selector in ToolbarSection
    * @param {string} value - new selected value
    */
-  function handleToolSelectorChange(tool: string, option: string) {
+  async function handleToolSelectorChange(tool: string, option: string) {
     
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
@@ -324,27 +333,14 @@ function Toolbar(props: {
         updateShape(option);
         break;
       case ELEMENTS.ADD_3D_SHAPE_TOOL:
-        console.log(option)
-        set3dActive(false)
-          setTimeout(() => {
-            setNew3dShape(option);
-            setCreating3d(true)
-            set3dActive(true)
-          }, 100);
-        // if(is3dActive){
-        //   set3dActive(false)
-        //   setTimeout(() => {
-        //     setNew3dShape(option);
-        //     setCreating3d(true)
-        //     set3dActive(true)
-        //     eventSerializer.push('creating3d', {type: 'shape3d', target: option, id: props.userId});
-        //   }, 100);
-        // }else{
-        //   setNew3dShape(option);
-        //   setCreating3d(true)
-        //   set3dActive(true)
-          
-        // }
+        /**
+         * A new shape is chosen from the 3d selector
+         */
+        await set3dActive(false)
+        setNew3dShape(option);
+        setCreating3d(true)
+        set3dActive(true)
+        updateLineWidthIsActive(false)
         break;
       case ELEMENTS.ADD_STAMP_TOOL:
         updateStamp(option);
@@ -666,7 +662,8 @@ function Toolbar(props: {
   const toolElements = mappedToolElements(
     tools,
     allToolbarIsEnabled,
-    props.permissions
+    props.permissions,
+    is3dSelected
   );
 
   return (

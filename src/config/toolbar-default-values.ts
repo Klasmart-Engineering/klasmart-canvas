@@ -10,11 +10,5 @@ export const DEFAULT_VALUES = {
   SHAPE: 'rectangle',
   SHAPE_COLOR: '#000000',
   STAMP: 'yellowStar',
-  IS_3D_ACTIVE: false,
-  SHAPE_3D: 'cube',
-  REDRAWING_3D: false,
-  EDITING_3D: false,
-  CREATING_3D: false,
-  PAINTING_3D: false,
-  OUT_OF_RANGE: 999999
+  IS_3D_ACTIVE: false
 };

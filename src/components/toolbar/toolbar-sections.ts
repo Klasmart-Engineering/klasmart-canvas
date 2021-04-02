@@ -495,12 +495,6 @@ const toolsSection: IBasicToolbarSection = {
         },
       ],
     },
-    // {
-    //   id: 'three_scene',
-    //   title: 'Activate 3d',
-    //   iconSrc: threeDShape,
-    //   iconName: '3D',
-    // },
     {
       id: 'add_3d_shape',
       options: [

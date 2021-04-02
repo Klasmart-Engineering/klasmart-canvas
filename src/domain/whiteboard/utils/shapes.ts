@@ -89,3 +89,11 @@ export const penPointsMapping = (points: any[], brush: any, min: number, max: nu
 export const is3DShape = (object: ICanvasObject) => {
   return object.hasOwnProperty("threeObject");
 };
+
+/**
+ * Check if the given object is a group
+ * @param {fabric.Object} object - object to check
+ */
+export const isGroup = (object: ICanvasObject) => {
+  return object.hasOwnProperty("_objects");
+};
