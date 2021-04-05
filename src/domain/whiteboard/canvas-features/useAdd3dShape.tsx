@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { I3dObject } from '../three/I3dObject';
+import { useCallback } from 'react';
 
 /**
  * Handles logic for adding a 2d image representation of a 3d shape after
@@ -31,32 +32,35 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
    * @param three
    * @param dataURL
    */
-  const translate3dTo2dImage = (three: I3dObject, dataURL: string = '') => {
-    if (dataURL === '') dataURL = three.dataURL;
-    fabric.Image.fromURL(dataURL, (img) => {
-      let top = 0;
-      let left = 0;
-      if (typeof three.canvasPosition !== 'undefined') {
-        top = three.canvasPosition.top;
-        left = three.canvasPosition.left;
-      }
-      const objectImage: ICanvasObject = img.set({
-        left,
-        top,
+  const translate3dTo2dImage = useCallback(
+    (three: I3dObject, dataURL: string = '') => {
+      if (dataURL === '') dataURL = three.dataURL;
+      fabric.Image.fromURL(dataURL, (img) => {
+        let top = 0;
+        let left = 0;
+        if (typeof three.canvasPosition !== 'undefined') {
+          top = three.canvasPosition.top;
+          left = three.canvasPosition.left;
+        }
+        const objectImage: ICanvasObject = img.set({
+          left,
+          top,
+        });
+        objectImage.scaleToHeight(three.canvasSize.height);
+        objectImage.scaleToWidth(three.canvasSize.width);
+
+        objectImage.id = `${userId}:3D:${uuidv4()}`;
+        objectImage.threeObject = JSON.stringify(three);
+        objectImage.target = objectImage;
+
+        canvas.add(objectImage);
+        if (typeof three.canvasPosition === 'undefined') {
+          objectImage.center();
+        }
       });
-      objectImage.scaleToHeight(three.canvasSize.height);
-      objectImage.scaleToWidth(three.canvasSize.width);
-
-      objectImage.id = `${userId}:3D:${uuidv4()}`;
-      objectImage.threeObject = JSON.stringify(three);
-      objectImage.target = objectImage;
-
-      canvas.add(objectImage);
-      if (typeof three.canvasPosition === 'undefined') {
-        objectImage.center();
-      }
-    });
-  };
+    },
+    [canvas, userId]
+  );
 
   /**
    * Hook reactive to new 3d data url image change in order to translate it to 2d canvas.
@@ -67,7 +71,14 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
     translate3dTo2dImage(three, new3dImage);
     set3dImage('');
     set3dSelected(false);
-  }, [new3dImage]);
+  }, [
+    new3dImage,
+    canvas,
+    json3D,
+    set3dImage,
+    set3dSelected,
+    translate3dTo2dImage
+  ]);
 
   /**
    * Hook reactive to 3d group objects status change in order to translate them to 2d canvas.
@@ -83,5 +94,13 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
       setRedrawing3dObjects(emptyRedrawing3dObjects);
       set3dSelected(false);
     }
-  }, [groupRedrawing3dStatus]);
+  }, [
+    groupRedrawing3dStatus,
+    canvas,
+    redrawing3dObjects,
+    set3dSelected,
+    setGroupRedrawing3dStatus,
+    setRedrawing3dObjects,
+    translate3dTo2dImage
+  ]);
 };

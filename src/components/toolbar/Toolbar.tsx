@@ -25,7 +25,6 @@ import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBasicSecondOptionSelector } from '../../interfaces/toolbar/toolbar-second-option-selector/basic-second-option-selector';
 import SecondOptionSelector from './second-option-selector/SecondOptionSelector';
 import { IStampMode } from '../../interfaces/stamps/stamp-mode';
-import { useSharedEventSerializer } from '../../domain/whiteboard/SharedEventSerializerProvider';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -103,10 +102,6 @@ function Toolbar(props: {
     setNew3dShape,
     is3dSelected
   } = useContext(WhiteboardContext);
-
-  const {
-    state: { eventSerializer },
-  } = useSharedEventSerializer();
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
   const cursorPointerToolIsActive =

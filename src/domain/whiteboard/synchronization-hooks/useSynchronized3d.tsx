@@ -1,6 +1,7 @@
 import { useEffect, useContext } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { WhiteboardContext } from '../WhiteboardContext';
+import { useCallback } from 'react';
 
 /**
  * Handle the logic for Real time listening of events associated to the 3d canvas
@@ -17,7 +18,7 @@ const useSynchronized3d = (userId: string) => {
     state: { eventController },
   } = useSharedEventSerializer();
 
-  const three = (
+  const three = useCallback((
     emittingUserId: string,
     objectType: string,
     target: string
@@ -42,7 +43,7 @@ const useSynchronized3d = (userId: string) => {
       default:
         break;
     }
-  };
+  }, [setRtAdding3dObject, setRtRemoving3dObject, setRtMoving3dObject, userId]);
 
   /** Register and handle remote events. */
   useEffect(() => {
@@ -51,7 +52,7 @@ const useSynchronized3d = (userId: string) => {
     return () => {
       eventController?.removeListener('three', three);
     };
-  }, [eventController]);
+  }, [eventController, three]);
 };
 
 export default useSynchronized3d;
