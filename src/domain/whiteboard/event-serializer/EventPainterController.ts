@@ -116,6 +116,10 @@ export class EventPainterController extends EventEmitter
         }
         default:
           break;
+        case 'three': {
+          this.emit('three', data.id, data.objectType, data.target);
+          break;
+        }
       }
     };
 
@@ -297,6 +301,9 @@ export class EventPainterController extends EventEmitter
       case 'setUserInfoToDisplay':
         this.setUserInfoToDisplay('setUserInfoToDisplay', target);
         break;
+      case 'three':
+        this.three(event.id, event.objectType, target)
+        break;
       default:
         break;
     }
@@ -306,9 +313,29 @@ export class EventPainterController extends EventEmitter
     this.emit('setUserInfoToDisplay', id, target);
 
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({ id, eventType: 'setUserInfoToDisplay', target })
     );
+  }
+  
+
+
+  private three(id: string, objectType: string, target: string) {
+
+    this.emit('three', id, objectType, target);
+
+    // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
+    this.ws?.send(
+      JSON.stringify({ 
+        id,
+        objectType,
+        eventType: 'three',
+        target,
+       })
+    );
+
   }
 
   private textEdit(id: string, target: ICanvasObject) {

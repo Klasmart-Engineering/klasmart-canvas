@@ -25,6 +25,7 @@ import { IPermissions } from '../../interfaces/permissions/permissions';
 import { IBasicSecondOptionSelector } from '../../interfaces/toolbar/toolbar-second-option-selector/basic-second-option-selector';
 import SecondOptionSelector from './second-option-selector/SecondOptionSelector';
 import { IStampMode } from '../../interfaces/stamps/stamp-mode';
+import { useSharedEventSerializer } from '../../domain/whiteboard/SharedEventSerializerProvider';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -97,7 +98,15 @@ function Toolbar(props: {
     fillBackgroundColor,
     updateSelectedTool,
     setActiveTool,
+    set3dActive,
+    setCreating3d,
+    setNew3dShape,
+    is3dSelected
   } = useContext(WhiteboardContext);
+
+  const {
+    state: { eventSerializer },
+  } = useSharedEventSerializer();
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
   const cursorPointerToolIsActive =
@@ -115,6 +124,7 @@ function Toolbar(props: {
   const shapeToolIsActive = allToolbarIsEnabled || props.permissions.shape;
   const backgroundColorToolIsActive =
     allToolbarIsEnabled || props.permissions.backgroundColor;
+    const shape3dToolIsActive = allToolbarIsEnabled || props.permissions.shape3d; 
 
   /**
    * Is executed when a ToolbarButton is clicked in Tools section
@@ -122,6 +132,7 @@ function Toolbar(props: {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
+
     if (tool === ELEMENTS.POINTERS_TOOL && !cursorPointerToolIsActive) {
       return;
     }
@@ -153,6 +164,12 @@ function Toolbar(props: {
     if (tool === ELEMENTS.ADD_SHAPE_TOOL && !shapeToolIsActive) {
       return;
     }
+
+    if (tool === ELEMENTS.ADD_3D_SHAPE_TOOL && !shape3dToolIsActive) {
+      return;
+    }
+
+    if(tool === ELEMENTS.LINE_WIDTH_TOOL && is3dSelected) return
 
     if (
       tool === ELEMENTS.BACKGROUND_COLOR_TOOL &&
@@ -247,6 +264,10 @@ function Toolbar(props: {
     }
 
     setActiveTool(tool);
+    /**
+     * Indicates if 3d tool is active
+     */
+    set3dActive(tool === ELEMENTS.ADD_3D_SHAPE_TOOL || (is3dSelected && ELEMENTS.LINE_TYPE_TOOL === tool))
   }
 
   /**
@@ -305,7 +326,8 @@ function Toolbar(props: {
    * @param {string} tool - index of the selector in ToolbarSection
    * @param {string} value - new selected value
    */
-  function handleToolSelectorChange(tool: string, option: string) {
+  async function handleToolSelectorChange(tool: string, option: string) {
+    
     switch (tool) {
       case ELEMENTS.POINTERS_TOOL:
         updatePointer(option as IPointerType);
@@ -334,7 +356,16 @@ function Toolbar(props: {
       case ELEMENTS.ADD_SHAPE_TOOL:
         updateShape(option);
         break;
-
+      case ELEMENTS.ADD_3D_SHAPE_TOOL:
+        /**
+         * A new shape is chosen from the 3d selector
+         */
+        await set3dActive(false)
+        setNew3dShape(option);
+        setCreating3d(true)
+        set3dActive(true)
+        updateLineWidthIsActive(false)
+        break;
       case ELEMENTS.ADD_STAMP_TOOL:
         updateStamp(option);
         break;
@@ -379,6 +410,9 @@ function Toolbar(props: {
       case ELEMENTS.ADD_STAMP_TOOL:
         updateStampIsActive(true);
         updateStamp(specific);
+      
+      default:
+        break;
     }
   }
 
@@ -683,7 +717,8 @@ function Toolbar(props: {
   const toolElements = mappedToolElements(
     tools,
     allToolbarIsEnabled,
-    props.permissions
+    props.permissions,
+    is3dSelected
   );
 
   return (

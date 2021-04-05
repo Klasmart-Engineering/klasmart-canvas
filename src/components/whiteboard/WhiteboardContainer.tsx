@@ -30,6 +30,7 @@ export function WhiteboardContainer(props: {
     flexDirection: 'column',
     justifyContent: 'center',
     margin: '0 13px 0 8px',
+    position: 'relative'
   };
 
   const resizeDivStyle: CSSProperties = {

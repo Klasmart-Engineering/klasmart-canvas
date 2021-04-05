@@ -12,5 +12,6 @@ export const DEFAULT_VALUES = {
   STAMP: 'good',
   IS_DRAWING: false,
   DISPLAY_USER_INFO_OPTION: 'none',
-  SELECTED_TOOL: 'pointers'
+  SELECTED_TOOL: 'pointers',
+  IS_3D_ACTIVE: false
 };

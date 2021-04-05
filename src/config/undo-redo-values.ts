@@ -10,4 +10,5 @@ export const CANVAS_OBJECT_PROPS = [
   'basePath',
   'name',
   'backgroundImageEditable',
+  'threeObject'
 ];

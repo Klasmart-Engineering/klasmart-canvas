@@ -4,6 +4,7 @@ import { IBrushType } from '../brushes/brush-type';
 import { IStampMode } from '../stamps/stamp-mode';
 import { ICanvasObject } from '../objects/canvas-object';
 import { IPointerType } from '../pointers/pointer-type';
+import { I3dObject } from '../../domain/whiteboard/three/I3dObject';
 
 export interface IWhiteboardContext {
   pointer: IPointerType;
@@ -125,4 +126,34 @@ export interface IWhiteboardContext {
   updateSelectedTool: (tool: string) => void;
   activeTool: string | null;
   setActiveTool: (arg: string | null) => void;
+  is3dActive: boolean,
+  set3dActive: (active: boolean) => void
+  new3dShape: string;
+  setNew3dShape: (shape: string) => void;
+  new3dImage: string,
+  set3dImage: (dataUrl: string) => void 
+  json3D: string,
+  set3dJson: (stringifiedJson: string) => void 
+  creating3d: boolean,
+  setCreating3d: (isIt: boolean) => void 
+  redrawing3d: boolean,
+  setRedrawing3d: (isIt: boolean) => void,
+  editing3d: boolean,
+  setEditing3d: (isIt: boolean) => void,
+  canvas3dPosition: {top:number, left: number},
+  set3dCanvasPosition: (pos: {top:number, left: number}) => void, 
+  should3dUpdate: boolean,
+  setShould3dUpdate: (shouldIt: boolean) => void,
+  rtAdding3dObject: I3dObject | null,
+  setRtAdding3dObject: (object3d: I3dObject | any) => void,
+  rtRemoving3dObject: I3dObject | null,
+  setRtRemoving3dObject: (object3d: I3dObject | any) => void,
+  rtMoving3dObject: I3dObject | null,
+  setRtMoving3dObject: (object3d: I3dObject | any) => void,
+  groupRedrawing3dStatus: string,
+  setGroupRedrawing3dStatus: (status: string) => void,
+  redrawing3dObjects: I3dObject[], 
+  setRedrawing3dObjects: (objs: I3dObject[]) => void 
+  is3dSelected: boolean,
+  set3dSelected: (selected: boolean) => void
 }

@@ -15,6 +15,8 @@ import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardConta
 import { Provider } from 'react-redux';
 import store from './redux/store';
 import AuthMenu from '../../components/AuthMenu';
+import Canvas3d from './three/Canvas3d';
+import Canvas3dSync from './three/Canvas3dSync';
 
 const users = store.getState().usersState;
 
@@ -95,6 +97,19 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
               >
                 <button>{user.role}</button>
               </WhiteboardCanvas>
+              <Canvas3d 
+                isOwn={true}
+                canvasId={user.id+"-root"}
+                userId={user.id}
+                ownerId={user.id}
+                width={whiteboardWidth}
+                height={whiteboardHeight}
+              />
+              <Canvas3dSync 
+              userId={user.id}
+              width={whiteboardWidth}
+              height={whiteboardHeight}
+              />
             </WhiteboardContainer>
           </div>
         </Provider>
@@ -114,7 +129,7 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
               activeCanvas.current = 'canvas1';
             }}
           >
-            <Toolbar />
+            <Toolbar userId="teacher" />
             <WhiteboardContainer
               width={whiteboardWidth}
               height={whiteboardHeight}
@@ -130,6 +145,19 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
               >
                 <button>Teacher</button>
               </WhiteboardCanvas>
+              <Canvas3d 
+                isOwn={true}
+                canvasId="teacher-root"
+                userId="teacher"
+                ownerId="teacher"
+                width={whiteboardWidth}
+                height={whiteboardHeight}
+              />
+              <Canvas3dSync 
+              userId="teacher"
+              width={whiteboardWidth}
+              height={whiteboardHeight}
+              />
             </WhiteboardContainer>
           </div>
         </Provider>
@@ -147,7 +175,7 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
               activeCanvas.current = 'canvas2';
             }}
           >
-            <Toolbar />
+            <Toolbar userId="student" />
             <WhiteboardContainer
               width={whiteboardWidth}
               height={whiteboardHeight}
@@ -163,6 +191,19 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
               >
                 <button>Student</button>
               </WhiteboardCanvas>
+              <Canvas3d 
+                isOwn={true}
+                canvasId="student-root"
+                userId="student"
+                ownerId="student"
+                width={whiteboardWidth}
+                height={whiteboardHeight}
+              />
+              <Canvas3dSync 
+              userId="student"
+              width={whiteboardWidth}
+              height={whiteboardHeight}
+              />
             </WhiteboardContainer>
           </div>
         </Provider>
@@ -180,7 +221,7 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
               activeCanvas.current = 'canvas3';
             }}
           >
-            <Toolbar />
+            <Toolbar userId="student2" />
             <WhiteboardContainer
               width={whiteboardWidth}
               height={whiteboardHeight}
@@ -199,6 +240,19 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
               >
                 <button>Student</button>
               </WhiteboardCanvas>
+              <Canvas3d 
+                isOwn={true}
+                canvasId="student2-root"
+                userId="student2"
+                ownerId="student2"
+                width={whiteboardWidth}
+                height={whiteboardHeight}
+              />
+              <Canvas3dSync 
+              userId="student2"
+              width={whiteboardWidth}
+              height={whiteboardHeight}
+              />
             </WhiteboardContainer>
           </div>
         </Provider>

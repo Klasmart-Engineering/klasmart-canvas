@@ -20,7 +20,8 @@ export type PainterEventType =
   | 'sendStamp'
   | 'cursorPointer'
   | 'backgroundColorChanged'
-  | 'setUserInfoToDisplay';
+  | 'setUserInfoToDisplay'
+  | 'three';
 
 export interface PainterEvent {
   // The event type.

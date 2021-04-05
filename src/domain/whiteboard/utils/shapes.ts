@@ -3,6 +3,7 @@ import { ITextOptions } from 'fabric/fabric-impl';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { ICoordinate } from '../../../interfaces/brushes/coordinate';
 import { PenBrush } from '../brushes/classes/penBrush';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 
 /**
  * Check if the given object is a free drawing object
@@ -88,3 +89,19 @@ export const penPointsMapping = (
     y: point.y,
     width: (brush as PenBrush).getRandomInt(min, max),
   }));
+
+/**
+ * Check if the given object is a 3d shape
+ * @param {fabric.Object} object - object to check
+ */
+export const is3DShape = (object: ICanvasObject) => {
+  return object.hasOwnProperty("threeObject");
+};
+
+/**
+ * Check if the given object is a group
+ * @param {fabric.Object} object - object to check
+ */
+export const isGroup = (object: ICanvasObject) => {
+  return object.hasOwnProperty("_objects");
+};
