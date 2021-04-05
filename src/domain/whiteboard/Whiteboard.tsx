@@ -1,4 +1,4 @@
-import React, { CSSProperties, useEffect, useRef } from 'react';
+import React, { CSSProperties, useEffect, useRef, useState } from 'react';
 import '../../assets/style/whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
@@ -26,6 +26,7 @@ const student = {
 function Whiteboard() {
   const whiteboardWidth = 740;
   const whiteboardHeight = 460;
+  const [ user, setUser ] = useState<any>();
 
   const canvasStyle: CSSProperties = {
     position: 'absolute',
@@ -50,115 +51,59 @@ function Whiteboard() {
     };
 
     window.addEventListener('keydown', keydownHandler);
+    window.addEventListener('message', (data: any) => {
+      setUser(data.data.value);
+    });
 
     // Remove event listeners on cleanup
     return () => {
       window.removeEventListener('keydown', keydownHandler);
+      window.removeEventListener('message', keydownHandler);
     };
-  }, []);
+  }, [user]);
 
   return (
     <>
-      <WhiteboardProvider
-        clearWhiteboardPermissions={teacher}
-        allToolbarIsEnabled={true}
-        activeCanvas={activeCanvas}
-        userId={'teacher'}
-      >
-        <Provider store={store}>
-          <AuthMenu userId={'teacher'} />
-          <div
-            className="whiteboard"
-            onClick={() => {
-              activeCanvas.current = 'canvas1';
-            }}
-          >
-            <Toolbar />
-            <WhiteboardContainer
-              width={whiteboardWidth}
-              height={whiteboardHeight}
+      {user?.id &&
+        <WhiteboardProvider
+          clearWhiteboardPermissions={teacher}
+          // allToolbarIsEnabled={true}
+          allToolbarIsEnabled={user?.id === 'teacher'}
+          activeCanvas={activeCanvas}
+          // userId={'teacher'}
+          userId={user?.id}
+        >
+          <Provider store={store}>
+            {/* <AuthMenu userId={'teacher'} /> */}
+            <AuthMenu userId={user?.id} />
+            <div
+              className="whiteboard"
+              onClick={() => {
+                activeCanvas.current = 'canvas1';
+              }}
             >
-              <WhiteboardCanvas
-                instanceId="canvas1"
-                userId="teacher"
-                initialStyle={canvasStyle}
-                pointerEvents={true}
-                clearWhiteboardPermissions={teacher}
-                pixelWidth={whiteboardWidth}
-                pixelHeight={whiteboardHeight}
+              <Toolbar />
+              <WhiteboardContainer
+                width={whiteboardWidth}
+                height={whiteboardHeight}
               >
-                <button>Teacher</button>
-              </WhiteboardCanvas>
-            </WhiteboardContainer>
-          </div>
-        </Provider>
-      </WhiteboardProvider>
-      <WhiteboardProvider
-        clearWhiteboardPermissions={student}
-        allToolbarIsEnabled={false}
-        activeCanvas={activeCanvas}
-        userId={'student'}
-      >
-        <Provider store={store}>
-          <div
-            className="whiteboard"
-            onClick={() => {
-              activeCanvas.current = 'canvas2';
-            }}
-          >
-            <Toolbar />
-            <WhiteboardContainer
-              width={whiteboardWidth}
-              height={whiteboardHeight}
-            >
-              <WhiteboardCanvas
-                instanceId="canvas2"
-                userId="student"
-                initialStyle={canvasStyle}
-                pointerEvents={true}
-                clearWhiteboardPermissions={student}
-                pixelWidth={whiteboardWidth}
-                pixelHeight={whiteboardHeight}
-              >
-                <button>Student</button>
-              </WhiteboardCanvas>
-            </WhiteboardContainer>
-          </div>
-        </Provider>
-      </WhiteboardProvider>
-      <WhiteboardProvider
-        clearWhiteboardPermissions={student}
-        allToolbarIsEnabled={false}
-        activeCanvas={activeCanvas}
-        userId={'student2'}
-      >
-        <Provider store={store}>
-          <div
-            className="whiteboard"
-            onClick={() => {
-              activeCanvas.current = 'canvas3';
-            }}
-          >
-            <Toolbar />
-            <WhiteboardContainer
-              width={whiteboardWidth}
-              height={whiteboardHeight}
-            >
-              <WhiteboardCanvas
-                instanceId="canvas3"
-                userId="student2"
-                initialStyle={canvasStyle}
-                pointerEvents={true}
-                clearWhiteboardPermissions={student}
-                pixelWidth={whiteboardWidth}
-                pixelHeight={whiteboardHeight}
-              >
-                <button>Student</button>
-              </WhiteboardCanvas>
-            </WhiteboardContainer>
-          </div>
-        </Provider>
-      </WhiteboardProvider>
+                <WhiteboardCanvas
+                  // instanceId="canvas1"
+                  // userId="teacher"
+                  instanceId={user?.canvasId}
+                  userId={user?.id}
+                  initialStyle={canvasStyle}
+                  pointerEvents={true}
+                  clearWhiteboardPermissions={teacher}
+                  pixelWidth={whiteboardWidth}
+                  pixelHeight={whiteboardHeight}
+                >
+                  <button>Teacher</button>
+                </WhiteboardCanvas>
+              </WhiteboardContainer>
+            </div>
+          </Provider>
+        </WhiteboardProvider>}
     </>
   );
 }
