@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React from 'react';
 import * as THREE from 'three';
 import { BufferGeometry } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -143,33 +143,37 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
 
   /**
    * Recover a scene from a saved json
-   * @param {I3dObject} jsObj - the scene saved in a json. Optional. If not present, it gets it from the state context. 
+   * @param {I3dObject} jsObj - the scene saved in a json. Optional. If not present, it gets it from the state context.
    */
   recoverScene = (jsObj?: I3dObject) => {
-    const loader = new THREE.ObjectLoader();
-    let jsonObj = jsObj ?? JSON.parse(this.context.json3D);
-    this.canvasPosition = jsonObj.canvasPosition;
-    this.canvasSize = {
-      width: jsonObj.canvasSize.width,
-      height: jsonObj.canvasSize.height,
-    };
-    this.renderer.setSize(this.canvasSize.width, this.canvasSize.height);
-    this.scene = loader.parse(jsonObj.scene);
-    const cameraPos = jsonObj.cameraPosition;
-    this.camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
-    this.controls?.update();
-    this.shapeType = jsonObj.shape;
-    this.shapeColor = jsonObj.shapeColor;
-    this.penColor = jsonObj.penColor;
-    this.brushType = jsonObj.brushType;
-    this.shape = this.shapeCreation();
-    this.scene.clear();
-    this.scene.add(this.shape);
-    this.rendererRender();
+    try {
+      const loader = new THREE.ObjectLoader();
+      let jsonObj = jsObj ?? JSON.parse(this.context.json3D);
+      this.canvasPosition = jsonObj.canvasPosition;
+      this.canvasSize = {
+        width: jsonObj.canvasSize.width,
+        height: jsonObj.canvasSize.height,
+      };
+      this.renderer.setSize(this.canvasSize.width, this.canvasSize.height);
+      this.scene = loader.parse(jsonObj.scene);
+      const cameraPos = jsonObj.cameraPosition;
+      this.camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
+      this.controls?.update();
+      this.shapeType = jsonObj.shape;
+      this.shapeColor = jsonObj.shapeColor;
+      this.penColor = jsonObj.penColor;
+      this.brushType = jsonObj.brushType;
+      this.shape = this.shapeCreation();
+      this.scene.clear();
+      this.scene.add(this.shape);
+      this.rendererRender();
+    } catch (error) {
+      console.warn(error);
+    }
   };
 
   /**
-   * Handle event of camera rotation on control change 
+   * Handle event of camera rotation on control change
    */
   requestRenderIfNotRequested = () => {
     if (!this.renderRequested) {
@@ -225,7 +229,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   initRenderer = () => {
     this.renderer = new THREE.WebGLRenderer();
     this.scene.clear();
-    
+
     /**
      * Get the html canvas, identified by the user and canvas ids
      * From three.js docs. No way to avoid the dom selector :(
@@ -248,9 +252,10 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     this.renderer.setPixelRatio(window.devicePixelRatio);
   };
 
-/**
- * Update scene from other user, on Real time request
- */ 
+  /**
+   * Update scene from other user, on Real time request
+   */
+
   update = () => {
     if (!this.props.json) return;
     this.recoverScene(this.props.json);
@@ -264,7 +269,6 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
    * Shape Creation
    */
   shapeCreation = () => {
-
     /**
      * Hardcoded values for sizing were selected because the new shape seems ok with them
      * And due to client request of avoiding multiple edges
@@ -449,7 +453,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     // }
 
     this.renderer.render(this.scene, this.camera);
-    
+
     /**
      * Get the data url image from the 3d scene/renderer
      */
@@ -487,7 +491,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       | THREE.LineBasicMaterial
       | THREE.Line;
     let shape: THREE.LineSegments | THREE.Mesh;
-    
+
     /**
      * If there is a color, it creates a phong material.
      * Otherwise a line segments that wraps a line -dashed or not- material, needed to create a transparent shape seen by its edges.
@@ -706,17 +710,16 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   };
 
   componentDidMount() {
-      /**
-       * As the 3d canvas owned by the user won't be display on App start, just the 
-       * not owned 3d canvas need to perform an initialization on component mount
-       */
+    /**
+     * As the 3d canvas owned by the user won't be display on App start, just the
+     * not owned 3d canvas need to perform an initialization on component mount
+     */
     if (!this.props.isOwn) {
       this.addRt3d();
     }
   }
 
   componentDidUpdate() {
-
     /**
      * Scenarios where nothing should happen
      */
@@ -728,9 +731,9 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     )
       return;
 
-      /**
-       * If the 3d canvas is not owned, the update method is called.
-       */
+    /**
+     * If the 3d canvas is not owned, the update method is called.
+     */
     if (!this.props.isOwn) {
       this.update();
       return;
@@ -740,10 +743,9 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
      * Checks if the canvas is being drawn
      */
     if (this.is3dDrawing()) {
-
-        /**
-         * If the redrawing is for multiple canvas -group action-
-         */
+      /**
+       * If the redrawing is for multiple canvas -group action-
+       */
       if (this.context.groupRedrawing3dStatus === 'redrawing') {
         this.groupRedrawAndExport();
         return;

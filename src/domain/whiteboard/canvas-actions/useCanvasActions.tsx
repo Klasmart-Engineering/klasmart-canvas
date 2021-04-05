@@ -65,7 +65,7 @@ export const useCanvasActions = (
     setBackgroundImage,
     setRedrawing3dObjects,
     set3dActive,
-    setGroupRedrawing3dStatus
+    setGroupRedrawing3dStatus,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { changePenColorSync } = useSynchronization(userId as string);
@@ -319,7 +319,16 @@ export const useCanvasActions = (
         setRedrawing3dObjects
       );
     },
-    [canvas, dispatch, eventSerializer, updateBrushType, userId]
+    [
+      canvas,
+      dispatch,
+      eventSerializer,
+      updateBrushType,
+      userId,
+      setGroupRedrawing3dStatus,
+      set3dActive,
+      setRedrawing3dObjects,
+    ]
   );
 
   /**

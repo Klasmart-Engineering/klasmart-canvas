@@ -42,7 +42,6 @@ function Toolbar(props: {
     permissionsState: { [key: string]: boolean };
   }) => boolean;
   permissions: IPermissions;
-  userId: string
 }) {
   const [tools, setTools] = useState(toolsSection);
   const [actions] = useState(actionsSection);
@@ -106,10 +105,6 @@ function Toolbar(props: {
     setNew3dShape,
     is3dSelected
   } = useContext(WhiteboardContext);
-
-  const {
-    state: { eventSerializer },
-  } = useSharedEventSerializer();
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
   const cursorPointerToolIsActive =
