@@ -22,7 +22,6 @@ import { mappedActionElements, mappedToolElements } from './permissions-mapper';
 import { IBrushType } from '../../interfaces/brushes/brush-type';
 import { IPointerType } from '../../interfaces/pointers/pointer-type';
 import { IPermissions } from '../../interfaces/permissions/permissions';
-import { useSharedEventSerializer } from '../../domain/whiteboard/SharedEventSerializerProvider';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -38,7 +37,6 @@ function Toolbar(props: {
     permissionsState: { [key: string]: boolean };
   }) => boolean;
   permissions: IPermissions;
-  userId: string
 }) {
   const [tools, setTools] = useState(toolsSection);
   const [actions] = useState(actionsSection);
@@ -94,10 +92,6 @@ function Toolbar(props: {
     setNew3dShape,
     is3dSelected
   } = useContext(WhiteboardContext);
-
-  const {
-    state: { eventSerializer },
-  } = useSharedEventSerializer();
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
   const cursorPointerToolIsActive =

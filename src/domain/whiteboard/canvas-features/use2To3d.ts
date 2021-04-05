@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useCallback } from 'react';
 import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { WhiteboardContext } from '../WhiteboardContext';
@@ -29,7 +29,7 @@ export const use2To3d = (canvas: fabric.Canvas) => {
    * Get the threeObject attribute from the Canvas Object and save it in context state.
    * @param canvasObject
    */
-  const to3D = (canvasObject: ICanvasObject) => {
+  const to3D = useCallback((canvasObject: ICanvasObject) => {
     try {
       const three = JSON.parse(
         (canvasObject as ICanvasObject).threeObject as string
@@ -44,16 +44,15 @@ export const use2To3d = (canvas: fabric.Canvas) => {
       canvas.remove(canvasObject);
       set3dJson(threeObjectString);
     } catch (error) {
-      console.log(canvasObject);
       console.warn(error);
     }
-  };
+  }, [canvas, set3dCanvasPosition, set3dJson]);
 
   /**
    * Check if has clicked some fabric canvas object related to a 3d shape
    * @param {fabric.Ievent} e - fabric event
    */
-  const checkIfHasClickedSome3dObject = (e: fabric.IEvent) => {
+  const checkIfHasClickedSome3dObject = useCallback((e: fabric.IEvent) => {
     if (!e.pointer) return;
     const { pointer } = e;
 
@@ -69,21 +68,30 @@ export const use2To3d = (canvas: fabric.Canvas) => {
       return canvasObject;
     }
     return false;
-  };
+  }, [canvas]);
 
   /**
    * Handle mouse down event. If Canvas Object with 3d representation,
    * 3d translation will be executed and context state, updated.
    * @param e
    */
-  const onMouseDown = function (e: fabric.IEvent) {
+  // const onMouseDown = function (e: fabric.IEvent) {
+  //   const canvasObject = checkIfHasClickedSome3dObject(e);
+  //   if (canvasObject) {
+  //     to3D(canvasObject);
+  //     setEditing3d(true);
+  //     set3dActive(true);
+  //   }
+  // };
+
+  const onMouseDown = useCallback((e: fabric.IEvent) => { 
     const canvasObject = checkIfHasClickedSome3dObject(e);
     if (canvasObject) {
       to3D(canvasObject);
       setEditing3d(true);
       set3dActive(true);
     }
-  };
+  }, [to3D, setEditing3d, set3dActive, checkIfHasClickedSome3dObject]);
 
   /**
    * Handle mouse down for clearing 3d selection and active context state
@@ -101,7 +109,7 @@ export const use2To3d = (canvas: fabric.Canvas) => {
    * for multiple 3d objects redraw after group behavior.
    * @param {fabric.IEvent} e
    */
-  const onSelectionCreate = (e: fabric.IEvent) => {
+  const onSelectionCreate = useCallback((e: fabric.IEvent) => {
     const selection = e.target as ICanvasObject;
     let isAll3d = true;
     if (selection._objects) {
@@ -113,20 +121,20 @@ export const use2To3d = (canvas: fabric.Canvas) => {
     }
     if (isAll3d) set3dSelected(true);
     else set3dSelected(false);
-  };
+  }, [set3dSelected]);
 
   /**
    * Handle Move and Scale object event, updates context state to redraw 3d object.
    * @param  {fabric.IEvent} e
    */
-  const redraw = (e: fabric.IEvent) => {
+  const redraw = useCallback((e: fabric.IEvent) => {
     const canvasObject = e.target as ICanvasObject;
     if (is3DShape(canvasObject)) {
       to3D(canvasObject);
       setRedrawing3d(true);
       set3dActive(true);
     }
-  };
+  }, [to3D, setRedrawing3d, set3dActive]);
 
   /**
    * Hook to react on canvas mouse down when 3dActive context state is updated.
@@ -139,7 +147,7 @@ export const use2To3d = (canvas: fabric.Canvas) => {
     return () => {
       canvas?.off('mouse:down', onMouseDown);
     };
-  }, [is3dActive, canvas]);
+  }, [is3dActive, canvas, onMouseDown]);
 
   /**
    * Hook to react on object scaled, moved or creation created.
@@ -156,7 +164,7 @@ export const use2To3d = (canvas: fabric.Canvas) => {
       canvas?.off('object:moved', redraw);
       canvas?.off('selection:created', onSelectionCreate);
     };
-  }, [new3dImage, canvas]);
+  }, [new3dImage, canvas, onSelectionCreate, redraw]);
 
   /**
    * Hook to react on canvas mouse down in order to update the 3d active context state.

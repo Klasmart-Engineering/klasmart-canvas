@@ -75,7 +75,7 @@ function Whiteboard() {
               activeCanvas.current = 'canvas1';
             }}
           >
-            <Toolbar userId="teacher" />
+            <Toolbar />
             <WhiteboardContainer
               width={whiteboardWidth}
               height={whiteboardHeight}
@@ -121,7 +121,7 @@ function Whiteboard() {
               activeCanvas.current = 'canvas2';
             }}
           >
-            <Toolbar userId="student" />
+            <Toolbar />
             <WhiteboardContainer
               width={whiteboardWidth}
               height={whiteboardHeight}
@@ -167,7 +167,7 @@ function Whiteboard() {
               activeCanvas.current = 'canvas3';
             }}
           >
-            <Toolbar userId="student2" />
+            <Toolbar />
             <WhiteboardContainer
               width={whiteboardWidth}
               height={whiteboardHeight}
