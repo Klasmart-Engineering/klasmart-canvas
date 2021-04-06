@@ -146,30 +146,30 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
    * @param {I3dObject} jsObj - the scene saved in a json. Optional. If not present, it gets it from the state context.
    */
   recoverScene = (jsObj?: I3dObject) => {
+    const loader = new THREE.ObjectLoader();
+    let jsonObj = jsObj ?? JSON.parse(this.context.json3D);
+    this.canvasPosition = jsonObj.canvasPosition;
+    this.canvasSize = {
+      width: jsonObj.canvasSize.width,
+      height: jsonObj.canvasSize.height,
+    };
+    this.renderer.setSize(this.canvasSize.width, this.canvasSize.height);
     try {
-      const loader = new THREE.ObjectLoader();
-      let jsonObj = jsObj ?? JSON.parse(this.context.json3D);
-      this.canvasPosition = jsonObj.canvasPosition;
-      this.canvasSize = {
-        width: jsonObj.canvasSize.width,
-        height: jsonObj.canvasSize.height,
-      };
-      this.renderer.setSize(this.canvasSize.width, this.canvasSize.height);
       this.scene = loader.parse(jsonObj.scene);
-      const cameraPos = jsonObj.cameraPosition;
-      this.camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
-      this.controls?.update();
-      this.shapeType = jsonObj.shape;
-      this.shapeColor = jsonObj.shapeColor;
-      this.penColor = jsonObj.penColor;
-      this.brushType = jsonObj.brushType;
-      this.shape = this.shapeCreation();
-      this.scene.clear();
-      this.scene.add(this.shape);
-      this.rendererRender();
     } catch (error) {
-      console.warn(error);
+      console.warn(error) 
     }
+    const cameraPos = jsonObj.cameraPosition;
+    this.camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
+    this.controls?.update();
+    this.shapeType = jsonObj.shape;
+    this.shapeColor = jsonObj.shapeColor;
+    this.penColor = jsonObj.penColor;
+    this.brushType = jsonObj.brushType;
+    this.shape = this.shapeCreation();
+    this.scene.clear();
+    this.scene.add(this.shape);
+    this.rendererRender();
   };
 
   /**
