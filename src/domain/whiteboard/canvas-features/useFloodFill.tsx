@@ -98,6 +98,10 @@ export const useFloodFill = (
         (target as ICanvasObject).threeObject as string
       );
       three.shapeColor = floodFill
+      three.canvasPosition = { left: target.left, top: target.top };
+      const width = (target.width ?? 1) * (target.scaleX ?? 1);
+      const height = (target.height ?? 1) * (target.scaleY ?? 1);
+      three.canvasSize = { width, height };
       const threeObjectString = JSON.stringify(three);
       canvas.remove(target);
       set3dJson(threeObjectString);
