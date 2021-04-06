@@ -152,12 +152,14 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
       'moving',
       'pointer',
       'textEdit',
+      'three'
     ];
 
     const storeRemoteEvent = (payload: PainterEvent) => {
       if (
         nonpersistentEventTypes.includes(payload.type) ||
         payload.id?.split(':')[1] === 'cursor' ||
+        payload.id?.includes(':3D:') ||
         payload.avoidPersistentStoring
       )
         return;
