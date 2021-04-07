@@ -15,6 +15,7 @@ import {
 import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
 import { isShape, isFreeDrawing, is3DShape } from '../utils/shapes';
 import { I3dObject } from '../three/I3dObject';
+import from2To3d from '../three/from2to3d';
 
 /**
  * Changes the penColor value and if one or more objects are selected
@@ -73,14 +74,8 @@ export const useChangeStrokeColor = (
             /**
              * to 3D
              */
-            const three = JSON.parse(
-              (object as ICanvasObject).threeObject as string
-            );
+            const three = from2To3d(object as ICanvasObject)
             three.penColor = color
-            three.canvasPosition = { left: object.left, top: object.top };
-            const width = (object.width ?? 1) * (object.scaleX ?? 1);
-            const height = (object.height ?? 1) * (object.scaleY ?? 1);
-            three.canvasSize = { width, height };
     
             canvas.remove(object);
             objects3d.push(three)

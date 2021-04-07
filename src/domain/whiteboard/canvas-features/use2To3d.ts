@@ -3,6 +3,7 @@ import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { is3DShape } from '../utils/shapes';
+import from2To3d from '../three/from2to3d';
 
 /**
  * Handles logic for exporting a the 2d image representation of the 3d shape
@@ -23,6 +24,7 @@ export const use2To3d = (canvas: fabric.Canvas) => {
     set3dCanvasPosition,
     set3dSelected,
     is3dSelected,
+    floodFillIsActive
   } = useContext(WhiteboardContext);
 
   /**
@@ -31,14 +33,10 @@ export const use2To3d = (canvas: fabric.Canvas) => {
    */
   const to3D = useCallback((canvasObject: ICanvasObject) => {
     try {
-      const three = JSON.parse(
-        (canvasObject as ICanvasObject).threeObject as string
-      );
-      three.canvasPosition = { left: canvasObject.left, top: canvasObject.top };
+      
+      const three = from2To3d(canvasObject)
+
       set3dCanvasPosition(three.canvasPosition);
-      const width = (canvasObject.width ?? 1) * (canvasObject.scaleX ?? 1);
-      const height = (canvasObject.height ?? 1) * (canvasObject.scaleY ?? 1);
-      three.canvasSize = { width, height };
       const threeObjectString = JSON.stringify(three);
 
       canvas.remove(canvasObject);
@@ -75,23 +73,14 @@ export const use2To3d = (canvas: fabric.Canvas) => {
    * 3d translation will be executed and context state, updated.
    * @param e
    */
-  // const onMouseDown = function (e: fabric.IEvent) {
-  //   const canvasObject = checkIfHasClickedSome3dObject(e);
-  //   if (canvasObject) {
-  //     to3D(canvasObject);
-  //     setEditing3d(true);
-  //     set3dActive(true);
-  //   }
-  // };
-
-  const onMouseDown = useCallback((e: fabric.IEvent) => { 
+   const onMouseDown = useCallback((e: fabric.IEvent) => { 
     const canvasObject = checkIfHasClickedSome3dObject(e);
-    if (canvasObject) {
+    if (canvasObject && is3dActive) {
       to3D(canvasObject);
       setEditing3d(true);
-      set3dActive(true);
+      // set3dActive(true);
     }
-  }, [to3D, setEditing3d, set3dActive, checkIfHasClickedSome3dObject]);
+  }, [to3D, setEditing3d, is3dActive, checkIfHasClickedSome3dObject]);
 
   /**
    * Handle mouse down for clearing 3d selection and active context state
@@ -128,13 +117,14 @@ export const use2To3d = (canvas: fabric.Canvas) => {
    * @param  {fabric.IEvent} e
    */
   const redraw = useCallback((e: fabric.IEvent) => {
+    if(floodFillIsActive) return
     const canvasObject = e.target as ICanvasObject;
     if (is3DShape(canvasObject)) {
       to3D(canvasObject);
       setRedrawing3d(true);
       set3dActive(true);
     }
-  }, [to3D, setRedrawing3d, set3dActive]);
+  }, [to3D, setRedrawing3d, set3dActive, floodFillIsActive]);
 
   /**
    * Hook to react on canvas mouse down when 3dActive context state is updated.
@@ -157,11 +147,13 @@ export const use2To3d = (canvas: fabric.Canvas) => {
 
     canvas.on('object:scaled', redraw);
     canvas.on('object:moved', redraw);
+    canvas.on('object:rotated', redraw);
     canvas.on('selection:created', onSelectionCreate);
 
     return () => {
       canvas?.off('object:scaled', redraw);
       canvas?.off('object:moved', redraw);
+      canvas?.off('object:rotated', redraw);
       canvas?.off('selection:created', onSelectionCreate);
     };
   }, [new3dImage, canvas, onSelectionCreate, redraw]);

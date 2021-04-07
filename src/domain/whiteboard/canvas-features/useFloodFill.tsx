@@ -16,6 +16,7 @@ import { getToolbarIsEnabled } from '../redux/utils';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { Gradient, IEvent, Pattern } from 'fabric/fabric-impl';
+import from2To3d from '../three/from2to3d';
 
 /**
  * Handles the logic for Flood-fill Feature
@@ -94,14 +95,8 @@ export const useFloodFill = (
      * to react an export to the 3d canvas
      */
     if(target && is3DShape(target as ICanvasObject)){
-      const three = JSON.parse(
-        (target as ICanvasObject).threeObject as string
-      );
+      const three = from2To3d(target as ICanvasObject)
       three.shapeColor = floodFill
-      three.canvasPosition = { left: target.left, top: target.top };
-      const width = (target.width ?? 1) * (target.scaleX ?? 1);
-      const height = (target.height ?? 1) * (target.scaleY ?? 1);
-      three.canvasSize = { width, height };
       const threeObjectString = JSON.stringify(three);
       canvas.remove(target);
       set3dJson(threeObjectString);
