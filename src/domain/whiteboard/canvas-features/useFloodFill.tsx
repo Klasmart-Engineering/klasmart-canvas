@@ -16,6 +16,7 @@ import { getToolbarIsEnabled } from '../redux/utils';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { Gradient, IEvent, Pattern } from 'fabric/fabric-impl';
+import from2To3d from '../three/from2to3d';
 
 /**
  * Handles the logic for Flood-fill Feature
@@ -89,14 +90,8 @@ export const useFloodFill = (
   const changeStrokeAndFill = (target: fabric.Object | fabric.Group, stroke: string | undefined, fill: string | Pattern | Gradient | undefined) => {
     
     if(target && is3DShape(target as ICanvasObject)){
-      const three = JSON.parse(
-        (target as ICanvasObject).threeObject as string
-      );
+      const three = from2To3d(target as ICanvasObject)
       three.shapeColor = floodFill
-      three.canvasPosition = { left: target.left, top: target.top };
-      const width = (target.width ?? 1) * (target.scaleX ?? 1);
-      const height = (target.height ?? 1) * (target.scaleY ?? 1);
-      three.canvasSize = { width, height };
       const threeObjectString = JSON.stringify(three);
       canvas.remove(target);
       set3dJson(threeObjectString);
@@ -292,8 +287,7 @@ export const useFloodFill = (
       );
     };
 
-    const teacherHasPermission =
-      allToolbarIsEnabled && floodFillIsActive;
+    const teacherHasPermission = allToolbarIsEnabled && floodFillIsActive;
 
     const studentHasPermission =
       floodFillIsActive && toolbarIsEnabled && serializerToolbarState.floodFill;
@@ -317,7 +311,11 @@ export const useFloodFill = (
       }
 
       // Click on shape object
+<<<<<<< HEAD
       if (event.target && (isEmptyShape(event.target) || is3DShape(event.target) ) ) {
+=======
+      if (event.target && (isEmptyShape(event.target) || is3DShape(event.target))) {
+>>>>>>> 7461ad2 (Canvas - 3D Shapes - bucket tool can rotate 3d objects issue fixed)
         floodFillInShape(event);
       }
 

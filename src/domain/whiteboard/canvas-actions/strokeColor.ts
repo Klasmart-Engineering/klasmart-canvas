@@ -14,7 +14,12 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET, SET_GROUP } from '../reducers/undo-redo';
 import { isShape, isFreeDrawing, is3DShape } from "../utils/shapes";
+<<<<<<< HEAD
 import { I3dObject } from '../three/I3dObject'
+=======
+import { I3dObject } from '../three/I3dObject';
+import from2To3d from '../three/from2to3d';
+>>>>>>> 7461ad2 (Canvas - 3D Shapes - bucket tool can rotate 3d objects issue fixed)
 
 /**
  * Changes the penColor value and if one or more objects are selected
@@ -62,6 +67,7 @@ export const useChangeStrokeColor = (
          * The object will be removed from the canvas and the context state updated in order
          * to react an export to the 3d canvas
          */
+<<<<<<< HEAD
         const objects3d: I3dObject[] = [] 
         for (const object of activeObjects) {
           if(is3DShape(object as ICanvasObject)){
@@ -140,6 +146,24 @@ export const useChangeStrokeColor = (
               });
           }
         }
+=======
+        const three = from2To3d(object as ICanvasObject)
+        three.penColor = color
+
+        canvas.remove(object);
+        objects3d.push(three)
+        continue
+      }
+      if (
+        ((isShape(object) && object.shapeType === 'shape') ||
+          isFreeDrawing(object)) &&
+        color !== object.stroke
+      ) {
+        (object as ICanvasPathBrush).set('stroke', color);
+        newActives.push(object);
+        changePenColorSync(object as ICanvasObject);
+      }
+>>>>>>> 7461ad2 (Canvas - 3D Shapes - bucket tool can rotate 3d objects issue fixed)
 
         if(objects3d.length > 0){
           setRedrawing3dObjects(objects3d)
