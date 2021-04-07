@@ -24,6 +24,7 @@ export const use2To3d = (canvas: fabric.Canvas) => {
     set3dCanvasPosition,
     set3dSelected,
     is3dSelected,
+    floodFillIsActive
   } = useContext(WhiteboardContext);
 
   /**
@@ -116,13 +117,14 @@ export const use2To3d = (canvas: fabric.Canvas) => {
    * @param  {fabric.IEvent} e
    */
   const redraw = useCallback((e: fabric.IEvent) => {
+    if(floodFillIsActive) return
     const canvasObject = e.target as ICanvasObject;
     if (is3DShape(canvasObject)) {
       to3D(canvasObject);
       setRedrawing3d(true);
       set3dActive(true);
     }
-  }, [to3D, setRedrawing3d, set3dActive]);
+  }, [to3D, setRedrawing3d, set3dActive, floodFillIsActive]);
 
   /**
    * Hook to react on canvas mouse down when 3dActive context state is updated.
