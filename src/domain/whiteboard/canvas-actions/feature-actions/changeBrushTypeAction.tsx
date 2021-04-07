@@ -21,6 +21,7 @@ import { CanvasAction, SET } from '../../reducers/undo-redo';
 import { isEmptyShape, is3DShape } from '../../utils/shapes';
 import { changeBrushTypeUndoRedoGroup } from './changeBrushTypeUndoRedoGroup';
 import { I3dObject } from '../../three/I3dObject';
+import from2To3d from '../../three/from2to3d';
 
 /**
  * Changes brushType value and if one or more objects are selected
@@ -90,13 +91,8 @@ export const changeBrushTypeAction = async (
       /**
        * to 3D
        */
-      const three = JSON.parse(object.threeObject as string);
+      const three = from2To3d(object)
       three.brushType = type;
-
-      three.canvasPosition = { left: object.left, top: object.top };
-      const width = (object.width ?? 1) * (object.scaleX ?? 1);
-      const height = (object.height ?? 1) * (object.scaleY ?? 1);
-      three.canvasSize = { width, height };
 
       canvas.remove(object);
       objects3d.push(three);

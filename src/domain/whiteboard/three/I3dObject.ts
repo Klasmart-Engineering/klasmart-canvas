@@ -5,6 +5,7 @@ export interface I3dObject {
   shapeColor: string,
   canvasPosition: {left: number, top: number},
   canvasSize: {width: number, height: number},
+  canvasRotation: number,
   shape: string,
   geometry: object,
   cameraPosition: {

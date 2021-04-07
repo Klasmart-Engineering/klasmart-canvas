@@ -30,6 +30,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   controls?: OrbitControls;
   canvasPosition?: { left: number; top: number };
   canvasSize?: { width: number; height: number };
+  canvasRotation = 0
   shapeColor?: string;
   shapeType?: string;
   brushType: string = TOOLBAR_DEFAULT_VALUES.PEN_LINE;
@@ -154,6 +155,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       height: jsonObj.canvasSize.height,
     };
     this.renderer.setSize(this.canvasSize.width, this.canvasSize.height);
+    this.canvasRotation = jsonObj.canvasRotation
     try {
       this.scene = loader.parse(jsonObj.scene);
     } catch (error) {
@@ -249,6 +251,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     this.renderer.setSize(width, height);
     this.canvasSize = { width, height };
     this.canvasPosition = { top: height, left: width };
+    this.canvasRotation = 0
     this.renderer.setPixelRatio(window.devicePixelRatio);
   };
 
@@ -582,6 +585,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       dataURL: this.dataURL,
       penColor: this.penColor,
       lineWidth: this.lineWidth,
+      canvasRotation: this.canvasRotation
     };
   };
 
@@ -611,6 +615,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     this.canvasSize = undefined;
     this.shapeType = undefined;
     this.geometry = undefined;
+    this.canvasRotation = 0
 
     /**
      * Updating context to inactivity
@@ -705,6 +710,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       dataURL: this.dataURL,
       penColor: this.penColor,
       lineWidth: this.lineWidth,
+      canvasRotation: this.canvasRotation
     };
     return json;
   };
@@ -794,13 +800,14 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   /**
    * Get the 3d canvas CSS left and top values
    */
-  getCanvasPosition = () => {
+  getCanvasStyles = () => {
     if (
       this.context.canvas3dPosition.top !== THREE_DEFAULT_VALUES.OUT_OF_RANGE
     ) {
       const style = {
         left: this.context.canvas3dPosition.left + 'px',
         top: this.context.canvas3dPosition.top + 'px',
+        transform: "rotate("+this.canvasRotation+"deg)"
       };
       return style;
     }
@@ -809,6 +816,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       const style = {
         left: this.props.json.canvasPosition.left + 'px',
         top: this.props.json.canvasPosition.top + 'px',
+        transform: "rotate("+this.props.json.canvasRotation+"deg)"
       };
       return style;
     }
@@ -825,7 +833,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
           className={
             'three ' + (this.props.isOwn ? 'three-own' : 'three-others')
           }
-          style={this.getCanvasPosition()}
+          style={this.getCanvasStyles()}
           id={'three-' + this.props.userId + '-' + this.props.canvasId}
         ></canvas>
       )
