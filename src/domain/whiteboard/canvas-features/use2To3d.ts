@@ -131,8 +131,10 @@ export const use2To3d = (canvas: fabric.Canvas, userId: string) => {
    */
   const redraw = useCallback(
     (e: fabric.IEvent) => {
+      console.log(e)
       if (floodFillIsActive) return;
       const canvasObject = e.target as ICanvasObject;
+      console.log(canvasObject)
       if (is3DShape(canvasObject)) {
         to3D(canvasObject);
         setRedrawing3d(true);
