@@ -45,14 +45,12 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
         const objectImage: ICanvasObject = img.set({
           left,
           top,
-          angle: three.canvasRotation
+          flipX: three.isFlipped
         });
+        objectImage.rotate(three.canvasRotation)
         objectImage.scaleToHeight(three.canvasSize.height);
         objectImage.scaleToWidth(three.canvasSize.width);
-
-        // if(typeof three.canvasRotation !== 'undefined'){
-        //   objectImage.setAngle(three.canvasRotation)
-        // }
+        
         objectImage.id = three.object2dId ?? `${userId}:3D:${uuidv4()}`;
         objectImage.threeObject = JSON.stringify(three);
         objectImage.target = objectImage;
