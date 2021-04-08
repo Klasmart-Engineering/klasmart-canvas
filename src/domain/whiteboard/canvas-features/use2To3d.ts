@@ -10,7 +10,7 @@ import from2To3d from '../three/from2to3d';
  * to a json object in context that will be used to import it in a 3d canvas.
  * @param {fabric.Canvas} canvas - Canvas to draw
  */
-export const use2To3d = (canvas: fabric.Canvas) => {
+export const use2To3d = (canvas: fabric.Canvas, userId: string) => {
   /**
    * Getting necessary context variables
    */
@@ -76,6 +76,8 @@ export const use2To3d = (canvas: fabric.Canvas) => {
    const onMouseDown = useCallback((e: fabric.IEvent) => { 
     const canvasObject = checkIfHasClickedSome3dObject(e);
     if (canvasObject && is3dActive) {
+      const threeObject = JSON.parse((canvasObject as ICanvasObject).threeObject as string);
+      if(userId !== threeObject.ownerId) return
       to3D(canvasObject);
       setEditing3d(true);
       // set3dActive(true);

@@ -163,6 +163,19 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
         return;
 
       payload.isPersistent = true;
+
+      if(payload.id?.includes(':3D:')){
+        const eventIndex = remoteEvents.findIndex(ev => ev.id.includes(':3D:') && payload.id === ev.id)
+        if(eventIndex !== -1){
+          remoteEvents[eventIndex] = {...payload }
+          window.localStorage.setItem(
+            'canvas:simulated:events',
+            JSON.stringify(remoteEvents)
+          );
+          return
+        } 
+      }
+
       const length = remoteEvents.push(payload);
       console.log(`storing simulated persistance events: ${length}`);
 

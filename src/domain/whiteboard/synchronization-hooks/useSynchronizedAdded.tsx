@@ -171,6 +171,7 @@ const useSynchronizedAdded = (
               flipY: e.target.flipY,
               originX: e.target.originX,
               originY: e.target.originY,
+              threeObject: e.target.threeObject
             };
           }
           break;
@@ -472,7 +473,8 @@ const useSynchronizedAdded = (
         provisionalImage.set({ id });
 
         fabric.Image.fromURL(src as string, (data: fabric.Image) => {
-          (data as TypedShape).set({
+          (data as ICanvasObject).set({
+            id,
             top: target.top,
             left: target.left,
             angle: target.angle,
@@ -484,6 +486,7 @@ const useSynchronizedAdded = (
             originY: target.originY,
             selectable: false,
             evented: false,
+            threeObject: target.threeObject
           });
 
           if ((target as ICanvasBrush).basePath) {

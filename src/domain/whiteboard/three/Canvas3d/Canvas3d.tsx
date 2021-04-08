@@ -17,6 +17,8 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   static contextType = WhiteboardContext;
 
   id?: string;
+  ownerId?:string
+  object2dId?:string
   json: any;
   previousState: any;
   scene: THREE.Scene;
@@ -66,6 +68,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       this.shape = this.shapeCreation();
       this.scene.add(this.shape);
       this.id = uuidv4();
+      this.ownerId = this.props.ownerId
     } else {
       /**
        * Otherwise, the scene is recovered
@@ -149,6 +152,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   recoverScene = (jsObj?: I3dObject) => {
     const loader = new THREE.ObjectLoader();
     let jsonObj = jsObj ?? JSON.parse(this.context.json3D);
+    this.object2dId = jsonObj.object2dId
     this.canvasPosition = jsonObj.canvasPosition;
     this.canvasSize = {
       width: jsonObj.canvasSize.width,
@@ -568,6 +572,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   generateJson = () => {
     this.json = {
       canvasId: this.id,
+      object2dId: this.object2dId,
       ownerId: this.props.ownerId,
       scene: this.scene.toJSON(),
       shapeColor: this.shapeColor,
@@ -693,6 +698,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     scene.add(shape);
     const json = {
       canvasId: this.id,
+      object2dId: this.object2dId,
       ownerId: this.props.ownerId,
       scene: scene.toJSON(),
       shapeColor: this.shapeColor,
