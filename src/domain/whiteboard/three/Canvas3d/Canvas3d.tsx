@@ -602,6 +602,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     if (this.dataURL === '') return;
     this.edgesToGeometry();
     this.generateJson();
+    console.log(this.canvasPosition)
     this.context.set3dJson(JSON.stringify(this.json));
     this.context.set3dImage(this.dataURL);
     this.close();
