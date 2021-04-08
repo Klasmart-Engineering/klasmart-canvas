@@ -12,7 +12,6 @@ const from2To3d = (canvasObject: ICanvasObject) => {
    */
   const canvasRotation = canvasObject.angle ?? 0;
   canvasObject.rotate(0)
-  
   const threeObject = JSON.parse(canvasObject.threeObject as string);
   const width = (canvasObject.width ?? 1) * (canvasObject.scaleX ?? 1);
   const height = (canvasObject.height ?? 1) * (canvasObject.scaleY ?? 1);
@@ -22,6 +21,7 @@ const from2To3d = (canvasObject: ICanvasObject) => {
     left: canvasObject.left as number,
     top: canvasObject.top as number,
   };
+  threeObject.isFlipped = canvasObject.flipX
   return threeObject;
 };
 

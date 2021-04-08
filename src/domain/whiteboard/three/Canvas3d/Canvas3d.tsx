@@ -38,6 +38,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   brushType: string = TOOLBAR_DEFAULT_VALUES.PEN_LINE;
   penColor: string = TOOLBAR_DEFAULT_VALUES.PEN_COLOR;
   lineWidth: number = TOOLBAR_DEFAULT_VALUES.LINE_WIDTH;
+  isFlipped: boolean = false
 
   constructor(props: ICanvas3dProps) {
     super(props);
@@ -158,6 +159,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       width: jsonObj.canvasSize.width,
       height: jsonObj.canvasSize.height,
     };
+    this.isFlipped = jsonObj.isFlipped
     this.renderer.setSize(this.canvasSize.width, this.canvasSize.height);
     this.canvasRotation = jsonObj.canvasRotation
     try {
@@ -590,7 +592,8 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       dataURL: this.dataURL,
       penColor: this.penColor,
       lineWidth: this.lineWidth,
-      canvasRotation: this.canvasRotation
+      canvasRotation: this.canvasRotation,
+      isFlipped: this.isFlipped
     };
   };
 
@@ -602,7 +605,6 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     if (this.dataURL === '') return;
     this.edgesToGeometry();
     this.generateJson();
-    console.log(this.canvasPosition)
     this.context.set3dJson(JSON.stringify(this.json));
     this.context.set3dImage(this.dataURL);
     this.close();
@@ -717,7 +719,8 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       dataURL: this.dataURL,
       penColor: this.penColor,
       lineWidth: this.lineWidth,
-      canvasRotation: this.canvasRotation
+      canvasRotation: this.canvasRotation,
+      isFlipped: this.isFlipped
     };
     return json;
   };
@@ -814,7 +817,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       const style = {
         left: this.context.canvas3dPosition.left + 'px',
         top: this.context.canvas3dPosition.top + 'px',
-        transform: "rotate("+this.canvasRotation+"deg)"
+        transform: "rotate("+this.canvasRotation+"deg)" + (this.isFlipped ? " scaleX(-1)" : "")
       };
       return style;
     }
@@ -823,7 +826,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       const style = {
         left: this.props.json.canvasPosition.left + 'px',
         top: this.props.json.canvasPosition.top + 'px',
-        transform: "rotate("+this.props.json.canvasRotation+"deg)"
+        transform: "rotate("+this.props.json.canvasRotation+"deg)" + (this.isFlipped ? " scaleX(-1)" : "")
       };
       return style;
     }
@@ -838,7 +841,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       this.is3dDrawing() && (
         <canvas
           className={
-            'three ' + (this.props.isOwn ? 'three-own' : 'three-others')
+            'three ' + (this.props.isOwn ? 'three-own ' : 'three-others ')
           }
           style={this.getCanvasStyles()}
           id={'three-' + this.props.userId + '-' + this.props.canvasId}

@@ -18,5 +18,6 @@ export interface I3dObject {
   brushType: string,
   dataURL: string,
   penColor: string,
-  lineWidth: number
+  lineWidth: number,
+  isFlipped: boolean
 };
