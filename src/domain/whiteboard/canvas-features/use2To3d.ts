@@ -89,7 +89,7 @@ export const use2To3d = (canvas: fabric.Canvas, userId: string) => {
         // set3dActive(true);
       }
     },
-    [to3D, setEditing3d, is3dActive, checkIfHasClickedSome3dObject]
+    [to3D, setEditing3d, is3dActive, checkIfHasClickedSome3dObject, userId]
   );
 
   /**
@@ -134,7 +134,6 @@ export const use2To3d = (canvas: fabric.Canvas, userId: string) => {
       console.log(e)
       if (floodFillIsActive) return;
       const canvasObject = e.target as ICanvasObject;
-      console.log(canvasObject)
       if (is3DShape(canvasObject)) {
         to3D(canvasObject);
         setRedrawing3d(true);
