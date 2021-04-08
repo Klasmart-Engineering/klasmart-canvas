@@ -1,6 +1,7 @@
 export interface I3dObject {
   canvasId: string,
   ownerId: string,
+  object2dId?:string,
   scene: object,
   shapeColor: string,
   canvasPosition: {left: number, top: number},
