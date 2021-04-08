@@ -53,8 +53,7 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
         // if(typeof three.canvasRotation !== 'undefined'){
         //   objectImage.setAngle(three.canvasRotation)
         // }
-
-        objectImage.id = `${userId}:3D:${uuidv4()}`;
+        objectImage.id = three.object2dId ?? `${userId}:3D:${uuidv4()}`;
         objectImage.threeObject = JSON.stringify(three);
         objectImage.target = objectImage;
 

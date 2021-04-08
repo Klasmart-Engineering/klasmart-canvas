@@ -274,7 +274,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   useAdd3dShape(canvas as fabric.Canvas, userId);
 
   // useEffects and logic for manage image adding feature
-  use2To3d(canvas as fabric.Canvas)
+  use2To3d(canvas as fabric.Canvas, userId)
 
   // useEffects and logic for manage line width changes in objects
   useChangeLineWidth(canvas as fabric.Canvas, userId, undoRedoDispatch);
