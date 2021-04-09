@@ -176,7 +176,7 @@ export const mappedToolElements = (
           return { ...elmnt, enabled, available };
         }
         case 'add_3d_shape': {
-          const available = allToolbarIsEnabled;
+          const available = true;
           const enabled = allToolbarIsEnabled || serializerToolbarState.shape3d;
           return { ...elmnt, enabled, available };
         }
