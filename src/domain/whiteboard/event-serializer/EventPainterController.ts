@@ -30,7 +30,6 @@ export class EventPainterController extends EventEmitter
 
     this.ws.onmessage = (event) => {
       let data = JSON.parse(event.data);
-
       switch (data.eventType) {
         case 'moving': {
           this.emit('moving', data.id, data.target);
@@ -106,6 +105,13 @@ export class EventPainterController extends EventEmitter
         }
         case 'brushTypeChanged': {
           this.emit('brushTypeChanged', data.id, data.target);
+          break;
+        }
+        /**
+         * Reconstruct event for real time undo/redo
+         */
+        case 'reconstruct': {
+          this.emit('reconstruct', data.id, data.target);
           break;
         }
       }
@@ -218,7 +224,8 @@ export class EventPainterController extends EventEmitter
         this.fontColorChanged(event.id, event.objectType, target);
         break;
       case 'reconstruct':
-        this.emit('reconstruct', event.id, target);
+        this.reconstruct(event.id, target)
+        // this.emit('reconstruct', event.id, target);
         break;
       case 'cursorPointer':
         this.cursorPointer(event.id, target);
@@ -320,12 +327,12 @@ export class EventPainterController extends EventEmitter
     );
   }
 
-  // private reconstruct(id: string, target: PainterEvent) {
-  //   this.emit('reconstruct', id, target);
+  private reconstruct(id: string, target: PainterEvent) {
+    this.emit('reconstruct', id, target);
 
-  //   // TEMPORARY for realtime testing purposes.
-  //   this.ws?.send(JSON.stringify({ id, target, eventType: 'reconstruct' }));
-  // }
+    // TEMPORARY for realtime testing purposes.
+    this.ws?.send(JSON.stringify({ id, target, eventType: 'reconstruct' }));
+  }
 
   private removed(id: string, target: boolean) {
     this.emit('removed', id, target);
