@@ -34,7 +34,7 @@ const useSynchronizedReconstruct = (
       isPersistent: boolean
     ) => {
       if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
-
+      console.log("reconstruct")
       if (typeof target === 'object' && !target.param) {
         target.param = JSON.stringify(target);
       }
@@ -95,13 +95,21 @@ const useSynchronizedReconstruct = (
       const objects = JSON.parse(target.param as string).objects;
 
       const reset = (object: TypedShape): void => {
-        const old = canvas
+        /**
+         * Iterate all the canvasObjects and update the one with the id of the reconstructed one.
+         * Snippet updated because it was doing this just for the first match previously. 
+         * And for certain complex shapes, the id was repeated (A star, drawn with a brush, flood filled). 
+         */
+        const olds = canvas
           ?.getObjects()
-          .filter((o: TypedShape) => o.id === object.id)[0];
-        object.set({ selectable: false, evented: false });
-        canvas?.remove(old as fabric.Object);
-        canvas?.add(object);
-        canvas?.bringToFront(object);
+          .filter((o: TypedShape) => o.id === object.id)
+        if(!olds) return
+        for(let old of olds){
+          object.set({ selectable: false, evented: false });
+          canvas?.remove(old as fabric.Object);
+          canvas?.add(object);
+          canvas?.bringToFront(object);
+        }
       };
 
       const loadImage = (object: ICanvasObject) =>

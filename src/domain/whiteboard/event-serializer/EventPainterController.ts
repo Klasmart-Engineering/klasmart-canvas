@@ -114,10 +114,15 @@ export class EventPainterController extends EventEmitter
           this.emit('setUserInfoToDisplay', data.id, data.target);
           break;
         }
-        default:
-          break;
         case 'three': {
           this.emit('three', data.id, data.objectType, data.target);
+          break;
+        }
+        /**
+         * Reconstruct event for real time undo/redo
+         */
+        case 'reconstruct': {
+          this.emit('reconstruct', data.id, data.target);
           break;
         }
       }
