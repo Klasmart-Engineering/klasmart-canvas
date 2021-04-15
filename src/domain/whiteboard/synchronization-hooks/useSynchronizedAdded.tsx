@@ -421,8 +421,15 @@ const useSynchronizedAdded = (
               basePath: (target as ICanvasBrush).basePath,
             });
           }
-
-          canvas?.add(data);
+          
+          const existingObjectIndex = (canvas?.getObjects() as TypedShape[]).findIndex(obj => obj.id === id)
+          if(existingObjectIndex !== -1){
+            const existingItem = (canvas?.getObjects() as TypedShape[])[existingObjectIndex]
+            canvas?.remove(existingItem)
+            canvas?.insertAt(data, existingObjectIndex, false)
+          }else{
+            canvas?.add(data);  
+          }
           canvas?.renderAll();
 
           undoRedoDispatch({
