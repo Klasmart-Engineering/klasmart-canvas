@@ -1,9 +1,10 @@
 import { useContext, useEffect } from 'react';
 import { fabric } from 'fabric';
-import { UserInfoTooltip } from '../brushes/classes/userInfoTooltip';
+import { UserInfoTooltip } from '../utils/userInfoTooltip';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
+
 /**
  * Handles logic for showing user info on object hover
  * @param {fabric.Canvas} canvas - Canvas to draw
@@ -13,17 +14,14 @@ export const useObjectHover = (
   canvas: fabric.Canvas,
   displayUserInfo: string
 ) => {
-
-  /** 
-   * Initializing the tooltip and tooltip group 
-  */
+  /**
+   * Initializing the tooltip and tooltip group
+   */
   let tooltipShapesGroup: fabric.Group;
   const tooltip = UserInfoTooltip.createInstance(displayUserInfo);
 
   // Getting necessary context variables
-  const {
-    selectedTool
-  } = useContext(WhiteboardContext);
+  const { selectedTool } = useContext(WhiteboardContext);
 
   /**
    * Get tooltip and add it to the canvas
@@ -33,11 +31,12 @@ export const useObjectHover = (
     if (
       !tooltip ||
       !hoveredObject.hasOwnProperty('id') ||
-      tooltip.hasTheSameObject(hoveredObject)
+      (tooltip.hasTheSameObject(hoveredObject) &&
+        tooltip.hasTheSameSelectedType(displayUserInfo))
     ) {
       return;
     }
-
+    hideTooltip();
     tooltipShapesGroup = tooltip.getDrawing(hoveredObject, displayUserInfo);
     canvas.add(tooltipShapesGroup);
   };
@@ -48,7 +47,7 @@ export const useObjectHover = (
   const hideTooltip = () => {
     const canvasObjects = canvas.getObjects();
     if (tooltip && tooltip.isShown()) {
-      tooltip.removeObject();
+      tooltip.reset();
     }
     for (let x = 0; x < canvasObjects.length; x++) {
       if (
@@ -64,8 +63,10 @@ export const useObjectHover = (
    * @param {fabric.Ievent} e - fabric event
    */
   const checkIfIsHoverSomeObject = (e: fabric.IEvent) => {
-    hideTooltip();
-    if (!e.pointer || selectedTool !== DEFAULT_VALUES.SELECTED_TOOL) return;
+    if (!e.pointer || selectedTool !== DEFAULT_VALUES.SELECTED_TOOL) {
+      hideTooltip();
+      return;
+    }
     const { pointer } = e;
     const canvasObjects = canvas.getObjects();
     const canvasObject = canvasObjects.find((obj) =>
@@ -73,6 +74,11 @@ export const useObjectHover = (
     );
 
     if (canvasObject) showTooltip(canvasObject);
+    else hideTooltip();
+  };
+
+  const eventHandler = function (e: fabric.IEvent) {
+    checkIfIsHoverSomeObject(e);
   };
 
   /**
@@ -80,9 +86,10 @@ export const useObjectHover = (
    */
   useEffect(() => {
     if (canvas && displayUserInfo !== 'none') {
-      canvas.on('mouse:move', function (e) {
-        checkIfIsHoverSomeObject(e);
-      });
+      canvas.on('mouse:move', eventHandler);
     }
+    return () => {
+      canvas?.off('mouse:move', eventHandler);
+    };
   });
 };
