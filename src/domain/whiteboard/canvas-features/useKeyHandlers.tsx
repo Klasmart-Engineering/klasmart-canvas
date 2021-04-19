@@ -179,7 +179,6 @@ export const useKeyHandlers = (
         perfectShapeIsActive &&
         window.innerWidth > 768
       ) {
-        console.log('key up');
         updatePerfectShapeIsActive(false);
       }
     },
