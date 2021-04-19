@@ -425,6 +425,8 @@ export const WhiteboardProvider = ({
     updateBackgroundColor,
     fillBackgroundColor,
     setBackgroundColorInCanvas,
+    copiedItem,
+    setCopiedItem,
     stampMode,
     updateStampMode,
     stampIsActive,
@@ -435,8 +437,6 @@ export const WhiteboardProvider = ({
     findObjectById,
     eventSerializer,
     eventController,
-    copiedItem,
-    setCopiedItem,
     activeTool,
     setActiveTool,
   };

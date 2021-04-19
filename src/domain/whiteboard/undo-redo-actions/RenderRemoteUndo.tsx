@@ -136,7 +136,6 @@ export const RenderRemoteUndo = (
         eventSerializer?.push('added', payload as ObjectEvent);
         break;
       }
-
       break;
     }
 
