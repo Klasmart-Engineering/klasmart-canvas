@@ -125,6 +125,8 @@ export class EventPainterController extends EventEmitter
           this.emit('reconstruct', data.id, data.target);
           break;
         }
+        default:
+          break;
       }
     };
 

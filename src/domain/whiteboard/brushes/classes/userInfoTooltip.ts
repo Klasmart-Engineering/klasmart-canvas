@@ -19,7 +19,7 @@ export class UserInfoTooltip {
   private _left: number = 0;
   private _top: number = 0;
   private _rect: fabric.Rect;
-  private _img: fabric.Image;
+  private _img: fabric.Image = new fabric.Image('');
   private _text: fabric.Text;
   private _shapesGroup: fabric.Group = new fabric.Group();
   private _objectId: string | undefined = '';
@@ -125,7 +125,6 @@ export class UserInfoTooltip {
       originY: 'top',
     });
 
-    this._img = new fabric.Image('');
     this._img.set({
       originX: 'left',
       originY: 'top',
@@ -209,7 +208,7 @@ export class UserInfoTooltip {
   }
 
   /**
-   * Check if tooltip assigned object is the same than the parameter one which is beign hovered
+   * Check if tooltip assigned object is the same than the parameter one which is beign hovered and the type is the same
    * @param {ICanvasObject} hoveredObject - canvasObject
    * @return {boolean}
    */
@@ -218,10 +217,20 @@ export class UserInfoTooltip {
   }
 
   /**
-   * Remove the assigned object
+   * Check if tooltip type of display user info selected is the same than the parameter value
+   * @param {string} displayUserInfo - displayUserInfo
+   * @return {boolean}
    */
-  public removeObject() {
+  public hasTheSameSelectedType(displayUserInfo: string) {
+    return this.displayUserInfo === displayUserInfo;
+  }
+
+  /**
+   * Remove the assigned object and reset display user info selected
+   */
+  public reset() {
     this._objectId = '';
+    this.displayUserInfo = 'none';
   }
 
   /**

@@ -64,7 +64,7 @@ export interface CanvasHistoryState {
   activeObjects: ICanvasObject[];
 
   /**
-   * 
+   * Stores background state in order to rerender if needed.
    */
   backgrounds: (string | fabric.Image | null)[];
 }

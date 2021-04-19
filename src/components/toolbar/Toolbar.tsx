@@ -127,7 +127,6 @@ function Toolbar(props: {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
-
     if (tool === ELEMENTS.POINTERS_TOOL && !cursorPointerToolIsActive) {
       return;
     }

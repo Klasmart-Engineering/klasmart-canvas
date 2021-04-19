@@ -131,7 +131,7 @@ export const changeBrushTypeAction = async (
             brush.convertPointsToSVGPath(points).join('')
           );
 
-          ((newPath as unknown as ICanvasObject) as unknown as ICanvasPathBrush).set({
+          (newPath as unknown as ICanvasPathBrush).set({
             stroke: basePath?.stroke,
             strokeWidth: basePath?.strokeWidth,
             strokeUniform: true,
