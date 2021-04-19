@@ -12,8 +12,9 @@ import { CanvasAction, SET } from '../reducers/undo-redo';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { PaintEventSerializer } from '../../../poc/whiteboard/event-serializer/PaintEventSerializer';
-import { Pattern, Point } from 'fabric/fabric-impl';
+import { IImageOptions, Pattern, Point } from 'fabric/fabric-impl';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { IUndoRedoSingleEvent } from '../../../interfaces/canvas-events/undo-redo-single-event';
 
 /**
  * Class that handles all partial erasure methods.
@@ -143,28 +144,20 @@ export class PartialErase {
     this.backgroundImage = this.hasBackground ? this.canvas.backgroundImage as ICanvasObject : null;
 
     if (this.hasBackground && this.hasBgPermission) {
-      this.bgRawCanvas = document.createElement('canvas');
-      this.bgRawCanvas.width = canvas.width;
-      this.bgRawCanvas.height = canvas.height;
-      this.bgRawCanvas.style.position = 'absolute';
-      this.canvas.getElement().before(this.bgRawCanvas);
+      this.backgroundId = this.backgroundImage?.id as string;
+      this.generateBackground();
 
-      let background = new Image();
-      // @ts-ignore
-      background.src = canvas.backgroundImage?.getElement().currentSrc;
+      this.canvas.on('background:modified', (e) => {
+       
+        if (!e || !(e as unknown as ICanvasObject).id) {
+          this.generateBackground(null);
+          return;
+        }
 
-      // Make sure the image is loaded first otherwise nothing will draw.
-      background.onload = () => {
-        const ctx = this.bgRawCanvas.getContext('2d');
         // @ts-ignore
-        const width = background.width * canvas.backgroundImage?.scaleX;
-        // @ts-ignore
-        const height = background.height * canvas.backgroundImage?.scaleY;
-
-        ctx.drawImage(background, 0, 0, width, height);
-        this.canvas.backgroundImage = '';
-        this.canvas.renderAll();
-      }
+        const src = (e as unknown as fabric.Image)?.getElement ? e : null;
+        this.generateBackground(src);
+      });
     }
 
     this.canvas
@@ -184,6 +177,60 @@ export class PartialErase {
 
     this.moveSelfToTemp();
     this.tempCanvas.on('path:created', this.pathCreated);
+  }
+
+  private generateBackground = (src?: any) => {
+    if (this.bgRawCanvas) {
+      this.bgRawCanvas.remove();
+      this.bgRawCanvas = null;
+    }
+
+    if (!this.bgRawCanvas) {
+      this.bgRawCanvas = document.createElement('canvas');
+      this.bgRawCanvas.width = this.canvas.width;
+      this.bgRawCanvas.height = this.canvas.height;
+      this.bgRawCanvas.style.position = 'absolute';
+    }
+
+    if (!src) {
+      this.canvas.getElement().before(this.bgRawCanvas);
+    } else {
+      this.tempCanvas.getElement().before(this.bgRawCanvas);
+    }
+
+    let background = new Image();
+
+    if (!src && (this.canvas.backgroundImage as fabric.Image)?.getElement) {
+      this.hasBackground = true;
+      background.src = (this.canvas.backgroundImage as fabric.Image)?.getElement().currentSrc;
+    } else if (src && src.getElement) {
+      this.hasBackground = true;
+      background.src = src.getElement().currentSrc;
+    } else {
+      this.hasBackground = false;
+      return;
+    }
+
+    background.onload = () => {
+      const ctx = this.bgRawCanvas.getContext('2d');
+      let width;
+      let height;
+
+      if (!src) {
+        // @ts-ignore  - linter ignoring backgroundImage type and optional chaining.
+        width = background.width * this.canvas.backgroundImage?.scaleX;
+        // @ts-ignore  - linter ignoring backgroundImage type and optional chaining.
+        height = background.height * this.canvas.backgroundImage?.scaleY;
+      } else {
+        width = background.width * src.scaleX;
+        height = background.height * src.scaleY;
+      }
+
+      ctx.drawImage(background, 0, 0, width, height);
+
+      this.canvas.backgroundImage = '';
+      this.canvas.renderAll();
+    }
   }
 
   /**
@@ -287,51 +334,19 @@ export class PartialErase {
   };
 
   private loadFromJSON = (
-    objects: string,
+    objects: ICanvasObject[],
     backgroundColor?: string | Pattern | undefined
   ): Promise<void> =>
     new Promise((resolve) => {
-      this.canvas.loadFromJSON(objects, () => {
+      let mapped = JSON.stringify({ objects: objects.map((o: ICanvasObject) => ({ ...o, fromJSON: true })) });
+      this.canvas.loadFromJSON(mapped, () => {
         if (backgroundColor) {
           this.canvas.backgroundColor = backgroundColor;
-        }
-
-        if (this.hasBackground && !this.hasBgPermission) {
-          // @ts-ignore
-          this.canvas.backgroundImage = this.backgroundImage;
         }
 
         resolve();
       });
     });
-
-  /**
-   * Updates background
-   */
-  private updateBackground = () => {
-    const bgImage = this.bgRawCanvas.toDataURL();
-    const id = `${this.id}:${uuidv4()}`;
-
-    fabric.Image.fromURL(bgImage, (img) => {
-      this.canvas.setBackgroundImage(img, this.canvas.renderAll.bind(this.canvas), {
-        originX: 'left',
-        originY: 'top',
-        // @ts-ignore
-        id,
-      });
-
-      const payload: ObjectEvent = {
-        type: 'backgroundImage',
-        target: { src: bgImage },
-        id,
-      };
-
-      this.updateStateBackground(payload);
-      this.eventSerializer.push('added', payload);
-      this.bgRawCanvas.remove();
-      this.canvas.renderAll();
-    });
-  }
 
   /**
    * Group self owned objects
@@ -349,6 +364,20 @@ export class PartialErase {
           }
         }
       });
+  }
+
+  private backgroundToPermanent = async (): Promise<void> => {
+    return new Promise((resolve) => {
+      const dataURL = this.bgRawCanvas.toDataURL();
+
+      fabric.Image.fromURL(dataURL, (image) => {
+        this.bgRawCanvas.remove();
+        this.canvas.setBackgroundImage(image, this.canvas.renderAll.bind(this.canvas), {
+          id: this.backgroundId
+        } as IImageOptions);
+        resolve();
+      });
+    });
   }
 
   /**
@@ -387,7 +416,7 @@ export class PartialErase {
 
     objects = [...objects, ...foreignObjects];
 
-    await this.loadFromJSON(JSON.stringify({ objects }), backgroundColor);
+    await this.loadFromJSON(objects, backgroundColor);
 
     this.groupObjects();
     this.canvas.renderAll();
@@ -397,7 +426,7 @@ export class PartialErase {
     }
 
     if (this.hasBackground && this.hasBgPermission && destroy) {
-      this.updateBackground();
+      await this.backgroundToPermanent();
       return;
     }
 
@@ -414,7 +443,6 @@ export class PartialErase {
       this.eventSerializer.push('added', payload);
     }
 
-    // @ts-ignore
     if (this.hasSelfObjects && (!(this.hasBackground && this.hasBgPermission) || (this.hasBackground && this.hasBgPermission && !destroy))) {
       group.cloneAsImage((image: TypedShape) => {
         image.set({
@@ -444,6 +472,7 @@ export class PartialErase {
       this.moveSelfToPermanent(null, true);
     }
 
+    this.canvas.off('background:modified');
     this.tempCanvas.off('mouse:move');
     this.tempCanvas.dispose();
     this.canvas.getElement().parentNode?.removeChild(this.rawCanvas);
@@ -529,10 +558,10 @@ export class PartialErase {
 
         this.tempCanvas.add(image);
 
-        const payload: ObjectEvent = {
+        let payload: ObjectEvent = {
           id: id as string,
           type: 'image',
-          target: image as ICanvasObject,
+          target: image.toJSON(CANVAS_OBJECT_PROPS) as ICanvasObject,
         };
 
         this.updateState(payload);
@@ -541,7 +570,6 @@ export class PartialErase {
 
       if (this.hasBackground && this.hasBgPermission) {
         const payloadBg = {
-          // @ts-ignore
           id: this.backgroundId,
           target: {
             strategy: 'allowClearMyself',
@@ -558,43 +586,48 @@ export class PartialErase {
   };
 
   /**
-   * Used for updating background state
-   * @param eventPayload Event data
-   */
-  private updateStateBackground = (eventPayload: ObjectEvent) => {
-    const payload = [
-      ...this.canvas.getObjects(),
-      ...this.tempCanvas.getObjects(),
-      // @ts-ignore
-      { ...(this.canvas.backgroundImage?.toJSON()), backgroundImageEditable: true }
-    ];
-
-    const eventData = { event: eventPayload, type: 'backgroundImageEditable' };
-
-    this.undoRedoDispatch({
-      type: SET,
-      payload,
-      canvasId: this.id,
-      event: (eventData as unknown) as IUndoRedoEvent,
-    });
-  };
-
-  /**
    * Updates undo / redo state.
    * @param eventPayload Event to store in state
    */
   private updateState = (eventPayload: ObjectEvent) => {
-    const payload = [
-      ...this.canvas.getObjects(),
-      ...this.tempCanvas.getObjects(),
+    let payload = [
+      ...this.canvas.getObjects()
     ];
+
+    let tempCanvasObjects = this.tempCanvas.getObjects();
+    let nonErasePathObjects = tempCanvasObjects.filter((path: any) => !path.isErasePath);
+
+    // @ts-ignore
+    if (nonErasePathObjects.length > 1 || (nonErasePathObjects.length === 1 && nonErasePathObjects[0].joinedIds?.length)) {
+      payload = [
+        ...payload,
+        ...this.tempCanvas.getObjects(),
+      ];
+    }
+
     const eventData = { event: eventPayload, type: 'added' };
 
-    this.undoRedoDispatch({
+    let statePayload = {
       type: SET,
       payload,
       canvasId: this.id,
       event: (eventData as unknown) as IUndoRedoEvent,
-    });
+    };
+
+    if (this.hasBackground && this.hasBgPermission) {
+      const bgImage = this.bgRawCanvas.toDataURL();
+      let background = {
+        ...(this.backgroundImage?.toJSON(CANVAS_OBJECT_PROPS)),
+        backgroundImageEditable: true,
+        src: bgImage,
+        scaleX: 1,
+        scaleY: 1,
+      }
+
+      // @ts-ignore - linter ignoring optinonal props.
+      statePayload = { ...statePayload, background: background } as CanvasAction;
+    };
+
+    this.undoRedoDispatch(statePayload);
   };
 }

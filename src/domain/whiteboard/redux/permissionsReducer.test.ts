@@ -19,6 +19,7 @@ const permissionsState = {
   clearWhiteboard: false,
   downloadCanvas: false,
   uploadImage: false,
+  cursorPointer: false,
 };
 
 describe('async actions', () => {

@@ -553,6 +553,7 @@ export const useCanvasActions = (
     return () => {
       if (eraser) {
         eraser.destroy();
+        eraser = null;
       }
 
       canvas?.off('mouse:up');

@@ -6,7 +6,7 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { fabric } from 'fabric';
-import { CanvasAction, SET, SET_OTHER } from '../reducers/undo-redo';
+import { CanvasAction, SET, SET_BACKGROUND, SET_OTHER } from '../reducers/undo-redo';
 import { TypedShape, TypedPolygon } from '../../../interfaces/shapes/shapes';
 import { chat, star, arrow, hexagon, pentagon } from '../shapes/shapes';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
@@ -19,6 +19,8 @@ import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { fabricGif } from '../gifs-actions/fabricGif';
 import { addSynchronizationInSpecialBrushes } from '../brushes/actions/addSynchronizationInSpecialBrushes';
 import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
+import { CANVAS_OBJECT_PROPS } from '../../../config/undo-redo-values';
+import { IImageOptions } from 'fabric/fabric-impl';
 
 const useSynchronizedAdded = (
   canvas: fabric.Canvas | undefined,
@@ -106,6 +108,18 @@ const useSynchronizedAdded = (
         };
         eventSerializer?.push('added', payload);
 
+        const event = { event: payload, type: 'backgroundAdded' } as IUndoRedoEvent;
+        const background = { ...e.target, backgroundImageEditable: false };
+
+        // send undo redo dispatch here.
+        undoRedoDispatch({
+          type: SET,
+          background,
+          payload: canvas?.getObjects(),
+          canvasId: userId,
+          event,
+        });
+
         return;
       }
 
@@ -183,14 +197,16 @@ const useSynchronizedAdded = (
           payload.type === 'path' &&
           (payload.target as ICanvasPathBrush)?.basePath)
       ) {
-        const event = { event: payload, type: 'added' } as IUndoRedoEvent;
+        if (e.type !== 'backgroundImage') {
+          const event = { event: payload, type: 'added' } as IUndoRedoEvent;
 
-        undoRedoDispatch({
-          type: SET,
-          payload: (canvas?.getObjects() as unknown) as TypedShape[],
-          canvasId: userId,
-          event,
-        });
+          undoRedoDispatch({
+            type: SET,
+            payload: (canvas?.getObjects() as unknown) as TypedShape[],
+            canvasId: userId,
+            event,
+          });
+        }
 
         if (!isGif && e.type !== 'backgroundImage') {
           eventSerializer?.push('added', payload);
@@ -210,12 +226,18 @@ const useSynchronizedAdded = (
       }
 
       if (e.type === 'backgroundImage') {
-        const payload: ObjectEvent = {
-          type: e.type,
-          target: e.target,
-          id: e.target.id,
-        };
-        eventSerializer?.push('added', payload);
+        eventSerializer?.push('added', { ...payload, type: 'backgroundImage' });
+        const event = { event: payload, type: 'backgroundAdded' } as IUndoRedoEvent;
+        const background = { ...((canvas?.backgroundImage as fabric.Image)?.toJSON(CANVAS_OBJECT_PROPS)), backgroundImageEditable: true };
+
+        // send undo redo dispatch here.
+        undoRedoDispatch({
+          type: SET,
+          background,
+          payload: canvas?.getObjects(),
+          canvasId: userId,
+          event,
+        });
 
         return;
       }
@@ -452,26 +474,27 @@ const useSynchronizedAdded = (
       }
 
       if (objectType === 'backgroundImage') {
-        if (canvas)
+        if (canvas) {
           canvas.setBackgroundColor(
             'transparent',
             canvas.renderAll.bind(canvas)
           );
-        setLocalImage('');
-        setLocalBackground(false);
+          setLocalImage('');
+          setLocalBackground(false);
+          let src = (target as ICanvasPathBrush).basePath?.imageData || target.src;
 
-        fabric.Image.fromURL(target.src as string, function (img) {
-          canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
-            scaleX: (canvas.width || 0) / (img.width || 0),
-            scaleY: (canvas.height || 0) / (img.height || 0),
-            originX: 'left',
-            originY: 'top',
-            // @ts-ignore
-            id,
+          fabric.Image.fromURL(src as string, function (img) {
+            canvas?.setBackgroundImage(img, canvas.renderAll.bind(canvas), {
+              scaleX: (canvas.width || 0) / (img.width || 0),
+              scaleY: (canvas.height || 0) / (img.height || 0),
+              originX: 'left',
+              originY: 'top',
+              id,
+            } as IImageOptions);
+
+            canvas?.renderAll();
           });
-
-          canvas?.renderAll();
-        });
+        }
 
         return;
       }
