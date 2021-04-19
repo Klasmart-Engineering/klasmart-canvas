@@ -12,10 +12,11 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET } from '../reducers/undo-redo';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
-import { isEmptyShape, isFreeDrawing } from '../utils/shapes';
+import { isEmptyShape, isFreeDrawing, is3DShape } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { useSynchronization } from './useSynchronization';
-
+import { I3dObject } from '../three/I3dObject';
+import from2To3d from '../three/from2to3d';
 /**
  * Handles the logic for change lineWidth in path and shape objects
  * @param {fabric.Canvas} canvas - Canvas in which the objects to modify are.
@@ -26,7 +27,10 @@ import { useSynchronization } from './useSynchronization';
 export const useChangeLineWidth = (
   canvas: fabric.Canvas,
   userId: string,
-  undoRedoDispatch: (action: CanvasAction) => void
+  undoRedoDispatch: (action: CanvasAction) => void,
+  setGroupRedrawing3d: (status: string) => void,
+  set3dActive: (active: boolean) => void,
+  setRedrawing3dObjects: (objs: I3dObject[]) => void
 ) => {
   // Getting lineWidth context variable
   const { lineWidth } = useContext(WhiteboardContext);
@@ -203,7 +207,26 @@ export const useChangeLineWidth = (
       if (!activeObjects) return;
       canvas.discardActiveObject();
 
+      const objects3d: I3dObject[] = [] 
+      
       for (const object of activeObjects) {
+        
+        /**
+         * If the object has a 3d relation its relation needs to be updated.
+         * The object will be removed from the canvas and the context state updated in order
+         * to react an export to the 3d canvas
+        */
+        if(is3DShape(object as ICanvasObject)){
+            
+          const three = from2To3d(object as ICanvasObject)
+          three.lineWidth = lineWidth
+
+          canvas.remove(object);
+          objects3d.push(three)
+          continue
+          
+        }
+
         canvas.discardActiveObject();
 
         if (isCommonBrush(object)) {
@@ -212,6 +235,12 @@ export const useChangeLineWidth = (
           await customBrushChange(object as ICanvasBrush, isUniqueObject);
         }
       }
+
+      if(objects3d.length > 0){
+        setRedrawing3dObjects(objects3d)
+        setGroupRedrawing3d("redrawing")
+        set3dActive(true)
+      } 
 
       if (newActives.length === 1) {
         canvas?.setActiveObject(newActives[0]);

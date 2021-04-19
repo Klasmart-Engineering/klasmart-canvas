@@ -129,6 +129,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     backgroundColor,
     eventSerializer,
     eventController,
+    setGroupRedrawing3dStatus,
+    set3dActive,
+    setRedrawing3dObjects  
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { dispatch: undoRedoDispatch } = UndoRedo(
@@ -277,7 +280,13 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   use2To3d(canvas as fabric.Canvas, userId)
 
   // useEffects and logic for manage line width changes in objects
-  useChangeLineWidth(canvas as fabric.Canvas, userId, undoRedoDispatch);
+  useChangeLineWidth(
+    canvas as fabric.Canvas, 
+    userId, undoRedoDispatch,
+    setGroupRedrawing3dStatus,
+    set3dActive,
+    setRedrawing3dObjects  
+  );
 
   // useEffects and logic for manage undo/redo feature
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
