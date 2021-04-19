@@ -335,22 +335,28 @@ export class ChalkBrush extends fabric.PencilBrush {
   public onMouseUp() {
     this.isDrawing = false;
 
-    this.createChalkPath(
-      `${this.userId}:${uuidv4()}`,
-      this.points,
-      this.width,
-      this.color,
-      this.clearRects
-    ).then((response) => {
-      if (response) {
-        this.canvas.add(response);
+    return new Promise<void>((resolve) => {
+      try {
+        this.createChalkPath(
+          `${this.userId}:${uuidv4()}`,
+          this.points,
+          this.width,
+          this.color,
+          this.clearRects
+        ).then((response) => {
+          if (response) {
+            this.canvas.add(response);
+            this.canvas.renderAll();
+          }
+
+          this.points = [];
+          this.clearRects = [];
+          resolve();
+        });
+      } catch (error) {
+        console.warn(error);
       }
-
-      this.canvas.renderAll();
     });
-
-    this.points = [];
-    this.clearRects = [];
   }
 
   /**

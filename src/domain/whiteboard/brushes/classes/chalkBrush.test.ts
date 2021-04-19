@@ -4,6 +4,8 @@ import { ChalkBrush } from './chalkBrush';
 import { fabric } from 'fabric';
 import { v4 as uuidv4 } from 'uuid';
 import { referencePoints } from './referencePoints';
+import 'jest-canvas-mock';
+import 'canvas';
 
 const mockCanvas = {
   ...window,
@@ -40,10 +42,16 @@ const mockCanvas = {
   transform: function () {},
   rect: function () {},
   clip: function () {},
+  quadraticCurveTo: function (
+    cpx: number,
+    cpy: number,
+    x: number,
+    y: number
+  ) {},
 };
 
 describe('Chalk Brush sould be created', () => {
-  it('Should have the correct properties and values', () => {
+  it('Should have the correct properties and values', async () => {
     window.HTMLCanvasElement.prototype.getContext = () => jest.fn();
     const canvasTest = {
       ...window,
@@ -62,6 +70,7 @@ describe('Chalk Brush sould be created', () => {
           insertBefore: jest.fn(),
         },
       }),
+      toDataURL: () => '',
     };
 
     jest.spyOn(document, 'createElement').mockImplementation(() => canvasTest);
@@ -78,20 +87,24 @@ describe('Chalk Brush sould be created', () => {
     );
 
     const clearRects = chalkBrush.createChalkEffect(referencePoints, width);
-    chalkBrush
-      .createChalkPath(id, referencePoints, width, color, clearRects)
-      .then((chalkPath) => {
-        expect(chalkPath.basePath?.type).toBe('chalk');
-        expect(chalkPath.basePath?.stroke).toBe(color);
-        expect(chalkPath.basePath?.strokeWidth).toBe(width);
-        expect(chalkPath.basePath?.points.length).toBe(referencePoints.length);
-        expect(chalkPath.basePath).toHaveProperty('imageData');
-      });
+    const chalkPath = await chalkBrush.createChalkPath(
+      id,
+      referencePoints,
+      width,
+      color,
+      clearRects
+    );
+
+    expect(chalkPath.basePath?.type).toBe('chalk');
+    expect(chalkPath.basePath?.stroke).toBe(color);
+    expect(chalkPath.basePath?.strokeWidth).toBe(width);
+    expect(chalkPath.basePath?.points.length).toBe(referencePoints.length);
+    expect(chalkPath.basePath).toHaveProperty('imageData');
   });
 });
 
 describe('Crayon Brush sould be created', () => {
-  it('Should have the correct properties and values', () => {
+  it('Should have the correct properties and values', async () => {
     window.HTMLCanvasElement.prototype.getContext = () => jest.fn();
     const canvasTest = {
       ...window,
@@ -110,6 +123,7 @@ describe('Crayon Brush sould be created', () => {
           insertBefore: jest.fn(),
         },
       }),
+      toDataURL: () => '',
     };
 
     jest.spyOn(document, 'createElement').mockImplementation(() => canvasTest);
@@ -126,14 +140,18 @@ describe('Crayon Brush sould be created', () => {
     );
 
     const clearRects = chalkBrush.createChalkEffect(referencePoints, width);
-    chalkBrush
-      .createChalkPath(id, referencePoints, width, color, clearRects)
-      .then((chalkPath) => {
-        expect(chalkPath.basePath?.type).toBe('crayon');
-        expect(chalkPath.basePath?.stroke).toBe(color);
-        expect(chalkPath.basePath?.strokeWidth).toBe(width);
-        expect(chalkPath.basePath?.points.length).toBe(referencePoints.length);
-        expect(chalkPath.basePath).toHaveProperty('imageData');
-      });
+    const chalkPath = await chalkBrush.createChalkPath(
+      id,
+      referencePoints,
+      width,
+      color,
+      clearRects
+    );
+
+    expect(chalkPath.basePath?.type).toBe('crayon');
+    expect(chalkPath.basePath?.stroke).toBe(color);
+    expect(chalkPath.basePath?.strokeWidth).toBe(width);
+    expect(chalkPath.basePath?.points.length).toBe(referencePoints.length);
+    expect(chalkPath.basePath).toHaveProperty('imageData');
   });
 });

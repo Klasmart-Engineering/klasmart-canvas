@@ -122,6 +122,13 @@ const useSynchronizedRemoved = (
             event,
           });
           break;
+        case 'removeBackground': {
+          if (!shouldHandleRemoteEvent(objectId) && objectId) return;
+          // @ts-ignore
+          canvas?.setBackgroundImage(0, canvas.renderAll.bind(canvas));
+          setLocalImage('');
+          break;
+        }
         default:
           canvas?.forEachObject(function (obj: ICanvasObject | TypedShape) {
             if (obj.id && obj.id === objectId) {
@@ -200,6 +207,8 @@ const useSynchronizedRemoved = (
           ((e.target as ICanvasObject)?.text?.trim().length ||
             (e.target as ICanvasObject).get('type') !== 'textbox')
         ) {
+          if (payload.id.split(':')[1] === 'cursor' ) return;
+
           let event = { event: payload, type: 'removed' } as IUndoRedoEvent;
 
           undoRedoDispatch({

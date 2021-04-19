@@ -8,5 +8,6 @@ export interface ICanvasPathBrush extends ICanvasObject {
     points: ICoordinate[];
     stroke: string;
     strokeWidth: number;
+    imageData?: string;
   };
 }
