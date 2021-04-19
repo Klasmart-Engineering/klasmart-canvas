@@ -145,7 +145,7 @@ export const mappedToolElements = (
         }
         case 'line_width': {
           const available = true;
-          const enabled = !is3dSelected;
+          const enabled = true
           return { ...elmnt, enabled, available };
         }
         case 'flood_fill': {

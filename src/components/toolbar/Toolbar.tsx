@@ -127,6 +127,7 @@ function Toolbar(props: {
    * @param {number} index - index that the clicked button has in the array
    */
   function handleToolsElementClick(tool: string) {
+    
     if (tool === ELEMENTS.POINTERS_TOOL && !cursorPointerToolIsActive) {
       return;
     }
@@ -162,8 +163,6 @@ function Toolbar(props: {
     if (tool === ELEMENTS.ADD_3D_SHAPE_TOOL && !shape3dToolIsActive) {
       return;
     }
-
-    if(tool === ELEMENTS.LINE_WIDTH_TOOL && is3dSelected) return
 
     if (
       tool === ELEMENTS.BACKGROUND_COLOR_TOOL &&
@@ -358,7 +357,7 @@ function Toolbar(props: {
         setNew3dShape(option);
         setCreating3d(true)
         set3dActive(true)
-        updateLineWidthIsActive(false)
+        // updateLineWidthIsActive(false)
         break;
       case ELEMENTS.ADD_STAMP_TOOL:
         updateStamp(option);
