@@ -2,6 +2,9 @@ import React from 'react';
 import * as THREE from 'three';
 import { BufferGeometry } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js';
 import { WhiteboardContext } from '../../WhiteboardContext';
 import { v4 as uuidv4 } from 'uuid';
 import { DEFAULT_VALUES as TOOLBAR_DEFAULT_VALUES } from '../../../../config/toolbar-default-values';
@@ -17,28 +20,28 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
   static contextType = WhiteboardContext;
 
   id?: string;
-  ownerId?:string
-  object2dId?:string
+  ownerId?: string;
+  object2dId?: string;
   json: any;
   previousState: any;
   scene: THREE.Scene;
   renderer: THREE.WebGLRenderer;
   camera: THREE.PerspectiveCamera;
   geometry?: THREE.BufferGeometry;
-  shape?: THREE.Mesh | THREE.LineSegments;
+  shape?: THREE.Mesh | THREE.LineSegments | LineSegments2;
   dataURL: string = '';
   renderRequested: boolean | undefined = false;
   canvas?: Element | null;
   controls?: OrbitControls;
   canvasPosition?: { left: number; top: number };
   canvasSize?: { width: number; height: number };
-  canvasRotation = 0
+  canvasRotation = 0;
   shapeColor?: string;
   shapeType?: string;
   brushType: string = TOOLBAR_DEFAULT_VALUES.PEN_LINE;
   penColor: string = TOOLBAR_DEFAULT_VALUES.PEN_COLOR;
   lineWidth: number = TOOLBAR_DEFAULT_VALUES.LINE_WIDTH;
-  isFlipped: boolean = false
+  isFlipped: boolean = false;
 
   constructor(props: ICanvas3dProps) {
     super(props);
@@ -69,7 +72,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       this.shape = this.shapeCreation();
       this.scene.add(this.shape);
       this.id = uuidv4();
-      this.ownerId = this.props.ownerId
+      this.ownerId = this.props.ownerId;
     } else {
       /**
        * Otherwise, the scene is recovered
@@ -151,22 +154,16 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
    * @param {I3dObject} jsObj - the scene saved in a json. Optional. If not present, it gets it from the state context.
    */
   recoverScene = (jsObj?: I3dObject) => {
-    const loader = new THREE.ObjectLoader();
     let jsonObj = jsObj ?? JSON.parse(this.context.json3D);
-    this.object2dId = jsonObj.object2dId
+    this.object2dId = jsonObj.object2dId;
     this.canvasPosition = jsonObj.canvasPosition;
     this.canvasSize = {
       width: jsonObj.canvasSize.width,
       height: jsonObj.canvasSize.height,
     };
-    this.isFlipped = jsonObj.isFlipped
+    this.isFlipped = jsonObj.isFlipped;
     this.renderer.setSize(this.canvasSize.width, this.canvasSize.height);
-    this.canvasRotation = jsonObj.canvasRotation
-    try {
-      this.scene = loader.parse(jsonObj.scene);
-    } catch (error) {
-      console.warn(error) 
-    }
+    this.canvasRotation = jsonObj.canvasRotation;
     const cameraPos = jsonObj.cameraPosition;
     this.camera.position.set(cameraPos.x, cameraPos.y, cameraPos.z);
     this.controls?.update();
@@ -174,6 +171,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     this.shapeColor = jsonObj.shapeColor;
     this.penColor = jsonObj.penColor;
     this.brushType = jsonObj.brushType;
+    this.lineWidth = jsonObj.lineWidth
     this.shape = this.shapeCreation();
     this.scene.clear();
     this.scene.add(this.shape);
@@ -257,7 +255,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     this.renderer.setSize(width, height);
     this.canvasSize = { width, height };
     this.canvasPosition = { top: height, left: width };
-    this.canvasRotation = 0
+    this.canvasRotation = 0;
     this.renderer.setPixelRatio(window.devicePixelRatio);
   };
 
@@ -498,8 +496,17 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     let material:
       | THREE.MeshPhongMaterial
       | THREE.LineBasicMaterial
-      | THREE.Line;
-    let shape: THREE.LineSegments | THREE.Mesh;
+      | THREE.Line
+      | THREE.Object3D;
+    let shape: THREE.LineSegments | THREE.Mesh | LineSegments2;
+
+    const toHexNumber = (hexString: string) => {
+      return parseInt(hexString.replace(/^#/, ''), 16);
+    };
+
+    const pairLineWidth = (width: number) => {
+      return width * 3;
+    };
 
     /**
      * If there is a color, it creates a phong material.
@@ -515,7 +522,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       if (this.brushType === 'dashed') {
         material = new THREE.LineDashedMaterial({
           color: this.penColor,
-          linewidth: this.lineWidth,
+          linewidth: pairLineWidth(this.lineWidth),
           scale: 1,
           dashSize: 3,
           gapSize: 1,
@@ -530,16 +537,36 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
         } catch (error) {
           console.warn(error);
         }
+        // const lineGeometry = new LineSegmentsGeometry().setPositions(
+        //   geometry.attributes.position.array
+        // );
+
+        // const lineMaterial = new LineMaterial({
+        //   color: toHexNumber(this.penColor),
+        //   linewidth: pairLineWidth(this.lineWidth),
+        //   dashed: true,
+        //   dashSize: 5,
+        //   gapSize: 2,
+        //   dashScale: 1,
+        //   opacity: 1
+        // });
+        // lineMaterial.defines.USE_DASH = "";
+
+        // lineMaterial.resolution.set(window.innerWidth, window.innerHeight);
+        // shape = new LineSegments2(lineGeometry, lineMaterial);
       } else {
-        material = new THREE.LineBasicMaterial({
-          color: this.penColor,
-          linewidth: this.lineWidth,
-          depthTest: false,
-          polygonOffset: true,
-          polygonOffsetFactor: 1,
-          polygonOffsetUnits: 1,
+        const lineGeometry = new LineSegmentsGeometry().setPositions(
+          geometry.attributes.position.array
+        );
+
+        const lineMaterial = new LineMaterial({
+          color: toHexNumber(this.penColor),
+          linewidth: pairLineWidth(this.lineWidth),
         });
-        shape = new THREE.LineSegments(geometry, material);
+
+        lineMaterial.resolution.set(window.innerWidth, window.innerHeight);
+
+        shape = new LineSegments2(lineGeometry, lineMaterial);
       }
     }
 
@@ -576,7 +603,6 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       canvasId: this.id,
       object2dId: this.object2dId,
       ownerId: this.props.ownerId,
-      scene: this.scene.toJSON(),
       shapeColor: this.shapeColor,
       canvasPosition: this.canvasPosition,
       canvasSize: this.canvasSize,
@@ -593,7 +619,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       penColor: this.penColor,
       lineWidth: this.lineWidth,
       canvasRotation: this.canvasRotation,
-      isFlipped: this.isFlipped
+      isFlipped: this.isFlipped,
     };
   };
 
@@ -623,7 +649,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
     this.canvasSize = undefined;
     this.shapeType = undefined;
     this.geometry = undefined;
-    this.canvasRotation = 0
+    this.canvasRotation = 0;
 
     /**
      * Updating context to inactivity
@@ -695,15 +721,11 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
    * @return json of the scene
    */
   generateScreenshot = () => {
-    const scene = new THREE.Scene();
-    scene.clear();
-    const shape = this.makeInstance(this.geometry, 0, 0, 0);
-    scene.add(shape);
+    
     const json = {
       canvasId: this.id,
       object2dId: this.object2dId,
       ownerId: this.props.ownerId,
-      scene: scene.toJSON(),
       shapeColor: this.shapeColor,
       canvasPosition: this.canvasPosition,
       canvasSize: this.canvasSize,
@@ -720,7 +742,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       penColor: this.penColor,
       lineWidth: this.lineWidth,
       canvasRotation: this.canvasRotation,
-      isFlipped: this.isFlipped
+      isFlipped: this.isFlipped,
     };
     return json;
   };
@@ -817,7 +839,11 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       const style = {
         left: this.context.canvas3dPosition.left + 'px',
         top: this.context.canvas3dPosition.top + 'px',
-        transform: "rotate("+this.canvasRotation+"deg)" + (this.isFlipped ? " scaleX(-1)" : "")
+        transform:
+          'rotate(' +
+          this.canvasRotation +
+          'deg)' +
+          (this.isFlipped ? ' scaleX(-1)' : ''),
       };
       return style;
     }
@@ -826,7 +852,11 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
       const style = {
         left: this.props.json.canvasPosition.left + 'px',
         top: this.props.json.canvasPosition.top + 'px',
-        transform: "rotate("+this.props.json.canvasRotation+"deg)" + (this.isFlipped ? " scaleX(-1)" : "")
+        transform:
+          'rotate(' +
+          this.props.json.canvasRotation +
+          'deg)' +
+          (this.isFlipped ? ' scaleX(-1)' : ''),
       };
       return style;
     }
