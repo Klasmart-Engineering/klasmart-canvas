@@ -8,4 +8,5 @@ export const CANVAS_OBJECT_PROPS = [
   'joinedIds',
   'isPartialErased',
   'basePath',
+  'backgroundImageEditable',
 ];

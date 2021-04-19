@@ -133,6 +133,8 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     displayUserInfo,
     eventSerializer,
     eventController,
+    setLocalBackground,
+    setLocalImage
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { dispatch: undoRedoDispatch } = UndoRedo(
@@ -233,6 +235,15 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
       eventController.removeListener('aboutToReplayAll', reset);
     };
   }, [canvas, eventController, generatedBy]);
+
+  const getObjects = useCallback(() => {
+    const objects = canvas?.getObjects().map((object) => {
+      return object.toJSON(['basePath']);
+    });
+
+    localStorage.setItem('objects', JSON.stringify(objects));
+    return canvas?.getObjects();
+  }, [canvas]);
 
   // useEffects and logic for manage the object manipulation in canvas
   useObjectManipulation(
@@ -337,7 +348,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     canvas,
     filterIncomingEvents,
     userId,
-    undoRedoDispatch
+    undoRedoDispatch,
+    setLocalImage,
+    setLocalBackground
   );
   useSynchronizedColorChanged(
     canvas,
@@ -410,10 +423,19 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
         height={height}
         backgroundColor={localBackground ? backgroundColor : undefined}
       ></CanvasDownloadConfirm>
+      <button
+        id="get-objects-button"
+        onClick={() => getObjects()}
+        hidden={true}
+        disabled={!canvas?.getObjects().length}
+      >
+        Picale bro
+      </button>
       <canvas
         width={pixelWidth}
         height={pixelHeight}
         id={instanceId}
+        placeholder={instanceId}
         style={{ ...initialStyle, backgroundColor: 'transparent' }}
         tabIndex={0}
         onClick={() => {
