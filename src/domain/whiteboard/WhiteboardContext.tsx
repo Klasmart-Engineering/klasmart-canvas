@@ -157,6 +157,9 @@ export const WhiteboardProvider = ({
   const [isBackgroundImage, setIsBackgroundImage] = useState(false);
   const [localImage, setLocalImage] = useState<string | File>('');
   const [localBackground, setLocalBackground] = useState(false);
+  const [copiedItem, setCopiedItem] = useState<ICanvasObject | null>(null);
+  const [activeTool, setActiveTool] = useState<string | null>(null);
+
   const [
     backgroundImageIsPartialErasable,
     setBackgroundImageIsPartialErasable,
@@ -436,6 +439,8 @@ export const WhiteboardProvider = ({
     updateBackgroundColor,
     fillBackgroundColor,
     setBackgroundColorInCanvas,
+    copiedItem,
+    setCopiedItem,
     stampMode,
     updateStampMode,
     stampIsActive,
@@ -452,6 +457,8 @@ export const WhiteboardProvider = ({
     findObjectById,
     eventSerializer,
     eventController,
+    activeTool,
+    setActiveTool,
   };
 
   return (

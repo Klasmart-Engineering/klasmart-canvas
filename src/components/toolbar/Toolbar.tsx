@@ -96,6 +96,7 @@ function Toolbar(props: {
     updateEraserIsActive,
     fillBackgroundColor,
     updateSelectedTool
+    setActiveTool,
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
@@ -244,6 +245,8 @@ function Toolbar(props: {
         elements: [...tools.elements],
       });
     }
+
+    setActiveTool(tool);
   }
 
   /**

@@ -414,7 +414,7 @@ const useSynchronizedAdded = (
       if (
         objectType === 'path' &&
         !target.name &&
-        !(target as ICanvasPathBrush).basePath
+        (!(target as ICanvasPathBrush).basePath || (target as ICanvasPathBrush).basePath.type === 'pencil')
       ) {
         const pencil = new fabric.PencilBrush();
         pencil.color = target.stroke || '#000';
@@ -429,6 +429,13 @@ const useSynchronizedAdded = (
         res.strokeUniform = true;
         if (target.isPartialErased) {
           res.globalCompositeOperation = 'destination-out';
+        }
+
+        if (target.top !== undefined && target.left !== undefined) {
+          res.set({
+            top: target.top,
+            left: target.left,
+          });
         }
 
         canvas?.add(res);
