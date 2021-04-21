@@ -253,20 +253,37 @@ const spliceEvents = (
 };
 
 /**
- * Get Steps for jumping from or to, undo/redo. It will be always 1 or 2 if all the 
- * objects of the state are 3d due to the 3d need of redrawing (remove, add) on every 2d step.
- * @param state 
+ * Get Steps for jumping from or to, undo/redo. It will be always 1 for groups and 2d objects 
+ * It will be 2 if the event object of the new state is 3d due to the 3d need of redrawing (remove, add) on every 2d step.
+ * @param {CanvasHistoryState} state 
+ * @param {string} sense forward or backward
  */
-const getSteps = (state: string) => {
-  let steps = 1
-      
-  const objects = JSON.parse(state).objects
-  if(objects && objects.length){
-    let isAll3d = true;
-    for (let obj of objects) {
-      if (!is3DShape(obj)) isAll3d = false;
+const getSteps = (state: CanvasHistoryState, sense: 'forward' | 'backward') => {
+
+  const backOrForwardStateIsValid = (backOrForwardIndex: number) => {
+    return state.events[backOrForwardIndex] && 
+    state.events[backOrForwardIndex].type && 
+    state.events[backOrForwardIndex].event && 
+    (state.events[backOrForwardIndex].event as any).hasOwnProperty("id") && 
+    (state.events[backOrForwardIndex].event as any).id.includes(':3D:')
+  }
+
+  let steps = 1 
+  let backOrForwardIndex = sense === 'backward' ? state.eventIndex - 1 : state.eventIndex + 1;
+  
+  if (
+    backOrForwardStateIsValid(backOrForwardIndex) && 
+    state.events[backOrForwardIndex].type === 'removed'
+  ) {
+    const threeObjectId = (state.events[backOrForwardIndex].event as any).id
+    backOrForwardIndex = sense === 'backward' ? backOrForwardIndex -= 1 : backOrForwardIndex += 1;
+    if (
+      backOrForwardStateIsValid(backOrForwardIndex) && 
+      state.events[backOrForwardIndex].type === 'added' &&
+      threeObjectId === (state.events[backOrForwardIndex].event as any).id
+    ) {
+      steps = 2 
     }
-    if(isAll3d) steps = 2
   }
 
   return steps
@@ -444,7 +461,7 @@ const reducer = (
         return state;
       }
 
-      const steps = getSteps(state.activeState as string)
+      const steps = getSteps(state, 'backward')
 
       let eventIndex = state.eventIndex - steps;
 
@@ -497,7 +514,7 @@ const reducer = (
     // Steps forward to more recent state.
     case REDO: {
 
-      const steps = getSteps(state.activeState as string)
+      const steps = getSteps(state, 'forward')
       
       // If no future states, return current state.
       if (
