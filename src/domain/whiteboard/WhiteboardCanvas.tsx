@@ -51,6 +51,7 @@ import { usePointerFeature } from './canvas-features/usePointerFeature';
 import useSynchronizedCursorPointer from './synchronization-hooks/useSynchronizedCursorPointer';
 import { IPermissions } from '../../interfaces/permissions/permissions';
 import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBackgroundColorChanged';
+import { useCopy } from './canvas-features/useCopy';
 import { useStampFeature } from './canvas-features/useStampFeature';
 import useSynchronizedSendStamp from './synchronization-hooks/useSynchronizedSendStamp';
 
@@ -128,7 +129,8 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     eventSerializer,
     eventController,
     setLocalBackground,
-    setLocalImage
+    setLocalImage,
+    activeTool,
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { dispatch: undoRedoDispatch } = UndoRedo(
@@ -283,6 +285,15 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for manage undo/redo feature
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
+  
+  useCopy(
+    canvas as fabric.Canvas,
+    userId,
+    allToolbarIsEnabled,
+    undoRedoDispatch,
+    eventSerializer,
+    activeTool
+  );
 
   // useEffects and logic for stamp feature
   useStampFeature();

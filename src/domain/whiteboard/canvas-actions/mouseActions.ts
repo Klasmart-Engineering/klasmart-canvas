@@ -123,14 +123,14 @@ export function useMouseUp(dispatch: React.Dispatch<CanvasAction>) {
 export const useMouseDown = (
   canvas: fabric.Canvas,
   shapeSelector: (args: string) => fabric.Object | TypedShape,
-  clearOnMouseEvent: () => void,
+  clearOnMouseEvent: (click: (arg: fabric.IEvent) => void) => void,
   mouseMove: (...args: Array<any>) => void,
   mouseUp: (...args: Array<any>) => void,
   brushType: string,
   shapeColor: string
 ) => (useCallback(
   (specific: string, color?: string): void => {
-    canvas?.on('mouse:down', (e: fabric.IEvent): void => {
+    const click = (e: fabric.IEvent): void => {
       if (e.target || !e.pointer) {
         return;
       }
@@ -156,13 +156,15 @@ export const useMouseDown = (
         });
       }
 
-      clearOnMouseEvent();
+      clearOnMouseEvent(click);
       // @ts-ignore
       mouseMove(shape, e.pointer, specific, canvas, brushType);
       // @ts-ignore
       mouseUp(shape, e.pointer, specific);
       canvas.add(shape);
-    });
+    };
+
+    canvas?.on('mouse:down', click);
   },
   [canvas, clearOnMouseEvent, mouseMove, mouseUp, shapeColor, shapeSelector, brushType]
 ));
