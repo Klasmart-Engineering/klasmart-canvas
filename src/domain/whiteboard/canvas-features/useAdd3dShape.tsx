@@ -5,6 +5,7 @@ import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { I3dObject } from '../three/I3dObject';
 import { useCallback } from 'react';
+import { is3DShape } from '../utils/shapes';
 
 /**
  * Handles logic for adding a 2d image representation of a 3d shape after
@@ -34,6 +35,8 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
    */
   const translate3dTo2dImage = useCallback(
     (three: I3dObject, dataURL: string = '') => {
+      
+      
       if (dataURL === '') dataURL = three.dataURL;
       fabric.Image.fromURL(dataURL, (img) => {
         let top = 0;
@@ -51,14 +54,23 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
         objectImage.scaleToHeight(three.canvasSize.height);
         objectImage.scaleToWidth(three.canvasSize.width);
         
-        objectImage.id = three.object2dId ?? `${userId}:3D:${uuidv4()}`;
+        three.object2dId = objectImage.id = three.object2dId ?? `${userId}:3D:${uuidv4()}`;
         objectImage.threeObject = JSON.stringify(three);
         objectImage.target = objectImage;
 
+        const objects = canvas.getObjects()
+        for(let object of objects){
+          if(is3DShape(object)){
+            if(three.canvasId === JSON.parse((object as ICanvasObject).threeObject as string).canvasId){
+              canvas.remove(object)  
+            }
+          } 
+        }
         canvas.add(objectImage);
         if (typeof three.canvasPosition === 'undefined') {
           objectImage.center();
         }
+        
       });
     },
     [canvas, userId]
