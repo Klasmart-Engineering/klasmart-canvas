@@ -2,7 +2,7 @@
   "name": "kidsloop-canvas",
   "version": "0.3.0",
   "private": true,
-  "main": "lib/exports.js",
+  "main": "dist/index.js",
   "dependencies": {
     "@babel/core": "^7.13.1",
     "@babel/register": "^7.13.0",
@@ -38,6 +38,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "build:lib": "rimraf ./lib && tsc && cp -R src/assets lib/assets",
+    "build:package": "rollup -c",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "server": "node server/server.js"
@@ -55,6 +56,8 @@
     ]
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^18.0.0",
+    "@rollup/plugin-image": "^2.0.6",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/react-hooks": "^3.3.0",
@@ -72,6 +75,8 @@
     "@types/react-redux": "^7.1.12",
     "@types/uuid": "^8.0.0",
     "@types/ws": "^7.4.0",
+    "babel-core": "^6.26.3",
+    "babel-runtime": "^6.26.0",
     "enzyme": "^3.11.0",
     "enzyme-adapter-react-16": "^1.15.6",
     "fetch-mock": "^9.11.0",
@@ -80,6 +85,21 @@
     "react-scripts": "3.4.1",
     "react-test-renderer": "^16.13.1",
     "redux-mock-store": "^1.5.4",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "rollup": "^2.45.2",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-import-css": "^2.0.1",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-postcss": "^4.0.0",
+    "rollup-plugin-sass": "^1.2.2",
+    "rollup-plugin-svg": "^2.0.0",
+    "rollup-plugin-typescript2": "^0.30.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1"
   }
 }
