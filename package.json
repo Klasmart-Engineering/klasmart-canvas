@@ -92,6 +92,7 @@
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-postcss": "^4.0.0",
     "rollup-plugin-sass": "^1.2.2",
+    "rollup-plugin-styles": "^3.14.1",
     "rollup-plugin-svg": "^2.0.0",
     "rollup-plugin-typescript2": "^0.30.0"
   },

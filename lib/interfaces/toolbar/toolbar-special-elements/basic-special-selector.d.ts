@@ -5,4 +5,5 @@ export default interface IBasicSpecialSelector {
     id: string;
     icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
     styleOptions: IStyleOptions[];
+    enabled?: boolean;
 }

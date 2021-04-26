@@ -1,10 +1,13 @@
 /// <reference types="react" />
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 export declare const UNDO = "CANVAS_UNDO";
 export declare const REDO = "CANVAS_REDO";
 export declare const SET = "CANVAS_SET";
-export declare const MODIFY = "CANVAS_MODIFY";
+export declare const SET_GROUP = "CANVAS_SET_GROUP";
 export declare const UPDATE_OTHER = "CANVAS_UPDATE_OTHER";
 export declare const SET_OTHER = "CANVAS_SET_OTHER";
+export declare const SET_BACKGROUND = "CANVAS_SET_BACKGROUND";
 /**
  * Model for storing the canvas history for undo/redo functionality.
  * States stored as stringified objects, since fabric requires it when
@@ -18,7 +21,7 @@ export interface CanvasHistoryState {
     /**
      * Objects created on another canvas.
      */
-    otherObjects: any;
+    otherObjects: string;
     /**
      * Indicates action being taken, such as undo or redo.
      */
@@ -34,7 +37,7 @@ export interface CanvasHistoryState {
     /**
      * List of events
      */
-    events: any[];
+    events: IUndoRedoEvent[];
     /**
      * Current event chosen, used for undo and redo events.
      */
@@ -42,7 +45,11 @@ export interface CanvasHistoryState {
     /**
      * Used for group manipulation.
      */
-    activeObjects: any[];
+    activeObjects: ICanvasObject[];
+    /**
+     * Stores background state in order to rerender if needed.
+     */
+    backgrounds: (string | fabric.Image | null)[];
 }
 /**
  * Dispatch action used by reducer for canvas history.
@@ -63,15 +70,19 @@ export interface CanvasAction {
     /**
      * Event to be added to list.
      */
-    event?: any;
+    event?: IUndoRedoEvent;
     /**
      * Payload of objects from other canvas.
      */
     otherPayload?: fabric.Object;
     /**
-     * Active objects on board.
+     * Event ID. Used to determine if an event is grouped.
      */
-    activeObjects?: fabric.Object[];
+    eventId?: string | undefined;
+    /**
+     * Canvas background payload
+     */
+    background?: fabric.Image;
 }
 /**
  * Reducer hook.

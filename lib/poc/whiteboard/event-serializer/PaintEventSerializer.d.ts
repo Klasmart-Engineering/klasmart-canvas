@@ -3,8 +3,10 @@ import { Point2D } from '../types/Point2D';
 import { PainterEvent } from '../types/PainterEvent';
 import { BrushParameters } from '../types/BrushParameters';
 import { EventEmitter } from 'events';
+import { ObjectEvent } from '../../../domain/whiteboard/event-serializer/PaintEventSerializer';
 export declare interface PaintEventSerializer {
     on(event: 'event', listener: (payload: PainterEvent) => void): this;
+    push(type: string, object: ObjectEvent): void;
 }
 export declare class PaintEventSerializer extends EventEmitter {
     readonly multiplier: number;

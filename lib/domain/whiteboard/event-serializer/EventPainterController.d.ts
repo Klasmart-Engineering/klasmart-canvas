@@ -11,9 +11,13 @@ import { PainterEvent } from './PainterEvent';
  */
 export declare class EventPainterController extends EventEmitter implements IPainterController {
     readonly events: PainterEvent[];
+    ws: WebSocket | null;
+    constructor();
     replayEvents(): Promise<void>;
     handlePainterEvent(events: PainterEvent[]): void;
+    requestRefetch(): void;
     private parseAndEmitEvent;
+    private textEdit;
     private added;
     private moved;
     private rotated;
@@ -22,6 +26,14 @@ export declare class EventPainterController extends EventEmitter implements IPai
     private colorChanged;
     private modified;
     private fontFamilyChanged;
-    private reconstruct;
     private removed;
+    private moving;
+    private setToolbarPermissions;
+    private fontColorChanged;
+    private lineWidthChanged;
+    private pointer;
+    private cursorPointer;
+    private brushTypeChanged;
+    private backgroundColorChanged;
+    private sendStamp;
 }
