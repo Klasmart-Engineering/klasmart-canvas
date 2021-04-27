@@ -1,8 +1,16 @@
+import { Group } from 'fabric/fabric-impl';
 import { useCallback, useContext, useEffect } from 'react';
+import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { ICanvasShapeBrush } from '../../../interfaces/brushes/canvas-shape-brush';
+import { ICoordinate } from '../../../interfaces/brushes/coordinate';
+import { IPenPoint } from '../../../interfaces/brushes/pen-point';
 import { IUndoRedoEvent } from '../../../interfaces/canvas-events/undo-redo-event';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { TypedShape } from '../../../interfaces/shapes/shapes';
+import { ChalkBrush } from '../brushes/classes/chalkBrush';
+import { PaintBrush } from '../brushes/classes/paintBrush';
+import { PenBrush } from '../brushes/classes/penBrush';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
 import {
   ObjectEvent,
@@ -219,16 +227,263 @@ export const useShapeFeature = (
   useEffect(() => {
     if (!canvas) return;
 
+    /**
+     * When the lines to fix are paintbrush type is necessary
+     * create a new paintbrush path based on its current data
+     * @param {ICanvasBrush} path - Path to take base to create the new one
+     */
+    const fixPaintBrushLines = (path: ICanvasShapeBrush) => {
+      if (!canvas || !userId) return;
+
+      const brush = new PaintBrush(canvas, userId);
+      const newPoints = (path.basePath?.points as ICoordinate[]).map(
+        (point) => {
+          return {
+            x: point.x * Number(path.scaleX),
+            y: point.y * Number(path.scaleY),
+          };
+        }
+      );
+
+      const newPath = brush.modifyPaintBrushPath(
+        String(path.id),
+        newPoints,
+        Number(path.basePath?.strokeWidth),
+        String(path.basePath?.stroke),
+        path.basePath?.bristles || []
+      );
+
+      path.set({ ...newPath });
+      ((path as unknown) as Group).addWithUpdate();
+      canvas.renderAll();
+    };
+
+    /**
+     * Fix the lines of marker/paintbrush path to maintain
+     * the same separation on them when marker/paintbrush path is scaled
+     * @param {ICanvasBrush} path - Modified path
+     */
+    const fixLines = (path: ICanvasShapeBrush) => {
+      let top = path.top;
+      let left = path.left;
+
+      if (path.basePath?.type === 'paintbrush') {
+        fixPaintBrushLines(path);
+      }
+
+      ((path as unknown) as Group)._objects.forEach((line) => {
+        line.set({
+          top: Number(line.top) / Number(path.scaleY),
+          left: Number(line.left) / Number(path.scaleX),
+        });
+      });
+      ((path as unknown) as Group).addWithUpdate();
+
+      (path as ICanvasShapeBrush).set({
+        top: top,
+        left: left,
+        blockResize: true,
+        lockUniScaling: perfectShapeIsActive,
+      });
+
+      ((path as unknown) as Group).addWithUpdate();
+    };
+
+    /**
+     * Fix the given custom shape to make it perfect
+     * @param shapeToFix - Shape to make it perfect
+     */
+    const fixCustomBrushShape = async (shapeToFix: ICanvasShapeBrush) => {
+      console.log(shapeToFix.scaleX, shapeToFix.scaleY);
+      const type: ObjectType = (shapeToFix as ICanvasObject).get(
+        'type'
+      ) as ObjectType;
+
+      const brushTarget = shapeToFix;
+      const brushType = brushTarget.basePath?.type;
+      const id = brushTarget.id;
+
+      let target = {
+        top: shapeToFix.top,
+        left: shapeToFix.left,
+        angle: shapeToFix.angle,
+        scaleX: shapeToFix.scaleX,
+        scaleY: shapeToFix.scaleY,
+        flipX: shapeToFix.flipX,
+        flipY: shapeToFix.flipY,
+        originX: shapeToFix.originX,
+        originY: shapeToFix.originY,
+        name: shapeToFix.name,
+      } as ICanvasShapeBrush;
+
+      switch (brushType) {
+        case 'pen': {
+          if (!canvas || !userId) return;
+
+          const brush = new PenBrush(canvas, userId);
+          const basePath = brushTarget.basePath;
+          const newPoints = (basePath?.points as IPenPoint[]).map((point) => {
+            return {
+              x: point.x * Number(shapeToFix?.scaleX),
+              y: point.y * Number(shapeToFix?.scaleY),
+              width: point.width,
+            };
+          });
+
+          try {
+            const newObject = brush.createPenPath(
+              String(brushTarget.id),
+              newPoints,
+              Number(basePath?.strokeWidth),
+              String(basePath?.stroke)
+            );
+
+            if (!shapeToFix) return;
+
+            console.log(shapeToFix);
+            const id = brushTarget.id;
+            ((newObject as unknown) as ICanvasShapeBrush).set({
+              top: shapeToFix.top,
+              left: shapeToFix.left,
+              angle: shapeToFix.angle,
+              flipX: shapeToFix.flipX,
+              flipY: shapeToFix.flipY,
+              name: shapeToFix.name,
+              shapeType: (shapeToFix as ICanvasShapeBrush).shapeType,
+              blockResize: true,
+              lockUniScaling: perfectShapeIsActive,
+            });
+
+            // Id's are deleted to avoid add and remove event serializing
+            delete shapeToFix.id;
+            delete newObject.id;
+
+            canvas.remove(shapeToFix);
+            canvas.add(newObject);
+            canvas.setActiveObject(newObject);
+            canvas.renderAll();
+
+            // Id's are deleted to avoid add and remove event serializing
+            newObject.set({
+              id: id,
+            });
+          } catch (e) {
+            console.warn(e);
+          }
+
+          target.type = 'group-pen';
+          break;
+        }
+
+        case 'marker':
+        case 'felt':
+        case 'paintbrush': {
+          fixLines(brushTarget);
+          canvas?.renderAll();
+          target.type = 'group-marker';
+          break;
+        }
+        case 'chalk':
+        case 'crayon': {
+          if (!canvas || !userId) return;
+
+          const brush = new ChalkBrush(canvas, userId, brushType);
+          const basePath = brushTarget.basePath;
+          const newPoints = (basePath?.points as ICoordinate[]).map((point) => {
+            return {
+              x: point.x * Number(shapeToFix?.scaleX),
+              y: point.y * Number(shapeToFix?.scaleY),
+            };
+          });
+
+          const newRects = brush.createChalkEffect(
+            newPoints,
+            Number(basePath?.strokeWidth)
+          );
+
+          try {
+            const newObject = await brush.createChalkPath(
+              String(brushTarget.id),
+              newPoints,
+              Number(basePath?.strokeWidth),
+              String(basePath?.stroke),
+              newRects
+            );
+
+            if (!shapeToFix) return;
+
+            const id = brushTarget.id;
+            ((newObject as unknown) as ICanvasShapeBrush).set({
+              top: shapeToFix.top,
+              left: shapeToFix.left,
+              angle: shapeToFix.angle,
+              flipX: shapeToFix.flipX,
+              flipY: shapeToFix.flipY,
+              name: shapeToFix.name,
+              shapeType: (shapeToFix as ICanvasShapeBrush).shapeType,
+              lockUniScaling: perfectShapeIsActive,
+              blockResize: true,
+            });
+
+            // Id's are deleted to avoid add and remove event serializing
+            delete shapeToFix.id;
+            delete newObject.id;
+
+            canvas.remove(shapeToFix);
+            canvas.add(newObject);
+            canvas.setActiveObject(newObject);
+            canvas.renderAll();
+
+            // Id's are deleted to avoid add and remove event serializing
+            newObject.set({
+              id: id,
+            });
+
+            target.type = 'image-based';
+          } catch (e) {
+            console.warn(e);
+          }
+
+          break;
+        }
+      }
+
+      const payload: ObjectEvent = {
+        id: id as string,
+        type: type as ObjectType,
+        target: { eTarget: target, isGroup: false },
+      };
+
+      console.log('EL PAY: ', payload);
+
+      eventSerializer?.push('scaled', payload);
+
+      if (canvas) {
+        const event = { event: payload, type: 'scaled' };
+
+        undoRedoDispatch({
+          type: SET,
+          payload: canvas.getObjects(),
+          canvasId: userId,
+          event: (event as unknown) as IUndoRedoEvent,
+        });
+      }
+    };
+
     /*
       Hide/Show resize middle controls in local shapes.
       When perfectShapeIsActive controls will be hidden
-      and when not will be showed
+      and when not will be shown
     */
     canvas.forEachObject((object: ICanvasObject) => {
       if (isLocalShape(object as TypedShape)) {
-        object.set('lockUniScaling', perfectShapeIsActive);
+        object.set({
+          lockUniScaling: perfectShapeIsActive,
+        });
       }
     });
+
+    canvas.renderAll();
 
     // Resets active shape like perfect
     if (activeShapeCanBePerfectSized()) {
@@ -236,6 +491,8 @@ export const useShapeFeature = (
       const shapeToFix = canvas.getActiveObject();
       const width = getShapeRealWidth(shapeToFix);
       const heigth = getShapeRealHeight(shapeToFix);
+
+      if ((shapeToFix as ICanvasShapeBrush).blockResize) return;
 
       if (width > heigth) {
         scaling = { scaleY: width / Number(shapeToFix.height) };
@@ -245,7 +502,15 @@ export const useShapeFeature = (
 
       if (scaling) {
         shapeToFix.set(scaling);
-        syncAndDispatchPerfectShapeScaling(shapeToFix);
+
+        if (
+          (shapeToFix as ICanvasBrush).basePath?.type === 'pencil' ||
+          (shapeToFix as ICanvasBrush).basePath?.type === 'dashed'
+        ) {
+          syncAndDispatchPerfectShapeScaling(shapeToFix);
+        } else {
+          fixCustomBrushShape(shapeToFix as ICanvasShapeBrush);
+        }
       }
 
       shapeToFix.setCoords();
