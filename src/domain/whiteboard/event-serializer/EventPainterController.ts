@@ -303,6 +303,7 @@ export class EventPainterController extends EventEmitter
   private setUserInfoToDisplay(id: string, target: ICanvasObject) {
     this.emit('setUserInfoToDisplay', id, target);
     // TEMPORARY for realtime testing purposes.
+    if (!this.ws?.readyState) return;
     this.ws?.send(
       JSON.stringify({ id, eventType: 'setUserInfoToDisplay', target })
     );
