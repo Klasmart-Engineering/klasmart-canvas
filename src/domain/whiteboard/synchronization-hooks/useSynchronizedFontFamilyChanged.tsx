@@ -11,8 +11,12 @@ const useSynchronizedFontFamilyChanged = (
   } = useSharedEventSerializer();
 
   useEffect(() => {
-    const fontFamilyChanged = (id: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const fontFamilyChanged = (
+      id: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
+      if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {

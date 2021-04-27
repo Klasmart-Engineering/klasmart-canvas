@@ -28,8 +28,12 @@ const useSynchronizedReconstruct = (
   }
 
   useEffect(() => {
-    const reconstruct = (id: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const reconstruct = (
+      id: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
+      if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
 
       if (typeof target === 'object' && !target.param) {
         target.param = JSON.stringify(target);

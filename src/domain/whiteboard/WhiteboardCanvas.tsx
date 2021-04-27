@@ -54,6 +54,7 @@ import useSynchronizedBackgroundColorChanged from './synchronization-hooks/useBa
 import { useCopy } from './canvas-features/useCopy';
 import { useStampFeature } from './canvas-features/useStampFeature';
 import useSynchronizedSendStamp from './synchronization-hooks/useSynchronizedSendStamp';
+import { useObjectHover } from './canvas-features/useObjectHover';
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -68,6 +69,8 @@ import useSynchronizedSendStamp from './synchronization-hooks/useSynchronizedSen
  * originating from userId's in this list.
  * @field scaleMode: Determines how the canvas should scale
  * if parent element doesn't match aspect ratio.
+ * @field onCanvasCreated: Is called when canvas changes from undefined
+ * to fabric canvas element
  */
 export type Props = {
   children?: ReactChild | ReactChildren | null;
@@ -83,6 +86,7 @@ export type Props = {
   display?: boolean;
   permissions: IPermissions;
   updatePermissions: (tool: string, payload: boolean) => void;
+  onCanvasCreated: (status: boolean) => void;
 };
 
 const WhiteboardCanvas: FunctionComponent<Props> = ({
@@ -97,6 +101,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   display,
   permissions,
   updatePermissions,
+  onCanvasCreated,
 }: Props): JSX.Element => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
   const [wrapper, setWrapper] = useState<HTMLElement>();
@@ -126,6 +131,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     localImage,
     localBackground,
     backgroundColor,
+    displayUserInfo,
     eventSerializer,
     eventController,
     setLocalBackground,
@@ -198,6 +204,15 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     },
     [isLocalObject, userId]
   );
+
+  /**
+   * Sends the status of the current canvas to the parent
+   */
+  useEffect(() => {
+    if (onCanvasCreated) {
+      onCanvasCreated(!!canvasActions);
+    }
+  }, [canvasActions, onCanvasCreated]);
 
   /**
    * Reset the canvas state in case the event controller will replay all events.
@@ -297,6 +312,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for stamp feature
   useStampFeature();
+
+  // useEffects and logic for manage the changes that would happen when an object is hovered
+  useObjectHover(canvas as fabric.Canvas, displayUserInfo);
 
   // useEffects and logic for manage pointers
   usePointerFeature(canvas as fabric.Canvas, userId, permissions);
@@ -402,7 +420,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     if (!canvasActions && canvas) {
       updateCanvasActions(actions);
     }
-  }, [actions, updateCanvasActions, canvas, canvasActions]);
+  }, [actions, updateCanvasActions, canvasActions, canvas]);
 
   return (
     <>

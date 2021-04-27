@@ -1,4 +1,5 @@
 import { INewStamp, IPortfolio } from '../../../interfaces/portfolio/portfolio';
+import { ADD_STAMP } from './actions';
 
 /**
  * Default portfolio state.
@@ -24,7 +25,7 @@ export function portfolioReducer(
   action: { type: string; payload: INewStamp }
 ) {
   switch (action.type) {
-    case 'ADD_STAMP':
+    case ADD_STAMP:
       const { studentId, stamp } = action.payload;
 
       const newState = state.map((portfolio) => {

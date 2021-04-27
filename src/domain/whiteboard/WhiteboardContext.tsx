@@ -34,6 +34,7 @@ import { usePerfectShapeIsActive } from './hooks/perfectShapeIsActive';
 import WhiteboardToggle from '../../components/WhiteboardToogle';
 import { usePartialEraseIsActive } from './hooks/usePartialEraseIsActive';
 import { useUploadFileModal } from './hooks/useUploadFileModal';
+import { useSetUserInfoToDisplayModal } from './hooks/useSetUserInfoToDisplayModal';
 import store from './redux/store';
 import { getToolbarIsEnabled } from './redux/utils';
 import { IPermissions } from '../../interfaces/permissions/permissions';
@@ -125,6 +126,19 @@ export const WhiteboardProvider = ({
     StampAssignationModal,
     openStampAssignationModal,
   } = useStampAssignationModal();
+
+  const [displayUserInfo, setUserInfoToDisplay] = useState(
+    DEFAULT_VALUES.DISPLAY_USER_INFO_OPTION
+  );
+  const {
+    SetUserInfoToDisplayModal,
+    openSetUserInfoToDisplayModal,
+  } = useSetUserInfoToDisplayModal(setUserInfoToDisplay);
+
+  const [isDrawing, updateIsDrawing] = useState(DEFAULT_VALUES.IS_DRAWING);
+  const [selectedTool, updateSelectedTool] = useState(
+    DEFAULT_VALUES.SELECTED_TOOL
+  );
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
@@ -433,6 +447,12 @@ export const WhiteboardProvider = ({
     updateStampIsActive,
     stampAssignedStudents,
     updateStampAssignedStudents,
+    openSetUserInfoToDisplayModal,
+    displayUserInfo,
+    isDrawing,
+    updateIsDrawing,
+    selectedTool,
+    updateSelectedTool,
     isCursorObject,
     findObjectById,
     eventSerializer,
@@ -483,6 +503,10 @@ export const WhiteboardProvider = ({
       <StampAssignationModal
         studentsList={studentsList}
         assignStudents={updateStampAssignedStudents}
+      />
+      <SetUserInfoToDisplayModal
+        setSelection={setUserInfoToDisplay}
+        selection={displayUserInfo}
       />
       {children}
     </WhiteboardContext.Provider>

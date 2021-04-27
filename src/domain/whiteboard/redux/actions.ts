@@ -1,5 +1,5 @@
 /**
- * Redux dispatch actions. Note, actions are directly named after permission properties to prevent 
+ * Redux dispatch actions. Note, actions are directly named after permission properties to prevent
  * rewrites of multiple files.
  */
 export const UPDATE_PEN = 'pen';
@@ -15,3 +15,4 @@ export const UPDATE_CLEAR_WHITEBOARD = 'clearWhiteboard';
 export const UPDATE_DOWNLOAD_CANVAS = 'downloadCanvas';
 export const UPDATE_UPLOAD_IMAGE = 'uploadImage';
 export const UPDATE_RECEIVED = 'updateReceived';
+export const ADD_STAMP = 'addStamp';

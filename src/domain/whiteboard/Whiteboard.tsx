@@ -1,4 +1,9 @@
-import React, { CSSProperties, useEffect, useRef } from 'react';
+import React, {
+  CSSProperties,
+  FunctionComponent,
+  useEffect,
+  useRef,
+} from 'react';
 import '../../assets/style/whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
@@ -7,23 +12,22 @@ import { ICanvasKeyboardEvent } from '../../interfaces/canvas-events/canvas-keyb
 import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardContainer';
 
 // Redux
-import { Provider } from 'react-redux'
-import store from './redux/store'
+import { Provider } from 'react-redux';
+import store from './redux/store';
 import AuthMenu from '../../components/AuthMenu';
 
-const teacher = {
-  allowClearAll: true,
-  allowClearOthers: true,
-  allowClearMyself: true,
+const users = store.getState().usersState;
+
+/**
+ * @field updateCanvasAreCreated: When all the canvases were loaded,
+ * this function is called to update the flag
+ * that is waiting for all the canvases
+ */
+export type Props = {
+  updateCanvasAreCreated: (status: boolean) => void;
 };
 
-const student = {
-  allowClearAll: false,
-  allowClearOthers: false,
-  allowClearMyself: true,
-};
-
-function Whiteboard() {
+const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
   const whiteboardWidth = 740;
   const whiteboardHeight = 460;
 
@@ -59,7 +63,44 @@ function Whiteboard() {
 
   return (
     <>
-      <WhiteboardProvider
+      {users.map(user => (
+        <WhiteboardProvider
+        key={user.id}
+        clearWhiteboardPermissions={user.permissions}
+        allToolbarIsEnabled={user.role === 'teacher'}
+        activeCanvas={activeCanvas}
+        userId={user.id}
+      >
+        <Provider store={store}>
+          <AuthMenu userId={user.id} />
+          <div
+            className="whiteboard"
+            onClick={() => {
+              activeCanvas.current = `canvas${user.id}`;
+            }}
+          >
+            <Toolbar />
+            <WhiteboardContainer
+              width={whiteboardWidth}
+              height={whiteboardHeight}
+            >
+              <WhiteboardCanvas
+                instanceId={`canvas${user.id}`}
+                userId={user.id}
+                initialStyle={canvasStyle}
+                pointerEvents={true}
+                clearWhiteboardPermissions={user.permissions}
+                pixelWidth={whiteboardWidth}
+                pixelHeight={whiteboardHeight}
+              >
+                <button>{user.role}</button>
+              </WhiteboardCanvas>
+            </WhiteboardContainer>
+          </div>
+        </Provider>
+      </WhiteboardProvider>
+      ))}
+      {/* <WhiteboardProvider
         clearWhiteboardPermissions={teacher}
         allToolbarIsEnabled={true}
         activeCanvas={activeCanvas}
@@ -152,15 +193,18 @@ function Whiteboard() {
                 clearWhiteboardPermissions={student}
                 pixelWidth={whiteboardWidth}
                 pixelHeight={whiteboardHeight}
+                onCanvasCreated={(status: boolean) => {
+                  updateCanvasAreCreated(status);
+                }}
               >
                 <button>Student</button>
               </WhiteboardCanvas>
             </WhiteboardContainer>
           </div>
         </Provider>
-      </WhiteboardProvider>
+      </WhiteboardProvider> */}
     </>
   );
-}
+};
 
 export default Whiteboard;

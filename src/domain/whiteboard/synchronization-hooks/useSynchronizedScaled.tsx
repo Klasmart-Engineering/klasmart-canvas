@@ -105,7 +105,9 @@ const useSynchronizedScaled = (
    */
   const remakePathSync = useCallback(
     async (path: ICanvasBrush) => {
-      if (!canvas || !userId) return;
+      if (!canvas || !userId || !path.basePath) return;
+
+      eventController.setEventRunning(true);
 
       // Data to generate a new chalk/crayon path
       const basePath = path.basePath;
@@ -118,7 +120,7 @@ const useSynchronizedScaled = (
       );
 
       // new points creation based on the new scale
-      const newPoints = (basePath?.points as ICoordinate[]).map((point) => {
+      const newPoints = (basePath?.points as ICoordinate[])?.map((point) => {
         return {
           x: point.x * Number(path?.scaleX),
           y: point.y * Number(path?.scaleY),
@@ -133,14 +135,14 @@ const useSynchronizedScaled = (
 
       try {
         const newObject = await brush.createChalkPath(
-          String(path.id),
+          'provisional',
           newPoints,
           Number(basePath?.strokeWidth),
           String(basePath?.stroke),
           newRects
         );
 
-        if (!path) return;
+        if (!path || !path.id) return;
 
         const id = path.id;
         newObject.set({
@@ -163,11 +165,13 @@ const useSynchronizedScaled = (
         newObject.set({
           id: id,
         });
+
+        eventController.setEventRunning(false);
       } catch (error) {
         console.warn(error);
       }
     },
-    [canvas, userId]
+    [canvas, eventController, userId]
   );
 
   /**
@@ -223,23 +227,63 @@ const useSynchronizedScaled = (
 
         // Id's are deleted to avoid add and remove event serializing
         newObject.set({
-          id: id,
+          id,
         });
+
+        eventController.setEventRunning(false);
       } catch (error) {
         console.warn(error);
       }
     },
-    [canvas, userId]
+    [canvas, eventController, userId]
+  );
+
+  /**
+   * Checks if an image-based path object should be scaled
+   * when this comes from persistent events
+   * @param object - Object to check
+   * @param target - Target with the properties to set in the given object
+   */
+  const chalkCrayonObjectShouldBeScaled = useCallback(
+    (object: ICanvasBrush, target: ICanvasBrush) => {
+      const objectWidth = Number(object.width);
+      const objectHeight = Number(object.height);
+      const targetWidth = Number(target.width);
+      const targetHeight = Number(target.height);
+      const objectStrokeWidth = Number(object.basePath?.strokeWidth);
+
+      return (
+        objectWidth > targetWidth + objectStrokeWidth / 4 ||
+        objectHeight > targetHeight + objectStrokeWidth / 4
+      );
+    },
+    []
   );
 
   /** Register and handle remote event. */
   useEffect(() => {
-    const objectScaled = (id: string, target: ICanvasObject) => {
-      if (!shouldHandleRemoteEvent(id)) return;
+    const objectScaled = (
+      id: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
+      if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
 
       canvas?.forEachObject(function (obj: ICanvasObject) {
         if (obj.id && obj.id === id) {
           const object = target.eTarget;
+
+          if (
+            isPersistent &&
+            object?.type === 'image-based' &&
+            chalkCrayonObjectShouldBeScaled(
+              obj as ICanvasBrush,
+              object as ICanvasBrush
+            )
+          ) {
+            return;
+          }
+
           if (object) {
             obj.set({
               angle: object.angle,
@@ -252,7 +296,20 @@ const useSynchronizedScaled = (
               originX: object.originX || 'left',
               originY: object.originY || 'top',
             });
+
             obj.setCoords();
+
+            if (
+              isPersistent &&
+              object.type === 'group-marker' &&
+              object.scaleX === 1 &&
+              object.scaleY === 1
+            ) {
+              obj.set({
+                scaleX: Number(object.width) / Number(obj.width),
+                scaleY: Number(object.height) / Number(obj.height),
+              });
+            }
 
             if (object.type === 'group-marker') {
               fixLines(obj as ICanvasBrush);
@@ -268,10 +325,15 @@ const useSynchronizedScaled = (
           }
         }
       });
+
       canvas?.renderAll();
     };
 
-    const groupScaled = (id: string, target: ICanvasObject) => {
+    const groupScaled = (
+      id: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
       const isLocalGroup = (id: string, canvasId: string | undefined) => {
         const object = id.split(':');
 
@@ -282,7 +344,7 @@ const useSynchronizedScaled = (
         return object[0] === canvasId;
       };
 
-      if (isLocalGroup(id, userId)) {
+      if (isLocalGroup(id, userId) && !isPersistent) {
         return;
       }
 
@@ -337,13 +399,18 @@ const useSynchronizedScaled = (
       canvas?.discardActiveObject();
     };
 
-    const scaled = (id: string, _type: string, target: ICanvasObject) => {
+    const scaled = (
+      id: string,
+      _type: string,
+      target: ICanvasObject,
+      isPersistent: boolean
+    ) => {
       if (target.isGroup) {
-        groupScaled(id, target);
+        groupScaled(id, target, isPersistent);
         return;
       }
 
-      objectScaled(id, target);
+      objectScaled(id, target, isPersistent);
     };
 
     eventController?.on('scaled', scaled);
@@ -353,6 +420,7 @@ const useSynchronizedScaled = (
     };
   }, [
     canvas,
+    chalkCrayonObjectShouldBeScaled,
     eventController,
     fixLines,
     remakePathSync,
@@ -392,6 +460,7 @@ const useSynchronizedScaled = (
           id: userId,
           type,
           target: { activeIds, eTarget: groupPayloadData, isGroup: true },
+          avoidPersistentStoring: filtered,
         };
 
         eventSerializer?.push('scaled', groupPayload);
@@ -445,6 +514,8 @@ const useSynchronizedScaled = (
         let target = {
           top: e.target.top,
           left: e.target.left,
+          width: e.target.width,
+          height: e.target.height,
           angle: e.target.angle,
           scaleX: e.target.scaleX,
           scaleY: e.target.scaleY,
@@ -594,6 +665,7 @@ const useSynchronizedScaled = (
           id: id as string,
           type: type as ObjectType,
           target: { eTarget: target, isGroup: false },
+          avoidPersistentStoring: filtered,
         };
 
         eventSerializer?.push('scaled', payload);

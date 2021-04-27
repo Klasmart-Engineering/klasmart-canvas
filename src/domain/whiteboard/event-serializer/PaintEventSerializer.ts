@@ -26,6 +26,7 @@ export interface ObjectEvent {
   id: string;
   type?: ObjectType;
   target?: PayloadTarget;
+  avoidPersistentStoring?: boolean;
 }
 
 export interface IBackgroundImageEvent {
@@ -53,6 +54,7 @@ export type ObjectType =
   | 'backgroundAdded'
   | 'localImage'
   | 'svg'
+  | 'userInfoToDisplay'
   | 'cursorPointer';
 
 export type PayloadTarget =
@@ -132,6 +134,7 @@ export class PaintEventSerializer extends EventEmitter
       type,
       objectType: object.type as string,
       param: JSON.stringify(object.target),
+      avoidPersistentStoring: object.avoidPersistentStoring,
     };
 
     // NOTE: The list of ID's this serialized generated is for filtering

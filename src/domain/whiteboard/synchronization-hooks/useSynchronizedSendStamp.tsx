@@ -10,6 +10,8 @@ import { WhiteboardContext } from '../WhiteboardContext';
 import { IStampSyncTarget } from '../../../interfaces/stamps/stamp-sync-target';
 import { IUtilAminEaseFunction } from 'fabric/fabric-impl';
 import { v4 as uuidv4 } from 'uuid';
+import { ADD_STAMP } from '../redux/actions';
+import { IPortfolio } from '../../../interfaces/portfolio/portfolio';
 
 const useSynchronizedSendStamp = (
   canvas: fabric.Canvas | undefined,
@@ -48,6 +50,9 @@ const useSynchronizedSendStamp = (
     animationDurations.afterShowing +
     animationDurations.stampGap;
 
+  const stampWidth = 50;
+  const stampHeight = 50;
+
   // State for register the time in that the animation started
   const [startTime, setStartTime] = useState<Date | null>(null);
 
@@ -72,7 +77,7 @@ const useSynchronizedSendStamp = (
    * Checks the current stamp objects to set the position of the next stamp
    */
   const determineStampPosition = useCallback(
-    (stampWidth: number, stampHeight: number) => {
+    (stampWidth: number, stampHeight: number, stampQuantity: number) => {
       let top;
       let left;
       const canvasWidth = Number(canvas?.width);
@@ -80,17 +85,11 @@ const useSynchronizedSendStamp = (
       const stampsInRow = Math.floor(Number(canvas?.width) / (stampWidth + 10));
       const stampsInColumn = Math.floor(Number(canvas?.height) / stampHeight);
 
-      let existentStamps = canvas
-        ?.getObjects()
-        .filter(
-          (obj: ICanvasObject) => obj.stampObject && !obj.fontFamily && obj.id
-        ).length as number;
-
-      if (existentStamps <= stampsInRow * stampsInColumn) {
-        top = Math.floor(existentStamps / stampsInRow) * stampHeight + 10;
+      if (stampQuantity <= stampsInRow * stampsInColumn) {
+        top = Math.floor(stampQuantity / stampsInRow) * stampHeight + 10;
         left =
           canvasWidth -
-          (existentStamps % stampsInRow) * (stampWidth + 10) -
+          (stampQuantity % stampsInRow) * (stampWidth + 10) -
           (stampWidth + 10);
       } else {
         top = canvasHeight - stampHeight;
@@ -131,17 +130,91 @@ const useSynchronizedSendStamp = (
     [canvas]
   );
 
+  /**
+   * Checks if an stamp with the given id already exists in the whiteboard
+   * @param id - Id to find the stamp
+   */
+  const stampAlreadyExists = useCallback(
+    (id: string) => {
+      return !!canvas?.getObjects().find((obj: ICanvasObject) => {
+        return obj.id === id;
+      });
+    },
+    [canvas]
+  );
+
+  /**
+   * Gets the current stamps quantity for the given student
+   * @param studentId - Id of the student to find the stamps
+   */
+  const getStampsCountByStudentId = useCallback((studentId: string) => {
+    const stampCount = (store.getState().potfolioReducer as IPortfolio[])
+      .find((portfolio) => portfolio.studentId === studentId)
+      ?.studentStamps.map((stamp) => stamp.quantity)
+      .reduce((accumulator, value) => accumulator + value, 0);
+
+    return Number(stampCount);
+  }, []);
+
+  /**
+   * Adds a stamp when it comes from persistent events,
+   * basically omits the animation and directly this added
+   * on the whiteboard's corner.
+   * @param stampId - Id to assign to the stamp.
+   * @param assignTo - Id of the student to assign the stamp.
+   * @param currentStampCount - Current stamps quantity for the given student.
+   * @param image - Image Object for the stamp.
+   */
+  const addPersistentEventStamp = useCallback(
+    (
+      stampId: string,
+      assignTo: string,
+      currentStampCount: number,
+      image: fabric.Image
+    ) => {
+      if (stampAlreadyExists(stampId) || !canvas || assignTo !== userId) return;
+      const { top, left } = determineStampPosition(
+        stampWidth,
+        stampHeight,
+        currentStampCount
+      );
+
+      (image as ICanvasObject).set({
+        id: stampId,
+        top,
+        left,
+        originX: 'left',
+        originY: 'top',
+        scaleX: stampWidth / Number(image.width),
+        scaleY: stampHeight / Number(image.height),
+      });
+
+      canvas.add(image);
+      canvas.renderAll();
+
+      store.dispatch({
+        type: ADD_STAMP,
+        payload: { studentId: assignTo, stamp },
+      });
+    },
+    [canvas, determineStampPosition, stamp, stampAlreadyExists, userId]
+  );
+
   // Handling remote. Receives the event.
   useEffect(() => {
     /**
      * Handler for sendStamp event
      * @param id - user id of the user that sent the stamp
      * @param target - Object with data for render the stamp
+     * @param isPersistent - Flag to know if this event
+     * comes from persistent events or not
      */
-    const showStamp = (id: string, target: IStampSyncTarget) => {
-      const stampWidth = 50;
-      const stampHeight = 50;
-      const { stamp, assignTo, stampMode } = target;
+    const showStamp = (
+      id: string,
+      target: IStampSyncTarget,
+      isPersistent: boolean
+    ) => {
+      const { stampId, stamp, assignTo, stampMode } = target;
 
       // If teacher receives event ignore it
       if (!shouldHandleRemoteEvent(id)) return;
@@ -160,6 +233,19 @@ const useSynchronizedSendStamp = (
       fabric.Image.fromURL(imageURL, (image) => {
         try {
           if (!canvas) return;
+
+          const currentStampCount = getStampsCountByStudentId(assignTo);
+
+          if (isPersistent) {
+            addPersistentEventStamp(
+              stampId,
+              assignTo,
+              currentStampCount,
+              image
+            );
+
+            return;
+          }
 
           let presentText: fabric.IText | null = null;
           const canvasWidth = Number(canvas?.width);
@@ -236,7 +322,8 @@ const useSynchronizedSendStamp = (
           const moveToCorner = () => {
             const { top, left } = determineStampPosition(
               stampWidth,
-              stampHeight
+              stampHeight,
+              currentStampCount
             );
 
             const valuesToChange = { top, left };
@@ -244,7 +331,7 @@ const useSynchronizedSendStamp = (
             const easeEffect = fabric.util.ease.easeInQuad;
 
             (image as ICanvasObject).set({
-              id: `${userId}:${uuidv4()}`,
+              id: stampId,
               originX: 'left',
               originY: 'top',
             });
@@ -256,7 +343,7 @@ const useSynchronizedSendStamp = (
             }
 
             store.dispatch({
-              type: 'ADD_STAMP',
+              type: ADD_STAMP,
               payload: { studentId: assignTo, stamp },
             });
           };
@@ -376,6 +463,7 @@ const useSynchronizedSendStamp = (
       eventController?.removeListener('sendStamp', showStamp);
     };
   }, [
+    addPersistentEventStamp,
     animateObject,
     animationDurations.afterShowing,
     animationDurations.growing,
@@ -384,6 +472,7 @@ const useSynchronizedSendStamp = (
     canvas,
     determineStampPosition,
     eventController,
+    getStampsCountByStudentId,
     shouldHandleRemoteEvent,
     userId,
   ]);
@@ -426,6 +515,7 @@ const useSynchronizedSendStamp = (
             const payload = {
               id: `${userId}:stamp`,
               target: {
+                stampId: `${userId}:${uuidv4()}`,
                 stamp,
                 assignTo: studentId,
                 stampMode: stampMode,

@@ -38,7 +38,11 @@ const useSynchronizedRemoved = (
 
   /** Register and handle remote event. */
   useEffect(() => {
-    const removed = (objectId: string, target: ITarget) => {
+    const removed = (
+      objectId: string,
+      target: ITarget,
+      isPersistent: boolean
+    ) => {
       if (target.isLocalImage) {
         setLocalImage('');
         setBackgroundImage('');
@@ -48,7 +52,7 @@ const useSynchronizedRemoved = (
 
       switch (target.strategy) {
         case 'allowClearMyself':
-          if (!shouldHandleRemoteEvent(objectId)) return;
+          if (!shouldHandleRemoteEvent(objectId) && !isPersistent) return;
           canvas?.forEachObject(function (obj: ICanvasObject) {
             if (
               obj.id === objectId &&
@@ -71,7 +75,7 @@ const useSynchronizedRemoved = (
 
           break;
         case 'allowClearAll':
-          if (shouldHandleRemoteEvent(objectId)) return;
+          if (shouldHandleRemoteEvent(objectId) && !isPersistent) return;
           canvas?.forEachObject(function (obj: ICanvasObject) {
             if (!isCursorObject(obj) && !obj.stampObject) {
               canvas?.remove(obj);
@@ -79,7 +83,7 @@ const useSynchronizedRemoved = (
           });
           break;
         case 'allowClearOthers':
-          if (shouldHandleRemoteEvent(objectId)) return;
+          if (shouldHandleRemoteEvent(objectId) && !isPersistent) return;
           canvas?.forEachObject(function (obj: ICanvasObject) {
             if (obj.id) {
               const object = obj.id.split(':');
@@ -99,7 +103,7 @@ const useSynchronizedRemoved = (
           });
           break;
         case 'removeGroup':
-          if (shouldHandleRemoteEvent(objectId)) return;
+          if (shouldHandleRemoteEvent(objectId) && !isPersistent) return;
 
           target.objectIds?.forEach((id) => {
             const objectToRemove = canvas
@@ -132,6 +136,7 @@ const useSynchronizedRemoved = (
         default:
           canvas?.forEachObject(function (obj: ICanvasObject | TypedShape) {
             if (obj.id && obj.id === objectId) {
+              delete obj.id;
               canvas?.remove(obj);
             }
           });

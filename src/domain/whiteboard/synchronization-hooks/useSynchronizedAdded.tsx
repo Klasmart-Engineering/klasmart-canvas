@@ -19,6 +19,7 @@ import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
 import { fabricGif } from '../gifs-actions/fabricGif';
 import { addSynchronizationInSpecialBrushes } from '../brushes/actions/addSynchronizationInSpecialBrushes';
 import { ICanvasPathBrush } from '../../../interfaces/brushes/canvas-path-brush';
+import FontFaceObserver from 'fontfaceobserver';
 import { CANVAS_OBJECT_PROPS } from '../../../config/undo-redo-values';
 import { IImageOptions } from 'fabric/fabric-impl';
 
@@ -315,9 +316,20 @@ const useSynchronizedAdded = (
     }
   };
 
+  const objectAlreadyExists = (objectId: string) => {
+    return !!canvas?.getObjects().find((obj: ICanvasObject) => {
+      return obj.id === objectId;
+    });
+  };
+
   /** Register and handle remote added event. */
   useEffect(() => {
-    const added = (id: string, objectType: string, target: ICanvasObject) => {
+    const added = (
+      id: string,
+      objectType: string,
+      target: ICanvasObject,
+      isPersistent?: boolean
+    ) => {
       // TODO: We'll want to filter events based on the user ID. This can
       // be done like this. Example of extracting user id from object ID:
       // let { user } = new ShapeID(id);
@@ -331,40 +343,70 @@ const useSynchronizedAdded = (
       // Events come from another user
       // Pass as props to user context
       // Ids of shapes + userId  uuid()
-      if (!shouldHandleRemoteEvent(id)) return;
+      if (
+        (!shouldHandleRemoteEvent(id) && !isPersistent) ||
+        objectAlreadyExists(id)
+      )
+        return;
 
-      if (objectType === 'textbox') {
+      const renderTextObject = async () => {
+        eventController.setEventRunning(true);
+
         let text = new fabric.Textbox(target.text || '', {
           fontSize: 30,
           fontWeight: 400,
           fontStyle: 'normal',
-          fontFamily: target.fontFamily,
           fill: target.stroke,
           top: target.top,
           left: target.left,
           width: target.width,
           selectable: false,
+          hoverCursor: isPersistent ? 'none' : 'default',
         });
 
-        (text as ICanvasObject).id = id;
         canvas?.add(text);
 
-        undoRedoDispatch({
-          type: SET_OTHER,
-          payload: (canvas?.getObjects() as unknown) as TypedShape[],
-          canvasId: userId,
-        });
+        (text as ICanvasObject).id = id;
+        const fontObserver = new FontFaceObserver(target.fontFamily as string);
+        try {
+          const font = (await fontObserver.load()) as any;
 
-        return;
-      }
+          text.set({ fontFamily: font.family });
+          canvas?.renderAll();
 
-      if ((objectType === 'group' || objectType === 'path') && canvas) {
-        addSynchronizationInSpecialBrushes(
-          canvas,
+          undoRedoDispatch({
+            type: SET_OTHER,
+            payload: (canvas?.getObjects() as unknown) as TypedShape[],
+            canvasId: userId,
+          });
+
+          eventController.setEventRunning(false);
+
+          return;
+        } catch (error) {
+          return;
+        }
+      };
+
+      const renderSpecialBrushObject = async () => {
+        eventController.setEventRunning(false);
+
+        await addSynchronizationInSpecialBrushes(
+          canvas as fabric.Canvas,
           userId,
           id,
           target as ICanvasBrush
         );
+
+        eventController.setEventRunning(false);
+      };
+
+      if (objectType === 'textbox') {
+        renderTextObject();
+      }
+
+      if ((objectType === 'group' || objectType === 'path') && canvas) {
+        renderSpecialBrushObject();
       }
 
       let shape = null;
@@ -422,9 +464,15 @@ const useSynchronizedAdded = (
       if (objectType === 'image') {
         const src = (target as ICanvasBrush).basePath?.imageData || target.src;
 
+        const provisionalImage = new fabric.Image() as ICanvasObject;
+
+        eventController.setEventRunning(true);
+
+        canvas?.add(provisionalImage);
+        provisionalImage.set({ id });
+
         fabric.Image.fromURL(src as string, (data: fabric.Image) => {
           (data as TypedShape).set({
-            id,
             top: target.top,
             left: target.left,
             angle: target.angle,
@@ -444,15 +492,13 @@ const useSynchronizedAdded = (
             });
           }
 
-          if (
-            canvas?.getObjects().find((obj: ICanvasObject) => {
-              return obj.id === (data as ICanvasObject).id;
-            })
-          ) {
-            return;
-          }
+          delete provisionalImage.id;
+          canvas?.remove(provisionalImage);
+
+          if (objectAlreadyExists(id) && isPersistent) return;
 
           canvas?.add(data);
+          (data as ICanvasObject).set({ id });
           canvas?.renderAll();
 
           undoRedoDispatch({
@@ -460,6 +506,8 @@ const useSynchronizedAdded = (
             payload: (canvas?.getObjects() as unknown) as TypedShape[],
             canvasId: userId,
           });
+
+          eventController.setEventRunning(false);
         });
       }
 
