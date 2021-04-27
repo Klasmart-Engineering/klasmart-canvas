@@ -96,7 +96,7 @@ function Toolbar(props: {
     updateEraserIsActive,
     fillBackgroundColor,
     updateSelectedTool,
-    setActiveTool,
+    setActiveTool
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
@@ -214,6 +214,11 @@ function Toolbar(props: {
      * Indicates if line width tool is active.
      */
     updateLineWidthIsActive(tool === ELEMENTS.LINE_WIDTH_TOOL);
+
+    /**
+     * Update selected tool
+     */
+    updateSelectedTool(tool)
 
     /*
       It is setted to false when you select Pointer Tool,

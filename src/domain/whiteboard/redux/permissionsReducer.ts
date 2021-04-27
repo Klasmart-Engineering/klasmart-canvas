@@ -33,8 +33,8 @@ const permissionsState: IPermissions = {
   uploadImage: false,
   backgroundColor: false,
   setUserInfoToDisplay: false,
-  cursorPointer: false,
-};
+  cursorPointer: false
+}
 
 /**
  * Reducer

@@ -294,7 +294,6 @@ export class EventPainterController extends EventEmitter
       case 'setUserInfoToDisplay':
         this.setUserInfoToDisplay('setUserInfoToDisplay', target);
         break;
-      default:
       case 'cursorPointer':
         this.cursorPointer(event.id, target);
         break;
@@ -303,7 +302,6 @@ export class EventPainterController extends EventEmitter
 
   private setUserInfoToDisplay(id: string, target: ICanvasObject) {
     this.emit('setUserInfoToDisplay', id, target);
-
     // TEMPORARY for realtime testing purposes.
     this.ws?.send(
       JSON.stringify({ id, eventType: 'setUserInfoToDisplay', target })

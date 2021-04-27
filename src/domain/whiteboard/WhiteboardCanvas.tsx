@@ -318,6 +318,8 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
 
   // useEffects and logic for manage pointers
   usePointerFeature(canvas as fabric.Canvas, userId, permissions);
+  // useEffects and logic for manage the changes that would happen when an object is hovered
+  useObjectHover(canvas as fabric.Canvas, displayUserInfo);
 
   useSynchronizedMoved(
     canvas,

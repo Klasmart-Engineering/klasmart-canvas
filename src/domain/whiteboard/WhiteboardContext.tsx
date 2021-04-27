@@ -458,7 +458,7 @@ export const WhiteboardProvider = ({
     eventSerializer,
     eventController,
     activeTool,
-    setActiveTool,
+    setActiveTool
   };
 
   return (
@@ -503,6 +503,11 @@ export const WhiteboardProvider = ({
       <StampAssignationModal
         studentsList={studentsList}
         assignStudents={updateStampAssignedStudents}
+        />
+      <SetUserInfoToDisplayModal
+        
+        setSelection={setUserInfoToDisplay}
+        selection={displayUserInfo}
       />
       <SetUserInfoToDisplayModal
         setSelection={setUserInfoToDisplay}
