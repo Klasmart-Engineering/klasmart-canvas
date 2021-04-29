@@ -80,13 +80,14 @@ export const use2To3d = (canvas: fabric.Canvas, userId: string) => {
     (e: fabric.IEvent) => {
       const canvasObject = checkIfHasClickedSome3dObject(e);
       if (canvasObject && is3dActive) {
+        set3dActive(false);
         const threeObject = JSON.parse(
           (canvasObject as ICanvasObject).threeObject as string
         );
         if (userId !== threeObject.ownerId) return;
         to3D(canvasObject);
         setEditing3d(true);
-        // set3dActive(true);
+        set3dActive(true);
       }
     },
     [to3D, setEditing3d, is3dActive, checkIfHasClickedSome3dObject, userId]
