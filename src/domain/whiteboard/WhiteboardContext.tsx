@@ -48,6 +48,7 @@ import { useStampAssignationModal } from './hooks/useStampAssignationModal';
 import { useStampAssignedStudents } from './hooks/useStampAssignedStudents';
 import { ICanvasObject } from '../../interfaces/objects/canvas-object';
 import { useSharedEventSerializer } from './SharedEventSerializerProvider';
+import { IUser } from '../../interfaces/user/user';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -165,9 +166,11 @@ export const WhiteboardProvider = ({
     setBackgroundImageIsPartialErasable,
   ] = useState(false);
 
-  const studentsList = store
-    .getState()
-    .usersState.filter((user) => user.role === 'student');
+  const users = store
+  .getState()
+  .usersState as IUser[]
+  
+  const studentsList = users && users.length > 0 ? users.filter((user) => user.role === 'student') : [];
 
   const isLocalObject = (id: string, canvasId: string | undefined) => {
     const object = id.split(':');
@@ -470,7 +473,7 @@ export const WhiteboardProvider = ({
       {/*: Should work only for teacher */}
       <button onClick={() => clearWhiteboardActionClearAll()}>Clear All</button>
       {/*: Should work only for teacher */}
-      <button onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
+      <button disabled onClick={() => clearWhiteboardAllowClearOthersAction('student')}>
         Clear student
       </button>
       {(window.innerWidth <= 768 || window.innerHeight <= 768) &&

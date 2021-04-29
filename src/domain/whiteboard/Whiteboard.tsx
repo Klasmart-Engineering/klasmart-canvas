@@ -15,21 +15,36 @@ import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardConta
 import { Provider } from 'react-redux';
 import store from './redux/store';
 import AuthMenu from '../../components/AuthMenu';
+import { IUser } from '../../interfaces/user/user'
+import { UPDATE_USERS } from './redux/actions';
 
-const users = store.getState().usersState;
+const users: IUser[] = store.getState().usersState as IUser[];
 
-/**
- * @field updateCanvasAreCreated: When all the canvases were loaded,
- * this function is called to update the flag
- * that is waiting for all the canvases
- */
 export type Props = {
-  updateCanvasAreCreated: (status: boolean) => void;
+  user?: IUser,
+  users?: IUser[]
 };
 
-const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
-  const whiteboardWidth = 740;
-  const whiteboardHeight = 460;
+const defaultProps: Props = {
+  user: users[0],
+  users: users
+}
+
+/**
+ * 
+ * @param props User and users from the canvas app parent or the default state
+ */
+const Whiteboard: FunctionComponent<Props> = ( props: Props) => {
+
+  const user = props.user!
+  const users = props.users
+  store.dispatch({
+    type: UPDATE_USERS,
+    payload: users,
+  });
+
+  const whiteboardWidth = window.innerWidth * 0.75
+  const whiteboardHeight = whiteboardWidth * 0.5
 
   const canvasStyle: CSSProperties = {
     position: 'absolute',
@@ -63,7 +78,6 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
 
   return (
     <>
-      {users.map(user => (
         <WhiteboardProvider
         key={user.id}
         clearWhiteboardPermissions={user.permissions}
@@ -99,112 +113,11 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
           </div>
         </Provider>
       </WhiteboardProvider>
-      ))}
-      {/* <WhiteboardProvider
-        clearWhiteboardPermissions={teacher}
-        allToolbarIsEnabled={true}
-        activeCanvas={activeCanvas}
-        userId={'teacher'}
-      >
-        <Provider store={store}>
-          <AuthMenu userId={'teacher'} />
-          <div
-            className="whiteboard"
-            onClick={() => {
-              activeCanvas.current = 'canvas1';
-            }}
-          >
-            <Toolbar />
-            <WhiteboardContainer
-              width={whiteboardWidth}
-              height={whiteboardHeight}
-            >
-              <WhiteboardCanvas
-                instanceId="canvas1"
-                userId="teacher"
-                initialStyle={canvasStyle}
-                pointerEvents={true}
-                clearWhiteboardPermissions={teacher}
-                pixelWidth={whiteboardWidth}
-                pixelHeight={whiteboardHeight}
-              >
-                <button>Teacher</button>
-              </WhiteboardCanvas>
-            </WhiteboardContainer>
-          </div>
-        </Provider>
-      </WhiteboardProvider>
-      <WhiteboardProvider
-        clearWhiteboardPermissions={student}
-        allToolbarIsEnabled={false}
-        activeCanvas={activeCanvas}
-        userId={'student'}
-      >
-        <Provider store={store}>
-          <div
-            className="whiteboard"
-            onClick={() => {
-              activeCanvas.current = 'canvas2';
-            }}
-          >
-            <Toolbar />
-            <WhiteboardContainer
-              width={whiteboardWidth}
-              height={whiteboardHeight}
-            >
-              <WhiteboardCanvas
-                instanceId="canvas2"
-                userId="student"
-                initialStyle={canvasStyle}
-                pointerEvents={true}
-                clearWhiteboardPermissions={student}
-                pixelWidth={whiteboardWidth}
-                pixelHeight={whiteboardHeight}
-              >
-                <button>Student</button>
-              </WhiteboardCanvas>
-            </WhiteboardContainer>
-          </div>
-        </Provider>
-      </WhiteboardProvider>
-      <WhiteboardProvider
-        clearWhiteboardPermissions={student}
-        allToolbarIsEnabled={false}
-        activeCanvas={activeCanvas}
-        userId={'student2'}
-      >
-        <Provider store={store}>
-          <div
-            className="whiteboard"
-            onClick={() => {
-              activeCanvas.current = 'canvas3';
-            }}
-          >
-            <Toolbar />
-            <WhiteboardContainer
-              width={whiteboardWidth}
-              height={whiteboardHeight}
-            >
-              <WhiteboardCanvas
-                instanceId="canvas3"
-                userId="student2"
-                initialStyle={canvasStyle}
-                pointerEvents={true}
-                clearWhiteboardPermissions={student}
-                pixelWidth={whiteboardWidth}
-                pixelHeight={whiteboardHeight}
-                onCanvasCreated={(status: boolean) => {
-                  updateCanvasAreCreated(status);
-                }}
-              >
-                <button>Student</button>
-              </WhiteboardCanvas>
-            </WhiteboardContainer>
-          </div>
-        </Provider>
-      </WhiteboardProvider> */}
+      
     </>
   );
 };
+
+Whiteboard.defaultProps = defaultProps
 
 export default Whiteboard;

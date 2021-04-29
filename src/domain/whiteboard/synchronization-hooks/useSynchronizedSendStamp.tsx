@@ -12,6 +12,7 @@ import { IUtilAminEaseFunction } from 'fabric/fabric-impl';
 import { v4 as uuidv4 } from 'uuid';
 import { ADD_STAMP } from '../redux/actions';
 import { IPortfolio } from '../../../interfaces/portfolio/portfolio';
+import { IUser } from '../../../../lib/interfaces/user/user.d';
 
 const useSynchronizedSendStamp = (
   canvas: fabric.Canvas | undefined,
@@ -270,7 +271,7 @@ const useSynchronizedSendStamp = (
 
           if (stampMode === 'present' && userId !== assignTo) {
             // Getting the name of the assigned user
-            const assignedUser = store.getState().usersState.find((student) => {
+            const assignedUser = (store.getState().usersState as IUser[]).find((student) => {
               return student.id === assignTo;
             });
 

@@ -1,6 +1,5 @@
 import React, { ChangeEvent, useCallback, useState } from 'react';
 import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogActions from '@material-ui/core/DialogActions';
 import Radio from '@material-ui/core/Radio';
@@ -11,6 +10,8 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import { FormLabel } from '@material-ui/core';
 import { PaintEventSerializer } from '../event-serializer/PaintEventSerializer';
+import Modal from 'react-modal';
+
 
 export interface IUploadFileModal {
   setImage: (image: string | File) => void;
@@ -136,11 +137,12 @@ export const useUploadFileModal = (eventSerializer: PaintEventSerializer, userId
 
     return (
       <div>
-        <Dialog
-          open={uploadFileModal}
-          onClose={closeUploadFileModal}
+        <Modal
+          isOpen={uploadFileModal}
+          onRequestClose={closeUploadFileModal}
           aria-labelledby="upload-image-dialog"
-          aria-describedby="upload-image-dialog"
+          aria-describedby="upload-image-dialog" 
+          id="upload-modal"
         >
           <DialogTitle id="alert-dialog-title">{'Upload image'}</DialogTitle>
           <div
@@ -214,7 +216,7 @@ export const useUploadFileModal = (eventSerializer: PaintEventSerializer, userId
               </Button>
             </label>
           </DialogActions>
-        </Dialog>
+        </Modal>
       </div>
     );
   };

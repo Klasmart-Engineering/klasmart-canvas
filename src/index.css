@@ -11,3 +11,11 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+#lock-menu-2 {
+  width: 300px;
+}
+#userinfo-modal, #upload-modal {
+  width: 300px;
+  height: fit-content;
+  margin: auto;
+}

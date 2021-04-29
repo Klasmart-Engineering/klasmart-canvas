@@ -1,4 +1,5 @@
 import { IUser } from '../../../interfaces/user/user';
+import { UPDATE_USERS } from './actions';
 
 const teacherPermissions = {
   allowClearAll: true,
@@ -49,9 +50,12 @@ const initialState: IUser[] = [
  */
 export function usersReducer(
   state: IUser[] = initialState,
-  action: { type: string; payload: IUser }
+  action: { type: string; payload: IUser | IUser[] }
 ) {
   switch (action.type) {
+    case UPDATE_USERS:
+      const users = action.payload;
+      return users
     default:
       return state;
   }

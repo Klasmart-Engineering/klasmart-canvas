@@ -95,7 +95,7 @@ function Toolbar(props: {
     openClearWhiteboardModal,
     updateEraserIsActive,
     fillBackgroundColor,
-    updateSelectedTool
+    updateSelectedTool,
     setActiveTool,
   } = useContext(WhiteboardContext);
 

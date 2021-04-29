@@ -3,13 +3,15 @@ import { makeStyles, Theme, createStyles } from '@material-ui/core/styles';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
-import Menu from '@material-ui/core/Menu';
 import FormControl from '@material-ui/core/FormControl';
 import FormGroup from '@material-ui/core/FormGroup';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import { useSharedEventSerializer } from '../domain/whiteboard/SharedEventSerializerProvider';
 import { connect } from 'react-redux';
+import Modal from 'react-modal';
+
+Modal.setAppElement('#root')
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -26,10 +28,10 @@ function AuthMenu(props: {
   userId: string;
   [key: string]: any
 }) {
-  console.log('PROPS:::::', props);
-  console.log('USER ID: ', props.userId);
+  
   const { userId } = props;
   const isTeacher = userId === 'teacher';
+  const [modalIsOpen,setIsOpen] = React.useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const {
     state: { eventSerializer },
@@ -40,6 +42,13 @@ function AuthMenu(props: {
   const handleClose = () => {
     setAnchorEl(null);
   };
+  function openModal() {
+    setIsOpen(true);
+  }
+
+  function closeModal(){
+    setIsOpen(false);
+  }
   const classes = useStyles();
   const {
     cursorPointer,
@@ -145,7 +154,7 @@ function AuthMenu(props: {
   ];
 
   if (!isTeacher) {
-    return null;
+    return <div style={{height:'60px'}}></div>;
   }
 
   return (
@@ -161,18 +170,16 @@ function AuthMenu(props: {
             button
             aria-haspopup="true"
             aria-controls="lock-menu-2"
-            onClick={handleClickListItem}
+            onClick={openModal}
           >
             <ListItemText primary="Authorize Tools" />
           </ListItem>
         </List>
 
-        <Menu
+        <Modal
+          isOpen={modalIsOpen}
+          onRequestClose={closeModal}
           id="lock-menu-2"
-          anchorEl={anchorEl}
-          keepMounted
-          open={Boolean(anchorEl)}
-          onClose={handleClose}
         >
           <FormControl component="fieldset" className={classes.formControl}>
             <FormGroup>
@@ -191,7 +198,7 @@ function AuthMenu(props: {
               ))}
             </FormGroup>
           </FormControl>
-        </Menu>
+        </Modal>
       </div>
     </div>
   );
