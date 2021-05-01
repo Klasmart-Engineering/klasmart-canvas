@@ -537,23 +537,6 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
         } catch (error) {
           console.warn(error);
         }
-        // const lineGeometry = new LineSegmentsGeometry().setPositions(
-        //   geometry.attributes.position.array
-        // );
-
-        // const lineMaterial = new LineMaterial({
-        //   color: toHexNumber(this.penColor),
-        //   linewidth: pairLineWidth(this.lineWidth),
-        //   dashed: true,
-        //   dashSize: 5,
-        //   gapSize: 2,
-        //   dashScale: 1,
-        //   opacity: 1
-        // });
-        // lineMaterial.defines.USE_DASH = "";
-
-        // lineMaterial.resolution.set(window.innerWidth, window.innerHeight);
-        // shape = new LineSegments2(lineGeometry, lineMaterial);
       } else {
         const lineGeometry = new LineSegmentsGeometry().setPositions(
           geometry.attributes.position.array

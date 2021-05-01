@@ -222,6 +222,11 @@ export const useChangeLineWidth = (
           three.lineWidth = lineWidth
 
           canvas.remove(object);
+          const target = {
+            // @ts-ignore
+            id: object.id,
+          };
+          eventSerializer?.push('removed', target as ObjectEvent);
           objects3d.push(three)
           continue
           
