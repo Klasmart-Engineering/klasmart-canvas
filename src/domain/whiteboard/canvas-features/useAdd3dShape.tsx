@@ -46,7 +46,8 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
         const objectImage: ICanvasObject = img.set({
           left,
           top,
-          flipX: three.isFlipped
+          lockScalingFlip: true,
+          lockRotation: true
         });
         objectImage.rotate(three.canvasRotation)
         objectImage.scaleToHeight(three.canvasSize.height);

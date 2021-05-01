@@ -32,9 +32,9 @@ export const use2To3d = (canvas: fabric.Canvas, userId: string) => {
    * @param canvasObject
    */
   const to3D = useCallback(
-    (canvasObject: ICanvasObject, action: string = '') => {
+    (canvasObject: ICanvasObject) => {
       try {
-        const three = from2To3d(canvasObject, action);
+        const three = from2To3d(canvasObject);
         set3dCanvasPosition(three.canvasPosition);
         const threeObjectString = JSON.stringify(three);
         canvas.remove(canvasObject);
@@ -135,12 +135,7 @@ export const use2To3d = (canvas: fabric.Canvas, userId: string) => {
       if (floodFillIsActive) return;
       const canvasObject = e.target as ICanvasObject;
       if (is3DShape(canvasObject)) {
-
-        let action = ''
-        if(e.transform && e.transform.hasOwnProperty("action"))
-          action = (e.transform as any).action
-
-        to3D(canvasObject, action);
+        to3D(canvasObject);
         setRedrawing3d(true);
         set3dActive(true);
       }

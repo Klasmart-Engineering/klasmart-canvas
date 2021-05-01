@@ -5,7 +5,7 @@ import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
  * @param canvasObject - canvasObject image being translated to its related 3d shape
  * @returns {I3dObject} - threeObject with updated attributes
  */
-const from2To3d = (canvasObject: ICanvasObject, action: string = '') => {
+const from2To3d = (canvasObject: ICanvasObject) => {
   
   /**
    * This rotation is needed due to the different approaches regarding CSS position 
@@ -14,8 +14,8 @@ const from2To3d = (canvasObject: ICanvasObject, action: string = '') => {
   const canvasRotation = canvasObject.angle ?? 0;
   canvasObject.rotate(0)
   const threeObject = JSON.parse(canvasObject.threeObject as string);
-  const width = (canvasObject.width ?? 1) * ( action === 'scale' ? (canvasObject.scaleX ?? 1) : 1);
-  const height = (canvasObject.height ?? 1) * ( action === 'scale' ? (canvasObject.scaleY ?? 1) : 1);
+  const width = (canvasObject.width ?? 1) * (canvasObject.scaleX ?? 1)
+  const height = (canvasObject.height ?? 1) * (canvasObject.scaleY ?? 1);
   threeObject.canvasSize = { width, height };
   threeObject.canvasRotation = canvasRotation
   threeObject.canvasPosition = {
