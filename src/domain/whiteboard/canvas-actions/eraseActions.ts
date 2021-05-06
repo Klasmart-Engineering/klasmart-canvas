@@ -14,7 +14,8 @@ import eraseObjectCursor from '../../../assets/cursors/erase-object.png';
 export const useEraseObject = (
   canvas: fabric.Canvas,
   userId: string,
-  canvasId: string
+  canvasId: string,
+  eraserIsActive: boolean
 ) => (
   useCallback(() => {
     let eraser: boolean = false;
@@ -48,6 +49,11 @@ export const useEraseObject = (
       if (eraser) {
         return;
       }
+
+      if(!eraserIsActive){
+        canvas.defaultCursor = 'default';
+        return
+      } 
 
       canvas.defaultCursor = `url("${eraseObjectCursor}"), auto`;
       eraser = true;
@@ -110,5 +116,5 @@ export const useEraseObject = (
     canvas?.on('mouse:up', mouseUp);
     // If isLocalObject is added in dependencies an infinity loop happens
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvas, canvasId, userId])
+  }, [canvas, canvasId, userId, eraserIsActive])
 );
