@@ -11,7 +11,9 @@ export declare const ELEMENTS: {
     LINE_TYPE_TOOL: string;
     LINE_WIDTH_TOOL: string;
     FLOOD_FILL_TOOL: string;
+    BACKGROUND_COLOR_TOOL: string;
     ADD_TEXT_TOOL: string;
     ADD_SHAPE_TOOL: string;
     ADD_STAMP_TOOL: string;
+    LASER_TOOL: string;
 };

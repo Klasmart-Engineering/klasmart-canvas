@@ -94,6 +94,7 @@ function Toolbar(props: {
     openSetUserInfoToDisplayModal,
     openClearWhiteboardModal,
     updateEraserIsActive,
+    eraserIsActive,
     fillBackgroundColor,
     updateSelectedTool,
     setActiveTool,
@@ -536,6 +537,20 @@ function Toolbar(props: {
   }
 
   /**
+   * If erase action is set to inactive by the teacher, in student whiteboard the erase button becomes inactive too.
+   */
+  useEffect(() => {
+    if (
+      !eraserIsActive
+    ) {
+      setTools({
+        active: null,
+        elements: getToolElements,
+      });
+    }
+  }, [eraserIsActive]);
+
+  /**
    * If a permission element is active in Toolbar, when the permission
    * will be revoked the active tool will change to the first one (pointers)
    */
@@ -609,23 +624,23 @@ function Toolbar(props: {
       });
     }
 
-    if (
-      !props.permissions.erase && !props.permissions.partialErase &&
-      getActiveTool === ELEMENTS.ERASE_TYPE_TOOL
-    ) {
-      setTools({
-        active: null,
-        elements: getToolElements,
-      });
-    }
+    // if (
+    //   !props.permissions.erase && !props.permissions.partialErase &&
+    //   getActiveTool === ELEMENTS.ERASE_TYPE_TOOL
+    // ) {
+    //   setTools({
+    //     active: null,
+    //     elements: getToolElements,
+    //   });
+    // }
 
-    if (!props.permissions.erase && props.permissions.partialErase) {
-      updateEraseType('partial');
-    } else if (props.permissions.erase && !props.permissions.partialErase) {
-      updateEraseType('object');
-    } else {
-      updateEraseType(null);
-    }
+    // if (!props.permissions.erase && props.permissions.partialErase) {
+    //   updateEraseType('partial');
+    // } else if (props.permissions.erase && !props.permissions.partialErase) {
+    //   updateEraseType('object');
+    // } else {
+    //   updateEraseType(null);
+    // }
 
     if (!props.permissions.pen && getActiveTool === ELEMENTS.LINE_TYPE_TOOL) {
       setTools({

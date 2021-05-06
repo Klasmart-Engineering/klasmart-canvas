@@ -21,9 +21,9 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "strictNullChecks": true,
-    "outDir": "./lib",
+    "outDir": "./dist",
     "declaration": true,
-    "sourceMap": true
+    "sourceMap": true,
   },
   "include": [
     "src"
@@ -33,6 +33,8 @@
     "src/serviceWorker.ts",
     "src/setupTests.ts",
     "src/index.tsx",
-    "src/App.tsx"
+    "src/App.tsx",
+    "dist", 
+    "rollup.config.js"
   ]
 }

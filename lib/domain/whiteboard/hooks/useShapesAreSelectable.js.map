@@ -1,1 +1,0 @@
-{"version":3,"file":"useShapesAreSelectable.js","sourceRoot":"","sources":["../../../../src/domain/whiteboard/hooks/useShapesAreSelectable.tsx"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,OAAO,CAAC;AAEjC;;GAEG;AACH,MAAM,CAAC,IAAM,sBAAsB,GAAG;IAC9B,IAAA,oBAAkE,EAAjE,2BAAmB,EAAE,iCAA4C,CAAC;IACzE,OAAO,EAAE,mBAAmB,qBAAA,EAAE,yBAAyB,2BAAA,EAAE,CAAC;AAC5D,CAAC,CAAC"}

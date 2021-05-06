@@ -1,1 +1,0 @@
-{"version":3,"file":"useFontColor.js","sourceRoot":"","sources":["../../../../src/domain/whiteboard/hooks/useFontColor.tsx"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,OAAO,CAAC;AACjC,MAAM,CAAC,IAAM,YAAY,GAAG,UAAC,KAAyB;IAAzB,sBAAA,EAAA,iBAAyB;IAC9C,IAAA,oBAA8C,EAA7C,iBAAS,EAAE,uBAAkC,CAAC;IACrD,OAAO,EAAE,SAAS,WAAA,EAAE,eAAe,iBAAA,EAAE,CAAC;AACxC,CAAC,CAAC"}

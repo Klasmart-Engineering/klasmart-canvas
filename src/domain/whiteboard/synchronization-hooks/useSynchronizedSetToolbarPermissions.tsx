@@ -1,6 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useContext } from 'react';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { UPDATE_RECEIVED } from '../redux/actions';
+import { WhiteboardContext } from '../WhiteboardContext';
+import { IWhiteboardContext } from '../../../interfaces/whiteboard-context/whiteboard-context';
+
 
 const useSynchronizedSetToolbarPermissions = (
   canvas: fabric.Canvas | undefined,
@@ -12,6 +15,10 @@ const useSynchronizedSetToolbarPermissions = (
     state: { eventController },
   } = useSharedEventSerializer();
 
+  const {updateEraserIsActive} =  useContext(
+    WhiteboardContext
+  ) as IWhiteboardContext;
+
   useEffect(() => {
     const setToolbarPermissions = (
       id: string,
@@ -20,6 +27,8 @@ const useSynchronizedSetToolbarPermissions = (
     ) => {
       if (!shouldHandleRemoteEvent(id) && !isPersistent) return;
       updatePermissions(UPDATE_RECEIVED, target);
+      if(target.hasOwnProperty('partialErase') || target.hasOwnProperty('erase'))
+        updateEraserIsActive(false)
     };
 
     eventController?.on('setToolbarPermissions', setToolbarPermissions);

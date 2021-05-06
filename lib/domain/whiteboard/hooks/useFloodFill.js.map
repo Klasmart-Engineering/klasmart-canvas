@@ -1,1 +1,0 @@
-{"version":3,"file":"useFloodFill.js","sourceRoot":"","sources":["../../../../src/domain/whiteboard/hooks/useFloodFill.tsx"],"names":[],"mappings":"AAAA,OAAO,EAAE,QAAQ,EAAE,MAAM,OAAO,CAAC;AAEjC,MAAM,CAAC,IAAM,YAAY,GAAG,UAAC,KAAyB;IAAzB,sBAAA,EAAA,iBAAyB;IAC9C,IAAA,oBAA8C,EAA7C,iBAAS,EAAE,uBAAkC,CAAC;IACrD,OAAO,EAAE,SAAS,WAAA,EAAE,eAAe,iBAAA,EAAE,CAAC;AACxC,CAAC,CAAC"}

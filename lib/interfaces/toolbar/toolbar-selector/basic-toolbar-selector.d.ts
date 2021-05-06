@@ -5,4 +5,5 @@ export default interface IBasicToolbarSelector {
     id: string;
     options: IToolbarSelectorOption[];
     colorPaletteIcon?: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
+    enabled?: boolean;
 }

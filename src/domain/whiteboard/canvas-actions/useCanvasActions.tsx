@@ -548,7 +548,7 @@ export const useCanvasActions = (
   /**
    * Creates the listeners to erase objects from the whiteboard
    */
-  const eraseObject = useEraseObject(canvas, userId, canvasId);
+  const eraseObject = useEraseObject(canvas, userId, canvasId, eraserIsActive );
 
   useEffect(() => {
     if (!canvas || ignoreDirectActions) {
