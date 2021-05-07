@@ -96,7 +96,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
     if (!eventSerializer || !eventController) return;
     if (!simulateNetworkSynchronization) return;
 
-    const stored = window.localStorage.getItem('canvas:simulated:events');
+    const stored = window.sessionStorage.getItem('canvas:simulated:events');
     if (stored !== null) {
       const persistentEvents = JSON.parse(stored);
       console.log(`resubmitting persistent events: ${persistentEvents.length}`);
@@ -132,10 +132,10 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
   // events being sent from the server when the user reloads the page.
   useEffect(() => {
     if (!eventSerializer || !eventController) return;
-    // changed from simulateNetworkSynchronization, needed network synch, but not persistence, which localStorage is for.
+    // changed from simulateNetworkSynchronization, needed network synch, but not persistence, which sessionStorage is for.
     if (!simulatePersistence) return;
 
-    const stored = window.localStorage.getItem('canvas:simulated:events');
+    const stored = window.sessionStorage.getItem('canvas:simulated:events');
     let persistentEvents = [];
 
     if (stored !== null) {
@@ -162,11 +162,17 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
       )
         return;
 
-      payload.isPersistent = true;
-      const length = remoteEvents.push(payload);
-      console.log(`storing simulated persistance events: ${length}`);
+      /**
+       * If Clearing, cleaning sessionStorage 
+       */
+      if(payload.param && JSON.parse(payload.param).hasOwnProperty("strategy") && (JSON.parse(payload.param).strategy === "allowClearAll" || JSON.parse(payload.param).strategy === "allowClearMyself")){
+        window.sessionStorage.removeItem('canvas:simulated:events')
+      }
 
-      window.localStorage.setItem(
+      payload.isPersistent = true;
+      remoteEvents.push(payload);
+      
+      window.sessionStorage.setItem(
         'canvas:simulated:events',
         JSON.stringify(remoteEvents)
       );
