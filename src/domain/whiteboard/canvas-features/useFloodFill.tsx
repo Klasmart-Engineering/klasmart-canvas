@@ -132,10 +132,14 @@ export const useFloodFill = (
 
       // Change stroke and fill to provisional colors to be identified
       changeStrokeAndFill(event.target, differentStroke, differentFill)
+<<<<<<< HEAD
       // event.target.set({
       //   stroke: differentStroke,
       //   fill: differentFill,
       // });
+=======
+      if(event.target && is3DShape(event.target as ICanvasObject)) return
+>>>>>>> 8184a47 (unnecesary file & comments removed)
 
       // Change canvas background to a provional color to be identified
       canvas.backgroundColor = differentBackground;
@@ -146,10 +150,6 @@ export const useFloodFill = (
       if (clickedColor === differentFill) {
         // If user click inside of the shape
         changeStrokeAndFill(event.target, originalStroke, floodFill)
-        // event.target.set({
-        //   fill: floodFill,
-        //   stroke: originalStroke,
-        // });
 
         canvas.discardActiveObject();
         canvas.backgroundColor = originalBackground;
@@ -311,11 +311,7 @@ export const useFloodFill = (
       }
 
       // Click on shape object
-<<<<<<< HEAD
       if (event.target && (isEmptyShape(event.target) || is3DShape(event.target) ) ) {
-=======
-      if (event.target && (isEmptyShape(event.target) || is3DShape(event.target))) {
->>>>>>> 7461ad2 (Canvas - 3D Shapes - bucket tool can rotate 3d objects issue fixed)
         floodFillInShape(event);
       }
 
