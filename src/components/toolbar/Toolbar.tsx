@@ -226,6 +226,11 @@ function Toolbar(props: {
      */
     updateLineWidthIsActive(tool === ELEMENTS.LINE_WIDTH_TOOL);
 
+    /**
+     * Update selected tool
+     */
+    updateSelectedTool(tool)
+
     /*
       It is setted to false when you select Pointer Tool,
       otherwise will be setted in true

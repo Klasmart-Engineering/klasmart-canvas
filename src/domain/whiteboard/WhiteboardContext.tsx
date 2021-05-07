@@ -555,6 +555,11 @@ export const WhiteboardProvider = ({
       <StampAssignationModal
         studentsList={studentsList}
         assignStudents={updateStampAssignedStudents}
+        />
+      <SetUserInfoToDisplayModal
+        
+        setSelection={setUserInfoToDisplay}
+        selection={displayUserInfo}
       />
       {children}
     </WhiteboardContext.Provider>
