@@ -5,8 +5,9 @@ import store from './store';
  * Indicates if any tool is enabled in toolbar.
  */
 export const getToolbarIsEnabled = (userId?: string): boolean => {
-  // teacher hardcoded until sign in active. TEMPORARY
-  if (userId && userId === 'teacher') {
+  const users = store.getState().usersState
+  const user = users.find(u => u.id === userId)
+  if (user && user.role === "teacher") {
     return true;
   }
 

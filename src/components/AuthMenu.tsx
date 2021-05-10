@@ -10,6 +10,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import { useSharedEventSerializer } from '../domain/whiteboard/SharedEventSerializerProvider';
 import { connect } from 'react-redux';
+import { IUser } from '../interfaces/user/user';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -26,7 +27,8 @@ function AuthMenu(props: { userId: string; [key: string]: any }) {
   console.log('PROPS:::::', props);
   console.log('USER ID: ', props.userId);
   const { userId } = props;
-  const isTeacher = userId === 'teacher';
+  const user = (props.users as IUser[]).find(u => u.id === props.userId)
+  const isTeacher = (user && user.role === 'teacher') ?? false;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const {
     state: { eventSerializer },
@@ -203,13 +205,14 @@ function AuthMenu(props: { userId: string; [key: string]: any }) {
   );
 }
 
-// TEMPORARY : once we have an actual login, this will have to be mapped to the login data for the user state and isAdmin properties.
-const mapStateToProps = (state: any, ownProps: any) => ({
-  ...ownProps,
-  permissions: state.permissionsState,
-  user: state.userState,
-  isAdmin: ownProps.userId === 'teacher', // TEMPORARY until actual login process is created.
-});
+// TEMPORARY : once we have an actual login, this will have to be mapped to the login data for the user state and isAdmin properties. 
+const mapStateToProps = (state:any, ownProps: any) => (
+  { 
+    ...ownProps, 
+    permissions: state.permissionsState,
+    users: state.usersState,
+  }
+);
 
 const mapDispatchToProps = (dispatch: any) => ({
   updatePermissions: (tool: string, payload: boolean) =>
