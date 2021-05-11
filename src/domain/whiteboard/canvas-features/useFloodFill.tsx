@@ -279,7 +279,6 @@ export const useFloodFill = (
           eventSerializer,
           undoRedoDispatch
         );
-
         return;
       }
 

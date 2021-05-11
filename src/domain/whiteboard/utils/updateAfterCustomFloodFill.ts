@@ -10,6 +10,7 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { IFloodFillData } from './floodFiller';
 import floodFillCursor from '../../../assets/cursors/flood-fill.png';
+import { isShape } from './shapes';
 
 export interface ITargetObject extends ICanvasObject {
   color: string;
@@ -47,11 +48,14 @@ export const updateAfterCustomFloodFill = async (
   (image as ICanvasObject).set({ id });
   canvas.discardActiveObject();
 
-  const objectsAtPoint = findIntersectedObjects(
+  let objectsAtPoint = findIntersectedObjects(
     image as TypedShape,
     findLocalObjects(userId, canvas.getObjects()),
     canvas
   );
+  
+  objectsAtPoint = objectsAtPoint.filter(o => !o.hasOwnProperty('shapeType'))
+  
   let singleObject = new fabric.Group(objectsAtPoint);
   let joinedIds: string[] = [];
 

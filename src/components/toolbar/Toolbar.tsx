@@ -96,7 +96,11 @@ function Toolbar(props: {
     updateEraserIsActive,
     fillBackgroundColor,
     updateSelectedTool,
+<<<<<<< HEAD
     setActiveTool
+=======
+    setActiveTool,
+>>>>>>> b9d4adc (bug fixed)
   } = useContext(WhiteboardContext);
 
   const toolbarIsEnabled = props.toolbarIsEnabled;
