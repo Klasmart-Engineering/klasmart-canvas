@@ -10,6 +10,8 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import { useSharedEventSerializer } from '../domain/whiteboard/SharedEventSerializerProvider';
 import { connect } from 'react-redux';
+import { IUser } from '../interfaces/user/user';
+
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -29,7 +31,8 @@ function AuthMenu(props: {
   console.log('PROPS:::::', props);
   console.log('USER ID: ', props.userId);
   const { userId } = props;
-  const isTeacher = userId === 'teacher';
+  const user = (props.users as IUser[]).find(u => u.id === props.userId)
+  const isTeacher = (user && user.role === 'teacher') ?? false;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const {
     state: { eventSerializer },
@@ -202,8 +205,7 @@ const mapStateToProps = (state:any, ownProps: any) => (
   { 
     ...ownProps, 
     permissions: state.permissionsState,
-    user: state.userState,
-    isAdmin: ownProps.userId === 'teacher', // TEMPORARY until actual login process is created.
+    users: state.usersState,
   }
 );
 
