@@ -55,7 +55,7 @@ export const useTextObject = (
   );
 
   // Getting Key Handlers
-  const { keyUpHandler, keyDownHandler } = useKeyHandlers(
+  const { keyDownHandler } = useKeyHandlers(
     canvas,
     instanceId,
     permissions,
@@ -411,12 +411,10 @@ export const useTextObject = (
    * */
   useEffect(() => {
     document.addEventListener('keydown', keyDownHandler, false);
-    document.addEventListener('keyup', keyUpHandler, false);
     fontFamilyLoader(fontFamily);
 
     return () => {
       document.removeEventListener('keydown', keyDownHandler);
-      document.removeEventListener('keyup', keyUpHandler);
     };
-  }, [canvas, fontFamily, fontFamilyLoader, keyDownHandler, keyUpHandler]);
+  }, [canvas, fontFamily, fontFamilyLoader, keyDownHandler]);
 };
