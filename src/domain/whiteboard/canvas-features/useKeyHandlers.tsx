@@ -143,12 +143,13 @@ export const useKeyHandlers = (
         canvas.renderAll();
       }
 
-      // Active/Deactivate Perfect Shape
+      // Active Perfect Shape
       if (
         event.key === 'Shift' &&
+        !perfectShapeIsActive &&
         perfectShapeIsAvailable()
       ) {
-        updatePerfectShapeIsActive(!perfectShapeIsActive);
+        updatePerfectShapeIsActive(true);
       }
     },
     [
@@ -166,8 +167,26 @@ export const useKeyHandlers = (
     ]
   );
 
+  /**
+   * General handler for keyup keyboard events
+   * 'Shift' event for deactive the perfect shapes creation
+   */
+  const keyUpHandler = useCallback(
+    (e: Event) => {
+      const event = e as ICanvasKeyboardEvent;
+      // Deactive Perfect Shape
+      if (
+        event.key === 'Shift' &&
+        perfectShapeIsActive 
+      ) {
+        updatePerfectShapeIsActive(false);
+      }
+    },
+    [perfectShapeIsActive, updatePerfectShapeIsActive]
+  );
 
   return {
-    keyDownHandler
+    keyDownHandler,
+    keyUpHandler,
   };
 };
