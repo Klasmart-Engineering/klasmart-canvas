@@ -30,9 +30,7 @@ export const useObjectHover = (
   const showTooltip = (hoveredObject: fabric.Object) => {
     if (
       !tooltip ||
-      !hoveredObject.hasOwnProperty('id') ||
-      (tooltip.hasTheSameObject(hoveredObject) &&
-        tooltip.hasTheSameSelectedType(displayUserInfo))
+      !hoveredObject.hasOwnProperty('id') 
     ) {
       return;
     }
