@@ -174,10 +174,19 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
       payload.isPersistent = true;
       remoteEvents.push(payload);
       
-      window.sessionStorage.setItem(
-        'canvas:simulated:events',
-        JSON.stringify(remoteEvents)
-      );
+      try {
+        window.sessionStorage.setItem(
+          'canvas:simulated:events',
+          JSON.stringify(remoteEvents)
+        );
+      } catch (error) {
+        /**
+         * Added to avoid app crash when huge images are uploaded and storage quota is exceeded.
+         * In the future it would be better to optimize the image size when it's uploaded.
+         */
+        console.warn(error)
+      }
+      
     };
 
     eventSerializer.on('event', storeRemoteEvent);
