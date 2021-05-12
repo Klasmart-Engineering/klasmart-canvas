@@ -129,16 +129,16 @@ export const WhiteboardProvider = ({
   } = useStampAssignationModal();
 
   const [displayUserInfo, setUserInfoToDisplay] = useState(
-    DEFAULT_VALUES.DISPLAY_USER_INFO_OPTION
+    TOOLBAR_DEFAULT_VALUES.DISPLAY_USER_INFO_OPTION
   );
   const {
     SetUserInfoToDisplayModal,
     openSetUserInfoToDisplayModal,
   } = useSetUserInfoToDisplayModal(setUserInfoToDisplay);
 
-  const [isDrawing, updateIsDrawing] = useState(DEFAULT_VALUES.IS_DRAWING);
+  const [isDrawing, updateIsDrawing] = useState(TOOLBAR_DEFAULT_VALUES.IS_DRAWING);
   const [selectedTool, updateSelectedTool] = useState(
-    DEFAULT_VALUES.SELECTED_TOOL
+    TOOLBAR_DEFAULT_VALUES.SELECTED_TOOL
   );
 
   /**
@@ -159,7 +159,6 @@ export const WhiteboardProvider = ({
   const [ rtAdding3dObject, setRtAdding3dObject ] = useState(THREE_DEFAULT_VALUES.ADDING_OBJECT)
   const [ rtRemoving3dObject, setRtRemoving3dObject ] = useState(THREE_DEFAULT_VALUES.REMOVING_OBJECT)
   const [ rtMoving3dObject, setRtMoving3dObject ] = useState(THREE_DEFAULT_VALUES.MOVING_OBJECT)
-
 
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
   const [penColor, updatePenColor] = useState(TOOLBAR_DEFAULT_VALUES.PEN_COLOR);
@@ -481,8 +480,6 @@ export const WhiteboardProvider = ({
     eventController,
     activeTool,
     setActiveTool,
-    is3dModalOpen,
-    set3dModalOpen,
     is3dActive,
     set3dActive,
     new3dShape,

@@ -98,8 +98,6 @@ function Toolbar(props: {
     fillBackgroundColor,
     updateSelectedTool,
     setActiveTool,
-    open3dModal,
-    set3dModalOpen,
     set3dActive,
     setCreating3d,
     setNew3dShape,
@@ -267,10 +265,13 @@ function Toolbar(props: {
 
     setActiveTool(tool);
 
-    if(tool === ELEMENTS.ADD_3D_SHAPE_TOOL)
-      set3dModalOpen(true)
+    /**
 
-    set3dActive(tool === ELEMENTS.ADD_3D_SHAPE_TOOL)
+     * Indicates if 3d tool is active
+
+     */
+
+     set3dActive(tool === ELEMENTS.ADD_3D_SHAPE_TOOL || (is3dSelected && ELEMENTS.LINE_TYPE_TOOL === tool))
   }
 
   /**

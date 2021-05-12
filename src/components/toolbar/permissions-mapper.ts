@@ -131,21 +131,24 @@ export const mappedToolElements = (
                   return {
                     ...option,
                     enabled: !is3dSelected,
+                    available,
                   };
                 } else {
                   return {
                     ...option,
                     enabled,
+                    available,
                   };
                 }
               }
             ),
           };
-          return { ...elmnt, enabled };
+          return { ...elmnt, enabled, available };
         }
         case 'line_width': {
-          const enabled = true;//!is3dSelected;
-          return { ...elmnt, enabled };
+          const available = true;
+          const enabled = true;
+          return { ...elmnt, enabled, available };
         }
         case 'flood_fill': {
           const available = true;
@@ -175,8 +178,9 @@ export const mappedToolElements = (
           return { ...elmnt, enabled, available };
         }
         case 'add_3d_shape': {
+          const available = true;
           const enabled = allToolbarIsEnabled || serializerToolbarState.shape3d;
-          return { ...elmnt, enabled };
+          return { ...elmnt, enabled, available };
         }
         default: {
           return { ...elmnt, enabled: true, available: true };

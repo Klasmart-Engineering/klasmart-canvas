@@ -132,14 +132,7 @@ export const useFloodFill = (
 
       // Change stroke and fill to provisional colors to be identified
       changeStrokeAndFill(event.target, differentStroke, differentFill)
-<<<<<<< HEAD
-      // event.target.set({
-      //   stroke: differentStroke,
-      //   fill: differentFill,
-      // });
-=======
       if(event.target && is3DShape(event.target as ICanvasObject)) return
->>>>>>> 8184a47 (unnecesary file & comments removed)
 
       // Change canvas background to a provional color to be identified
       canvas.backgroundColor = differentBackground;
