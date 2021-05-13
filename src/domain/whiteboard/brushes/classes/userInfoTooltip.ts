@@ -1,6 +1,7 @@
 import { fabric } from 'fabric';
 import { ICanvasObject } from '../../../../interfaces/objects/canvas-object';
 import store from '../../redux/store';
+import { IUser } from '../../../../interfaces/user/user';
 
 /** Interface of the user info option selected variables. */
 interface IUserInfoOption {
@@ -242,7 +243,7 @@ export class UserInfoTooltip {
     const userId = this._objectId
       ? this._objectId.substr(0, this._objectId.indexOf(':'))
       : '';
-    const user = store.getState().usersState.find((user) => user.id === userId);
+    const user = (store.getState().usersState as IUser[]).find((user) => user.id === userId);
     this.setPosition(hoveredObject.left || 0, hoveredObject.top || 0);
     if (user) {
       this.setUserInfo(user.avatarImg, user.name);

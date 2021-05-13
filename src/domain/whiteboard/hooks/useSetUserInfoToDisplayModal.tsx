@@ -1,5 +1,4 @@
 import React, {  useCallback, useState } from 'react';
-import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
@@ -10,6 +9,8 @@ import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { useEffect } from 'react';
 import { UserInfoTooltip } from '../brushes/classes/userInfoTooltip';
 import { DialogActions, Button } from '@material-ui/core';
+import Modal from 'react-modal';
+
 
 export interface ISetUserInfoToDisplayModal {
   selection: string;
@@ -76,11 +77,12 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
 
     return (
       <div>
-        <Dialog
-          open={setUserInfoToDisplayModal}
-          onClose={cancel}
+        <Modal
+          isOpen={setUserInfoToDisplayModal}
+          onRequestClose={cancel}
           aria-labelledby="user-info-to-display-dialog"
           aria-describedby="user-info-to-display-dialog"
+          id="userinfo-modal"
         >
           <DialogTitle id="alert-dialog-title">
             {'Set user info to display'}
@@ -126,7 +128,7 @@ export const useSetUserInfoToDisplayModal = (setUserInfo: (value: string) => voi
               Confirm
             </Button>
           </DialogActions>
-        </Dialog>
+        </Modal>
       </div>
     );
   };

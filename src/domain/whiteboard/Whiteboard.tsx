@@ -15,21 +15,36 @@ import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardConta
 import { Provider } from 'react-redux';
 import store from './redux/store';
 import AuthMenu from '../../components/AuthMenu';
+import { IUser } from '../../interfaces/user/user'
+import { UPDATE_USERS } from './redux/actions';
 
-const users = store.getState().usersState;
+const users: IUser[] = store.getState().usersState as IUser[];
 
-/**
- * @field updateCanvasAreCreated: When all the canvases were loaded,
- * this function is called to update the flag
- * that is waiting for all the canvases
- */
 export type Props = {
-  updateCanvasAreCreated: (status: boolean) => void;
+  user?: IUser,
+  users?: IUser[]
 };
 
-const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
-  const whiteboardWidth = 740;
-  const whiteboardHeight = 460;
+const defaultProps: Props = {
+  user: users[0],
+  users: users
+}
+
+/**
+ * 
+ * @param props User and users from the canvas app parent or the default state
+ */
+const Whiteboard: FunctionComponent<Props> = ( props: Props) => {
+
+  const user = props.user!
+  const users = props.users
+  store.dispatch({
+    type: UPDATE_USERS,
+    payload: users,
+  });
+
+  const whiteboardWidth = window.innerWidth * 0.75
+  const whiteboardHeight = whiteboardWidth * 0.5
 
   const canvasStyle: CSSProperties = {
     position: 'absolute',
@@ -63,7 +78,6 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
 
   return (
     <>
-      {users.map(user => (
         <WhiteboardProvider
         key={user.id}
         clearWhiteboardPermissions={user.permissions}
@@ -99,9 +113,11 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
           </div>
         </Provider>
       </WhiteboardProvider>
-      ))}
+      
     </>
   );
 };
+
+Whiteboard.defaultProps = defaultProps
 
 export default Whiteboard;
