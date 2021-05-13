@@ -134,14 +134,22 @@ export class UserInfoTooltip {
       height: this.optionUserInfo.imgSize,
     });
 
-    this._text = new fabric.Text('userName', {
+    this._text.set({
       fontSize: 14,
       fontFamily: 'sans-serif',
       originX: 'left',
       originY: 'top',
       left: this.optionUserInfo.textLeft,
       top: 5,
-    });
+    })
+    // this._text = new fabric.Text('userName', {
+    //   fontSize: 14,
+    //   fontFamily: 'sans-serif',
+    //   originX: 'left',
+    //   originY: 'top',
+    //   left: this.optionUserInfo.textLeft,
+    //   top: 5,
+    // });
   }
 
   /**

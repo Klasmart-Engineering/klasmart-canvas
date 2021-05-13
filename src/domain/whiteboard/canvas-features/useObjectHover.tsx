@@ -1,6 +1,6 @@
 import { useContext, useEffect } from 'react';
 import { fabric } from 'fabric';
-import { UserInfoTooltip } from '../utils/userInfoTooltip';
+import { UserInfoTooltip } from '../utils/userInfoTooltip'
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
 import { WhiteboardContext } from '../WhiteboardContext';
 import { DEFAULT_VALUES } from '../../../config/toolbar-default-values';
