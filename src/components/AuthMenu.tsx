@@ -10,6 +10,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import { useSharedEventSerializer } from '../domain/whiteboard/SharedEventSerializerProvider';
 import { connect } from 'react-redux';
+import { IUser } from '../interfaces/user/user';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -22,14 +23,12 @@ const useStyles = makeStyles((theme: Theme) =>
   })
 );
 
-function AuthMenu(props: {
-  userId: string;
-  [key: string]: any
-}) {
+function AuthMenu(props: { userId: string; [key: string]: any }) {
   console.log('PROPS:::::', props);
   console.log('USER ID: ', props.userId);
   const { userId } = props;
-  const isTeacher = userId === 'teacher';
+  const user = (props.users as IUser[]).find(u => u.id === props.userId)
+  const isTeacher = (user && user.role === 'teacher') ?? false;
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const {
     state: { eventSerializer },
@@ -55,10 +54,12 @@ function AuthMenu(props: {
     clearWhiteboard,
     downloadCanvas,
     uploadImage,
-    backgroundColor
+    backgroundColor,
+    shape3d
   } = props.permissions;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    
     props.updatePermissions(event.target.name, event.target.checked);
 
     const payload = {
@@ -67,6 +68,8 @@ function AuthMenu(props: {
         [event.target.name]: event.target.checked,
       },
     };
+
+    console.log(payload)
 
     eventSerializer?.push('setToolbarPermissions', payload);
   };
@@ -142,6 +145,11 @@ function AuthMenu(props: {
       name: 'uploadImage',
       label: 'Upload Image tool',
     },
+    {
+      checked: shape3d,
+      name: 'shape3d',
+      label: '3D Shape tool',
+    },
   ];
 
   if (!isTeacher) {
@@ -202,13 +210,13 @@ const mapStateToProps = (state:any, ownProps: any) => (
   { 
     ...ownProps, 
     permissions: state.permissionsState,
-    user: state.userState,
-    isAdmin: ownProps.userId === 'teacher', // TEMPORARY until actual login process is created.
+    users: state.usersState,
   }
 );
 
 const mapDispatchToProps = (dispatch: any) => ({
-  updatePermissions: (tool: string, payload: boolean) => dispatch({ type: tool, payload }),
+  updatePermissions: (tool: string, payload: boolean) =>
+    dispatch({ type: tool, payload }),
   updateUser: (id: string) => dispatch({ type: 'UPDATE_USER', id }),
 });
 
