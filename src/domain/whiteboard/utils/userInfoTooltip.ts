@@ -1,6 +1,6 @@
 import { fabric } from 'fabric';
-import { ICanvasObject } from '../../../../interfaces/objects/canvas-object';
-import store from '../../redux/store';
+import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import store from '../redux/store';
 
 /** Interface of the user info option selected variables. */
 interface IUserInfoOption {
@@ -134,14 +134,22 @@ export class UserInfoTooltip {
       height: this.optionUserInfo.imgSize,
     });
 
-    this._text = new fabric.Text('userName', {
+    this._text.set({
       fontSize: 14,
       fontFamily: 'sans-serif',
       originX: 'left',
       originY: 'top',
       left: this.optionUserInfo.textLeft,
       top: 5,
-    });
+    })
+    // this._text = new fabric.Text('userName', {
+    //   fontSize: 14,
+    //   fontFamily: 'sans-serif',
+    //   originX: 'left',
+    //   originY: 'top',
+    //   left: this.optionUserInfo.textLeft,
+    //   top: 5,
+    // });
   }
 
   /**
@@ -179,8 +187,9 @@ export class UserInfoTooltip {
    * @param {string} name - name of the user.
    */
   public setUserInfo(imageUrl: string, name: string) {
-    this.setImageUrl(imageUrl);
-    this.setText(name);
+    this._img.setSrc(imageUrl, ()=> {
+      this.setText(name);
+    })
   }
 
   /**
@@ -189,14 +198,6 @@ export class UserInfoTooltip {
    */
   private setText(text: string) {
     this._text.set({ text });
-  }
-
-  /**
-   * Set image url
-   * @param {string} url - url or base64 string.
-   */
-  private setImageUrl(url: string) {
-    this._img.setSrc(url);
   }
 
   /**
