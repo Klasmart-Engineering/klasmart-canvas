@@ -176,8 +176,7 @@ export const useKeyHandlers = (
       // Deactive Perfect Shape
       if (
         event.key === 'Shift' &&
-        perfectShapeIsActive &&
-        window.innerWidth > 768
+        perfectShapeIsActive 
       ) {
         updatePerfectShapeIsActive(false);
       }
