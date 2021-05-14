@@ -27,12 +27,6 @@ function App(props: IAppProps) {
         >
           <Whiteboard
             {...props}
-            /**
-             * This is commented and not deleted because it seems useful.
-             */
-            // updateCanvasAreCreated={(value) => {
-            //   setCanvasAreCreated(value);
-            // }}
           />
         </SharedEventSerializerContextProvider>
       </div>
