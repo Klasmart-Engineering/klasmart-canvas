@@ -17,7 +17,7 @@ export const useKeyHandlers = (
   canvas: fabric.Canvas,
   instanceId: string,
   permissions: IPermissions,
-  allToolbarIsEnabled: boolean
+  allToolbarIsEnabled: boolean,
 ) => {
   // Getting context variables
   const {
@@ -43,6 +43,8 @@ export const useKeyHandlers = (
   const keyDownHandler = useCallback(
     (e: Event) => {
       if (instanceId !== activeCanvas.current) return;
+
+      if (!(permissions.undoRedo || allToolbarIsEnabled)) return;
 
       /**
        * Removes the current active objects in canvas
@@ -142,7 +144,6 @@ export const useKeyHandlers = (
       }
 
       // Active Perfect Shape
-      console.log(event.key, perfectShapeIsActive)
       if (
         event.key === 'Shift' &&
         !perfectShapeIsActive &&
