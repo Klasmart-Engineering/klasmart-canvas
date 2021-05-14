@@ -96,8 +96,10 @@ export const useShapeFeature = (
    * Checks if is possible resize the active object perfectly
    */
   const activeShapeCanBePerfectSized = useCallback(() => {
+    console.log(perfectShapeIsActive,
+      canvas.getActiveObject(), isShape(canvas.getActiveObject()))
     return (
-      perfectShapeIsActive &&
+      // perfectShapeIsActive &&
       canvas.getActiveObject() 
       // && isShape(canvas.getActiveObject())
     );
@@ -482,7 +484,9 @@ export const useShapeFeature = (
     canvas.renderAll();
 
     // Resets active shape like perfect      
-    if (activeShapeCanBePerfectSized()) {
+    if (canvas.getActiveObject()) {
+      canvas.getActiveObject().lockUniScaling = true
+      console.log("updating?")
       let scaling;
       const shapeToFix = canvas.getActiveObject();
       const width = getShapeRealWidth(shapeToFix);
