@@ -19,7 +19,7 @@ import {
 import { CanvasAction, SET } from '../reducers/undo-redo';
 import { getToolbarIsEnabled } from '../redux/utils';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
-import { isEmptyShape, isShape } from '../utils/shapes';
+import { isEmptyShape } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
 
 /**
@@ -96,12 +96,10 @@ export const useShapeFeature = (
    * Checks if is possible resize the active object perfectly
    */
   const activeShapeCanBePerfectSized = useCallback(() => {
-    console.log(perfectShapeIsActive,
-      canvas.getActiveObject(), isShape(canvas.getActiveObject()))
     return (
-      // perfectShapeIsActive &&
+      perfectShapeIsActive &&
       canvas.getActiveObject() 
-      // && isShape(canvas.getActiveObject())
+      //&& isEmptyShape(canvas.getActiveObject())
     );
   }, [canvas, perfectShapeIsActive]);
 
@@ -296,6 +294,7 @@ export const useShapeFeature = (
      * @param shapeToFix - Shape to make it perfect
      */
     const fixCustomBrushShape = async (shapeToFix: ICanvasShapeBrush) => {
+      console.log(shapeToFix.scaleX, shapeToFix.scaleY);
       const type: ObjectType = (shapeToFix as ICanvasObject).get(
         'type'
       ) as ObjectType;
@@ -341,6 +340,7 @@ export const useShapeFeature = (
 
             if (!shapeToFix) return;
 
+            console.log(shapeToFix);
             const id = brushTarget.id;
             ((newObject as unknown) as ICanvasShapeBrush).set({
               top: shapeToFix.top,
@@ -454,6 +454,8 @@ export const useShapeFeature = (
         target: { eTarget: target, isGroup: false },
       };
 
+      console.log('EL PAY: ', payload);
+
       eventSerializer?.push('scaled', payload);
 
       if (canvas) {
@@ -483,37 +485,43 @@ export const useShapeFeature = (
 
     canvas.renderAll();
 
-    // Resets active shape like perfect      
-    if (canvas.getActiveObject()) {
-      canvas.getActiveObject().lockUniScaling = true
-      console.log("updating?")
-      let scaling;
+    // Resets active shape like perfect
+    console.log(perfectShapeIsActive)
+    if(canvas.getActiveObject()){
       const shapeToFix = canvas.getActiveObject();
-      const width = getShapeRealWidth(shapeToFix);
-      const heigth = getShapeRealHeight(shapeToFix);
-
-      if ((shapeToFix as ICanvasShapeBrush).blockResize) return;
-
-      if (width > heigth) {
-        scaling = { scaleY: width / Number(shapeToFix.height) };
-      } else if (heigth > width) {
-        scaling = { scaleX: heigth / Number(shapeToFix.width) };
+      if(perfectShapeIsActive){
+          let scaling;
+          shapeToFix.lockUniScaling = true
+          const width = getShapeRealWidth(shapeToFix);
+          const heigth = getShapeRealHeight(shapeToFix);
+          
+          if ((shapeToFix as ICanvasShapeBrush).blockResize) return;
+    
+          if (width > heigth) {
+            scaling = { scaleY: width / Number(shapeToFix.height) };
+          } else if (heigth > width) {
+            scaling = { scaleX: heigth / Number(shapeToFix.width) };
+          }
+    
+          if (scaling) {
+            shapeToFix.set(scaling);
+    
+            if (
+              (shapeToFix as ICanvasBrush).basePath?.type === 'pencil' ||
+              (shapeToFix as ICanvasBrush).basePath?.type === 'dashed'
+            ) {
+              syncAndDispatchPerfectShapeScaling(shapeToFix);
+            } else {
+              fixCustomBrushShape(shapeToFix as ICanvasShapeBrush);
+            }
+          }
+    
+          shapeToFix.setCoords();
+          canvas.renderAll();
+      }else{
+        shapeToFix.lockUniScaling = false
+        canvas.renderAll();
       }
-
-      if (scaling) {
-        shapeToFix.set(scaling);
-
-        if (
-          (shapeToFix as ICanvasBrush).basePath?.type === 'pencil' ||
-          (shapeToFix as ICanvasBrush).basePath?.type === 'dashed'
-        ) {
-          syncAndDispatchPerfectShapeScaling(shapeToFix);
-        } else {
-          fixCustomBrushShape(shapeToFix as ICanvasShapeBrush);
-        }
-      }
-
-      shapeToFix.setCoords();
     }
 
     /* If isLocalObject is added on dependencies
