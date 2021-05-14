@@ -98,8 +98,8 @@ export const useShapeFeature = (
   const activeShapeCanBePerfectSized = useCallback(() => {
     return (
       perfectShapeIsActive &&
-      canvas.getActiveObject() &&
-      isShape(canvas.getActiveObject())
+      canvas.getActiveObject() 
+      // && isShape(canvas.getActiveObject())
     );
   }, [canvas, perfectShapeIsActive]);
 
