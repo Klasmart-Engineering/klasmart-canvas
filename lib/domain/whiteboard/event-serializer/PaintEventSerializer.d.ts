@@ -14,6 +14,7 @@ export interface ObjectEvent {
     id: string;
     type?: ObjectType;
     target?: PayloadTarget;
+    avoidPersistentStoring?: boolean;
 }
 export interface IBackgroundImageEvent {
     id: string | undefined;
@@ -23,7 +24,7 @@ export interface IBackgroundImageEvent {
         id: string;
     };
 }
-export declare type ObjectType = 'path' | 'textbox' | 'activeSelection' | 'reconstruct' | 'shape' | 'background' | 'image' | 'pointer' | 'group' | 'gif' | 'backgroundImage' | 'backgroundAdded' | 'localImage' | 'svg' | 'cursorPointer';
+export declare type ObjectType = 'path' | 'textbox' | 'activeSelection' | 'reconstruct' | 'shape' | 'background' | 'image' | 'pointer' | 'group' | 'gif' | 'backgroundImage' | 'backgroundAdded' | 'localImage' | 'svg' | 'userInfoToDisplay' | 'cursorPointer';
 export declare type PayloadTarget = ICanvasObject | {
     objects: ICanvasObject[];
 } | {

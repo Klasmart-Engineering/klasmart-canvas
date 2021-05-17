@@ -5,6 +5,7 @@ declare const _default: {
         children?: string | number | import("react").ReactElement<any, string | ((props: any) => import("react").ReactElement<any, string | any | (new (props: any) => import("react").Component<any, any, any>)> | null) | (new (props: any) => import("react").Component<any, any, any>)> | import("react").ReactChildren | Element[] | null | undefined;
         simulateNetworkSynchronization?: boolean | undefined;
         simulatePersistence?: boolean | undefined;
+        canvasAreCreated?: boolean | undefined;
     }>;
     WhiteboardProvider: ({ children, clearWhiteboardPermissions, allToolbarIsEnabled, activeCanvas, userId, }: {
         children: import("react").ReactNode;

@@ -10,4 +10,7 @@ export declare const DEFAULT_VALUES: {
     SHAPE: string;
     SHAPE_COLOR: string;
     STAMP: string;
+    IS_DRAWING: boolean;
+    DISPLAY_USER_INFO_OPTION: string;
+    SELECTED_TOOL: string;
 };

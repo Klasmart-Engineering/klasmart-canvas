@@ -16,4 +16,5 @@ export declare const ELEMENTS: {
     ADD_SHAPE_TOOL: string;
     ADD_STAMP_TOOL: string;
     LASER_TOOL: string;
+    SET_USER_INFO_TO_DISPLAY: string;
 };

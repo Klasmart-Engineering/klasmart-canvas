@@ -15,6 +15,8 @@ interface IAppProps{
  */
 function App(props: IAppProps) {
 
+  console.log(React.version)
+
   const [canvasAreCreated, setCanvasAreCreated] = useState(false);
 
   return (

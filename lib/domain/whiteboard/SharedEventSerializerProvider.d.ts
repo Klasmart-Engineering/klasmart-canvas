@@ -7,6 +7,7 @@ declare type Props = {
     children?: ReactChild | ReactChildren | null | Element[];
     simulateNetworkSynchronization?: boolean;
     simulatePersistence?: boolean;
+    canvasAreCreated?: boolean;
 };
 interface IEventSerializerState {
     eventSerializer: PaintEventSerializer;

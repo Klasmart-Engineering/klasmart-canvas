@@ -16,6 +16,8 @@ import { IPermissions } from '../../interfaces/permissions/permissions';
  * originating from userId's in this list.
  * @field scaleMode: Determines how the canvas should scale
  * if parent element doesn't match aspect ratio.
+ * @field onCanvasCreated: Is called when canvas changes from undefined
+ * to fabric canvas element
  */
 export declare type Props = {
     children?: ReactChild | ReactChildren | null;
@@ -31,6 +33,7 @@ export declare type Props = {
     display?: boolean;
     permissions: IPermissions;
     updatePermissions: (tool: string, payload: boolean) => void;
+    onCanvasCreated: (status: boolean) => void;
 };
 declare const _default: import("react-redux").ConnectedComponent<React.FunctionComponent<Props>, any>;
 export default _default;
