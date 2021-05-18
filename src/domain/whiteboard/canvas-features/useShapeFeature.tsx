@@ -294,7 +294,6 @@ export const useShapeFeature = (
      * @param shapeToFix - Shape to make it perfect
      */
     const fixCustomBrushShape = async (shapeToFix: ICanvasShapeBrush) => {
-      console.log(shapeToFix.scaleX, shapeToFix.scaleY);
       const type: ObjectType = (shapeToFix as ICanvasObject).get(
         'type'
       ) as ObjectType;
@@ -340,7 +339,6 @@ export const useShapeFeature = (
 
             if (!shapeToFix) return;
 
-            console.log(shapeToFix);
             const id = brushTarget.id;
             ((newObject as unknown) as ICanvasShapeBrush).set({
               top: shapeToFix.top,
@@ -454,8 +452,6 @@ export const useShapeFeature = (
         target: { eTarget: target, isGroup: false },
       };
 
-      console.log('EL PAY: ', payload);
-
       eventSerializer?.push('scaled', payload);
 
       if (canvas) {
@@ -486,7 +482,6 @@ export const useShapeFeature = (
     canvas.renderAll();
 
     // Resets active shape like perfect
-    console.log(perfectShapeIsActive)
     if(canvas.getActiveObject()){
       const shapeToFix = canvas.getActiveObject();
       if(perfectShapeIsActive){
