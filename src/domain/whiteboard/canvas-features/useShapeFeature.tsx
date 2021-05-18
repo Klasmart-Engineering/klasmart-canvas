@@ -99,6 +99,7 @@ export const useShapeFeature = (
     return (
       perfectShapeIsActive &&
       canvas.getActiveObject() 
+      && isEmptyShape(canvas.getActiveObject())
     );
   }, [canvas, perfectShapeIsActive]);
 
