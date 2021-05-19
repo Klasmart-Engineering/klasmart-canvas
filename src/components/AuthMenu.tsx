@@ -26,8 +26,6 @@ function AuthMenu(props: {
   userId: string;
   [key: string]: any
 }) {
-  console.log('PROPS:::::', props);
-  console.log('USER ID: ', props.userId);
   const { userId } = props;
   const isTeacher = userId === 'teacher';
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
