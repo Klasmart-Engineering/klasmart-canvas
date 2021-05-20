@@ -1,5 +1,4 @@
 import React from 'react'
-import { fabric } from 'fabric';
 import 'jest-canvas-mock';
 import {render, cleanup, fireEvent} from "@testing-library/react"
 import App from '../App'
