@@ -28,6 +28,7 @@ function ToolbarButton(props: IToolbarButton) {
 
   return (
     <button
+      data-testid={'toolbar-button-'+id}
       key={id}
       title={title}
       style={toolbarButtonStyle}
