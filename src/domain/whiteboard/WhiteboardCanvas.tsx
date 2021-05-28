@@ -242,8 +242,13 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     const objects = canvas?.getObjects().map((object) => {
       return object.toJSON(['basePath']);
     });
-
     localStorage.setItem('objects', JSON.stringify(objects));
+    
+    const activeObjects = canvas?.getActiveObjects().map((object) => {
+      return object.toJSON(['basePath']);
+    });
+    localStorage.setItem('activeObjects', JSON.stringify(activeObjects));
+    
     return canvas?.getObjects();
   }, [canvas]);
 
