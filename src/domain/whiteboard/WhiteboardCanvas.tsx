@@ -249,7 +249,6 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
       return object.toJSON(['basePath']);
     });
     localStorage.setItem('activeObjects', JSON.stringify(activeObjects));
-    console.log(activeObjects)
     return canvas?.getObjects();
   }, [canvas]);
 
