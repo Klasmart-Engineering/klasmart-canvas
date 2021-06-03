@@ -1,15 +1,16 @@
 import React from 'react';
 import 'jest-canvas-mock';
-import { render, cleanup, fireEvent } from '@testing-library/react';
+import { render, cleanup, fireEvent, wait } from '@testing-library/react';
 import { act } from 'react-dom/test-utils';
 import App from '../App';
 
 afterEach(cleanup);
-beforeEach(() => {
-    localStorage.removeItem('objects');
-});
 
 describe('Text Tool', () => {
+
+  beforeEach(() => {
+    localStorage.removeItem('objects');
+  });
 
   it(`should add a text`, async () => {
     const promise = Promise.resolve();
@@ -86,7 +87,7 @@ describe('Text Tool', () => {
   });
 
   it(`should set text font`, async () => {
-    const promise = Promise.resolve();
+    
     const { container } = render(<App />);
 
     const upperCanvas = container.getElementsByClassName(
@@ -106,20 +107,23 @@ describe('Text Tool', () => {
     fireEvent.mouseDown(upperCanvas, { clientX: 300, clientY: 300 });
 
     fireEvent.click(arrowDiv);
-    const buttonDiv = container.querySelector(
-      `[data-testid='toolbar-button-crayon_font']`
-    );
-    fireEvent.click(buttonDiv);
-    fireEvent.mouseDown(upperCanvas, { clientX: 60, clientY: 60 });
-    fireEvent.mouseUp(upperCanvas, { clientX: 62, clientY: 62 });
-    fireEvent.keyDown(upperCanvas, { key: 'a', keyCode: 65 });
-    fireEvent.keyDown(upperCanvas, { key: 'escape', keyCode: 27 });
-
-    fireEvent.click(getObjBtn);
-    const objs = JSON.parse(localStorage.getItem('objects') as string);
     
-    expect(objs[objs.length - 1].fontFamily).toBe('Crayon');
+    
+    
+    await wait(() => {
+      const buttonDiv = container.querySelector(
+        `[data-testid='toolbar-button-crayon_font']`
+      );
+      fireEvent.click(buttonDiv);
+      fireEvent.mouseDown(upperCanvas, { clientX: 60, clientY: 60 });
+      fireEvent.mouseUp(upperCanvas, { clientX: 62, clientY: 62 });
+      fireEvent.keyDown(upperCanvas, { key: 'a', keyCode: 65 });
+      fireEvent.keyDown(upperCanvas, { key: 'escape', keyCode: 27 });
+  
+      fireEvent.click(getObjBtn);
+      const objs = JSON.parse(localStorage.getItem('objects') as string);
+      expect(objs[objs.length - 1].fontFamily).toBe('Crayon');
+    })
 
-    await act(() => promise);
   });
 });
