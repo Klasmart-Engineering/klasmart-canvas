@@ -96,6 +96,8 @@ export const useFloodFill = (
     const floodFillInShape = (event: fabric.IEvent) => {
       if (!event.target || !event.pointer) return;
 
+      console.log(event)
+
       const differentFill = '#dcdcdc';
       const differentStroke = '#dbdbdb';
       const differentBackground = '#dadada';

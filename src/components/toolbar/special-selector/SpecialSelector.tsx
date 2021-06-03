@@ -156,6 +156,7 @@ function SpecialSelector(props: ISpecialSelector) {
     <div className="selector-container" style={selectorContainerStyle}>
       <button
         title={selectedOption.title}
+        data-testid={'special-selector-'+id}
         ref={buttonRef}
         style={toolbarSelectorStyle}
         className={[
@@ -169,7 +170,7 @@ function SpecialSelector(props: ISpecialSelector) {
         <div style={iconContainerStyle}>
           <Icon style={selectedOption.style} />
         </div>
-        <ArrowRightIcon onClick={handleArrowClick} style={arrowStyle} />
+        <ArrowRightIcon onClick={handleArrowClick} style={arrowStyle} data-testid={'special-selector-arrow-'+selectedOption.id} />
       </button>
       {showOptions && active ? (
         <div className="options-container" style={optionsContainerStyle}>

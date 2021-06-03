@@ -227,6 +227,7 @@ function SecondOptionSelector(props: ISecondOptionSelector) {
     <div className="selector-container" style={selectorContainerStyle}>
       <button
         title={selectedOption.title}
+        data-testid={'second-option-selector-'+id}
         ref={buttonRef}
         style={toolbarSelectorStyle}
         className={[
