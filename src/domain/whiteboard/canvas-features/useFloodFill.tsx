@@ -96,39 +96,37 @@ export const useFloodFill = (
     const floodFillInShape = (event: fabric.IEvent) => {
       if (!event.target || !event.pointer) return;
 
-      console.log(event)
-
-      const differentFill = '#dcdcdc';
-      const differentStroke = '#dbdbdb';
-      const differentBackground = '#dadada';
+      // const differentFill = '#dcdcdc';
+      // const differentStroke = '#dbdbdb';
+      // const differentBackground = '#dadada';
 
       /* Storing the current stroke, fill
       and canvas background colors to reset them */
-      const originalStroke = event.target.stroke;
-      const originalFill = event.target.fill;
-      const originalBackground = canvas.backgroundColor;
+      // const originalStroke = event.target.stroke;
+      // const originalFill = event.target.fill;
+      // const originalBackground = canvas.backgroundColor;
 
       // Change stroke and fill to provisional colors to be identified
-      event.target.set({
-        stroke: differentStroke,
-        fill: differentFill,
-      });
+      // event.target.set({
+      //   stroke: differentStroke,
+      //   fill: differentFill,
+      // });
 
       // Change canvas background to a provional color to be identified
-      canvas.backgroundColor = differentBackground;
-      canvas.renderAll();
+      // canvas.backgroundColor = differentBackground;
+      // canvas.renderAll();
 
-      const clickedColor = getColorInCoord(event.pointer.x, event.pointer.y);
-
-      if (clickedColor === differentFill) {
+      // const clickedColor = getColorInCoord(event.pointer.x, event.pointer.y);
+      
+      // if (clickedColor === differentFill) {
         // If user click inside of the shape
         event.target.set({
           fill: floodFill,
-          stroke: originalStroke,
+          // stroke: originalStroke,
         });
 
         canvas.discardActiveObject();
-        canvas.backgroundColor = originalBackground;
+        // canvas.backgroundColor = originalBackground;
 
         const payload: ObjectEvent = {
           type: 'shape',
@@ -156,27 +154,27 @@ export const useFloodFill = (
         });
 
         eventSerializer?.push('colorChanged', payload);
-      } else if (clickedColor === differentStroke) {
-        // If user click in the border of the shape
-        event.target.set({
-          stroke: originalStroke,
-          fill: originalFill,
-        });
+      // } else if (clickedColor === differentStroke) {
+      //   // If user click in the border of the shape
+      //   event.target.set({
+      //     stroke: originalStroke,
+      //     fill: originalFill,
+      //   });
 
-        canvas.backgroundColor = originalBackground;
-      } else {
-        // If user click outside of the shape
-        event.target.set({
-          stroke: originalStroke,
-          fill: originalFill,
-        });
+      //   canvas.backgroundColor = originalBackground;
+      // } else {
+      //   // If user click outside of the shape
+      //   event.target.set({
+      //     stroke: originalStroke,
+      //     fill: originalFill,
+      //   });
 
-        canvas.backgroundColor = originalBackground;
+      //   canvas.backgroundColor = originalBackground;
 
-        if (event.e) {
-          manageShapeOutsideClick(event);
-        }
-      }
+      //   if (event.e) {
+      //     manageShapeOutsideClick(event);
+      //   }
+      // }
     };
 
     /**

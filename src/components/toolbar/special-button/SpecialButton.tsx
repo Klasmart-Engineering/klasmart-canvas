@@ -37,15 +37,15 @@ function SpecialButton(props: ISpecialButton) {
     <button
       title={title}
       style={toolbarButtonStyle}
-      data-testid={'special-button-'+id}
       className={[
         'toolbar-button',
         selected ? 'selected-button' : '',
         !selected ? 'unselected-button' : '',
       ].join(' ')}
       onClick={handleClick}
+      data-testid={'special-button-'+id}
     >
-      <Icon style={style} />
+      <Icon data-testid={'special-button-icon-'+id} style={style} />
     </button>
   );
 }
