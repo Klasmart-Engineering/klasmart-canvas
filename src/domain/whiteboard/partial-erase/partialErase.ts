@@ -133,6 +133,7 @@ export class PartialErase {
     this.id = id;
     this.canvas = canvas;
     this.rawCanvas = document.createElement('canvas');
+    this.rawCanvas.classList.add('raw-canvas')
     this.rawCanvas.style.cssText = 'position: absolute; z-index: 3;';
     this.undoRedoDispatch = undoRedoDispatch;
     this.active = false;
