@@ -190,6 +190,7 @@ function ToolbarSelector(props: IToolbarSelector) {
           className="arrow"
           onClick={handleArrowClick}
           style={arrowStyle}
+          data-testid={'toolbar-button-arrow-'+selectedOption.id}
         />
       </button>
       {showOptions && active ? (

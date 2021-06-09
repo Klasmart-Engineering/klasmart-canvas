@@ -37,6 +37,7 @@ function SpecialButton(props: ISpecialButton) {
     <button
       title={title}
       style={toolbarButtonStyle}
+      data-testid={'special-button-'+id}
       className={[
         'toolbar-button',
         selected ? 'selected-button' : '',
