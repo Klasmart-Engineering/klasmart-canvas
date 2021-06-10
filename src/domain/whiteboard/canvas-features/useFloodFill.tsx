@@ -117,20 +117,12 @@ export const useFloodFill = (
       canvas.renderAll();
 
       const clickedColor = getColorInCoord(event.pointer.x, event.pointer.y);
-
-      if (clickedColor === differentStroke) {
-        // If user click in the border of the shape
-        event.target.set({
-          stroke: originalStroke,
-          fill: originalFill,
-        });
-
-        canvas.backgroundColor = originalBackground;
-      } else {
-        /**
-         * Deprecated? This commented lines will dissapear once it's confirmed it's not needed.
-         */
-        //else if (clickedColor === differentFill) {
+      /**
+       * This was 
+       */
+      const isTesting = localStorage.getItem('isTestingFloodFill') === 'true'
+      
+      if (clickedColor === differentFill || isTesting) {
         // If user click inside of the shape
         event.target.set({
           fill: floodFill,
@@ -166,24 +158,27 @@ export const useFloodFill = (
         });
 
         eventSerializer?.push('colorChanged', payload);
+      } else if (clickedColor === differentStroke) {
+        // If user click in the border of the shape
+        event.target.set({
+          stroke: originalStroke,
+          fill: originalFill,
+        });
+
+        canvas.backgroundColor = originalBackground;
+      } else {
+        // If user click outside of the shape
+        event.target.set({
+          stroke: originalStroke,
+          fill: originalFill,
+        });
+
+        canvas.backgroundColor = originalBackground;
+
+        if (event.e) {
+          manageShapeOutsideClick(event);
+        }
       }
-
-      /**
-       * Deprecated? Thess commented lines will dissapear once it's confirmed it's not needed.
-       */
-      // else {
-      //   // If user click outside of the shape
-      //   event.target.set({
-      //     stroke: originalStroke,
-      //     fill: originalFill,
-      //   });
-
-      //   canvas.backgroundColor = originalBackground;
-
-      //   if (event.e) {
-      //     manageShapeOutsideClick(event);
-      //   }
-      // }
     };
 
     /**
@@ -268,7 +263,8 @@ export const useFloodFill = (
       );
     };
 
-    const teacherHasPermission = allToolbarIsEnabled && floodFillIsActive;
+    const teacherHasPermission =
+      allToolbarIsEnabled && floodFillIsActive;
 
     const studentHasPermission =
       floodFillIsActive && toolbarIsEnabled && serializerToolbarState.floodFill;

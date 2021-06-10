@@ -16,7 +16,9 @@ describe('Flood fill Tool', () => {
   beforeEach(() => {
     localStorage.removeItem('objects');
     localStorage.removeItem('canvas:simulated:events');
+    localStorage.setItem('isTestingFloodFill', 'true')
   });
+  afterEach(()=>localStorage.removeItem('isTestingFloodFill'))
 
   it(`should select a secondary color and change the color of the shape`, async () => {
     const { container } = render(<App />);
