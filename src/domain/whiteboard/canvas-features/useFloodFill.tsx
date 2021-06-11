@@ -118,7 +118,7 @@ export const useFloodFill = (
 
       const clickedColor = getColorInCoord(event.pointer.x, event.pointer.y);
       /**
-       * This was 
+       * This was added in order to handle the case of the integration test for flood fill.
        */
       const isTesting = localStorage.getItem('isTestingFloodFill') === 'true'
       
