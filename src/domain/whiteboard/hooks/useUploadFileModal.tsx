@@ -57,6 +57,7 @@ export const useUploadFileModal = (eventSerializer: PaintEventSerializer, userId
     };
 
     const onImageChange = (event: ChangeEvent<HTMLInputElement>) => {
+      console.log("uploading?")
       if (event.target.files && event.target.files[0]) {
         const {
           setBackgroundImageIsPartialErasable,
@@ -204,6 +205,7 @@ export const useUploadFileModal = (eventSerializer: PaintEventSerializer, userId
               accept="image/*"
               style={{ display: 'none' }}
               id="raised-button-file"
+              data-testid="raised-button-file"
               multiple
               type="file"
               onChange={onImageChange}
