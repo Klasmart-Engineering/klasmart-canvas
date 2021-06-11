@@ -22,57 +22,47 @@ describe('Brush Type Tool', () => {
     localStorage.removeItem('canvas:simulated:events');
   });
 
-//   it(`should add an object to the canvas with the brush type previously selected`, async () => {
-//     const { container } = render(<App />);
+  it(`should add an object to the canvas with the brush type previously selected`, async () => {
+    const { container } = render(<App />);
 
-//     const upperCanvas = container.getElementsByClassName(
-//       'upper-canvas'
-//     )[0] as HTMLCanvasElement;
-//     const getObjBtn = document.getElementById(
-//       'get-objects-button'
-//     ) as HTMLButtonElement;
+    const upperCanvas = container.getElementsByClassName(
+      'upper-canvas'
+    )[0] as HTMLCanvasElement;
+    const getObjBtn = document.getElementById(
+      'get-objects-button'
+    ) as HTMLButtonElement;
 
-//     let arrowBtn = container.querySelector(
-//       `[data-testid='toolbar-button-arrow-pencil_line']`
-//     );
-//     fireEvent.click(arrowBtn);
+    let arrowBtn = container.querySelector(
+      `[data-testid='toolbar-button-arrow-pencil_line']`
+    );
+    fireEvent.click(arrowBtn);
 
-//     let brushType = getAllByTitle(container, `Pen Line`)[0];
-//     fireEvent.click(brushType);
+    let brushType = getAllByTitle(container, `Pen Line`)[0];
+    fireEvent.click(brushType);
 
-//     fireEvent.mouseDown(upperCanvas, { clientX: 60, clientY: 200 });
-//     fireEvent.mouseMove(upperCanvas, { clientX: 100, clientY: 100 });
-//     fireEvent.mouseUp(upperCanvas, { clientX: 100, clientY: 100 });
+    fireEvent.mouseDown(upperCanvas, { clientX: 60, clientY: 200 });
+    fireEvent.mouseMove(upperCanvas, { clientX: 100, clientY: 100 });
+    fireEvent.mouseUp(upperCanvas, { clientX: 100, clientY: 100 });
 
-//     fireEvent.click(getObjBtn);
-//     const objs = JSON.parse(localStorage.getItem('objects') as string);
+    fireEvent.click(getObjBtn);
+    const objs = JSON.parse(localStorage.getItem('objects') as string);
 
-//     expect(objs[objs.length - 1].basePath.type).toBe('pen');
-//     arrowBtn = container.querySelector(
-//       `[data-testid='toolbar-button-arrow-pen_line']`
-//     );
-//     fireEvent.click(arrowBtn);
+    expect(objs[objs.length - 1].basePath.type).toBe('pen');
+    arrowBtn = container.querySelector(
+      `[data-testid='toolbar-button-arrow-pen_line']`
+    );
+    fireEvent.click(arrowBtn);
 
-//     brushType = getAllByTitle(container, `Pen Line`)[0];
-//     fireEvent.click(brushType);
+    brushType = getAllByTitle(container, `Pen Line`)[0];
+    fireEvent.click(brushType);
 
-//     fireEvent.mouseDown(upperCanvas, { clientX: 200, clientY: 200 });
-//     fireEvent.mouseMove(upperCanvas, { clientX: 300, clientY: 100 });
-//     fireEvent.mouseUp(upperCanvas, { clientX: 300, clientY: 100 });
-//   });
+    fireEvent.mouseDown(upperCanvas, { clientX: 200, clientY: 200 });
+    fireEvent.mouseMove(upperCanvas, { clientX: 300, clientY: 100 });
+    fireEvent.mouseUp(upperCanvas, { clientX: 300, clientY: 100 });
+  });
 
   it(`should add change the brush type a 2d shape`, async () => {
-    const brushTypes = [
-      'Pencil',
-      'Pencil',
-      'Pen',
-      //   'Felt',
-      //   'Crayon',
-      'Chalk',
-      'Paintbrush',
-      'Marker',
-      'Dashed Pen',
-    ];
+    
     const { container } = render(<App />);
 
     const upperCanvas = container.getElementsByClassName(
