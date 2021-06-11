@@ -83,7 +83,7 @@ describe('Partial Erase Tool', () => {
     });
   });
   
-  it(`should replace an for an image of a partial erased object`, async () => {
+  it(`should replace a 2d shape with a partial erased image of itself`, async () => {
     localStorage.removeItem('canvas:simulated:events');
     const { container } = render(<App />);
 
@@ -129,6 +129,103 @@ describe('Partial Erase Tool', () => {
       expect(JSON.parse(persistentEvents[2].param).isPartialErased).toBe(true);
     });
   });
+
+  it(`should replace a free hand drawing with a partial erased image of itself`, async () => {
+    localStorage.removeItem('canvas:simulated:events');
+    const { container } = render(<App />);
+
+    const upperCanvas = container.getElementsByClassName(
+      'upper-canvas'
+    )[0] as HTMLCanvasElement;
+
+    const pencilButton = getByTestId(
+      container,
+      'toolbar-button-pencil_line'
+    );
+    const eraserArrow = getByTestId(
+      container,
+      'toolbar-button-arrow-object_erase'
+    );
+
+    fireEvent.click(pencilButton);
+    fireEvent.mouseDown(upperCanvas, { clientX: 60, clientY: 200 });
+    fireEvent.mouseMove(upperCanvas, { clientX: 70, clientY: 100 });
+    fireEvent.mouseMove(upperCanvas, { clientX: 200, clientY: 200 });
+    fireEvent.mouseMove(upperCanvas, { clientX: 60, clientY: 200 });
+    fireEvent.mouseUp(upperCanvas, { clientX: 60, clientY: 200 });
+
+    fireEvent.click(eraserArrow);
+
+    await wait(() => {
+      const partialEraserBtn = getByTitle(container, 'Partial Erase');
+      fireEvent.click(partialEraserBtn);
+
+      const rawCanvas = container.getElementsByClassName(
+        'raw-canvas'
+      )[1] as HTMLCanvasElement;
+
+      fireEvent.mouseDown(rawCanvas, { clientX: 50, clientY: 210 });
+      fireEvent.mouseMove(rawCanvas, { clientX: 210, clientY: 210 });
+      fireEvent.mouseUp(rawCanvas, { clientX: 210, clientY: 210 });
+
+      const stored = window.localStorage.getItem('canvas:simulated:events');
+      const persistentEvents = JSON.parse(stored as string);
+      expect(persistentEvents[0].type).toBe('added');
+      expect(persistentEvents[1].type).toBe('removed');
+      expect(persistentEvents[2].type).toBe('added');
+      expect(persistentEvents[2].objectType).toBe('image');
+      expect(JSON.parse(persistentEvents[2].param).isPartialErased).toBe(true);
+    });
+  });
+
+  // it(`should replace a text with a partial erased image of itself`, async () => {
+  //   localStorage.removeItem('canvas:simulated:events');
+  //   const { container } = render(<App />);
+
+  //   const upperCanvas = container.getElementsByClassName(
+  //     'upper-canvas'
+  //   )[0] as HTMLCanvasElement;
+
+  //   const textButton = getByTestId(
+  //     container,
+  //     'toolbar-button-toolbar-button-arial_font'
+  //   );
+  //   const eraserArrow = getByTestId(
+  //     container,
+  //     'toolbar-button-arrow-object_erase'
+  //   );
+
+  //   fireEvent.click(textButton);
+  //   fireEvent.mouseDown(upperCanvas, { clientX: 60, clientY: 200 });
+  //   fireEvent.mouseUp(upperCanvas, { clientX: 60, clientY: 200 });
+  //   fireEvent.keyDown(upperCanvas, { key: 'a', keyCode: 65 });
+  //   fireEvent.keyUp(upperCanvas, { key: 'a', keyCode: 65 });
+  //   fireEvent.keyDown(upperCanvas, { key: 'escape', keyCode: 27 });
+  //   fireEvent.keyUp(upperCanvas, { key: 'escape', keyCode: 65 });
+
+  //   fireEvent.click(eraserArrow);
+
+  //   await wait(() => {
+  //     const partialEraserBtn = getByTitle(container, 'Partial Erase');
+  //     fireEvent.click(partialEraserBtn);
+
+  //     const rawCanvas = container.getElementsByClassName(
+  //       'raw-canvas'
+  //     )[1] as HTMLCanvasElement;
+
+  //     fireEvent.mouseDown(rawCanvas, { clientX: 50, clientY: 210 });
+  //     fireEvent.mouseMove(rawCanvas, { clientX: 210, clientY: 210 });
+  //     fireEvent.mouseUp(rawCanvas, { clientX: 210, clientY: 210 });
+
+  //     const stored = window.localStorage.getItem('canvas:simulated:events');
+  //     const persistentEvents = JSON.parse(stored as string);
+  //     expect(persistentEvents[0].type).toBe('added');
+  //     expect(persistentEvents[1].type).toBe('removed');
+  //     expect(persistentEvents[2].type).toBe('added');
+  //     expect(persistentEvents[2].objectType).toBe('image');
+  //     expect(JSON.parse(persistentEvents[2].param).isPartialErased).toBe(true);
+  //   });
+  // });
 
   
 });
