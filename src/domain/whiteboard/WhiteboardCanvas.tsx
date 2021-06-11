@@ -239,7 +239,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   }, [canvas, eventController, generatedBy]);
 
   const getObjects = useCallback(() => {
-    console.log("getting?")
+    
     const objects = canvas?.getObjects().map((object) => {
       return object.toJSON(['basePath']);
     });
