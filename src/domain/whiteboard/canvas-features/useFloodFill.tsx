@@ -133,6 +133,10 @@ export const useFloodFill = (
       // Change stroke and fill to provisional colors to be identified
       changeStrokeAndFill(event.target, differentStroke, differentFill)
       if(event.target && is3DShape(event.target as ICanvasObject)) return
+      event.target.set({
+        stroke: differentStroke,
+        fill: differentFill,
+      });
 
       // Change canvas background to a provional color to be identified
       canvas.backgroundColor = differentBackground;
@@ -147,6 +151,10 @@ export const useFloodFill = (
       if (clickedColor === differentFill || isTesting) {
         // If user click inside of the shape
         changeStrokeAndFill(event.target, originalStroke, floodFill)
+        event.target.set({
+          fill: floodFill,
+          stroke: originalStroke,
+        });
 
         canvas.discardActiveObject();
         canvas.backgroundColor = originalBackground;
@@ -180,19 +188,19 @@ export const useFloodFill = (
       } else if (clickedColor === differentStroke) {
         // If user click in the border of the shape
         changeStrokeAndFill(event.target, originalStroke, originalFill)
-        // event.target.set({
-        //   stroke: originalStroke,
-        //   fill: originalFill,
-        // });
+        event.target.set({
+          stroke: originalStroke,
+          fill: originalFill,
+        });
 
         canvas.backgroundColor = originalBackground;
       } else {
         // If user click outside of the shape
         changeStrokeAndFill(event.target, originalStroke, originalFill)
-        // event.target.set({
-        //   stroke: originalStroke,
-        //   fill: originalFill,
-        // });
+        event.target.set({
+          stroke: originalStroke,
+          fill: originalFill,
+        });
 
         canvas.backgroundColor = originalBackground;
 

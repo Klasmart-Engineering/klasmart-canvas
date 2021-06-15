@@ -17,7 +17,7 @@ const studentPermissions = {
  */
 const initialState: IUser[] = [
   {
-    id: "1",
+    id: "teacher",
     name: 'William',
     role: 'teacher',
     permissions: teacherPermissions,
