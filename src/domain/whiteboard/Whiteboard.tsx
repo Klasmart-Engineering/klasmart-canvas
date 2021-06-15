@@ -47,7 +47,6 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
    */
   useEffect(() => {
     const keydownHandler = (event: Event) => {
-      console.log((event as ICanvasKeyboardEvent).key)
       if (
         (event as ICanvasKeyboardEvent).key === 'Backspace' &&
         (event.target as HTMLElement).nodeName !== 'TEXTAREA'

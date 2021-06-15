@@ -43,8 +43,9 @@ function SpecialButton(props: ISpecialButton) {
         !selected ? 'unselected-button' : '',
       ].join(' ')}
       onClick={handleClick}
+      data-testid={'special-button-'+id}
     >
-      <Icon style={style} />
+      <Icon data-testid={'special-button-icon-'+id} style={style} />
     </button>
   );
 }

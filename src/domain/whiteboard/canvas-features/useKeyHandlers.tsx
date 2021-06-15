@@ -42,7 +42,6 @@ export const useKeyHandlers = (
    * */
   const keyDownHandler = useCallback(
     (e: Event) => {
-      console.log(e)
       if (instanceId !== activeCanvas.current) return;
 
       if (!(permissions.undoRedo || allToolbarIsEnabled)) return;

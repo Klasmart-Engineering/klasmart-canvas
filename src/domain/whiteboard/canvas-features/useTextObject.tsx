@@ -264,6 +264,7 @@ export const useTextObject = (
     let textboxCopy: IText;
 
     if (textIsActive) {
+      
       /**
        * Entering to edit a text object
        * Textbox transformed in IText
@@ -337,6 +338,7 @@ export const useTextObject = (
             target: e.target,
             id: (e.target as ICanvasObject).id as string,
           };
+          console.log(payload)
           eventSerializer.push('textEdit', payload);
         } else {
           const payload: ObjectEvent = {

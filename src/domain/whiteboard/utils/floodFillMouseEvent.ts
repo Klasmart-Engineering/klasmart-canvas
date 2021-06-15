@@ -175,9 +175,9 @@ export const floodFillMouseEvent = async (
 
   if (
     // @ts-ignore - TS is ignoring previous error throw if Canvas is undefined.
-    canvas.width - data.width / 2 <= 4 &&
+    (canvas.width - data.width) / 2 <= 4 &&
     // @ts-ignore - TS is ignoring previous error throw if Canvas is undefined.
-    canvas.height - data.height / 2 <= 4
+    (canvas.height - data.height) / 2 <= 4
   ) {
     changeBackgroundColor(
       canvas,
