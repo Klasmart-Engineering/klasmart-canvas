@@ -14,7 +14,8 @@ test('should set useClearWhiteboardSelf as a function', () => {
       // @ts-ignore
       canvas,
       'test',
-      'test'))
+      'test', 
+      true))
   );
   expect(typeof result.current).toBe('function');
 });
