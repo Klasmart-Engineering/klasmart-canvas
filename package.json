@@ -11,7 +11,7 @@
     "@reduxjs/toolkit": "^1.5.0",
     "@types/tinycolor2": "^1.4.2",
     "babel-preset-react-app": "^10.0.0",
-    "canvas": "^2.6.1",
+    "canvas": "^2.8.0",
     "cross-env": "^7.0.3",
     "d3-path": "^2.0.0",
     "express": "^4.17.1",
@@ -59,6 +59,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^18.0.0",
     "@rollup/plugin-image": "^2.0.6",
+    "@testing-library/dom": "^7.31.0",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/react-hooks": "^3.3.0",

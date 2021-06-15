@@ -465,6 +465,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
         Picale bro
       </button>
       <canvas
+        data-testid="canvas"
         width={pixelWidth}
         height={pixelHeight}
         id={instanceId}

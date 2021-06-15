@@ -169,6 +169,7 @@ function ToolbarSelector(props: IToolbarSelector) {
   return (
     <div className="selector-container" style={selectorContainerStyle}>
       <button
+        data-testid={'toolbar-button-'+selectedOption.id}
         title={selectedOption.title}
         ref={buttonRef}
         style={toolbarSelectorStyle}

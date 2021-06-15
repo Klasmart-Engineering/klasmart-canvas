@@ -27,8 +27,6 @@ function AuthMenu(props: {
   userId: string;
   [key: string]: any
 }) {
-  console.log('PROPS:::::', props);
-  console.log('USER ID: ', props.userId);
   const { userId } = props;
   const user = (props.users as IUser[]).find(u => u.id === props.userId)
   const isTeacher = (user && user.role === 'teacher') ?? false;

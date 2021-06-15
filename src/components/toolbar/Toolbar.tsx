@@ -723,7 +723,7 @@ function Toolbar(props: {
   );
 
   return (
-    <div style={toolbarContainerStyle}>
+    <div style={toolbarContainerStyle} data-testid="toolbar">
       <div style={toolbarStyle}>
         <ToolbarSection>
           {toolElements
