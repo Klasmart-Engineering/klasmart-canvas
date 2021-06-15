@@ -8,7 +8,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import { useSharedEventSerializer } from '../SharedEventSerializerProvider';
 import { ObjectEvent } from '../event-serializer/PaintEventSerializer';
 import { useEffect } from 'react';
-import { UserInfoTooltip } from '../brushes/classes/userInfoTooltip';
+import { UserInfoTooltip } from '../utils/userInfoTooltip'
 import { DialogActions, Button } from '@material-ui/core';
 
 export interface ISetUserInfoToDisplayModal {
