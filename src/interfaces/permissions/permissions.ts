@@ -17,4 +17,5 @@ export interface IPermissions {
   backgroundColor: boolean;
   setUserInfoToDisplay: boolean;
   cursorPointer: boolean;
+  shape3d: boolean
 }

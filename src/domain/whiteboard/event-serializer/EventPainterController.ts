@@ -114,8 +114,10 @@ export class EventPainterController extends EventEmitter
           this.emit('brushTypeChanged', data.id, data.target);
           break;
         }
-        default:
+        case 'three': {
+          this.emit('three', data.id, data.objectType, data.target);
           break;
+        }
       }
     };
 
@@ -297,6 +299,18 @@ export class EventPainterController extends EventEmitter
       case 'cursorPointer':
         this.cursorPointer(event.id, target);
         break;
+       case 'three':
+        // console.log(event, target)
+        // event
+        //id: "teacher"
+        // objectType: "creating3d"
+        // param: ""cube""
+        // type: "three"
+        //target
+        //cube
+        this.three(event.id, event.objectType, target)
+        break;
+
     }
   }
 
@@ -308,13 +322,26 @@ export class EventPainterController extends EventEmitter
       JSON.stringify({ id, eventType: 'setUserInfoToDisplay', target })
     );
   }
+  
+  private three(id: string, objectType: string, target: ICanvasObject) {
+
+    this.emit('three', id, objectType, target);
+    if (!this.ws?.readyState) return;this.ws?.send(
+      JSON.stringify({ 
+        id,
+        objectType,
+        eventType: 'three',
+        target,
+       })
+    );
+
+  }
 
   private textEdit(id: string, target: ICanvasObject) {
     this.emit('textEdit', id, target);
 
     // TEMPORARY for realtime testing purposes.
-    if (!this.ws?.readyState) return;
-    this.ws?.send(
+    if (!this.ws?.readyState) return;this.ws?.send(
       JSON.stringify({ id, eventType: 'textEdit', target: { ...target, id } })
     );
   }

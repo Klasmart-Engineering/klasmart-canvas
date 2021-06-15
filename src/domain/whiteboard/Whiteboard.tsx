@@ -15,6 +15,8 @@ import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardConta
 import { Provider } from 'react-redux';
 import store from './redux/store';
 import AuthMenu from '../../components/AuthMenu';
+import Canvas3d from './three/Canvas3d';
+import Canvas3dSync from './three/Canvas3dSync';
 
 const users = store.getState().usersState;
 
@@ -95,6 +97,19 @@ const Whiteboard: FunctionComponent<Props> = ({ updateCanvasAreCreated }) => {
               >
                 <button>{user.role}</button>
               </WhiteboardCanvas>
+              <Canvas3d 
+                isOwn={true}
+                canvasId={user.id+"-root"}
+                userId={user.id}
+                ownerId={user.id}
+                width={whiteboardWidth}
+                height={whiteboardHeight}
+              />
+              <Canvas3dSync 
+              userId={user.id}
+              width={whiteboardWidth}
+              height={whiteboardHeight}
+              />
             </WhiteboardContainer>
           </div>
         </Provider>

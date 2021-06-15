@@ -13,4 +13,12 @@ export const DEFAULT_VALUES = {
   IS_DRAWING: false,
   DISPLAY_USER_INFO_OPTION: 'none',
   SELECTED_TOOL: 'pointers',
+  IS_3D_MODAL_OPEN: false,
+  IS_3D_ACTIVE: false,
+  SHAPE_3D: 'cube',
+  REDRAWING_3D: false,
+  EDITING_3D: false,
+  CREATING_3D: false,
+  PAINTING_3D: false,
+  OUT_OF_RANGE: 999999
 };

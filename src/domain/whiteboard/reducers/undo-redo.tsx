@@ -7,6 +7,7 @@ import {
   STATES_LIMIT,
   CANVAS_OBJECT_PROPS,
 } from '../../../config/undo-redo-values';
+import { is3DShape } from '../utils/shapes';
 
 export const UNDO = 'CANVAS_UNDO';
 export const REDO = 'CANVAS_REDO';
@@ -279,6 +280,43 @@ const spliceEvents = (
 };
 
 /**
+ * Get Steps for jumping from or to, undo/redo. It will be always 1 for groups and 2d objects 
+ * It will be 2 if the event object of the new state is 3d due to the 3d need of redrawing (remove, add) on every 2d step.
+ * @param {CanvasHistoryState} state 
+ * @param {string} sense forward or backward
+ */
+const getSteps = (state: CanvasHistoryState, sense: 'forward' | 'backward') => {
+
+  const backOrForwardStateIsValid = (backOrForwardIndex: number) => {
+    return state.events[backOrForwardIndex] && 
+    state.events[backOrForwardIndex].type && 
+    state.events[backOrForwardIndex].event && 
+    (state.events[backOrForwardIndex].event as any).hasOwnProperty("id") && 
+    (state.events[backOrForwardIndex].event as any).id.includes(':3D:')
+  }
+
+  let steps = 1 
+  let backOrForwardIndex = sense === 'backward' ? state.eventIndex - 1 : state.eventIndex + 1;
+  
+  if (
+    backOrForwardStateIsValid(backOrForwardIndex) && 
+    state.events[backOrForwardIndex].type === 'removed'
+  ) {
+    const threeObjectId = (state.events[backOrForwardIndex].event as any).id
+    backOrForwardIndex = sense === 'backward' ? backOrForwardIndex -= 1 : backOrForwardIndex += 1;
+    if (
+      backOrForwardStateIsValid(backOrForwardIndex) && 
+      state.events[backOrForwardIndex].type === 'added' &&
+      threeObjectId === (state.events[backOrForwardIndex].event as any).id
+    ) {
+      steps = 2 
+    }
+  }
+
+  return steps
+}
+
+/**
  * History state reducer.
  * @param state Canvas state.
  * @param action Action
@@ -339,7 +377,7 @@ const reducer = (
         activeState: currentState,
         otherObjects: objectStringifier(otherObjects),
       };
-
+      
       events = spliceEvents(state.eventIndex, events);
       events = limitValidator(events, STATES_LIMIT) as IUndoRedoEvent[];
 
@@ -456,7 +494,9 @@ const reducer = (
         return state;
       }
 
-      let eventIndex = state.eventIndex - 1;
+      const steps = getSteps(state, 'backward')
+
+      let eventIndex = state.eventIndex - steps;
 
       if (
         state.events[state.eventIndex] &&
@@ -465,15 +505,15 @@ const reducer = (
         // This is a grouped event action, determine previous
         // event index prior to grouped event.
         eventIndex = determineNewIndex(
-          state.eventIndex - 1,
-          state.events[state.eventIndex - 1].eventId as string,
+          state.eventIndex - steps,
+          state.events[state.eventIndex - steps].eventId as string,
           state.events
         );
       }
 
       let activeStateIndex =
         state.activeStateIndex !== null && state.activeStateIndex >= 1
-          ? state.activeStateIndex - 1
+          ? state.activeStateIndex - steps
           : null;
 
       if (activeStateIndex === null && state.states.length === STATES_LIMIT) {
@@ -506,10 +546,13 @@ const reducer = (
 
     // Steps forward to more recent state.
     case REDO: {
+
+      const steps = getSteps(state, 'forward')
+      
       // If no future states, return current state.
       if (
         state.activeStateIndex !== null &&
-        state.activeStateIndex + 1 === state.states.length
+        state.activeStateIndex + steps === state.states.length
       ) {
         return state;
       }
@@ -518,23 +561,23 @@ const reducer = (
         return state;
       }
 
-      let eventIndex = state.eventIndex + 1;
+      let eventIndex = state.eventIndex + steps;
       if (
-        state.events[state.eventIndex + 1] &&
-        state.events[state.eventIndex + 1].eventId
+        state.events[state.eventIndex + steps] &&
+        state.events[state.eventIndex + steps].eventId
       ) {
         // This is a grouped event action, determine previous
         // event index prior to grouped event.
         eventIndex = determineNewRedoIndex(
-          state.eventIndex + 1,
-          state.events[state.eventIndex + 1].eventId as string,
+          state.eventIndex + steps,
+          state.events[state.eventIndex + steps].eventId as string,
           state.events
         );
       }
 
       const activeStateIndex =
         state.activeStateIndex !== null
-          ? (state.activeStateIndex as number) + 1
+          ? (state.activeStateIndex as number) + steps
           : 0;
 
       const activeSelfState =

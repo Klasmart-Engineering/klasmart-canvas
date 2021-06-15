@@ -163,6 +163,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
         return;
 
       payload.isPersistent = true;
+
       const length = remoteEvents.push(payload);
       console.log(`storing simulated persistance events: ${length}`);
 

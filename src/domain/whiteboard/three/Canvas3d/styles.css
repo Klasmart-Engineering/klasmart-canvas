@@ -1,0 +1,11 @@
+.three{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+.three-own{
+    z-index: 1000;
+}
+.three-others{
+    z-index: 999;
+}

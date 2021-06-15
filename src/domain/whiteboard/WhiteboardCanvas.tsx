@@ -43,6 +43,7 @@ import { useFloodFill } from './canvas-features/useFloodFill';
 import { useObjectSelection } from './canvas-features/useObjectSelection';
 import { useTextObject } from './canvas-features/useTextObject';
 import { useAddImage } from './canvas-features/useAddImage';
+import { useAdd3dShape } from './canvas-features/useAdd3dShape'
 import { useChangeLineWidth } from './canvas-features/useChangeLineWidth';
 import { useUndoRedo } from './canvas-features/useUndoRedo';
 import useSynchronizedBrushTypeChanged from './synchronization-hooks/useSynchronizedBrushTypeChanged';
@@ -55,6 +56,9 @@ import { useCopy } from './canvas-features/useCopy';
 import { useStampFeature } from './canvas-features/useStampFeature';
 import useSynchronizedSendStamp from './synchronization-hooks/useSynchronizedSendStamp';
 import { useObjectHover } from './canvas-features/useObjectHover';
+import { use2To3d } from './canvas-features/use2To3d';
+import useSynchronized3d from './synchronization-hooks/useSynchronized3d';
+
 
 /**
  * @field instanceId: Unique ID for this canvas.
@@ -137,6 +141,9 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
     setLocalBackground,
     setLocalImage,
     activeTool,
+    setGroupRedrawing3dStatus,
+    set3dActive,
+    setRedrawing3dObjects  
   } = useContext(WhiteboardContext) as IWhiteboardContext;
 
   const { dispatch: undoRedoDispatch } = UndoRedo(
@@ -295,8 +302,20 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   // useEffects and logic for manage image adding feature
   useAddImage(canvas as fabric.Canvas, userId);
 
+  // useEffects and logic for manage image adding feature
+  useAdd3dShape(canvas as fabric.Canvas, userId);
+
+  // useEffects and logic for manage image adding feature
+  use2To3d(canvas as fabric.Canvas, userId)
+
   // useEffects and logic for manage line width changes in objects
-  useChangeLineWidth(canvas as fabric.Canvas, userId, undoRedoDispatch);
+  useChangeLineWidth(
+    canvas as fabric.Canvas, 
+    userId, undoRedoDispatch,
+    setGroupRedrawing3dStatus,
+    set3dActive,
+    setRedrawing3dObjects  
+  );
 
   // useEffects and logic for manage undo/redo feature
   useUndoRedo(canvas as fabric.Canvas, userId, undoRedoDispatch);
@@ -416,6 +435,7 @@ const WhiteboardCanvas: FunctionComponent<Props> = ({
   useSynchronizedCursorPointer(canvas, userId, filterIncomingEvents);
   useSynchronizedBackgroundColorChanged(filterIncomingEvents);
   useSynchronizedSendStamp(canvas, userId, filterIncomingEvents);
+  useSynchronized3d(userId)
 
   // NOTE: Register canvas actions with context.
   useEffect(() => {

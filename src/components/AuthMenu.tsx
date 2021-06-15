@@ -57,10 +57,12 @@ function AuthMenu(props: {
     clearWhiteboard,
     downloadCanvas,
     uploadImage,
-    backgroundColor
+    backgroundColor,
+    shape3d
   } = props.permissions;
 
   const handleToolbarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    
     props.updatePermissions(event.target.name, event.target.checked);
 
     const payload = {
@@ -69,6 +71,8 @@ function AuthMenu(props: {
         [event.target.name]: event.target.checked,
       },
     };
+
+    console.log(payload)
 
     eventSerializer?.push('setToolbarPermissions', payload);
   };
@@ -143,6 +147,11 @@ function AuthMenu(props: {
       checked: uploadImage,
       name: 'uploadImage',
       label: 'Upload Image tool',
+    },
+    {
+      checked: shape3d,
+      name: 'shape3d',
+      label: '3D Shape tool',
     },
   ];
 

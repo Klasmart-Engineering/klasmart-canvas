@@ -17,7 +17,8 @@ import { useBrushIsActive } from './hooks/useBrushIsActive';
 import { useEraseType } from './hooks/useEraseType';
 import { useShapesAreSelectable } from './hooks/useShapesAreSelectable';
 import { useShapesAreEvented } from './hooks/useShapesAreEvented';
-import { DEFAULT_VALUES } from '../../config/toolbar-default-values';
+import { DEFAULT_VALUES as TOOLBAR_DEFAULT_VALUES } from '../../config/toolbar-default-values';
+import { DEFAULT_VALUES as THREE_DEFAULT_VALUES } from '../../config/threeD-default-values';
 import { useLineWidth } from './hooks/useLineWidth';
 import { useFloodFill } from './hooks/useFloodFill';
 import { useFloodFillIsActive } from './hooks/useFloodFillIsActive';
@@ -128,20 +129,39 @@ export const WhiteboardProvider = ({
   } = useStampAssignationModal();
 
   const [displayUserInfo, setUserInfoToDisplay] = useState(
-    DEFAULT_VALUES.DISPLAY_USER_INFO_OPTION
+    TOOLBAR_DEFAULT_VALUES.DISPLAY_USER_INFO_OPTION
   );
   const {
     SetUserInfoToDisplayModal,
     openSetUserInfoToDisplayModal,
   } = useSetUserInfoToDisplayModal(setUserInfoToDisplay);
 
-  const [isDrawing, updateIsDrawing] = useState(DEFAULT_VALUES.IS_DRAWING);
+  const [isDrawing, updateIsDrawing] = useState(TOOLBAR_DEFAULT_VALUES.IS_DRAWING);
   const [selectedTool, updateSelectedTool] = useState(
-    DEFAULT_VALUES.SELECTED_TOOL
+    TOOLBAR_DEFAULT_VALUES.SELECTED_TOOL
   );
 
+  /**
+   * States Hooks for handling Whiteboard 3D Context State
+   */
+  const [ is3dActive, set3dActive] = useState(TOOLBAR_DEFAULT_VALUES.IS_3D_ACTIVE);
+  const [ is3dSelected, set3dSelected] = useState(THREE_DEFAULT_VALUES.IS_3D_SELECTED);
+  const [ new3dShape, setNew3dShape] = useState(THREE_DEFAULT_VALUES.NEW_SHAPE);
+  const [ new3dImage, set3dImage ] = useState(THREE_DEFAULT_VALUES.NEW_IMAGE)
+  const [ json3D, set3dJson ] = useState(THREE_DEFAULT_VALUES.JSON_3D)
+  const [ redrawing3d, setRedrawing3d] = useState(THREE_DEFAULT_VALUES.REDRAWING_3D)
+  const [ groupRedrawing3dStatus, setGroupRedrawing3dStatus] = useState(THREE_DEFAULT_VALUES.GROUP_REDRAWING_3D_STATUS)
+  const [ redrawing3dObjects, setRedrawing3dObjects ] = useState(THREE_DEFAULT_VALUES.REDRAWING_3D_OBJECTS)
+  const [ editing3d, setEditing3d] = useState(THREE_DEFAULT_VALUES.EDITING_3D)
+  const [ creating3d, setCreating3d] = useState(THREE_DEFAULT_VALUES.CREATING_3D)
+  const [ canvas3dPosition, set3dCanvasPosition ] = useState(THREE_DEFAULT_VALUES.CANVAS_POSITION)
+  const [ should3dUpdate, setShould3dUpdate ] = useState(false)
+  const [ rtAdding3dObject, setRtAdding3dObject ] = useState(THREE_DEFAULT_VALUES.ADDING_OBJECT)
+  const [ rtRemoving3dObject, setRtRemoving3dObject ] = useState(THREE_DEFAULT_VALUES.REMOVING_OBJECT)
+  const [ rtMoving3dObject, setRtMoving3dObject ] = useState(THREE_DEFAULT_VALUES.MOVING_OBJECT)
+
   // Provisional (just for change value in Toolbar selectors) they can be modified in the future
-  const [penColor, updatePenColor] = useState(DEFAULT_VALUES.PEN_COLOR);
+  const [penColor, updatePenColor] = useState(TOOLBAR_DEFAULT_VALUES.PEN_COLOR);
   const [eraserIsActive, updateEraserIsActive] = useState(false);
 
   // NOTE: Actions provided by canvas instance somewhere in the DOM.
@@ -217,6 +237,7 @@ export const WhiteboardProvider = ({
 
   const changeBrushTypeAction = useCallback(
     (type: IBrushType) => {
+      //here...
       canvasActions?.changeBrushType(type);
     },
     [canvasActions]
@@ -458,7 +479,37 @@ export const WhiteboardProvider = ({
     eventSerializer,
     eventController,
     activeTool,
-    setActiveTool
+    setActiveTool,
+    is3dActive,
+    set3dActive,
+    new3dShape,
+    setNew3dShape,
+    new3dImage,
+    set3dImage,
+    json3D,
+    set3dJson,
+    redrawing3d,
+    setRedrawing3d,
+    groupRedrawing3dStatus,
+    setGroupRedrawing3dStatus,
+    redrawing3dObjects,
+    setRedrawing3dObjects,
+    editing3d,
+    setEditing3d,
+    creating3d,
+    setCreating3d,
+    canvas3dPosition,
+    set3dCanvasPosition,
+    should3dUpdate,
+    setShould3dUpdate,
+    rtAdding3dObject,
+    setRtAdding3dObject,
+    rtRemoving3dObject,
+    setRtRemoving3dObject,
+    rtMoving3dObject,
+    setRtMoving3dObject,
+    is3dSelected,
+    set3dSelected,
   };
 
   return (

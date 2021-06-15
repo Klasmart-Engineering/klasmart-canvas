@@ -8,13 +8,15 @@ import {
 } from '../event-serializer/PaintEventSerializer';
 import { CanvasAction, SET } from '../reducers/undo-redo';
 import { floodFillMouseEvent } from '../utils/floodFillMouseEvent';
-import { isEmptyShape, isFreeDrawing, isShape } from '../utils/shapes';
+import { isEmptyShape, isFreeDrawing, isShape, is3DShape } from '../utils/shapes';
 import { WhiteboardContext } from '../WhiteboardContext';
 import floodFillCursor from '../../../assets/cursors/flood-fill.png';
 import ICanvasActions from '../canvas-actions/ICanvasActions';
 import { getToolbarIsEnabled } from '../redux/utils';
 import { IPermissions } from '../../../interfaces/permissions/permissions';
 import { ICanvasBrush } from '../../../interfaces/brushes/canvas-brush';
+import { Gradient, IEvent, Pattern } from 'fabric/fabric-impl';
+import from2To3d from '../three/from2to3d';
 
 /**
  * Handles the logic for Flood-fill Feature
@@ -44,7 +46,9 @@ export const useFloodFill = (
     eraseType,
     laserIsActive,
     textIsActive,
-    pointerEvents,
+    set3dJson,
+    set3dActive,
+    setRedrawing3d
   } = useContext(WhiteboardContext);
 
   const paintBucket = `url("${floodFillCursor}") 2 15, default`;
@@ -72,14 +76,34 @@ export const useFloodFill = (
    * @param {fabric.IEvent} event - Event in which mouse down is happening
    */
   const needsFloodFillAlgorithm = (event: fabric.IEvent) => {
+    if(event.target && is3DShape(event.target as ICanvasObject))
+      return false
     return (
-      !event.target ||
+      !event.target || 
       (event.target.get('type') === 'path' && !isEmptyShape(event.target)) ||
       (event.target.get('type') === 'group' &&
         (event.target as ICanvasBrush).basePath) ||
       event.target.get('type') === 'image'
-    );
+      )
   };
+
+  const changeStrokeAndFill = (target: fabric.Object | fabric.Group, stroke: string | undefined, fill: string | Pattern | Gradient | undefined) => {
+    
+    if(target && is3DShape(target as ICanvasObject)){
+      const three = from2To3d(target as ICanvasObject)
+      three.shapeColor = floodFill
+      const threeObjectString = JSON.stringify(three);
+      canvas.remove(target);
+      set3dJson(threeObjectString);
+      setRedrawing3d(true)
+      set3dActive(true);
+    }else{
+      target.set({
+        stroke,
+        fill,
+      });
+    }
+  }
 
   /**
    * Manages the logic for Flood-fill Feature
@@ -107,10 +131,8 @@ export const useFloodFill = (
       const originalBackground = canvas.backgroundColor;
 
       // Change stroke and fill to provisional colors to be identified
-      event.target.set({
-        stroke: differentStroke,
-        fill: differentFill,
-      });
+      changeStrokeAndFill(event.target, differentStroke, differentFill)
+      if(event.target && is3DShape(event.target as ICanvasObject)) return
 
       // Change canvas background to a provional color to be identified
       canvas.backgroundColor = differentBackground;
@@ -120,10 +142,7 @@ export const useFloodFill = (
 
       if (clickedColor === differentFill) {
         // If user click inside of the shape
-        event.target.set({
-          fill: floodFill,
-          stroke: originalStroke,
-        });
+        changeStrokeAndFill(event.target, originalStroke, floodFill)
 
         canvas.discardActiveObject();
         canvas.backgroundColor = originalBackground;
@@ -156,18 +175,20 @@ export const useFloodFill = (
         eventSerializer?.push('colorChanged', payload);
       } else if (clickedColor === differentStroke) {
         // If user click in the border of the shape
-        event.target.set({
-          stroke: originalStroke,
-          fill: originalFill,
-        });
+        changeStrokeAndFill(event.target, originalStroke, originalFill)
+        // event.target.set({
+        //   stroke: originalStroke,
+        //   fill: originalFill,
+        // });
 
         canvas.backgroundColor = originalBackground;
       } else {
         // If user click outside of the shape
-        event.target.set({
-          stroke: originalStroke,
-          fill: originalFill,
-        });
+        changeStrokeAndFill(event.target, originalStroke, originalFill)
+        // event.target.set({
+        //   stroke: originalStroke,
+        //   fill: originalFill,
+        // });
 
         canvas.backgroundColor = originalBackground;
 
@@ -259,8 +280,7 @@ export const useFloodFill = (
       );
     };
 
-    const teacherHasPermission =
-      allToolbarIsEnabled && floodFillIsActive;
+    const teacherHasPermission = allToolbarIsEnabled && floodFillIsActive;
 
     const studentHasPermission =
       floodFillIsActive && toolbarIsEnabled && serializerToolbarState.floodFill;
@@ -284,7 +304,7 @@ export const useFloodFill = (
       }
 
       // Click on shape object
-      if (event.target && isEmptyShape(event.target)) {
+      if (event.target && (isEmptyShape(event.target) || is3DShape(event.target) ) ) {
         floodFillInShape(event);
       }
 
@@ -298,9 +318,7 @@ export const useFloodFill = (
     }
 
     return () => {
-      if (pointerEvents) {
-        canvas.defaultCursor = 'default';
-      }
+      canvas.defaultCursor = 'default';
 
       // Returning objects to their normal state
       if (!floodFillIsActive && eraseType !== 'object') {
@@ -329,10 +347,9 @@ export const useFloodFill = (
     isLocalObject,
     laserPointerIsActive,
     paintBucket,
-    pointerEvents,
     serializerToolbarState.floodFill,
     textIsActive,
     undoRedoDispatch,
-    userId,
+    userId
   ]);
 };

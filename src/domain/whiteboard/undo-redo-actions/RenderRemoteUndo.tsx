@@ -57,7 +57,8 @@ export const RenderRemoteUndo = (
   
     let joinedIds = nextObject.target.joinedIds as string[];
     const id = nextObject.id;
-    const currentIds = currentObject?.target?.joinedIds as string[] | [];
+    if(!currentObject || !currentObject.target) return
+    const currentIds = currentObject.target.joinedIds as string[];
     const objects = JSON.parse(currentState).objects;
 
     if (currentIds && joinedIds) {
@@ -97,6 +98,8 @@ export const RenderRemoteUndo = (
     }
   }
 
+  if(typeof nextEvent === "undefined") return 
+  
   switch (nextEvent.type) {
     case 'added': {
 

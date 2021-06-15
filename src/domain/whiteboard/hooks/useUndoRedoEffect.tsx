@@ -36,6 +36,7 @@ export const UndoRedo = (
 
     // Rerenders local canvas when an undo or redo event has been executed.
     if (state.actionType === UNDO || state.actionType === REDO) {
+      // console.log("undo/redo", state.actionType)
       RenderLocalUndoRedo(
         canvas,
         instanceId,
