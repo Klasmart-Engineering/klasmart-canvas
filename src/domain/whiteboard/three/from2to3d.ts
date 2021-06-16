@@ -23,6 +23,7 @@ const from2To3d = (canvasObject: ICanvasObject) => {
     top: canvasObject.top as number,
   };
   threeObject.isFlipped = canvasObject.flipX
+  threeObject.object2dId = canvasObject.id
   return threeObject;
 };
 

@@ -53,6 +53,7 @@ export const useAdd3dShape = (canvas: fabric.Canvas, userId: string) => {
         objectImage.scaleToHeight(three.canvasSize.height);
         objectImage.scaleToWidth(three.canvasSize.width);
         
+        console.log(three.object2dId)
         objectImage.id = three.object2dId ?? `${userId}:3D:${uuidv4()}`;
         objectImage.threeObject = JSON.stringify(three);
         objectImage.target = objectImage;

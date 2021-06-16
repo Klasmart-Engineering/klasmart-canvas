@@ -158,7 +158,8 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
       if (
         nonpersistentEventTypes.includes(payload.type) ||
         payload.id?.split(':')[1] === 'cursor' ||
-        payload.avoidPersistentStoring
+        payload.avoidPersistentStoring || 
+        payload.type === 'three'
       )
         return;
 
@@ -172,6 +173,9 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
       payload.isPersistent = true;
       remoteEvents.push(payload);
       
+      if(remoteEvents.length > 100){
+        remoteEvents.splice(0, 10)
+      }
       try {
         window.sessionStorage.setItem(
           'canvas:simulated:events',
@@ -182,7 +186,7 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
          * Added to avoid app crash when huge images are uploaded and storage quota is exceeded.
          * In the future it would be better to optimize the image size when it's uploaded.
          */
-        console.warn(error)
+        window.sessionStorage.clear()
       }
       
     };
