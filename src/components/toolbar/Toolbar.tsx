@@ -130,6 +130,8 @@ function Toolbar(props: {
    */
   function handleToolsElementClick(tool: string) {
     
+    updateEraseType(null)
+
     if (tool === ELEMENTS.POINTERS_TOOL && !cursorPointerToolIsActive) {
       return;
     }
