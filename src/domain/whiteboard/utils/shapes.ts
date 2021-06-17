@@ -95,7 +95,7 @@ export const penPointsMapping = (
  * @param {fabric.Object} object - object to check
  */
 export const is3DShape = (object: ICanvasObject) => {
-  return typeof object.threeObject !== "undefined";
+  return object.hasOwnProperty("threeObject");
 };
 
 /**
