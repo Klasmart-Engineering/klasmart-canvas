@@ -193,6 +193,7 @@ export const floodFillMouseEvent = async (
   let target: ICanvasObject;
 
   fabric.Image.fromURL(tempData, async (image: fabric.Image) => {
+    console.log(tempData)
     try {
       target = await updateAfterCustomFloodFill(
         id as string,
@@ -212,7 +213,7 @@ export const floodFillMouseEvent = async (
       };
 
       const eventData = { event: payload, type: 'added' };
-
+      console.log(target, canvas.getObjects())
       undoRedoDispatch({
         type: SET,
         payload: canvas.getObjects(),
