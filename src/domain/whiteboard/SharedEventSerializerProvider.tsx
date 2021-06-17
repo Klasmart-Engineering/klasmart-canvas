@@ -167,7 +167,8 @@ export const SharedEventSerializerContextProvider: FunctionComponent<Props> = ({
        * If Clearing, cleaning sessionStorage 
        */
       if(payload.param && JSON.parse(payload.param).hasOwnProperty("strategy") && (JSON.parse(payload.param).strategy === "allowClearAll" || JSON.parse(payload.param).strategy === "allowClearMyself")){
-        window.sessionStorage.removeItem('canvas:simulated:events')
+        window.sessionStorage.clear()
+        return
       }
 
       payload.isPersistent = true;
