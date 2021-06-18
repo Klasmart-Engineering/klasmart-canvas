@@ -1,19 +1,10 @@
 import { INewStamp, IPortfolio } from '../../../interfaces/portfolio/portfolio';
-import { ADD_STAMP } from './actions';
+import { ADD_PORTFOLIO, ADD_STAMP } from './actions';
 
 /**
  * Default portfolio state.
  */
-const initialState: IPortfolio[] = [
-  {
-    studentId: 'student',
-    studentStamps: [],
-  },
-  {
-    studentId: 'student2',
-    studentStamps: [],
-  },
-];
+const initialState: IPortfolio[] = [];
 
 /**
  * Reducer
@@ -22,11 +13,19 @@ const initialState: IPortfolio[] = [
  */
 export function portfolioReducer(
   state: IPortfolio[] = initialState,
-  action: { type: string; payload: INewStamp }
+  action: { type: string; payload: INewStamp | IPortfolio }
 ) {
   switch (action.type) {
+    case ADD_PORTFOLIO:
+      
+      const portfolios = state
+      const { studentId: id  } = action.payload;
+      portfolios.push({studentId: id, studentStamps:[] })
+      
+      return portfolios
+
     case ADD_STAMP:
-      const { studentId, stamp } = action.payload;
+      const { studentId, stamp } = action.payload as INewStamp;
 
       const newState = state.map((portfolio) => {
         // Finding for the element with the received studentId

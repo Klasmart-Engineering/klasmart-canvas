@@ -14,12 +14,18 @@ import { WhiteboardContainer } from '../../components/whiteboard/WhiteboardConta
 // Redux
 import { Provider } from 'react-redux';
 import store from './redux/store';
+import { ADD_PORTFOLIO } from './redux/actions';
 import AuthMenu from '../../components/AuthMenu';
 import Canvas3d from './three/Canvas3d';
 import Canvas3dSync from './three/Canvas3dSync';
 
 const users = store.getState().usersState;
-
+for(let user of users){
+  store.dispatch({
+    type: ADD_PORTFOLIO,
+    payload: { studentId: user.id },
+  });
+}
 /**
  * @field updateCanvasAreCreated: When all the canvases were loaded,
  * this function is called to update the flag

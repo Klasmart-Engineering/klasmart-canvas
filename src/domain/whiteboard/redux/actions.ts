@@ -16,4 +16,5 @@ export const UPDATE_DOWNLOAD_CANVAS = 'downloadCanvas';
 export const UPDATE_UPLOAD_IMAGE = 'uploadImage';
 export const UPDATE_RECEIVED = 'updateReceived';
 export const ADD_STAMP = 'addStamp';
+export const ADD_PORTFOLIO = 'addPortfolio';
 export const UPDATE_SHAPE_3D = 'shape';
