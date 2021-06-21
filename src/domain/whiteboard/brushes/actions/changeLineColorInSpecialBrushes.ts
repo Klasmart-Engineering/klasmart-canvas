@@ -65,7 +65,7 @@ export const changeLineColorInSpecialBrushes = async (
           newClearRects
         )
         .then((newObject) => {
-          const id = object.id;
+          // const id = object.id;
 
           newObject.set({
             angle: object.angle,
@@ -76,8 +76,8 @@ export const changeLineColorInSpecialBrushes = async (
           });
 
           // Id's are deleted to avoid add and remove event serializing
-          delete object.id;
-          delete newObject.id;
+          // delete object.id;
+          // delete newObject.id;
 
           canvas.remove(object);
           canvas.add(newObject);
@@ -87,9 +87,10 @@ export const changeLineColorInSpecialBrushes = async (
           object = newObject;
 
           // Id is resetted to could synchronize object
-          object.set({
-            id: id,
-          });
+          // object.set({
+          //   id: id,
+          // });
+          // console.log(object)
         });
       break;
 
