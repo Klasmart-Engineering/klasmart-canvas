@@ -118,6 +118,10 @@ export class EventPainterController extends EventEmitter
           this.emit('three', data.id, data.objectType, data.target);
           break;
         }
+        case 'reconstruct': {
+          this.emit('reconstruct', data.id, data.target);
+          break;
+        }
       }
     };
 
@@ -300,14 +304,6 @@ export class EventPainterController extends EventEmitter
         this.cursorPointer(event.id, target);
         break;
        case 'three':
-        // console.log(event, target)
-        // event
-        //id: "teacher"
-        // objectType: "creating3d"
-        // param: ""cube""
-        // type: "three"
-        //target
-        //cube
         this.three(event.id, event.objectType, target)
         break;
 
