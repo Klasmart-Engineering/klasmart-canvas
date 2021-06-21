@@ -55,6 +55,7 @@ class Canvas3d extends React.Component<ICanvas3dProps, ICanvas3dState> {
    * Initialize the 3d rederer, camera, scene and shape.
    */
   init = () => {
+    this.object2dId = undefined;
     this.setState({ isActive: true });
     this.initRenderer();
     this.initCamera();
