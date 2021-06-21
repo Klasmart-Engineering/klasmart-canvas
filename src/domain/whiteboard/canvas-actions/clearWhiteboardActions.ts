@@ -82,6 +82,16 @@ export const useClearWhiteboardSelf = (
         }
       });
 
+      canvas.backgroundColor = 'transparent'
+      const payload: ObjectEvent = {
+        type: 'background',
+        target: {
+          fill: 'transparent',
+        } as ICanvasObject,
+        id: '',
+      };
+      eventSerializer?.push('colorChanged', payload);
+
       if (canvas?.backgroundImage) {
         const target = {
           // @ts-ignore
@@ -199,6 +209,16 @@ export const useClearWhiteboardClearAll = (
         canvas?.remove(obj);
       }
     });
+
+    canvas.backgroundColor = 'transparent'
+    const payload: ObjectEvent = {
+      type: 'background',
+      target: {
+        fill: 'transparent',
+      } as ICanvasObject,
+      id: '',
+    };
+    eventSerializer?.push('colorChanged', payload);
 
     const target = {
       target: {
