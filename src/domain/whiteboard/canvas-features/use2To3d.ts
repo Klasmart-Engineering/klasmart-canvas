@@ -116,6 +116,7 @@ export const use2To3d = (canvas: fabric.Canvas, userId: string) => {
       if (selection._objects) {
         for (let obj of selection._objects) {
           if (!is3DShape(obj)) isAll3d = false;
+          else selection.set({ hasRotatingPoint: false });
         }
       } else {
         if (!is3DShape(selection)) isAll3d = false;
