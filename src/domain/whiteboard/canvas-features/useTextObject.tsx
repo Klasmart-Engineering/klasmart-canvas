@@ -328,6 +328,9 @@ export const useTextObject = (
       });
 
       /**
+       * Commented to avoid text duplication on text creation/edition
+       */
+      /**
        * Text has been changed is some Text Object in canvas
        */
       canvas?.on('text:changed', (e: IEvent) => {
@@ -336,9 +339,8 @@ export const useTextObject = (
           const payload: ObjectEvent = {
             type: 'textbox',
             target: e.target,
-            id: (e.target as ICanvasObject).id as string,
+            id: userId,
           };
-          console.log(payload)
           eventSerializer.push('textEdit', payload);
         } else {
           const payload: ObjectEvent = {

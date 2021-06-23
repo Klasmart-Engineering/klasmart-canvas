@@ -151,6 +151,7 @@ const useSynchronizedRealtime = (
         fontweight?: number;
       }
     ) => {
+      if(getOwner(userId, id)) return
       if (rt && !rt.isInitiated() && target.type === 'i-text') {
         rt.init(
           canvas as fabric.Canvas,
@@ -179,6 +180,15 @@ const useSynchronizedRealtime = (
       }
     };
   }, [canvas, eventController, shouldHandleRemoteEvent, rt]);
+};
+
+/**
+   *
+   * @param selfId Onwer ID
+   * @param objectId Object ID
+   */
+  const getOwner = (selfId: string, objectId: string) => {
+    return objectId === selfId;
 };
 
 export default useSynchronizedRealtime;
