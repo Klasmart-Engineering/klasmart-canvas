@@ -89,7 +89,8 @@ const useSynchronizedReconstruct = (
             canvas.renderAll.bind(canvas)
           );
 
-          setLocalImage(parsed.backroundImage.src);
+          if(parsed.backroundImage)
+            setLocalImage(parsed.backroundImage.src);
         }
       }
 
