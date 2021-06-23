@@ -134,6 +134,11 @@ const useSynchronizedCursorPointer = (
         if not, will be created
       */
       if (pointerImage) {
+        /**
+         * Fix to avoid double cursor
+         */
+        (document.getElementsByClassName('upper-canvas')[0] as HTMLElement).style.cursor = "none";
+        
         pointerImage.set({ top, left });
         canvas?.renderAll();
       } else {
