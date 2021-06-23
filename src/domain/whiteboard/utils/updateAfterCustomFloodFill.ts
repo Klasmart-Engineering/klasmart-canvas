@@ -54,7 +54,7 @@ export const updateAfterCustomFloodFill = async (
     canvas
   );
   
-  objectsAtPoint = objectsAtPoint.filter(o => !o.hasOwnProperty('shapeType'))
+  // objectsAtPoint = objectsAtPoint.filter(o => !o.hasOwnProperty('shapeType'))
   
   let singleObject = new fabric.Group(objectsAtPoint);
   let joinedIds: string[] = [];
