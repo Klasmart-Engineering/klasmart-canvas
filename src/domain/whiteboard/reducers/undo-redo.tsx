@@ -291,7 +291,7 @@ const getSteps = (state: CanvasHistoryState, sense: 'forward' | 'backward') => {
     return state.events[backOrForwardIndex] && 
     state.events[backOrForwardIndex].type && 
     state.events[backOrForwardIndex].event && 
-    (state.events[backOrForwardIndex].event as any).hasOwnProperty("id") && 
+    (state.events[backOrForwardIndex].event as any).id && 
     (state.events[backOrForwardIndex].event as any).id.includes(':3D:')
   }
 
