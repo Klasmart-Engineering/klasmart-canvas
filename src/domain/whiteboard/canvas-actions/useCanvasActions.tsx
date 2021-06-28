@@ -578,6 +578,7 @@ export const useCanvasActions = (
         eraser = null;
       }
 
+      canvas?.off('mouse:down');
       canvas?.off('mouse:up');
       canvas?.off('mouse:over');
       canvas?.off('path:created');
