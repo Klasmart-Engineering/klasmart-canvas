@@ -1,4 +1,4 @@
-import React, { CSSProperties } from 'react';
+import React from 'react';
 import '../../assets/style/whiteboard.css';
 import { WhiteboardProvider } from './WhiteboardContext';
 import Toolbar from '../../components/toolbar/Toolbar';
@@ -17,7 +17,7 @@ const student = {
 };
 
 function Whiteboard() {
-  const canvasStyle: CSSProperties = {
+  const canvasStyle: React.CSSProperties = {
     border: '2px blue solid',
     position: 'absolute',
     top: '0px',

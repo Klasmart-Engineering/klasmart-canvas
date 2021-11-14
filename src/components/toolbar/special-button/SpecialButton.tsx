@@ -1,4 +1,4 @@
-import React, { CSSProperties } from 'react';
+import React from 'react';
 import '../../../assets/style/toolbar-button.css';
 import ISpecialButton from '../../../interfaces/toolbar/toolbar-special-elements/special-button';
 
@@ -22,7 +22,7 @@ function SpecialButton(props: ISpecialButton) {
     onClick(id);
   }
 
-  const toolbarButtonStyle: CSSProperties = {
+  const toolbarButtonStyle: React.CSSProperties = {
     border: 'none',
     width: '36px',
     display: 'flex',

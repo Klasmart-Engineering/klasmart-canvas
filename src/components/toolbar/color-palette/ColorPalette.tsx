@@ -4,7 +4,6 @@ import SpecialButton from '../special-button/SpecialButton';
 import { OverridableComponent } from '@material-ui/core/OverridableComponent';
 import { SvgIconTypeMap } from '@material-ui/core';
 import '../../../assets/style/color-palette.css';
-import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
 interface IColorPalette {
   Icon: OverridableComponent<SvgIconTypeMap<{}, 'svg'>>;
@@ -30,7 +29,7 @@ function ColorPalette(props: IColorPalette) {
     handleColorChange(color);
   }
 
-  const colorPaletteStyle: CSSProperties = {
+  const colorPaletteStyle: React.CSSProperties = {
     display: "grid",
     gridTemplateColumns: "repeat(6, 1fr)",
     rowGap: "2px",

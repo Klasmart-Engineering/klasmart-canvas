@@ -1,4 +1,3 @@
-import { CSSProperties } from '@material-ui/core/styles/withStyles';
 import React from 'react';
 
 interface IToolbarSectionComponent {
@@ -10,7 +9,7 @@ interface IToolbarSectionComponent {
  * @param children - content that the TollbarSection will have inside
  */
 function ToolbarSection({ children }: IToolbarSectionComponent) {
-  const toolbarSectionStyle: CSSProperties = {
+  const toolbarSectionStyle: React.CSSProperties = {
     width: '52px',
     display: 'flex',
     flexDirection: 'column',

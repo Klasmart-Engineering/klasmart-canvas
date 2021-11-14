@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, CSSProperties } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import SpecialButton from '../special-button/SpecialButton';
 import '../../../assets/style/toolbar-selector.css';
@@ -104,12 +104,12 @@ function SpecialSelector(props: ISpecialSelector) {
     }
   }
 
-  const selectorContainerStyle: CSSProperties = {
+  const selectorContainerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'row',
   };
 
-  const toolbarSelectorStyle: CSSProperties = {
+  const toolbarSelectorStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -122,12 +122,12 @@ function SpecialSelector(props: ISpecialSelector) {
     outline: 0,
   };
 
-  const arrowStyle: CSSProperties = {
+  const arrowStyle: React.CSSProperties = {
     width: '20px',
     height: '20px',
   };
 
-  const optionsContainerStyle: CSSProperties = {
+  const optionsContainerStyle: React.CSSProperties = {
     position: 'absolute',
     margin: '0 0 8px 56px',
     padding: '2px',
@@ -137,14 +137,14 @@ function SpecialSelector(props: ISpecialSelector) {
     zIndex: 2,
   };
 
-  const optionsStyle: CSSProperties = {
+  const optionsStyle: React.CSSProperties = {
     display: 'grid',
     rowGap: '2px',
     padding: '2px 2px 4px 0',
     gridAutoColumns: 'repeat(6, auto)',
   };
 
-  const iconContainerStyle: CSSProperties = {
+  const iconContainerStyle: React.CSSProperties = {
     width: '100%',
     display: 'flex',
     alignContent: 'center',

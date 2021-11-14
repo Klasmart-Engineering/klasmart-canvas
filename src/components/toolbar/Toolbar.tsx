@@ -15,7 +15,6 @@ import IColorPalette from '../../interfaces/toolbar/toolbar-selector/color-palet
 import IBasicSpecialSelector from '../../interfaces/toolbar/toolbar-special-elements/basic-special-selector';
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
-import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
 // Toolbar Element Available Types
 type ToolbarElementTypes =
@@ -361,14 +360,14 @@ function Toolbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toolbarIsEnabled]);
 
-  const toolbarContainerStyle: CSSProperties = {
+  const toolbarContainerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     width: '120px',
   };
 
-  const toolbarStyle: CSSProperties = {
+  const toolbarStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'column',
     marginTop: '16px',

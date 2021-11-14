@@ -1,4 +1,4 @@
-import { CSSProperties, FunctionComponent, ReactChild, ReactChildren } from 'react';
+import React, { FunctionComponent, ReactChild, ReactChildren } from 'react';
 import '../../assets/style/whiteboard.css';
 import { ScaleMode } from './utils/useFixedAspectScaling';
 /**
@@ -15,7 +15,7 @@ export declare type Props = {
     children?: ReactChild | ReactChildren | null;
     instanceId: string;
     userId: string;
-    initialStyle?: CSSProperties;
+    initialStyle?: React.CSSProperties;
     pointerEvents: boolean;
     pixelWidth: number;
     pixelHeight: number;

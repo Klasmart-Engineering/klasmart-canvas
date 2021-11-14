@@ -3,7 +3,6 @@ import floodFillCursor from '../../assets/cursors/flood-fill.png';
 
 import { v4 as uuidv4 } from 'uuid';
 import React, {
-  CSSProperties,
   FunctionComponent,
   ReactChild,
   ReactChildren,
@@ -66,7 +65,7 @@ export type Props = {
   children?: ReactChild | ReactChildren | null;
   instanceId: string;
   userId: string;
-  initialStyle?: CSSProperties;
+  initialStyle?: React.CSSProperties;
   pointerEvents: boolean;
   pixelWidth: number;
   pixelHeight: number;

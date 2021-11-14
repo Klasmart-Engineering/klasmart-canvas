@@ -5,7 +5,6 @@ import ArrowRightIcon from '@material-ui/icons/ArrowRight';
 import ColorPalette from '../color-palette/ColorPalette';
 import ToolbarButton from '../toolbar-button/ToolbarButton';
 import IToolbarSelectorOption from '../../../interfaces/toolbar/toolbar-selector/toolbar-selector-option';
-import { CSSProperties } from '@material-ui/core/styles/withStyles';
 
 /**
  * Render a ToolbarSelector
@@ -118,12 +117,12 @@ function ToolbarSelector(props: IToolbarSelector) {
     setShowOptions(false);
   }
 
-  const selectorContainerStyle: CSSProperties = {
+  const selectorContainerStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'row',
   };
 
-  const toolbarSelectorStyle: CSSProperties = {
+  const toolbarSelectorStyle: React.CSSProperties = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -136,17 +135,17 @@ function ToolbarSelector(props: IToolbarSelector) {
     outline: 0,
   };
 
-  const iconStyle: CSSProperties = {
+  const iconStyle: React.CSSProperties = {
     width: '24px',
     height: '24px',
   };
 
-  const arrowStyle: CSSProperties = {
+  const arrowStyle: React.CSSProperties = {
     width: '20px',
     height: '20px',
   };
 
-  const optionsContainerStyle: CSSProperties = {
+  const optionsContainerStyle: React.CSSProperties = {
     position: 'absolute',
     margin: '0 0 8px 56px',
     padding: '2px',
@@ -156,7 +155,7 @@ function ToolbarSelector(props: IToolbarSelector) {
     zIndex: 2,
   };
 
-  const optionsStyle: CSSProperties = {
+  const optionsStyle: React.CSSProperties = {
     display: 'grid',
     rowGap: '2px',
     padding: '2px 2px 4px 0',
