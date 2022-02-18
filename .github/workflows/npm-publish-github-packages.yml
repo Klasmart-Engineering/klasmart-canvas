@@ -30,6 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
+      - name: Install xmllint
+        run: sudo apt-get install -y cairo cairo-devel cairomm-devel libjpeg-turbo-devel pango pango-devel pangomm pangomm-devel giflib-devel
       - run: npm i
       - run: cat package-lock.json
       - run: npm run build
