@@ -1,8 +1,9 @@
 {
-  "name": "kidsloop-canvas",
-  "version": "0.5.0",
+  "name": "@KL-Engineering/kidsloop-canvas",
+  "version": "0.5.0-package",
   "private": true,
   "main": "lib/exports.js",
+  "types": "types/index.d.ts",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -52,5 +53,12 @@
     "resize-observer-polyfill": "1.5.1",
     "typescript": "4.4.4",
     "uuid": "8.3.2"
+  },
+  "repository": {
+      "type": "git",
+      "url": "git+https://github.com/KL-Engineering/kidsloop-canvas"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   }
 }
