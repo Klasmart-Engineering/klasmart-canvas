@@ -19,14 +19,10 @@ jobs:
         with:
           node-version: 16
           registry-url: https://npm.pkg.github.com/
-      # - name: Install deps
-      #   run: | 
-      #     apt list --installed|grep pango
-      #     sudo apt-get install -y libcairo2-dev libpango-1.0-0 libpangocairo-1.0-0 libpango1.0-dev
-      #     apt list --installed|grep pango
       - run: npm i
       - run: npm run build:lib
       - run: npm publish
         env:
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
           NPM_GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           NPM_TOKEN: ${{secrets.GITHUB_TOKEN}}
