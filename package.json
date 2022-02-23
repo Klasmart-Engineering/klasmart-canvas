@@ -1,8 +1,8 @@
 {
   "name": "@KL-Engineering/kidsloop-canvas",
-  "version": "0.5.2-internal",
+  "version": "0.5.3-internal",
   "main": "lib/exports.js",
-  "types": "types/index.d.ts",
+  "types": "lib/exports.d.ts",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
