@@ -16,30 +16,48 @@ export class EventPainterController extends EventEmitter
 
   async replayEvents(): Promise<void> {
     this.emit('aboutToReplayAll');
-
+    // If we call the parseAndEmitEvent too soon, 
+    // the shouldHandleRemoteEvent in useSynchronizedAdded.tsx still is previous state.
+    await new Promise(resolve => setTimeout(resolve, 100));
     for (const event of this.events) {
       this.parseAndEmitEvent(event);
     }
   }
 
-  handlePainterEvent(events: PainterEvent[], replaying?: boolean): void {
-    if (replaying) this.emit('aboutToReplayAll');
+  cleanEvents(): void {
+    while(this.events.length > 0) {
+      this.events.pop();
+    }
+  }
 
+  fillEvents(events: PainterEvent[]): void {
     for (const event of events) {
       this.events.push(event);
+    }
+  }
 
-      this.parseAndEmitEvent(event);
-
-      // TODO: We can clear the list of events if we receive a
-      // 'clear all' event. We know there wont be any events to
-      // replay to get to current state of whiteboard right after
-      // a clear (whiteboard will be empty). This assumption might
-      // change once we implement Undo/Redo functions though.
-
-      // In the Poc it used to look like this:
-      // if (event.type === 'painterClear') {
-      //   this.events.splice(0, this.events.length - 1);
-      // }
+  handlePainterEvent(events: PainterEvent[], replaying?: boolean): void {
+    if (replaying) {
+      this.cleanEvents();
+      this.fillEvents(events);
+      this.replayEvents();
+    }else {
+      for (const event of events) {
+        this.events.push(event);
+  
+        this.parseAndEmitEvent(event);
+  
+        // TODO: We can clear the list of events if we receive a
+        // 'clear all' event. We know there wont be any events to
+        // replay to get to current state of whiteboard right after
+        // a clear (whiteboard will be empty). This assumption might
+        // change once we implement Undo/Redo functions though.
+  
+        // In the Poc it used to look like this:
+        // if (event.type === 'painterClear') {
+        //   this.events.splice(0, this.events.length - 1);
+        // }
+      }
     }
   }
 
