@@ -303,6 +303,12 @@ const toolsSection: IBasicToolbarSection = {
         },
       ],
     },
+    {
+      id: 'move_canvas',
+      title: 'Move Canvas',
+      iconSrc: move,
+      iconName: 'Move canvas',
+    },
     // Line Type - ToolbarSelector - Color Palette
     {
       id: 'line_type',

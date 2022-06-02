@@ -17,14 +17,14 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
+    "noEmit": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "strictNullChecks": true,
     "outDir": "./lib",
     "declaration": true,
     "sourceMap": true,
-    "noFallthroughCasesInSwitch": true,
-    "noEmit": false
+    "noFallthroughCasesInSwitch": true
   },
   "include": [
     "src"

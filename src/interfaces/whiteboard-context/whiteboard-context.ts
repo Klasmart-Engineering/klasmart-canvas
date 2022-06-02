@@ -1,4 +1,5 @@
 import ICanvasActions from '../../domain/whiteboard/canvas-actions/ICanvasActions';
+import { ICanvasMouseCordsEvent } from '../canvas-events/canvas-mouse-event';
 import { IWhiteboardPermissions } from '../canvas-events/whiteboard-permissions';
 
 export interface IWhiteboardContext {
@@ -32,6 +33,10 @@ export interface IWhiteboardContext {
   updateStamp: (stamp: string) => void;
   pointerEvents: boolean;
   setPointerEvents: (status: boolean) => void;
+  moveCanvasIsActive: boolean,
+  updateMoveCanvasIsActive: (status: boolean) => void;
+  updateMouseXY: (obj: ICanvasMouseCordsEvent) => void;
+  mouseXY: ICanvasMouseCordsEvent,
   textIsActive: boolean;
   updateTextIsActive: (status: boolean) => void;
   shapeIsActive: boolean;

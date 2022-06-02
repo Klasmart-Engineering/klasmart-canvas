@@ -22,6 +22,8 @@ import ICanvasActions from './canvas-actions/ICanvasActions';
 import { IWhiteboardContext } from '../../interfaces/whiteboard-context/whiteboard-context';
 import { IWhiteboardPermissions } from '../../interfaces/canvas-events/whiteboard-permissions';
 import { useClearIsActive } from './hooks/useClearIsActive';
+import { useMoveCanvasIsActive } from './hooks/useMoveCanvasIsActive';
+import { useMouseXY } from './hooks/useMouseXY';
 
 export const WhiteboardContext = createContext({} as IWhiteboardContext);
 
@@ -50,6 +52,9 @@ export const WhiteboardProvider = ({
     closeModal,
   } = useWhiteboardClearModal();
 
+  const { moveCanvasIsActive, updateMoveCanvasIsActive } =
+    useMoveCanvasIsActive();
+  const { mouseXY, updateMouseXY } = useMouseXY();
   const { textIsActive, updateTextIsActive } = useTextIsActive();
   const { shapeIsActive, updateShapeIsActive } = useShapeIsActive();
   const { brushIsActive, updateBrushIsActive } = useBrushIsActive();
@@ -175,6 +180,10 @@ export const WhiteboardProvider = ({
     updateEraseType,
     textIsActive,
     updateTextIsActive,
+    moveCanvasIsActive,
+    updateMoveCanvasIsActive,
+    mouseXY,
+    updateMouseXY,
     shapeIsActive,
     updateShapeIsActive,
     brushIsActive,

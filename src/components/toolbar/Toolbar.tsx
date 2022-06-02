@@ -38,6 +38,7 @@ function Toolbar() {
     updateFontFamily,
     openClearWhiteboardModal,
     setPointerEvents,
+    updateMoveCanvasIsActive,
     textIsActive,
     updateTextIsActive,
     updateShapeIsActive,
@@ -101,6 +102,9 @@ function Toolbar() {
     ) {
       discardActiveObject();
     }
+
+    updateMoveCanvasIsActive(tool === ELEMENTS.MOVE_CANVAS_TOOL);
+
 
     /*
       It is setted to true when you select Add Text Tool,

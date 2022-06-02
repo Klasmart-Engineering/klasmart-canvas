@@ -50,6 +50,9 @@ import useFixedAspectScaling, {
 } from './utils/useFixedAspectScaling';
 import { PainterEvents } from './event-serializer/PainterEvents';
 import useSynchronizedModified from './synchronization-hooks/useSynchronizedModified';
+import useSynchronizedCanvasPan from './synchronization-hooks/useSynchronizedCanvasPan';
+import { useScrollCanvas } from './hooks/useScrollCanvas';
+import { usePanCanvas } from './hooks/usePanCanvas';
 
 /**
  * @field instanceId: Unique ID for this canvas. This enables fabricjs canvas to know which target to use.
@@ -124,6 +127,9 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
   const {
     text,
     brushIsActive,
+    moveCanvasIsActive,
+    mouseXY,
+    updateMouseXY,
     textIsActive,
     shapeIsActive,
     fontFamily,
@@ -178,6 +184,15 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
 
     setCanvas(canvasInstance);
   }, [instanceId]);
+
+  useScrollCanvas(
+    clickThrough,
+    lowerCanvas,
+    upperCanvas,
+    wrapper,
+    mouseXY,
+    canvas
+  );
 
   /** 
    * Reset the canvas state in case the event controller will replay all events.
@@ -284,6 +299,7 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     }
   }, [clickThrough, lowerCanvas, pointerEvents, upperCanvas, wrapper]);
 
+
   /** Update objects selectable/evented state. */
   useEffect(() => {
     if (!canvas) {
@@ -302,6 +318,14 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     canvas.selection = shapesAreSelectable;
     canvas.renderAll();
   }, [canvas, shapesAreEvented, shapesAreSelectable, userId]);
+
+  usePanCanvas(
+    moveCanvasIsActive,
+    canvas,
+    toolbarIsEnabled,
+    mouseXY,
+    updateMouseXY
+  );
 
   /**
    * Handles the logic to write text on the whiteboard
@@ -1083,6 +1107,12 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     filterIncomingEvents,
     undoRedoDispatch
   );
+  useSynchronizedCanvasPan(
+    canvas,
+    userId,
+    filterIncomingEvents,
+    undoRedoDispatch
+  );
   useSynchronizedModified(
     canvas,
     generatedBy,
@@ -1120,6 +1150,60 @@ export const WhiteboardCanvas: FunctionComponent<Props> = ({
     an unecessary colorChange event is triggered */
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canvas, eventSerializer, userId, penColor, fontColor, undoRedoDispatch]);
+
+
+  useEffect(() => {
+    if (!moveCanvasIsActive) {
+      return;
+    }
+    const target = () => {
+      return { pan: mouseXY, userId };
+    };
+
+    const payload: ObjectEvent = {
+      type: 'canvas',
+      target: target(),
+      id: instanceId,
+    };
+
+    eventSerializer?.push('canvasPanned', generatedBy, payload);
+  }, [
+    canvas,
+    eventSerializer,
+    generatedBy,
+    mouseXY,
+    userId,
+    moveCanvasIsActive,
+    instanceId,
+  ]);
+
+  useEffect(() => {
+    if (!clickThrough || !wrapper || !lowerCanvas || !upperCanvas) return;
+
+    const target = () => {
+      return { pan: mouseXY, userId };
+    };
+
+    const payload: ObjectEvent = {
+      type: 'canvas',
+      target: target(),
+      id: instanceId,
+    };
+
+    eventSerializer?.push('canvasPanned', generatedBy, payload);
+  }, [
+    canvas,
+    eventSerializer,
+    generatedBy,
+    mouseXY,
+    userId,
+    clickThrough,
+    wrapper,
+    lowerCanvas,
+    upperCanvas,
+    instanceId,
+  ]);
+
 
   /**
    * Send synchronization event for lineWidth changes
