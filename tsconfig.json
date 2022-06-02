@@ -24,7 +24,7 @@
     "declaration": true,
     "sourceMap": true,
     "noFallthroughCasesInSwitch": true,
-    "noEmit": true
+    "noEmit": false
   },
   "include": [
     "src"

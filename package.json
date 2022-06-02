@@ -6,7 +6,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build:html": "react-scripts build",
-    "build": "rimraf ./lib && tsc && cp -R src/assets lib/assets",
+    "build": "rimraf ./lib && tsc --noEmit=false && cp -R src/assets lib/assets",
     "test": "react-scripts test --watchAll=false",
     "eject": "react-scripts eject",
     "prepare": "husky install",
