@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   ReactChild,
   ReactChildren,
@@ -19,6 +19,7 @@ import {
 } from './toolbar-utils';
 import { WhiteboardContext } from '../../domain/whiteboard/WhiteboardContext';
 import { ELEMENTS } from '../../config/toolbar-element-names';
+import { ICanvasMouseCordsEvent } from '../../interfaces/canvas-events/canvas-mouse-event';
 
 export type ToolType =
   | 'clickthrough'
@@ -45,6 +46,8 @@ export interface IToolbarActions {
   undo: () => void;
 
   redo: () => void;
+
+  panCanvas: (point:ICanvasMouseCordsEvent) => void;
 }
 
 export interface IToolbarState {
@@ -87,6 +90,7 @@ export default function ToolbarContextProvider({
     updateBrushIsActive,
     updateFloodFillIsActive,
     updateLaserIsActive,
+    updateMouseXY,
     setPointerEvents,
     updateEventedObjects,
     updateShapesAreSelectable,
@@ -282,6 +286,7 @@ export default function ToolbarContextProvider({
     clear: clearAction,
     undo: undoAction,
     redo: redoAction,
+    panCanvas: updateMouseXY
   };
 
   const status: IToolbarStatus = {

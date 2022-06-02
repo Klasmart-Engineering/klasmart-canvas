@@ -125,6 +125,9 @@ export class EventPainterController extends EventEmitter
       case 'lineWidthChanged':
         this.lineWidthChanged(event.id, event.generatedBy, event.objectType, target);
         break;
+      case 'canvasPanned':
+        this.canvasPanned(event.id, event.generatedBy, target);
+        break;
     }
   }
 
@@ -192,5 +195,13 @@ export class EventPainterController extends EventEmitter
     target: ICanvasObject
   ) {
     this.emit('lineWidthChanged', id, generatedBy, objectType, target);
+  }
+
+  private canvasPanned(
+    id: string,
+    generatedBy: string,
+    target: ICanvasObject
+  ) {
+    this.emit('canvasPanned', id, generatedBy, target);
   }
 }

@@ -1,4 +1,4 @@
-import React, { ReactChild, ReactChildren, useCallback } from 'react';
+import { ReactChild, ReactChildren, useCallback } from 'react';
 import { useToolbarContext } from './toolbar-context-provider';
 
 export type Props = {

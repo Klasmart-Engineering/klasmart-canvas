@@ -1,6 +1,7 @@
 import { PainterEvent, PainterEventType } from './PainterEvent';
 import { EventEmitter } from 'events';
 import { ICanvasObject } from '../../../interfaces/objects/canvas-object';
+import { ICanvasPanEventObject } from '../../../interfaces/objects/canvas-pan-event-object';
 
 // TODO: This service should probably implement some sort of
 // event batching, especially the line drawing can generate
@@ -25,7 +26,8 @@ export interface ObjectEvent {
   | ICanvasObject
   | { objects: ICanvasObject[] }
   | { background: string }
-  | boolean;
+  | boolean
+  | ICanvasPanEventObject;
 }
 
 export type ObjectType =
@@ -35,7 +37,8 @@ export type ObjectType =
   | 'reconstruct'
   | 'shape'
   | 'background'
-  | 'pointer';
+  | 'pointer'
+  | 'canvas';
 
 export class PaintEventSerializer extends EventEmitter
   implements PaintEventSerializer {
