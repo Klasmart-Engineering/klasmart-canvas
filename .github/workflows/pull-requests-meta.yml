@@ -2,7 +2,7 @@ name: Pull requests meta info
 
 on:
     pull_request:
-        types: [opened, edited, synchronize]
+        types: [opened, edited]
 
 jobs:
     conventional-pr-title:
