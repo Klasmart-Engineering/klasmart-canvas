@@ -33,13 +33,13 @@ jobs:
 
     install:
         needs: [confirm-version-generation]
-        uses: KL-Engineering/github-action-workflows/.github/workflows/npm-ci.yml@785cd03160951c320420eedbccfa480951542f62
+        uses: KL-Engineering/github-action-workflows/.github/workflows/npm-ci.yml@v3.3.0
         secrets:
             NODE_AUTH_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
 
     generate-version:
         needs: [install]
-        uses: KL-Engineering/github-action-workflows/.github/workflows/npm-generate-version.yml@785cd03160951c320420eedbccfa480951542f62
+        uses: KL-Engineering/github-action-workflows/.github/workflows/npm-generate-version.yml@v3.3.0
         with:
             prerelease: ${{ github.event.inputs.prerelease }}
             release_as: ${{ github.event.inputs.release_as }}
