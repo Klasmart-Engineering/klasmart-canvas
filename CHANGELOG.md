@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.5](https://github.com/KL-Engineering/kidsloop-canvas/branches/compare/v0.5.5%0Dv0.5.4) (2022-06-03)
+
+
+### ⚙️ Continuous Integrations
+
+* remove reference to non existent step ([1d8672d](https://github.com/KL-Engineering/kidsloop-canvas/commits/1d8672d4e935f2071a855223940c9057f12bea6a))
+
 ### [0.5.4](https://github.com/KL-Engineering/kidsloop-canvas/branches/compare/v0.5.4%0Dv0.5.4-internal) (2022-06-03)
 
 
