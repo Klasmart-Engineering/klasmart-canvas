@@ -1,12 +1,12 @@
 {
   "name": "@kl-engineering/kidsloop-canvas",
   "version": "0.5.5",
-  "main": "lib/exports.js",
-  "types": "lib/exports.d.ts",
+  "main": "dist/exports.js",
+  "types": "dist/exports.d.ts",
   "scripts": {
     "start": "react-scripts start",
     "build:html": "react-scripts build",
-    "build": "rimraf ./lib && tsc && cp -R src/assets lib/assets",
+    "build": "rimraf ./dist && tsc && cp -R src/assets dist/assets",
     "test": "react-scripts test --watchAll=false",
     "eject": "react-scripts eject",
     "prepare": "husky install",
