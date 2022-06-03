@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.6.0](https://github.com/KL-Engineering/kidsloop-canvas/branches/compare/v0.6.0%0Dv0.5.5) (2022-06-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* build directory name change
+
+### 🔨 Build
+
+* build directory name change ([1a52375](https://github.com/KL-Engineering/kidsloop-canvas/commits/1a52375c3da28b198e6f04f326e6e1d0711ce619))
+
 ### [0.5.5](https://github.com/KL-Engineering/kidsloop-canvas/branches/compare/v0.5.5%0Dv0.5.4) (2022-06-03)
 
 
