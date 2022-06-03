@@ -26,7 +26,7 @@ jobs:
             upload: true
 
     confirm-publish:
-        needs: [test-unit, lint, build]
+        needs: [test-unit, build]
         runs-on: ubuntu-latest
         environment: latest
         steps:
