@@ -1,14 +1,16 @@
 {
-  "name": "@KL-Engineering/kidsloop-canvas",
+  "name": "@kl-engineering/kidsloop-canvas",
   "version": "0.5.4-internal",
   "main": "lib/exports.js",
   "types": "lib/exports.d.ts",
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
-    "build:lib": "rimraf ./lib && tsc && cp -R src/assets lib/assets",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "build:html": "react-scripts build",
+    "build": "rimraf ./lib && tsc && cp -R src/assets lib/assets",
+    "test": "react-scripts test --watchAll=false",
+    "eject": "react-scripts eject",
+    "prepare": "husky install",
+    "release": "standard-version"
   },
   "browserslist": {
     "production": [
@@ -23,6 +25,8 @@
     ]
   },
   "devDependencies": {
+    "@commitlint/cli": "17.0.2",
+    "@commitlint/config-conventional": "17.0.2",
     "@testing-library/jest-dom": "5.15.0",
     "@testing-library/react": "12.1.2",
     "@testing-library/react-hooks": "7.0.2",
@@ -35,10 +39,12 @@
     "@types/react-color": "3.0.6",
     "@types/react-dom": "17.0.11",
     "@types/uuid": "8.3.1",
+    "husky": "^7.0.0",
     "prettier": "2.4.1",
     "react-scripts": "4.0.3",
     "react-test-renderer": "17.0.2",
-    "rimraf": "3.0.2"
+    "rimraf": "3.0.2",
+    "standard-version": "9.5.0"
   },
   "dependencies": {
     "@material-ui/core": "4.12.3",
@@ -54,8 +60,8 @@
     "uuid": "8.3.2"
   },
   "repository": {
-      "type": "git",
-      "url": "git+https://github.com/KL-Engineering/kidsloop-canvas"
+    "type": "git",
+    "url": "git+https://github.com/KL-Engineering/kidsloop-canvas"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"

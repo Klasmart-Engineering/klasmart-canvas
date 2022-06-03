@@ -1,7 +1,0 @@
-.color-palette {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  row-gap: 2px;
-  border-top: solid 1px #c0c0c0;
-  padding: 4px 4px 4px 2px;
-}
